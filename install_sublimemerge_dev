@@ -1,0 +1,145 @@
+#!/bin/bash
+#
+# @author Zeus Intuivo <zeus@intuivo.com>
+#
+#
+load_struct_testing_wget(){
+    local provider="$HOME/_/clis/execute_command_intuivo_cli/struct_testing"
+    [   -e "${provider}"  ] && source "${provider}"
+    [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
+    ( ( ! command -v type passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
+} # end load_struct_testing_wget
+load_struct_testing_wget
+
+get_lastest_sublime_version() {
+   # 0. Determine where is the latest vesion published
+   #    + expected to respond: https://www.sublimemerge.com/
+   # 1. Go to page and see current version
+   # 2. Extract current version number
+   # 3.
+
+
+    # normal local _sublime_string=$(curl -L https://www.sublimemerge.com/  2>/dev/null | sed -n "/<div\ class=\"current_version\">/,/<\/div>/p" | head -1)   # suppress only wget download messages, but keep wget output for variable
+   #    + expected string:     <div class="current_version">Sublime Merge <i>(Build 1119)</i></div>
+    local _sublime_string=$(curl -L https://www.sublimemerge.com/dev  2>/dev/null | sed -n "/<p\ class=\"latest\">/,/<\/div>/p" | head -1)   # suppress only wget download messages, but keep wget output for variable
+   #    + expected string:      <p class="latest"><i>Version:</i> Build 1118</p>
+    local _sublime_build_line=$(echo "${_sublime_string}" | grep 'Build ....')
+    if [ -z "${_sublime_build_line}" ] ; then
+    {
+        echo "error when doing check of line string from website. Got nothing"
+        echo "    _sublime_string: <${_sublime_string}>"
+        echo "                      0123456789 123456789 123456789 123456789 123456789 123456789 1234567889 123456789 123456789 123456789 123456789 "
+        echo "                                1         2         3         4         5         6          7         8         9        10        11"
+        echo "_sublime_build_line: <${_sublime_build_line}>"
+        failed "Error"
+        exit 69;
+    }
+    else
+    {
+        local SUBLIMEDEVLASTESTBUILD=$(echo "${_sublime_build_line}" | cut -c42-45)
+        wait
+        [[ -z "${SUBLIMEDEVLASTESTBUILD}" ]] && failed "Sublime Version not found!"
+        echo "${SUBLIMEDEVLASTESTBUILD}"
+    }
+    fi
+}
+download_sublime(){
+  # + expected download url  https://download.sublimetext.com/sublime-merge_build-1119_amd64.deb
+  if ( command -v type wget >/dev/null 2>&1; ) ; then
+   wget --quiet --no-check-certificate "https://download.sublimetext.com/${1}" 2>/dev/null   # suppress only wget download messages, but keep wget output for variable
+
+  elif ( command -v type curl >/dev/null 2>&1; ); then
+    curl -O "https://download.sublimetext.com/${1}" 2>/dev/null   # suppress only wget download messages, but keep wget output for variable
+
+  else
+    failed "I cannot find wget or curl to download! https://download.sublimetext.com/${1}"
+  fi
+}
+install_darwin_lastest_sublime_64() {
+    # expected string: https://download.sublimetext.com/sublime_merge_build_1119_mac.zip
+    local SUBLIMEDEVLASTESTBUILD=$(get_lastest_sublime_version)
+    local SUBLIMENAME="sublime_merge_build_{SUBLIMEDEVLASTESTBUILD}_mac.zip"
+    local SUBLIMENAME_4_HDUTIL="sublime_merge_build_{SUBLIMEDEVLASTESTBUILD}_mac.dmg"
+    wait
+    cd ~/Downloads/
+    [ ! -e "${SUBLIMENAME_4_HDUTIL}" ] || download_sublime "${SUBLIMENAME}"
+    unzip "${SUBLIMENAME}"
+    echo "${pwd}"
+    echo "${SUBLIMENAME_4_HDUTIL}"
+    ls -la "${SUBLIMENAME_4_HDUTIL}"
+    wait
+    sudo hdiutil attach "${SUBLIMENAME_4_HDUTIL}"
+    wait
+    sudo cp -R /Volumes/Sublime\ Merge/Sublime\ Merge.app /Applications/
+    wait
+    sudo hdiutil detach /Volumes/Sublime\ Merge
+    wait
+} # end install_darwin_lastest_sublime_64
+
+install_linux_lastest_sublime_64() {
+    echo "checking version"
+    local SUBLIMEDEVLASTESTBUILD=$(get_lastest_sublime_version)
+    echo " version ${SUBLIMEDEVLASTESTBUILD}"
+    local SUBLIMENAME="sublime-merge_build-${SUBLIMEDEVLASTESTBUILD}_amd64.deb"
+    echo " looking for file ${SUBLIMENAME} online"
+    wait
+    echo "changing to Downloads folder  ~/Downloads/"
+    cd ~/Downloads/
+    echo "downloading ${SUBLIMENAME}"
+    download_sublime "${SUBLIMENAME}"
+    wait
+    echo "installing "
+    sudo dpkg -i ${SUBLIMENAME}
+    wait
+} # end install_linux_lastest_sublime_64
+
+install_linux_lastest_sublime_32() {
+    echo "checking version"
+    local SUBLIMEDEVLASTESTBUILD=$(get_lastest_sublime_version)
+    echo " version ${SUBLIMEDEVLASTESTBUILD}"
+    local SUBLIMENAME="sublime-merge_build-${SUBLIMEDEVLASTESTBUILD}_i386.deb"
+    echo " looking for file ${SUBLIMENAME} online"
+    wait
+    echo "changing to Downloads folder  ~/Downloads/"
+    cd ~/Downloads/
+    echo "downloading ${SUBLIMENAME}"
+    download_sublime "${SUBLIMENAME}"
+    wait
+    echo "installing "
+    sudo dpkg -i ${SUBLIMENAME}
+    wait
+} # end install_linux_lastest_sublime_32
+
+install_windows_lastest_sublime_64() {
+    # expected url: https://download.sublimetext.com/sublime_merge_build_1119_x64_setup.exe
+    local SUBLIMEDEVLASTESTBUILD=$(get_lastest_sublime_version)
+    wait
+    local SUBLIMENAME="sublime_merge_build_${SUBLIMEDEVLASTESTBUILD}_x64_setup.exe"
+    wait
+    cd $HOMEDIR
+    cd Downloads
+    curl -O https://download.sublimetext.com/${SUBLIMENAME}
+    ${SUBLIMENAME}
+    wait
+} # end install_windows_lastest_sublime_64
+
+# check operation systems
+if [[ "$(uname)" == "Darwin" ]] ; then
+  # Do something under Mac OS X platform
+    [[ "$(uname -m)" == "x86_64" ]] && install_darwin_lastest_sublime_64 "$@"
+    [[ "$(uname -m)" == "i686"   ]] && install_darwin_lastest_sublime_64 "$@"
+elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]] ; then
+  # Do something under GNU/Linux platform
+  # ubuntu lsb_release -i | sed 's/Distributor\ ID://g' = \tUbuntu\n
+    [[ "$(uname -i)" == "x86_64" ]] && install_linux_lastest_sublime_64 "$@"
+    [[ "$(uname -i)" == "i686"   ]] && install_linux_lastest_sublime_32 "$@"
+elif [[ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]] ; then
+  # Do something under Windows NT platform
+    [[ "$(uname -i)" == "x86_64" ]] && install_windows_lastest_sublime_64 "$*"
+    [[ "$(uname -i)" == "i686"   ]] && install_windows_lastest_sublime_64 "$*"
+  install_windows_lastest_sublime_64 "$*"
+  # nothing here
+fi
+
+
+
