@@ -10,19 +10,28 @@ THISSCRIPTNAME=`basename "$0"`
 
 execute_as_sudo(){
   if [ -z $SUDO_USER ] ; then
-    if [ -e "./$THISSCRIPTNAME" ] ; then
-    {       
-      sudo "./$THISSCRIPTNAME"
-    }
-    elif ( command -v type "$THISSCRIPTNAME" >/dev/null 2>&1 );  then
+    if [[ -z "$THISSCRIPTNAME" ]] ; then
     {
-      echo "sudo sudo sudo "
-      sudo "$THISSCRIPTNAME"
+        echo "error You need to add THISSCRIPTNAME vairable like this:" 
+        echo "     THISSCRIPTNAME=\`basename \"\$0\"\`"
     }
-    else
+    else 
     {
-      echo -e "\033[05;7m*** Failed to find script to recall it as sudo ...\033[0m"
-      exit 1
+        if [ -e "./$THISSCRIPTNAME" ] ; then
+        {       
+        sudo "./$THISSCRIPTNAME"
+        }
+        elif ( command -v type "$THISSCRIPTNAME" >/dev/null 2>&1 );  then
+        {
+        echo "sudo sudo sudo "
+        sudo "$THISSCRIPTNAME"
+        }
+        else
+        {
+        echo -e "\033[05;7m*** Failed to find script to recall it as sudo ...\033[0m"
+        exit 1
+        }
+        fi
     }
     fi
     wait
@@ -50,173 +59,37 @@ load_struct_testing_wget(){
 load_struct_testing_wget
 passed Caller user identified:$USER_HOME
 
-function _assure_success() {
-  if [ $? != 0 ] ; then
-    echo -e "\033[38;5;1m Something went wrong \033[0m"
-    exit 1
-  fi
+
+_version() {
+  # fedora_32 https://www.scootersoftware.com/bcompare-4.3.3.24545.i386.rpm
+  # https://www.scootersoftware.com/bcompare-4.3.3.24545.x86_64.rpm
+  # zz=dl4&platform=mac, zz=dl4&platform=linux, zz=dl4&platform=win
+   
+  local PLATFORM="${1}"
+  local PATTERN="${2}"
+  # THOUGHT: local CODEFILE=$(curl -d "zz=dl4&platform=linux" -H "Content-Type: application/x-www-form-urlencoded" -X POST  -sSLo -  https://www.scootersoftware.com/download.php  2>&1;) # suppress only wget download messages, but keep wget output for variable
+  local CODEFILE=$(curl -d "zz=dl4&platform=${PLATFORM}" -H "Content-Type: application/x-www-form-urlencoded" -X POST  -sSLo -  https://www.scootersoftware.com/download.php  2>&1;) # suppress only wget download messages, but keep wget output for variable
+  # THOUGHT: local CODELASTESTBUILD=$(echo $CODEFILE | sed s/\</\\n\</g | grep "bcompare*.*.*.*.x86_64.rpm" | sed s/\"/\\n/g | grep "/" | cuet "/")
+  local CODELASTESTBUILD=$(echo $CODEFILE | sed s/\</\\n\</g | grep "${PATTERN}" | sed s/\"/\\n/g | grep "/" | cuet "/")
+  # fedora 32 local CODELASTESTBUILD=$(echo $CODEFILE | sed s/\</\\n\</g | grep "bcompare*.*.*.*.i386.rpm" | sed s/\"/\\n/g | grep "/" | cuet "/")
   wait
-}
+  [[ -z "${CODELASTESTBUILD}" ]] && failed "Beyond Compare Version not found! :${CODELASTESTBUILD}:"
+   
+  
+  assert not empty "${USER_HOME}"
+  assert not empty "${CODELASTESTBUILD}"
 
-function _trap_try_start() {
-  trap _term SIGTERM
-}
-
-function _trap_catch_check() {
-  declare -i ret=$?
-  local child
-  if [ $ret -gt 0 ] ; then
-  {
-    child=$!
-    wait $child
-    warning "${YELLOW}Error SIGNAL_RETURN(${RED}${ret}${YELLOW}) executing: \n${action}"
-    return 1 # non zero is error
-  }
-  fi
-  return 0
-}
-
-function _action_runner() {
-  local action	
-  while read -r action ; do
-  {
-    if [[ ! -z "${action}" ]] ; then # if not empty
-    {
-      _trap_try_start
-      echo "${action}"
-      "${action}"
-      _trap_catch_check
-    }
-    fi
-  }
-  done <<< "${@}"
-} # end _action_runner
-
-function _try_runner() {
-  local body=$(_function_body "#{1}")
-  function_exists "${1}"
-  while read -r action ; do
-  {
-    if [[ ! -z "${action}" ]] ; then # if not empty
-    {
-      _trap_try_start
-      echo "${action}"
-      "${action}"
-      _trap_catch_check
-    }
-    fi
-  }
-  done <<< "${body}"
-} # end _try_runner
-
-function _function_body() {
-  local functionname="${1}"
-  # function_exists "${functionname}"
-  # ensure head or Cancel. Missing head command
-  # ensure tail or Cancel. Missing tail command
-  # ensure declare or Cancel. Missing declare command
-  # ensure wc or Cancel. Missing declare command
-  local functioncomplete=$(declare -f "${functionname}")
-  # echo complete:"${functioncomplete}"
-  local functionbody=$(echo "${functioncomplete}" | cuet "${functionname} ()")
-  # echo body:"${functionbody}"
-  local functionlength=$(echo "${functionbody}" | wc -l)
-  # echo length:${functionlength}
-  # echo less:${functionlengthless}
-  (( functionlength-- ))
-  # echo lenght:${functionlength}
-  functionbody=$(echo "${functionbody}" | head -${functionlength} )
-  # echo body:"${functionbody}"
-  (( functionlength-- ))
-  # echo length:${functionlength}
-  functionbody=$(echo "${functionbody}" | tail -${functionlength} )
-  # echo body:"${functionbody}"
-  echo "${functionbody}"
-}
-
-function _try_body() {
-  local body=$(_function_body "${1}")
-  _trap_try_start
-  echo "${body}"
-  "${body}"
-  _trap_catch_check
-}
-
-function _try() {
-  local body="${@}"
-  _trap_try_start
-  echo -e "\033[01;7m***${body}\033[0m***"
-  local msg="${body}"
-  declare -i ret=_trap_catch_check
-  echo "${msg}"
-  unset body
-  unset msg
-  if [ $ret -gt 0 ] ; then
-    unset ret
-    return 1
-  else
-    unset ret
-    return 0
-  fi
-}
-
-
-
-# https://code.visualstudio.com/docs/?dv=linux64_rpm
-get_lastest_studio_code_version() {
-    local CODEFILE=$(curl -sSLo -  https://code.visualstudio.com/docs/?dv=linux32_deb&build=insiders  2>&1;) # suppress only wget download messages, but keep wget output for variable
-    echo "${CODEFILE}" | grep 'facebook'  | head -3
-    local CODELASTESTBUILD=$(echo "${CODELASTESTBUILD}" | grep 'direct download link ....' )
-    wait
-    [[ -z "${CODELASTESTBUILD}" ]] && failed "Beyond Compare Version not found! :${CODELASTESTBUILD}:"
-    echo "${CODELASTESTBUILD}"
-
-} # end get_lastest_studio_code_version
-
-_download() {
-  #  url  https://www.scootersoftware.com/master-pdf-editor-3133_amd64.deb
-  _trap_try_start
-  local target_url="${1}"
-  if [ -z "${target_url}" ] ; then  # if empty
-  {
-    failed Could not load target_url string or it was empty
-  }
-  fi
-  _trap_catch_check
-  # wget --directory-prefix="${USER_HOME}/Downloads/" --quiet --no-check-certificate "${target_url}" 2>/dev/null
-  echo -e "\033[01;7m*** Downloading file to temp location...\033[0m"
-  if ( command -v type wget >/dev/null 2>&1; ) ; then
-    # # REF: about :> http://unix.stackexchange.com/questions/37507/what-does-do-here
-    _trap_try_start
-    :> wgetrc   # here :> equals to Equivalent to the following: cat /dev/null > wgetrc which Nulls out the file called "wgetrc" in the current directory. As in creates an empty file "wgetrc" if one doesn't exist or overwrites one with nothing if it does.
-    _trap_catch_check
-    file_exists_with_spaces wgetrc
-    _trap_try_start
-    echo "noclobber=off" >> wgetrc
-    _trap_catch_check
-    echo "dir_prefix=." >> wgetrc
-    echo "dirstruct=off" >> wgetrc
-    echo "verbose=off" >> wgetrc    # NOTE Can't be verbose and quiet at the same time.--quiet
-    echo "progress=bar:default" >> wgetrc
-    echo "tries=3" >> wgetrc
-    # _trap_try_start # _trap_catch_check
-    # WGETRC=wgetrc wget --directory-prefix="${USER_HOME}/Downloads/" --quiet --no-check-certificate "${target_url}" 2>/dev/null
-    #  _trap_catch_check
-    # WGETRC=wgetrc wget --quiet --no-check-certificate "${target_url}" 2>/dev/null   # suppress only wget download messages, but keep wget output for variable
-    _try "WGETRC=wgetrc wget --directory-prefix=\"${USER_HOME}/Downloads/\" --quiet --no-check-certificate \"${target_url}\"" # 2>/dev/null"
-    echo -e "\033[7m*** Download Wget executed completed.\033[0m"
-    rm -f wgetrc
-    file_does_not_exist_with_spaces wgetrc
-  elif ( command -v type curl >/dev/null 2>&1; ); then
-    curl -O "${target_url}" 2>/dev/null   # suppress only wget download messages, but keep wget output for variable
-    _assure_success
-  else
-    failed "I cannot find wget or curl programs to perform a download action! ${target_url}"
-  fi
-}
+  local CODENAME="${CODELASTESTBUILD}"
+  echo "${CODELASTESTBUILD}"
+  unset PATTERN
+  unset PLATFORM
+  unset CODEFILE
+  unset CODELASTESTBUILD
+} # end _version
 
 _darwin__64() { 
-    local CODENAME="BCompareOSX-4.3.3.24545.zip"
+    local CODENAME=$(_version "mac" "BCompareOSX*.*.*.*.zip")
+    # THOUGHT        local CODENAME="BCompareOSX-4.3.3.24545.zip"
     local URL="https://www.scootersoftware.com/${CODENAME}"
     cd $USER_HOME/Downloads/
     _download "${URL}"
@@ -227,7 +100,8 @@ _darwin__64() {
 } # end _darwin__64
 
 _ubuntu__64() {
-    local CODENAME="bcompare-4.3.3.24545_amd64.deb"
+    local CODENAME=$(_version "linux" "bcompare-*.*.*.*amd64.deb")
+    # THOUGHT          local CODENAME="bcompare-4.3.3.24545_amd64.deb"
     local URL="https://www.scootersoftware.com/${CODENAME}"
     cd $USER_HOME/Downloads/
     _download "${URL}"
@@ -235,31 +109,17 @@ _ubuntu__64() {
 } # end _ubuntu__64
 
 _ubuntu__32() {
-    local CODENAME="bcompare-4.3.3.24545_i386.deb"
-    local URL="https://www.scootersoftware.com/"
+    local CODENAME=$(_version "linux" "bcompare-*.*.*.*i386.deb")
+    # THOUGHT local CODENAME="bcompare-4.3.3.24545_i386.deb"
+    local URL="https://www.scootersoftware.com/${CODENAME}"
     cd $USER_HOME/Downloads/
     _download "${URL}"
     sudo dpkg -i ${CODENAME}
 } # end _ubuntu__32 
 
-_fedora__64() {
-   # fedora_32 https://www.scootersoftware.com/bcompare-4.3.3.24545.i386.rpm
-   # https://www.scootersoftware.com/bcompare-4.3.3.24545.x86_64.rpm
-   # zz=dl4&platform=mac, zz=dl4&platform=linux, zz=dl4&platform=win
-  # get download link 
-    local CODEFILE=$(curl -d "zz=dl4&platform=linux" -H "Content-Type: application/x-www-form-urlencoded" -X POST  -sSLo -  https://www.scootersoftware.com/download.php  2>&1;) # suppress only wget download messages, but keep wget output for variable
-    local CODELASTESTBUILD=$(echo $CODEFILE | sed s/\</\\n\</g | grep "bcompare*.*.*.*.x86_64.rpm" | sed s/\"/\\n/g | grep "/" | cuet "/")
-    # fedora 32 local CODELASTESTBUILD=$(echo $CODEFILE | sed s/\</\\n\</g | grep "bcompare*.*.*.*.i386.rpm" | sed s/\"/\\n/g | grep "/" | cuet "/")
-    wait
-    [[ -z "${CODELASTESTBUILD}" ]] && failed "Beyond Compare Version not found! :${CODELASTESTBUILD}:"
-    echo "${CODELASTESTBUILD}"
-   
-  # get download link ..NEEDS TO BE REDONE FORM THIS CODE
- 
-  assert not empty "${USER_HOME}"
-  assert not empty "${CODELASTESTBUILD}"
-
-  local CODENAME="${CODELASTESTBUILD}"
+_fedora__32() {
+  local CODENAME=$(_version "linux" "bcompare*.*.*.*.i386.rpm")
+  # THOUGHT                          bcompare-4.3.3.24545.i386.rpm
   local TARGET_URL="https://www.scootersoftware.com/${CODENAME}"
   file_exists_with_spaces $USER_HOME/Downloads
   cd $USER_HOME/Downloads
@@ -285,307 +145,61 @@ _fedora__64() {
   ensure bcompare or "Failed to install Beyond Compare"
   rm -f "$USER_HOME/Downloads/${CODENAME}"
   file_does_not_exist_with_spaces "$USER_HOME/Downloads/${CODENAME}"
-}
+} # end _fedora__32
+
+
+_fedora__64() {
+  local CODENAME=$(_version "linux" "bcompare*.*.*.*.x86_64.rpm")
+  # THOUGHT  https://www.scootersoftware.com/bcompare-4.3.3.24545.x86_64.rpm
+  local TARGET_URL="https://www.scootersoftware.com/${CODENAME}"
+  file_exists_with_spaces $USER_HOME/Downloads
+  cd $USER_HOME/Downloads
+  _download "${TARGET_URL}"
+  file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}"
+  ensure rpm or "Canceling Install. Could not find rpm command to execute install"
+  
+  # provide error handling , once learned goes here. LEarn under if, once learned here.
+  # Start loop while ERROR flag in case needs to try again, based on error 
+  _try "rpm --import https://www.scootersoftware.com/RPM-GPG-KEY-scootersoftware"
+  local msg=$(_try "rpm -ivh \"$USER_HOME/Downloads/${CODENAME}\"" )
+  local ret=$?
+  if [ $ret -gt 0 ] ; then 
+  {
+    failed "${ret}:${msg}"
+    # add error handling knowledge while learning.
+  } 
+  else
+  {
+    passed Install with RPM success!
+  }
+  fi
+  ensure bcompare or "Failed to install Beyond Compare"
+  rm -f "$USER_HOME/Downloads/${CODENAME}"
+  file_does_not_exist_with_spaces "$USER_HOME/Downloads/${CODENAME}"
+} # end _fedora__64
 
 _mingw__64() {
-    local CODENAME="BCompare-4.3.3.24545.exe"
+    local CODENAME=$(_version "win" "BCompare*.*.*.*.exe")
+    # THOUGHT        local CODENAME="BCompare-4.3.3.24545.exe"
+    local URL="https://www.scootersoftware.com/${CODENAME}"
     cd $HOMEDIR
-	    cd Downloads
-    curl -O https://www.scootersoftware.com/${CODENAME}
+	  cd Downloads
+    curl -O $URL
     ${CODENAME}
 } # end _mingw__64
 
 _mingw__32() {
-    local CODENAME="BCompare-4.3.3.24545.exe"
+    local CODENAME=$(_version "win" "BCompare*.*.*.*.exe")
+    # THOUGHT        local CODENAME="BCompare-4.3.3.24545.exe"
+    local URL="https://www.scootersoftware.com/${CODENAME}"
     cd $HOMEDIR
     cd Downloads
-	    curl -O https://www.scootersoftware.com/${CODENAME}
-	    ${CODENAME}
+	  curl -O $URL
+	  ${CODENAME}
 } # end 
 
-function function_is_defined_with_spaces() {
-		    # Sample usage
-		    #
-		    #          if  ! function_is_defined_with_spaces "/home/vagrant/.zshrc" ; then    is like is NOT installed
-		    #          if  function_is_defined_with_spaces "/root/.zshrc ; then      it makes more sense to make it this way
-		    #
-            local ONE_FUNCTION FUNCTIONS="${@}"
-            if [ ! -z "${FILES-x}" ] ; then # if its set and not empty
-            {
-                while read -r ONE_FUNCTION; do
-                # if not empty
-                if [ ! -z "${ONE_FUNCTION}" ] ; then
-                    if [ -n "$(LC_ALL=C type -t "${ONE_FUNCTION}")" ] && [ "$(LC_ALL=C type -t "${ONE_FUNCTION}")" = function ]; then
-                    {
-                        return 0 # function exists
-                    }
-                    fi
-                fi
-                done <<< "${FUNCTIONS}"
-                return 1 # function does not exists
-            }
-            fi
-            unset ONE_FUNCTION
-            unset FUNCTIONS
-            unset TESTING
-} # end function_is_defined_with_spaces
-
-function function_is_defined() {
-	    # Sample usage
-	    #
-	    #          if  ! function_is_defined determine_os_and_fire_action ; then    is like is NOT installed
-	    #          if  function_is_defined "$FUNCTION_TO_CALL" ; then      it makes more sense to make it this way
-            #
-            local ONE_FUNCTION FUNCTIONS="${@}"
-            if [ ! -z "${FILES-x}" ] ; then # if its set and not empty
-            {
-                FUNCTIONS=$(switch_spaces_to_newlines <<< "${@}")
-                while read -r ONE_FUNCTION; do
-                # if not empty
-                if [ ! -z "${ONE_FUNCTION}" ] ; then
-	            if [ -n "$(LC_ALL=C type -t "${ONE_FUNCTION}")" ] && [ "$(LC_ALL=C type -t "${ONE_FUNCTION}")" = function ]; then 
-                    {
-                        return 0 # function exists
-                    }
-                    fi
-                fi
-                done <<< "${FUNCTIONS}"
-                return 1 # function does not exists
-            }
-            fi
-            unset ONE_FUNCTION 
-            unset FUNCTIONS
-            unset TESTING
-
-} # end function_is_defined
-
-function function_exists() {
-            # Sample usage
-            #
-            #     function_exists determine_os_and_fire_action
-            #     function_exists  "$FUNCTION_TO_CALL"
-            #     function_exists "Function1
-	    #                      Function2
-            #                      Function2"	    
-            #
-            local TESTING ONE_FUNCTION FUNCTIONS="${@}"
-            if [ ! -z "${FUNTIONS-x}" ] ; then # if its set and not empty
-            {
-                FUNCTIONS=$(switch_spaces_to_newlines <<< "${@}")
-                while read -r ONE_FUNCTION; do
-                if [ ! -z "${ONE_FUNCTION}" ] ; then # if not empty
-                    TESTING="that function ${CYAN}${ONE_FUNCTION}${LIGHTYELLOW} exists"
-                    if function_is_defined "${ONE_FUNCTION}" ; then
-                    {
-                        passed "${TESTING}"
-                    }
-                    else
-                    {
-                        failed "${TESTING}"
-                    }
-                    fi
-                fi
-                done <<< "${FUNCTIONS}"
-            }
-            fi
-	    unset ONE_FUNCTION 
-	    unset FUNCTIONS
-	    unset TESTING
-
-} # end function_exists
-
-# function_exists ls
-# build_table_from_installed_components $USER
-# build_table_from_installed_components $SUDO_USER
-
-function function_exists_with_spaces() {
-            # Sample usage
-            #
-            #     function_exists_with_spaces determine_os_and_fire_action
-            #     function_exists_with_spaces  "$FUNCTION_TO_CALL"
-	    #     function_exists_with_spaces "Function1
-            #                      Function2
-            #                      Function2"       
-            #
-            local TESTING ONE_FUNCTION FUNCTIONS="${@}"
-            if [ ! -z "${FUNTIONS-x}" ] ; then # if its set and not empty
-            {
-                while read -r ONE_FUNCTION; do
-                if [ ! -z "${ONE_FUNCTION}" ] ; then # if not empty
-                    TESTING="that function ${CYAN}${ONE_FUNCTION}${LIGHTYELLOW} exists"
-                    if function_is_defined_with_spaces "${ONE_FUNCTION}" ; then
-                    {
-                        passed "${TESTING}"
-                    }
-                    else
-                    {
-                        failed "${TESTING}"
-                    }
-                    fi
-                fi
-			done <<< "${FUNCTIONS}"
-            }
-            fi
-            unset ONE_FUNCTION 
-            unset FUNCTIONS
-            unset TESTING
-} # end function_exists_with_spaces
-
-function determine_os_and_fire_action() {
-  # Interface
-  local FUNCTION_TO_CALL=""
-  local PARAMETERS=""  
-  # Check operating systems
-  if [[ "$(uname)" == "Darwin" ]] ; then
-      # Do something under Mac OS X platform
-      if [[ "$(uname -m)" == "x86_64" ]] ; then
-      { 
-	     FUNCTION_TO_CALL='_darwin__64'
-	     PARAMETERS="$@"
-      }
-      elif [[ "$(uname -m)" == "i686"   ]] ; then 
-      {
-	     FUNCTION_TO_CALL='_darwin__32'
-	     PARAMETERS="$@"
-      }
-      fi
-  elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]] ; then
-    # Do something under GNU/Linux platform
-    # Determine OS platform
-    local UNAME=$(uname | tr "[:upper:]" "[:lower:]")
-    local DISTRO=""
-    local ID=""
-    local VERSION_ID=""
-    # If Linux, try to determine specific distribution
-    if [ "$UNAME" == "linux" ]; then
-        # If available, use LSB to identify distribution
-        if [ -f /etc/lsb-release -o -d /etc/lsb-release.d ]; then
-	    if ( command -v type lsb_release >/dev/null 2>&1; ); then
-            {
-              DISTRO=$(lsb_release -i | cut -d: -f2 | sed s/'^\t'//)
-            }
-            else
-            {
-              DISTRO=$(ls -d /etc/[A-Za-z]*[_-][rv]e[lr]* | grep -v "lsb" | cut -d'/' -f3 | cut -d'-' -f1 | cut -d'_' -f1)
-	    }
-            fi
-        # Otherwise, use release info file
-        else
-            DISTRO=$(ls -d /etc/[A-Za-z]*[_-][rv]e[lr]* | grep -v "lsb" | cut -d'/' -f3 | cut -d'-' -f1 | cut -d'_' -f1)
-        fi
-    fi
-    if [[ -z "$DISTRO" ]]; then  # if empty
-    {
-      # If available, use /etc/os-release to identify distribution
-        if [ -f /etc/os-release ]; then
-        {
-		source /etc/os-release
-                # file_exists "/etc/os-release"
-                _assure_success
-                # source /etc/os-release
-                # $ echo $ID
-                # fedora
-                # $ echo $VERSION_ID
-                # 17
-                # $ echo $VERSION
-                # 17 (Beefy Miracle)
-                DISTRO=$ID
-	}
-        fi
-    }
-    fi
-    if [[ -z "$DISTRO" ]]; then  # if empty
-    {
-        failed to determine DISTRO for this linux. uname -a, cat /etc/os-release, lsb_release -i
-    }
-    fi
-
-    if [[ "$DISTRO" == *"edora"* ]]; then
-    {
-        if [[ "$(uname -i)" == "x86_64" ]] ; then
-        {
-	  FUNCTION_TO_CALL='_fedora__64'
-	  PARAMETERS="$@"
-        }
-        elif [[ "$(uname -i)" == "i686"   ]] ; then
-	{
-	  FUNCTION_TO_CALL='_fedora__32'
-          PARAMETERS="$@"
-        }
-	fi
-    }
-    elif [[ "$DISTRO" == *"untu"* ]]; then
-    {
-        # ubuntu lsb_release -i | sed 's/Distributor\ ID://g' = \tUbuntu\n
-        if [[ "$(uname -i)" == "x86_64" ]] ; then 
-	{ 
-	  FUNCTION_TO_CALL='_ubuntu__64'
-	  PARAMETERS="$@"
-	}
-        elif [[ "$(uname -i)" == "i686"   ]] ; then 
-	{ 
-	  FUNCTION_TO_CALL='_ubuntu__32'
-	  PARAMETERS="$@"
-	}
-	fi
-    }
-    fi
-    # For everything else (or if above failed), just use generic identifier
-    unset UNAME
-    unset DISTRO
-    unset ID
-
-  elif [[ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]] ; then
-    # Do something under Windows NT platform
-    if [[ "$(uname -i)" == "x86_64" ]] ; then
-    { 
-      FUNCTION_TO_CALL='_mingw__64'
-      PARAMETERS="$*"
-    }
-    elif [[ "$(uname -i)" == "i686"   ]] ; then
-    { 
-      FUNCTION_TO_CALL='_mingw__32'
-      PARAMETERS="$*"
-    }
-    fi
-    # nothing here
-  else 
-    failed system not recognized
-  fi
-  if [[ -z "$FUNCTION_TO_CALL" ]]; then  # if empty
-  {
-     failed to determine FUNCTION_TO_CALL for this OS. uname -a, cat /etc/os-release, lsb_release -i
-  }
-  else
-  {
-        if function_is_defined "${FUNCTION_TO_CALL}" ; then
-        {
-           "${FUNCTION_TO_CALL}"
-	   _assure_success
-        }
-        else
-        {
-	   failed to find function for this OS or DISTRO:  "${FUNCTION_TO_CALL}"
-	   _assure_success
-        }
-	fi
-
-  }
-  fi
-  _assure_success
-  unset FUNCTION_TO_CALL
-  unset PARAMETERS
-} # end determine_os_and_fire_action
 
 _main() {
-  # const declare -r CODELASTESTBUILD=$(get_lastest_studio_code_version)
-  CODELASTESTBUILD=$(get_lastest_studio_code_version)
-  if [ -z "${CODELASTESTBUILD}" ] ; then  # if empty
-  {
-    failed Could not find Code version
-  }
-  fi
-  check_equality "1=1"
   determine_os_and_fire_action
 } # end _main
 
