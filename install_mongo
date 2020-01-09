@@ -114,6 +114,8 @@ _darwin__64() {
   # ensure mongod or "Failed to install mongo"
 
   local CODENAME=$(_version "mac" "x86_64")
+  local VERSION="3.4"
+
   echo CODENAME: $CODENAME
   # https://fastdl.mongodb.org/osx/mongodb-osx-ssl-x86_64-3.4.23.tgz
   local TARGET_URL="https://fastdl.mongodb.org/osx/${CODENAME}.tgz"
@@ -123,13 +125,22 @@ _darwin__64() {
   wait
   file_exists_with_spaces "${CODENAME}.tgz"
   tar -zxvf "${CODENAME}.tgz"
-  mkdir -p mongodb
-  file_exists_with_spaces mongodb
-  cp -R -n "${CODENAME}/" mongodb
-  cd mongodb
+  local FOLDERNAME=$(echo "${CODENAME}" | cüt '-ssl')
+  file_exists_with_spaces "${FOLDERNAME}"
+  mkdir -p mongodb${VERSION}
+  sudo cp -R "${FOLDERNAME}/" mongodb${VERSION}
+  file_exists_with_spaces "mongodb${VERSION}"
+  file_exists_with_spaces "mongodb${VERSION}/bin"
+  file_exists_with_spaces "mongodb${VERSION}/bin/mongod"
+  rm -rf "${FOLDERNAME}"
+  file_does_not_exist_with_spaces "${FOLDERNAME}"
+  cd "mongodb${VERSION}"
   local INSTALLDIR=$(pwd) 
+  echo "# Mongo ${VERSION}" >> $USER_HOME/.bashrc
+  echo "# Mongo ${VERSION}" >> $USER_HOME/.zshrc
   echo "export PATH=${INSTALLDIR}/bin:\$PATH" >> $USER_HOME/.bashrc
-  
+  echo "export PATH=${INSTALLDIR}/bin:\$PATH" >> $USER_HOME/.zshrc
+
   # NOTE Starting with macOS 10.15 Catalina, Apple restricts 
   # access to the MongoDB default data directory of /data/db. 
   # On macOS 10.15 Catalina, you must use a different data directory,
@@ -142,7 +153,11 @@ _darwin__64() {
   sudo chown $SUDO_USER /usr/local/var/log/mongodb
   echo "alias mongo_run=mongod --dbpath /usr/local/var/mongodb --logpath /usr/local/var/log/mongodb/mongo.log --fork"  >> $USER_HOME/.bashrc
   echo "alias mongo_check=ps aux | grep -v grep | grep mongod" >> $USER_HOME/.bashrc
-
+  echo "alias mongo_run=mongod --dbpath /usr/local/var/mongodb --logpath /usr/local/var/log/mongodb/mongo.log --fork"  >> $USER_HOME/.zshrc
+  echo "alias mongo_check=ps aux | grep -v grep | grep mongod" >> $USER_HOME/.zshrc
+  cd ..
+  rm -f "${CODENAME}.tgz"
+  file_does_not_exist_with_spaces "${CODENAME}.tgz"
 } # end _darwin__64
 
 _ubuntu__64() {
