@@ -47,20 +47,32 @@ execute_as_sudo(){
     echo "Needs to run as sudo ... ${0}"
   fi
 }
-execute_as_sudo
 
-# check operation systems
-if [[ "$(uname)" == "Darwin" ]] ; then
-  # Do something under Mac OS X platform
-  USER_HOME=$(echo "/Users/$SUDO_USER")
-elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]] ; then
-  # Do something under GNU/Linux platform
-  USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
-elif [[ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]] ; then
-  # Do something under Windows NT platform
-  USER_HOME=$(echo "/Users/$SUDO_USER")
-  # nothing here
-fi
+_get_user_home() {
+  # check operation systems
+  if [[ "$(uname)" == "Darwin" ]] ; then
+    # Do something under Mac OS X platform
+    CAN_I_RUN_SUDO=$(sudo -n uptime 2>&1|grep "load"|wc -l)
+    if [ ${CAN_I_RUN_SUDO} -gt 0 ]; then
+      echo -e "\033[01;7m*** Installing as sudo...\033[0m"
+    else
+      echo "Needs to run as sudo ... ${0}"
+      exit 1
+    fi
+    USER_HOME=$(echo "/Users/$SUDO_USER")
+  elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]] ; then
+    # Do something under GNU/Linux platform
+    execute_as_sudo
+    USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
+  elif [[ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]] ; then
+    # Do something under Windows NT platform
+    USER_HOME=$(echo "/Users/$SUDO_USER")
+    # nothing here
+  fi
+
+} # end _get_user_home
+_get_user_home
+
 
 
 load_struct_testing_wget(){
@@ -107,7 +119,7 @@ _darwin__64() {
   local TARGET_URL="https://fastdl.mongodb.org/osx/${CODENAME}.tgz"
   echo TARGET_URL: $TARGET_URL
   cd $USER_HOME/Downloads
-  _download "${TARGET_URL}"
+  _download $TARGET_URL
   wait
   file_exists_with_spaces "${CODENAME}.tgz"
   tar -zxvf "${CODENAME}.tgz"
