@@ -244,24 +244,57 @@ _fedora__64() {
   ensure cat or "Failed to use cat command does not exists"
   ensure xdg-mime or "Failed to install run xdg-mime"
 
-
-    cat << EOF > $USER_HOME/_/software/rubymine/bin/mine-open.rb 
+   cat << EOF > $USER_HOME/_/software/rubymine/bin/mine-open.rb 
 #!/usr/bin/env ruby
-#encoding: UTF-8
+
 # $USER_HOME/_/software/rubymine/bin/mine-open.rb
-# script opens URL in format rubymine://open?file=%{file}&line=%{line} in RubyMine
+# script opens URL in format rubymine://open?file=%{file}:%{line} in RubyMine
 
 require 'uri'
 
-url = ARGV.first
-/file=(?<file>.+)&line=(?<line>\d+)/ =~ url # same same as into initializers/better_errors.rb
-file_arg = URI.unescape(file)
-line_arg = line ? ":#{line}" : ""
-cmd = "mine #{file_arg}#{line_arg}"
-\`#{cmd})\`
+begin 
+    url = ARGV.first
+    u = URI.parse(url)
+    # puts u
+    q = URI.decode_www_form(u.query)
+    # puts q
+    h = q.to_h
+    # puts h
+    file = h['file']
+    line = h['line']
+    # puts file
+    # puts line
+    if line 
+        arg = "#{file}:#{line}"
+    else
+        arg = "#{file}"
+    end
+rescue 
+    arg = ""
+end
+puts arg
 EOF
   file_exists_with_spaces "$USER_HOME/_/software/rubymine/bin/mine-open.rb"
   chmod +x $USER_HOME/_/software/rubymine/bin/mine-open.rb 
+
+
+    cat << EOF > $USER_HOME/_/software/rubymine/bin/mine-open.sh 
+#!/usr/bin/env bash
+#encoding: UTF-8
+# $USER_HOME/_/software/rubymine/bin/mine-open.sh
+# script opens URL in format rubymine://open?file=%{file}:%{line} in RubyMine
+
+echo "\${@}"
+echo "\${@}" >>  $USER_HOME/_/work/velophil/projects/velotermin/requested.log
+$USER_HOME/_/software/rubymine/bin/mine-open.rb \${@}
+filetoopen=\$($USER_HOME/_/software/rubymine/bin/mine-open.rb "\${@}")
+echo filetoopen "\${filetoopen}"
+echo "\${filetoopen}" >>  $USER_HOME/_/work/velophil/projects/velotermin/requestedfiletoopen.log
+mine "\${filetoopen}"
+
+EOF
+  file_exists_with_spaces "$USER_HOME/_/software/rubymine/bin/mine-open.sh"
+  chmod +x $USER_HOME/_/software/rubymine/bin/mine-open.sh 
 
 
   cat << EOF > $USER_HOME/.local/share/applications/jetbrains-rubymine.desktop
@@ -286,7 +319,7 @@ EOF
 # $USER_HOME/.local/share/applications/mimeinfo.cache 
 
 [MIME Cache]
-x-scheme-handler/rubymine=jetbrains-rubymine.desktop;
+x-scheme-handler/rubymine=mine-open.desktop;
 EOF
   file_exists_with_spaces "$USER_HOME/.local/share/applications/mimeinfo.cache"
 
@@ -296,7 +329,7 @@ EOF
 Encoding=UTF-8
 Version=1.0
 Type=Application
-Exec="$USER_HOME/_/software/rubymine/bin/mine-open.rb" %u
+Exec="$USER_HOME/_/software/rubymine/bin/mine-open.sh" %f
 MimeType=x-scheme-handler/rubymine;
 Name=MineOpen
 Comment=BetterErrors
@@ -312,7 +345,7 @@ EOF
   # ... path to ruby project .../config/initializers/better_errors.rb
 
   if defined?(BetterErrors)
-    BetterErrors.editor = \"rubymine://open?file=%{file}&line=%{line}\" 
+    BetterErrors.editor = \"rubymine://open?file=%{file}:%{line}\" 
   end
   "
   msg=$(_try "xdg-mime query default x-scheme-handler/rubymine")
