@@ -61,9 +61,7 @@ passed Caller user identified:$USER_HOME
 
 
 _version() {
-  # fedora_32 https://download-cf.jetbrains.com/ruby/bcompare-4.3.3.24545.i386.rpm
-  # https://download-cf.jetbrains.com/ruby/bcompare-4.3.3.24545.x86_64.rpm
-  # zz=dl4&platform=mac, zz=dl4&platform=linux, zz=dl4&platform=win
+
    
   local PLATFORM="${1}"
   local PATTERN="${2}"
@@ -151,7 +149,7 @@ _fedora__32() {
 _fedora__64() {
   # THOUGHT  https://download-cf.jetbrains.com/ruby/RubyMine-2019.3.1.tar.gz
   local CODENAME=$(_version "linux" "RubyMine*.*.*.tar.gz")
-  CODENAME=$(echo "RubyMine-2019.3.1")
+  CODENAME=$(echo "RubyMine-2019.3.2")
   local TARGET_URL="https://download-cf.jetbrains.com/ruby/${CODENAME}.tar.gz"
   if  it_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}.tar.gz" ; then  
   {
@@ -177,7 +175,11 @@ _fedora__64() {
   ensure pv or "Canceling Install. Could not find pv command to execute unzip"
   ensure du or "Canceling Install. Could not find du command to execute unzip"
   ensure gzip or "Canceling Install. Could not find gzip command to execute unzip"
-  
+  ensure gio or "Canceling Install. Could not find gio command to execute unzip"
+  ensure update-mime-database or "Canceling Install. Could not find update-mime-database command to execute unzip"
+  ensure update-desktop-database or "Canceling Install. Could not find update-desktop-database command to execute unzip"
+  ensure touch or "Canceling Install. Could not find touch command to execute unzip"
+        
   # provide error handling , once learned goes here. LEarn under if, once learned here.
   # Start loop while ERROR flag in case needs to try again, based on error 
   cd $USER_HOME/Downloads
@@ -238,6 +240,10 @@ _fedora__64() {
   directory_does_not_exist_with_spaces "$USER_HOME/Downloads/${CODENAME}" 
   directory_exists_with_spaces "$USER_HOME/_/software/rubymine"
   directory_exists_with_spaces "$USER_HOME/_/software/rubymine/bin"
+  mkdir -p "$USER_HOME/.local/share/applications"
+  directory_exists_with_spaces "$USER_HOME/.local/share/applications"
+  mkdir -p "$USER_HOME/.local/share/mime/packages"
+  directory_exists_with_spaces "$USER_HOME/.local/share/mime/packages"
   file_exists_with_spaces "$USER_HOME/_/software/rubymine/bin/rubymine.sh"
 
   # Now Proceed to register REF:  https://gist.github.com/c80609a/752e566093b1489bd3aef0e56ee0426c
@@ -296,20 +302,33 @@ EOF
   file_exists_with_spaces "$USER_HOME/_/software/rubymine/bin/mine-open.sh"
   chmod +x $USER_HOME/_/software/rubymine/bin/mine-open.sh 
 
+ cat << EOF > $USER_HOME/.local/share/mime/packages/application-x-mine.xml
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="application/x-mine">
+    <comment>new mime type</comment>
+    <glob pattern="*.x-mine;*.rb;*.html;*.html.erb;*.js.erb;*.html.haml;*.js.haml;*.erb;*.haml;*.js"/>
+  </mime-type>
+</mime-info>
+EOF
+  file_exists_with_spaces "$USER_HOME/.local/share/mime/packages/application-x-mine.xml"
+  
+
+
 
   cat << EOF > $USER_HOME/.local/share/applications/jetbrains-rubymine.desktop
 # $USER_HOME/.local/share/applications/jetbrains-rubymine.desktop
 [Desktop Entry]
 Encoding=UTF-8
-Version=1.0
+Version=2019.3.2
 Type=Application
 Name=RubyMine
 Icon=$USER_HOME/_/software/rubymine/bin/rubymine.svg
 Exec="$USER_HOME/_/software/rubymine/bin/rubymine.sh" %f
-MimeType=text/plain;text/x-chdr;text/x-csrc;text/x-c++hdr;text/x-c++src;text/x-java;text/x-dsrc;text/x-pascal;text/x-perl;text/x-python;application/x-php;application/x-httpd-php3;application/x-httpd-php4;application/x-httpd-php5;application/xml;text/html;text/css;text/x-sql;text/x-diff;x-directory/normal;inode/directory;
+MimeType=application/x-mine;text/x-mine;text/plain;text/x-chdr;text/x-csrc;text/x-c++hdr;text/x-c++src;text/x-java;text/x-dsrc;text/x-pascal;text/x-perl;text/x-python;application/x-php;application/x-httpd-php3;application/x-httpd-php4;application/x-httpd-php5;application/xml;text/html;text/css;text/x-sql;text/x-diff;x-directory/normal;inode/directory;
 Comment=The Most Intelligent Ruby and Rails IDE
 Categories=Development;IDE;
-Terminal=false
+Terminal=true
 StartupWMClass=jetbrains-rubymine
 EOF
   file_exists_with_spaces "$USER_HOME/.local/share/applications/jetbrains-rubymine.desktop"
@@ -329,8 +348,9 @@ EOF
 Encoding=UTF-8
 Version=1.0
 Type=Application
+Terminal=true
 Exec="$USER_HOME/_/software/rubymine/bin/mine-open.sh" %f
-MimeType=x-scheme-handler/rubymine;
+MimeType=application/rubymine;x-scheme-handler/rubymine;
 Name=MineOpen
 Comment=BetterErrors
 EOF
@@ -338,17 +358,45 @@ EOF
 
   # xdg-mime default jetbrains-rubymine.desktop text/plain;text/x-chdr;text/x-csrc;text/x-c++hdr;text/x-c++src;text/x-java;text/x-dsrc;text/x-pascal;text/x-perl;text/x-python;application/x-php;application/x-httpd-php3;application/x-httpd-php4;application/x-httpd-php5;application/xml;text/html;text/css;text/x-sql;text/x-diff;x-directory/normal;inode/directory;
   # xdg-mime default mine-open.desktop x-scheme-handler/rubymine
-  msg=$(_try "xdg-mime default mine-open.desktop x-scheme-handler/rubymine" )
+  # msg=$(_try "xdg-mime default mine-open.desktop x-scheme-handler/rubymine" )
+  su - "${SUDO_USER}" -c "xdg-mime default mine-open.desktop x-scheme-handler/rubymine"
+  su - "${SUDO_USER}" -c "xdg-mime default mine-open.desktop text/rubymine"
+  su - "${SUDO_USER}" -c "xdg-mime default mine-open.desktop application/rubymine"
+  su - "${SUDO_USER}" -c "xdg-mime default jetbrains-rubymine.desktop x-scheme-handler/x-mine"
+  su - "${SUDO_USER}" -c "xdg-mime default jetbrains-rubymine.desktop text/x-mine"
+  su - "${SUDO_USER}" -c "xdg-mime default jetbrains-rubymine.desktop application/x-mine"
 
-  echo "HINT: Add this to your config/initializers/better_errors.rb file "
-  echo "better_errors.rb
-  # ... path to ruby project .../config/initializers/better_errors.rb
+#   cat << EOF > $USER_HOME/.config/mimeapps.list 
+#   cat << EOF > $USER_HOME/.local/share/applications/mimeapps.list 
+# [Default Applications]
+# x-scheme-handler/rubymine=mine-open.desktop
+# text/rubymine=mine-open.desktop
+# application/rubymine=mine-open.desktop
+# x-scheme-handler/x-mine=jetbrains-rubymine.desktop
+# text/x-mine=jetbrains-rubymine.desktop
+# application/x-mine=jetbrains-rubymine.desktop
 
-  if defined?(BetterErrors)
-    BetterErrors.editor = \"rubymine://open?file=%{file}:%{line}\" 
-  end
-  "
-  msg=$(_try "xdg-mime query default x-scheme-handler/rubymine")
+# [Added Associations]
+# x-scheme-handler/rubymine=mine-open.desktop;
+# text/rubymine=mine-open.desktop;
+# application/rubymine=mine-open.desktop;
+# x-scheme-handler/x-mine=jetbrains-rubymine.desktop;
+# text/x-mine=jetbrains-rubymine.desktop;
+# application/x-mine=jetbrains-rubymine.desktop;
+# EOF
+#   file_exists_with_spaces "$USER_HOME/.local/share/applications/mimeapps.list"
+#   file_exists_with_spaces "$USER_HOME/.config/mimeapps.list"
+ln -fs "$USER_HOME/.config/mimeapps.list" "$USER_HOME/.local/share/applications/mimeapps.list"
+softlink_exists_with_spaces "$USER_HOME/.local/share/applications/mimeapps.list>$USER_HOME/.config/mimeapps.list"
+
+
+  su - "${SUDO_USER}" -c "xdg-mime query default x-scheme-handler/rubymine"
+  su - "${SUDO_USER}" -c "xdg-mime query default x-scheme-handler/x-mine"
+  su - "${SUDO_USER}" -c "xdg-mime query default text/x-mine"
+  su - "${SUDO_USER}" -c "xdg-mime query default application/x-mine"
+  su - "${SUDO_USER}" -c "xdg-mime query default text/rubymine"
+  su - "${SUDO_USER}" -c "xdg-mime query default application/rubymine"
+  msg=$(_try "su - \"${SUDO_USER}\" -c \"xdg-mime query default x-scheme-handler/rubymine\"")
   ret=$?
   if [ $ret -gt 0 ] ; then 
   {
@@ -360,7 +408,46 @@ EOF
     passed Install with xdg-mime scheme success!
   }
   fi
+  su - "${SUDO_USER}" -c "update-mime-database \"$USER_HOME/.local/share/mime\""
+  su - "${SUDO_USER}" -c "update-desktop-database \"$USER_HOME/.local/share/applications\""
+  su - "${SUDO_USER}" -c "touch test12345.rb "
+  su - "${SUDO_USER}" -c "gio info test12345.rb  | grep \"standard::content-type\""
+  su - "${SUDO_USER}" -c "touch test12345.erb "
+  su - "${SUDO_USER}" -c "gio info test12345.erb  | grep \"standard::content-type\""
+  su - "${SUDO_USER}" -c "touch test12345.js.erb "
+  su - "${SUDO_USER}" -c "gio info test12345.js.erb  | grep \"standard::content-type\""
+  su - "${SUDO_USER}" -c "touch test12345.html.erb "
+  su - "${SUDO_USER}" -c "gio info test12345.html.erb  | grep \"standard::content-type\""
+  su - "${SUDO_USER}" -c "touch test12345.haml "
+  su - "${SUDO_USER}" -c "gio info test12345.haml  | grep \"standard::content-type\""
+  su - "${SUDO_USER}" -c "touch test12345.html.haml "
+  su - "${SUDO_USER}" -c "gio info test12345.html.haml  | grep \"standard::content-type\""
+  su - "${SUDO_USER}" -c "touch test12345.js.haml "
+  su - "${SUDO_USER}" -c "gio info test12345.js.haml  | grep \"standard::content-type\""
 
+  su - "${SUDO_USER}" -c "gio mime x-scheme-handler/rubymine"
+  su - "${SUDO_USER}" -c "gio mime x-scheme-handler/x-mine"
+  su - "${SUDO_USER}" -c "gio mime text/x-mine"
+  su - "${SUDO_USER}" -c "gio mime application/x-mine"
+  su - "${SUDO_USER}" -c "gio mime text/rubymine"
+  su - "${SUDO_USER}" -c "gio mime application/rubymine"
+  su - "${SUDO_USER}" -c "rm test12345.rb"
+  su - "${SUDO_USER}" -c "rm test12345.erb"
+  su - "${SUDO_USER}" -c "rm test12345.js.erb"
+  su - "${SUDO_USER}" -c "rm test12345.html.erb"
+  su - "${SUDO_USER}" -c "rm test12345.haml"
+  su - "${SUDO_USER}" -c "rm test12345.js.haml"
+  su - "${SUDO_USER}" -c "rm test12345.html.haml"
+  echo " "
+  echo "HINT: Add this to your config/initializers/better_errors.rb file "
+  echo "better_errors.rb
+  # ... /path_to_ruby_project/ ... /config/initializers/better_errors.rb
+
+  if defined?(BetterErrors)
+    BetterErrors.editor = \"rubymine://open?file=%{file}:%{line}\" 
+    BetterErrors.editor = \"x-mine://open?file=%{file}:%{line}\" 
+  end
+  "
 } # end _fedora__64
 
 _mingw__64() {
