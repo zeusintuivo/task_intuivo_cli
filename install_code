@@ -10,7 +10,30 @@ THISSCRIPTNAME=`basename "$0"`
 
 execute_as_sudo(){
   if [ -z $SUDO_USER ] ; then
-    sudo $THISSCRIPTNAME
+    if [[ -z "$THISSCRIPTNAME" ]] ; then
+    {
+        echo "error You need to add THISSCRIPTNAME vairable like this:"
+        echo "     THISSCRIPTNAME=\`basename \"\$0\"\`"
+    }
+    else
+    {
+        if [ -e "./$THISSCRIPTNAME" ] ; then
+        {
+          sudo "./$THISSCRIPTNAME"
+        }
+        elif ( command -v type "$THISSCRIPTNAME" >/dev/null 2>&1 );  then
+        {
+          echo "sudo sudo sudo "
+          sudo "$THISSCRIPTNAME"
+        }
+        else
+        {
+          echo -e "\033[05;7m*** Failed to find script to recall it as sudo ...\033[0m"
+          exit 1
+        }
+        fi
+    }
+    fi
     wait
     exit 0
   fi
@@ -23,9 +46,34 @@ execute_as_sudo(){
     echo "Needs to run as sudo ... ${0}"
   fi
 }
-execute_as_sudo
 
-USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
+_get_user_home() {
+  # check operation systems
+  if [[ "$(uname)" == "Darwin" ]] ; then
+    # Do something under Mac OS X platform
+    CAN_I_RUN_SUDO=$(sudo -n uptime 2>&1|grep "load"|wc -l)
+    if [ ${CAN_I_RUN_SUDO} -gt 0 ]; then
+      echo -e "\033[01;7m*** Installing as sudo...\033[0m"
+    else
+      echo "Needs to run as sudo ... ${0}"
+      exit 1
+    fi
+    USER_HOME=$(echo "/Users/$SUDO_USER")
+  elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]] ; then
+    # Do something under GNU/Linux platform
+    execute_as_sudo
+    USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
+  elif [[ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]] ; then
+    # Do something under Windows NT platform
+    USER_HOME=$(echo "/Users/$SUDO_USER")
+    # nothing here
+  fi
+
+} # end _get_user_home
+
+_get_user_home
+
+
 
 load_struct_testing_wget(){
     local provider="$USER_HOME/_/clis/execute_command_intuivo_cli/struct_testing"
@@ -34,161 +82,108 @@ load_struct_testing_wget(){
     ( ( ! command -v type passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
 } # end load_struct_testing_wget
 load_struct_testing_wget
-passed Caller user identified:$USER_HOME
 
-function _assure_success() {
-  if [ $? != 0 ] ; then
-    echo -e "\033[38;5;1m Something went wrong \033[0m"
-    exit 1
-  fi
-  wait
-}
-
-function _trap_try_start() {
-  trap _term SIGTERM
-}
-
-function _trap_catch_check() {
-  declare -i ret=$?
-  local child
-  if [ $ret -gt 0 ] ; then
-  {
-    child=$!
-    wait $child
-    warning "${YELLOW}Error SIGNAL_RETURN(${RED}${ret}${YELLOW}) executing: \n${action}"
-    return 1 # non zero is error
-  }
-  fi
-  return 0
-}
-
-function _action_runner() {
-  local action	
-  while read -r action ; do
-  {
-    if [[ ! -z "${action}" ]] ; then # if not empty
-    {
-      _trap_try_start
-      echo "${action}"
-      "${action}"
-      _trap_catch_check
-    }
-    fi
-  }
-  done <<< "${@}"
-} # end _action_runner
-
-function _try_runner() {
-  local body=$(_function_body "#{1}")
-  function_exists "${1}"
-  while read -r action ; do
-  {
-    if [[ ! -z "${action}" ]] ; then # if not empty
-    {
-      _trap_try_start
-      echo "${action}"
-      "${action}"
-      _trap_catch_check
-    }
-    fi
-  }
-  done <<< "${body}"
-} # end _try_runner
-
-function _function_body() {
-  local functionname="${1}"
-  # function_exists "${functionname}"
-  # ensure head or Cancel. Missing head command
-  # ensure tail or Cancel. Missing tail command
-  # ensure declare or Cancel. Missing declare command
-  # ensure wc or Cancel. Missing declare command
-  local functioncomplete=$(declare -f "${functionname}")
-  # echo complete:"${functioncomplete}"
-  lcoal functionbody=$(echo "${functioncomplete}" | cuet "${functionname} ()")
-  # echo body:"${functionbody}"
-  local functionlength=$(echo "${functionbody}" | wc -l)
-  # echo length:${functionlength}
-  # echo less:${functionlengthless}
-  (( functionlength-- ))
-  # echo lenght:${functionlength}
-  functionbody=$(echo "${functionbody}" | head -${functionlength} )
-  # echo body:"${functionbody}"
-  (( functionlength-- ))
-  # echo length:${functionlength}
-  functionbody=$(echo "${functionbody}" | tail -${functionlength} )
-  # echo body:"${functionbody}"
-  echo "${functionbody}"
-}
-
-function _try() {
-  local body=$(_function_body "#{1}")
-  _trap_try_start
-  "${body}"
-  _trap_catch_check
-}
+passed Caller user identified:$SUDO_USER
+passed Home identified:$USER_HOME
+file_exists_with_spaces "$USER_HOME"
 
 
-# https://code.visualstudio.com/docs/?dv=linux64_rpm
-get_lastest_studio_code_version() {
-    local CODEFILE=$(curl -sSLo -  https://code.visualstudio.com/docs/?dv=linux32_deb&build=insiders  2>&1;) # suppress only wget download messages, but keep wget output for variable
-    echo "${CODEFILE}" | grep 'facebook'  | head -3
-    local CODELASTESTBUILD=$(echo "${CODELASTESTBUILD}" | grep 'direct download link ....' )
-    wait
-    [[ -z "${CODELASTESTBUILD}" ]] && failed "Visual Studio Code Version not found! :${CODELASTESTBUILD}:"
-    echo "${CODELASTESTBUILD}"
-    if [ -z "${CODELASTESTBUILD}" ] ; then  # if empty
-    {
-      failed Could not find Code version
-    }
-    fi
+# function _assure_success() {
+#   if [ $? != 0 ] ; then
+#     echo -e "\033[38;5;1m Something went wrong \033[0m"
+#     exit 1
+#   fi
+#   wait
+# }
 
-} # end get_lastest_studio_code_version
+# function _trap_try_start() {
+#   trap _term SIGTERM
+# }
 
-_download() {
-  #  url  https://download.studio_codetext.com/studio_code-text_build-3133_amd64.deb
-  _trap_try_start
-  local target_url="${1}"
-  if [ -z "${target_url}" ] ; then  # if empty
-  {
-    failed Could not load target_url string or it was empty
-  }
-  fi
-  _trap_catch_check
-  # wget --directory-prefix="${USER_HOME}/Downloads/" --quiet --no-check-certificate "${target_url}" 2>/dev/null
-  echo -e "\033[01;7m*** Downloading file to temp location...\033[0m"
-  if ( command -v type wget >/dev/null 2>&1; ) ; then
-    # # REF: about :> http://unix.stackexchange.com/questions/37507/what-does-do-here
-    _trap_try_start
-    :> wgetrc   # here :> equals to Equivalent to the following: cat /dev/null > wgetrc which Nulls out the file called "wgetrc" in the current directory. As in creates an empty file "wgetrc" if one doesn't exist or overwrites one with nothing if it does.
-    _trap_catch_check
-    file_exists_with_spaces wgetrc
-    _trap_try_start
-    echo "noclobber=off" >> wgetrc
-    _trap_catch_check
-    echo "dir_prefix=." >> wgetrc
-    echo "dirstruct=off" >> wgetrc
-    echo "verbose=on" >> wgetrc
-    echo "progress=bar:default" >> wgetrc
-    echo "tries=3" >> wgetrc
-    # _trap_try_start # _trap_catch_check
-    WGETRC=wgetrc wget --directory-prefix="${USER_HOME}/Downloads/" --quiet --no-check-certificate "${target_url}" 2>/dev/null
-    # _trap_catch_check
-    # WGETRC=wgetrc wget --quiet --no-check-certificate "${target_url}" 2>/dev/null   # suppress only wget download messages, but keep wget output for variable
-    # echo -e "\e[7m*** Download completed.\e[0m"
-    rm -f wgetrc
-    file_does_not_exist_with_spaces wgetrc
-  elif ( command -v type curl >/dev/null 2>&1; ); then
-    curl -O "${target_url}" 2>/dev/null   # suppress only wget download messages, but keep wget output for variable
-    _assure_success
-  else
-    failed "I cannot find wget or curl programs to perform a download action! ${target_url}"
-  fi
-}
+# function _trap_catch_check() {
+#   declare -i ret=$?
+#   local child
+#   if [ $ret -gt 0 ] ; then
+#   {
+#     child=$!
+#     wait $child
+#     warning "${YELLOW}Error SIGNAL_RETURN(${RED}${ret}${YELLOW}) executing: \n${action}"
+#     return 1 # non zero is error
+#   }
+#   fi
+#   return 0
+# }
+
+# function _action_runner() {
+#   local action
+#   while read -r action ; do
+#   {
+#     if [[ ! -z "${action}" ]] ; then # if not empty
+#     {
+#       _trap_try_start
+#       echo "${action}"
+#       "${action}"
+#       _trap_catch_check
+#     }
+#     fi
+#   }
+#   done <<< "${@}"
+# } # end _action_runner
+
+# function _try_runner() {
+#   local body=$(_function_body "#{1}")
+#   function_exists "${1}"
+#   while read -r action ; do
+#   {
+#     if [[ ! -z "${action}" ]] ; then # if not empty
+#     {
+#       _trap_try_start
+#       echo "${action}"
+#       "${action}"
+#       _trap_catch_check
+#     }
+#     fi
+#   }
+#   done <<< "${body}"
+# } # end _try_runner
+
+# function _function_body() {
+#   local functionname="${1}"
+#   # function_exists "${functionname}"
+#   # ensure head or Cancel. Missing head command
+#   # ensure tail or Cancel. Missing tail command
+#   # ensure declare or Cancel. Missing declare command
+#   # ensure wc or Cancel. Missing declare command
+#   local functioncomplete=$(declare -f "${functionname}")
+#   # echo complete:"${functioncomplete}"
+#   local functionbody=$(echo "${functioncomplete}" | cuet "${functionname} ()")
+#   # echo body:"${functionbody}"
+#   local functionlength=$(echo "${functionbody}" | wc -l)
+#   # echo length:${functionlength}
+#   # echo less:${functionlengthless}
+#   (( functionlength-- ))
+#   # echo lenght:${functionlength}
+#   functionbody=$(echo "${functionbody}" | head -${functionlength} )
+#   # echo body:"${functionbody}"
+#   (( functionlength-- ))
+#   # echo length:${functionlength}
+#   functionbody=$(echo "${functionbody}" | tail -${functionlength} )
+#   # echo body:"${functionbody}"
+#   echo "${functionbody}"
+# }
+
+# function _try() {
+#   local body=$(_function_body "#{1}")
+#   _trap_try_start
+#   "${body}"
+#   _trap_catch_check
+# }
 
 _darwin__64() {
     local CODENAME="Visual Studio Code%20Text%20Build%20${CODELASTESTBUILD}.dmg"
     cd $USER_HOME/Downloads/
-    download_studio_code "${CODENAME}"
+    local URL=""
+    _download "${URL}"
     sudo hdiutil attach ${CODENAME}
     sudo cp -R /Volumes/Visual Studio Code\ Text/Visual Studio Code\ Text.app /Applications/
     sudo hdiutil detach /Volumes/Visual Studio Code\ Text
@@ -197,46 +192,58 @@ _darwin__64() {
 _ubuntu__64() {
     local CODENAME="studio_code-text_build-${CODELASTESTBUILD}_amd64.deb"
     cd $USER_HOME/Downloads/
-    download_studio_code "${CODENAME}"
+    local URL=""
+    _download "${URL}"
     sudo dpkg -i ${CODENAME}
 } # end _ubuntu__64
 
 _ubuntu__32() {
     local CODENAME="studio_code-text_build-${CODELASTESTBUILD}_i386.deb"
     cd $USER_HOME/Downloads/
-    download_studio_code "${CODENAME}"
+    local URL=""
+    _download "${URL}"
     sudo dpkg -i ${CODENAME}
-} # end _ubuntu__32 
+} # end _ubuntu__32
 
 _fedora__64() {
-sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
-sudo sh -c 'echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" > /etc/yum.repos.d/vscode.repo'
-sudo dnf -y check-update
-sudo dnf -y install code
+  # sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
+  # sudo sh -c 'echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" > /etc/yum.repos.d/vscode.repo'
+  # sudo dnf -y check-update
+  # sudo dnf -y install code
 
-# rpm: https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-31.noarch.rpm
-  # get download link 
+  # rpm: https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-31.noarch.rpm
+  # get download link
   # https://code.visualstudio.com/docs/?dv=linux64_rpm
-    local CODEFILE=$(curl -sSLo -  https://code.visualstudio.com/docs/?dv=linux64_rpm  2>&1;) # suppress only wget download messages, but keep wget output for variable
-    local CODELASTESTBUILD=$(echo $CODEFILE | sed s/\</\\n\</g | grep softwareVersion | sed s/\>/\>\\n/g | tail -1)
-    local ARCHITECTURE=$(uname -m)
-    wait
-    [[ -z "${CODELASTESTBUILD}" ]] && failed "Visual Studio Code Version not found! :${CODELASTESTBUILD}:"
-    echo "${CODELASTESTBUILD}"
-    if [ -z "${CODELASTESTBUILD}" ] ; then  # if empty
-    {
-      failed Could not find Code version
-    }
-    fi
+  # local DOWNLOAD_DISPLAY_PAGE=$(curl -sSLo -  https://code.visualstudio.com/docs/?dv=linux64_rpm&build=insiders  2>&1;) # suppress only wget download messages, but keep wget output for variable
+  # https://vscode-update.azurewebsites.net/latest/linux-rpm-x64/insider
+  # https://vscode-update.azurewebsites.net/latest/linux-rpm-x64/stable
+  # local DOWNLOAD_DISPLAY_PAGE=$(curl -sSLo -  https://vscode-update.azurewebsites.net/latest/linux-rpm-x64/insider  2>&1;) # suppress only wget download messages, but keep wget output for variable
+  local DOWNLOAD_DISPLAY_PAGE=$(curl -sSLo -  https://code.visualstudio.com/updates/  2>&1;) # suppress only wget download messages, but keep wget output for variable
 
 
-  # get download link 
+  local LASTEST_VERSION=$(echo "${DOWNLOAD_DISPLAY_PAGE}" | sed s/\</\\n\</g | grep ".strong.Update." | cuet "<strong>Update " )
+  local TARGET_URL=$(echo  "${DOWNLOAD_DISPLAY_PAGE}" | sed s/\</\\n\</g | grep "${LASTEST_VERSION}" | grep 'rpm' | cut -d'"' -f2 )
+  # local TARGET_URL="https://vscode-update.azurewebsites.net/latest/linux-rpm-x64/insider"
+  local ARCHITECTURE=$(uname -m)
+  wait
+  [[ -z "${LASTEST_VERSION}" ]] && failed "Visual Studio Code Version not found! :${LASTEST_VERSION}:"
+
+  echo "Visual Studio Code Version found:" "${LASTEST_VERSION}"
+
+  if [ -z "${LASTEST_VERSION}" ] ; then  # if empty
+  {
+    failed Could not find Code version
+  }
+  fi
+
+
+  # get download link
   local ID
   local VERSION
   local VERSION_ID
   file_exists_with_spaces "/etc/os-release"
   _assure_success
-  
+
   source /etc/os-release
   # $ echo $ID
   # fedora
@@ -247,22 +254,37 @@ sudo dnf -y install code
   assert not empty "${ID}"
   assert not empty "${VERSION_ID}"
   assert not empty "${USER_HOME}"
-  assert not empty "${CODELASTESTBUILD}"
+  assert not empty "${LASTEST_VERSION}"
   assert not empty "${ARCHITECTURE}"
-  local CODENAME="code-${CODELASTESTBUILD}.1-1576681965.el7.${ARCHITECTURE}.rpm"
-  # local CODENAME="code-1.41.1-1576681965.el7.x86_64.rpm"
-  #  local CODENAME="rpmfusion-free-release-${VERSION_ID}.noarch.rpm"
-  #  local TARGET_URL="https://download1.rpmfusion.org/free/${ID}/${CODENAME}"
-  local TARGET_URL="https://az764295.vo.msecnd.net/stable/26076a4de974ead31f97692a0d32f90d735645c0/${CODENAME}"
-  file_exists_with_spaces $USER_HOME/Downloads
-  cd $USER_HOME/Downloads
-  # https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-31.noarch.rpm
-  # https://az764295.vo.msecnd.net/stable/26076a4de974ead31f97692a0d32f90d735645c0/code-1.41.1-1576681965.el7.x86_64.rpm
-  _download "${TARGET_URL}"
-  file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}"
+
+
+  file_exists_with_spaces "${USER_HOME}/Downloads"
+
+  local folder_date=$(date +"%Y%m%d")
+  _assure_success
+  assert not empty "${folder_date}"
+  local download_folder=$(echo  "${USER_HOME}/Downloads/${folder_date}")
+
+  mkdir -p "${download_folder}"
+  file_exists_with_spaces "${download_folder}"
+  cd "${download_folder}"
+  local NEW_FILENAME="code-${LASTEST_VERSION}-${folder_date}.el7.${ARCHITECTURE}.rpm"
+  rm -rf "${download_folder}/${NEW_FILENAME}"
+  file_does_not_exist_with_spaces "${download_folder}/${NEW_FILENAME}"
+  _download "${TARGET_URL}" "${download_folder}/" "${NEW_FILENAME}"
+
+
+  _trap_try_start
+  local CODENAME=$(ls -1 "${download_folder}" | head -1)
+  _trap_catch_check
+  assert not empty "${CODENAME}"
+  Showing ls -1 "${download_folder}"
+  echo "Downloaded filename:" "${CODENAME}"
+
+  file_exists_with_spaces "${download_folder}/${CODENAME}"
   ensure rpm or "Canceling Install. Could not find rpm command to execute install"
   _trap_try_start # _trap_catch_check
-  local msg=$(rpm -ivh "$USER_HOME/Downloads/${CODENAME}")
+  local msg=$(rpm -ivh "${download_folder}/${CODENAME}")
   _trap_catch_check
   echo "${msg}"
 }
@@ -281,98 +303,8 @@ _mingw__32() {
     cd Downloads
     curl -O https://download.studio_codetext.com/${CODENAME}
     ${CODENAME}
-} # end 
+} # end
 
-function function_is_defined_with_spaces() {
-            # Sample usage
-            #
-            #          if  ! function_is_defined_with_spaces "/home/vagrant/.zshrc" ; then    is like is NOT installed
-            #          if  function_is_defined_with_spaces "/root/.zshrc ; then      it makes more sense to make it this way
-            #
-            local ONE_FUNCTION FUNCTIONS="${@}"
-            if [ ! -z "${FILES-x}" ] ; then # if its set and not empty
-            {
-                while read -r ONE_FUNCTION; do
-                # if not empty
-                if [ ! -z "${ONE_FUNCTION}" ] ; then
-                    if [ -n "$(LC_ALL=C type -t "${ONE_FUNCTION}")" ] && [ "$(LC_ALL=C type -t "${ONE_FUNCTION}")" = function ]; then
-                    {
-                        return 0 # function exists
-                    }
-                    fi
-                fi
-                done <<< "${FUNCTIONS}"
-                return 1 # function does not exists
-            }
-            fi
-            unset ONE_FUNCTION
-            unset FUNCTIONS
-            unset TESTING
-} # end function_is_defined_with_spaces
-
-function function_is_defined() {
-	    # Sample usage
-	    #
-	    #          if  ! function_is_defined determine_os_and_fire_action ; then    is like is NOT installed
-	    #          if  function_is_defined "$FUNCTION_TO_CALL" ; then      it makes more sense to make it this way
-            #
-            local ONE_FUNCTION FUNCTIONS="${@}"
-            if [ ! -z "${FILES-x}" ] ; then # if its set and not empty
-            {
-                FUNCTIONS=$(switch_spaces_to_newlines <<< "${@}")
-                while read -r ONE_FUNCTION; do
-                # if not empty
-                if [ ! -z "${ONE_FUNCTION}" ] ; then
-	            if [ -n "$(LC_ALL=C type -t "${ONE_FUNCTION}")" ] && [ "$(LC_ALL=C type -t "${ONE_FUNCTION}")" = function ]; then 
-                    {
-                        return 0 # function exists
-                    }
-                    fi
-                fi
-                done <<< "${FUNCTIONS}"
-                return 1 # function does not exists
-            }
-            fi
-            unset ONE_FUNCTION 
-            unset FUNCTIONS
-            unset TESTING
-
-} # end function_is_defined
-
-function function_exists() {
-            # Sample usage
-            #
-            #     function_exists determine_os_and_fire_action
-            #     function_exists  "$FUNCTION_TO_CALL"
-            #     function_exists "Function1
-	    #                      Function2
-            #                      Function2"	    
-            #
-            local TESTING ONE_FUNCTION FUNCTIONS="${@}"
-            if [ ! -z "${FUNTIONS-x}" ] ; then # if its set and not empty
-            {
-                FUNCTIONS=$(switch_spaces_to_newlines <<< "${@}")
-                while read -r ONE_FUNCTION; do
-                if [ ! -z "${ONE_FUNCTION}" ] ; then # if not empty
-                    TESTING="that function ${CYAN}${ONE_FUNCTION}${LIGHTYELLOW} exists"
-                    if function_is_defined "${ONE_FUNCTION}" ; then
-                    {
-                        passed "${TESTING}"
-                    }
-                    else
-                    {
-                        failed "${TESTING}"
-                    }
-                    fi
-                fi
-                done <<< "${FUNCTIONS}"
-            }
-            fi
-	    unset ONE_FUNCTION 
-	    unset FUNCTIONS
-	    unset TESTING
-
-} # end function_exists
 
 # function_exists _fedora__64
 
@@ -387,194 +319,8 @@ function function_exists() {
 
 # build_table_from_installed_components $USER
 # build_table_from_installed_components $SUDO_USER
-function function_exists_with_spaces() {
-            # Sample usage
-            #
-            #     function_exists_with_spaces determine_os_and_fire_action
-            #     function_exists_with_spaces  "$FUNCTION_TO_CALL"
-	    #     function_exists_with_spaces "Function1
-            #                      Function2
-            #                      Function2"       
-            #
-            local TESTING ONE_FUNCTION FUNCTIONS="${@}"
-            if [ ! -z "${FUNTIONS-x}" ] ; then # if its set and not empty
-            {
-                while read -r ONE_FUNCTION; do
-                if [ ! -z "${ONE_FUNCTION}" ] ; then # if not empty
-                    TESTING="that function ${CYAN}${ONE_FUNCTION}${LIGHTYELLOW} exists"
-                    if function_is_defined_with_spaces "${ONE_FUNCTION}" ; then
-                    {
-                        passed "${TESTING}"
-                    }
-                    else
-                    {
-                        failed "${TESTING}"
-                    }
-                    fi
-                fi
-			done <<< "${FUNCTIONS}"
-            }
-            fi
-            unset ONE_FUNCTION 
-            unset FUNCTIONS
-            unset TESTING
-} # end function_exists_with_spaces
-
-function determine_os_and_fire_action() {
-  # Interface
-  local FUNCTION_TO_CALL=""
-  local PARAMETERS=""  
-  # Check operating systems
-  if [[ "$(uname)" == "Darwin" ]] ; then
-      # Do something under Mac OS X platform
-      if [[ "$(uname -m)" == "x86_64" ]] ; then
-      { 
-	     FUNCTION_TO_CALL='_darwin__64'
-	     PARAMETERS="$@"
-      }
-      elif [[ "$(uname -m)" == "i686"   ]] ; then 
-      {
-	     FUNCTION_TO_CALL='_darwin__32'
-	     PARAMETERS="$@"
-      }
-      fi
-  elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]] ; then
-    # Do something under GNU/Linux platform
-    # Determine OS platform
-    local UNAME=$(uname | tr "[:upper:]" "[:lower:]")
-    local DISTRO=""
-    local ID=""
-    local VERSION_ID=""
-    # If Linux, try to determine specific distribution
-    if [ "$UNAME" == "linux" ]; then
-        # If available, use LSB to identify distribution
-        if [ -f /etc/lsb-release -o -d /etc/lsb-release.d ]; then
-	    if ( command -v type lsb_release >/dev/null 2>&1; ); then
-            {
-              DISTRO=$(lsb_release -i | cut -d: -f2 | sed s/'^\t'//)
-            }
-            else
-            {
-              DISTRO=$(ls -d /etc/[A-Za-z]*[_-][rv]e[lr]* | grep -v "lsb" | cut -d'/' -f3 | cut -d'-' -f1 | cut -d'_' -f1)
-	    }
-            fi
-        # Otherwise, use release info file
-        else
-            DISTRO=$(ls -d /etc/[A-Za-z]*[_-][rv]e[lr]* | grep -v "lsb" | cut -d'/' -f3 | cut -d'-' -f1 | cut -d'_' -f1)
-        fi
-    fi
-    if [[ -z "$DISTRO" ]]; then  # if empty
-    {
-      # If available, use /etc/os-release to identify distribution
-        if [ -f /etc/os-release ]; then
-        {
-		source /etc/os-release
-                # file_exists "/etc/os-release"
-                _assure_success
-                # source /etc/os-release
-                # $ echo $ID
-                # fedora
-                # $ echo $VERSION_ID
-                # 17
-                # $ echo $VERSION
-                # 17 (Beefy Miracle)
-                DISTRO=$ID
-	}
-        fi
-    }
-    fi
-    if [[ -z "$DISTRO" ]]; then  # if empty
-    {
-        failed to determine DISTRO for this linux. uname -a, cat /etc/os-release, lsb_release -i
-    }
-    fi
-
-    if [[ "$DISTRO" == *"edora"* ]]; then
-    {
-        if [[ "$(uname -i)" == "x86_64" ]] ; then
-        {
-	  FUNCTION_TO_CALL='_fedora__64'
-	  PARAMETERS="$@"
-        }
-        elif [[ "$(uname -i)" == "i686"   ]] ; then
-	{
-	  FUNCTION_TO_CALL='_fedora__32'
-          PARAMETERS="$@"
-        }
-	fi
-    }
-    elif [[ "$DISTRO" == *"untu"* ]]; then
-    {
-        # ubuntu lsb_release -i | sed 's/Distributor\ ID://g' = \tUbuntu\n
-        if [[ "$(uname -i)" == "x86_64" ]] ; then 
-	{ 
-	  FUNCTION_TO_CALL='_ubuntu__64'
-	  PARAMETERS="$@"
-	}
-        elif [[ "$(uname -i)" == "i686"   ]] ; then 
-	{ 
-	  FUNCTION_TO_CALL='_ubuntu__32'
-	  PARAMETERS="$@"
-	}
-	fi
-    }
-    fi
-    # For everything else (or if above failed), just use generic identifier
-    unset UNAME
-    unset DISTRO
-    unset ID
-
-  elif [[ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]] ; then
-    # Do something under Windows NT platform
-    if [[ "$(uname -i)" == "x86_64" ]] ; then
-    { 
-      FUNCTION_TO_CALL='_mingw__64'
-      PARAMETERS="$*"
-    }
-    elif [[ "$(uname -i)" == "i686"   ]] ; then
-    { 
-      FUNCTION_TO_CALL='_mingw__32'
-      PARAMETERS="$*"
-    }
-    fi
-    # nothing here
-  else 
-    failed system not recognized
-  fi
-  if [[ -z "$FUNCTION_TO_CALL" ]]; then  # if empty
-  {
-     failed to determine FUNCTION_TO_CALL for this OS. uname -a, cat /etc/os-release, lsb_release -i
-  }
-  else
-  {
-        if function_is_defined "${FUNCTION_TO_CALL}" ; then
-        {
-           "${FUNCTION_TO_CALL}"
-	   _assure_success
-        }
-        else
-        {
-	   failed to find function for this OS or DISTRO:  "${FUNCTION_TO_CALL}"
-	   _assure_success
-        }
-	fi
-
-  }
-  fi
-  _assure_success
-  unset FUNCTION_TO_CALL
-  unset PARAMETERS
-} # end determine_os_and_fire_action
 
 _main() {
-  # const declare -r CODELASTESTBUILD=$(get_lastest_studio_code_version)
-  CODELASTESTBUILD=$(get_lastest_studio_code_version)
-  if [ -z "${CODELASTESTBUILD}" ] ; then  # if empty
-  {
-    failed Could not find Code version
-  }
-  fi
-  check_equality "1=1"
   determine_os_and_fire_action
 } # end _main
 

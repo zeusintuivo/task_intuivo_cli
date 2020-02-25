@@ -12,13 +12,13 @@ execute_as_sudo(){
   if [ -z $SUDO_USER ] ; then
     if [[ -z "$THISSCRIPTNAME" ]] ; then
     {
-        echo "error You need to add THISSCRIPTNAME vairable like this:" 
+        echo "error You need to add THISSCRIPTNAME vairable like this:"
         echo "     THISSCRIPTNAME=\`basename \"\$0\"\`"
     }
-    else 
+    else
     {
         if [ -e "./$THISSCRIPTNAME" ] ; then
-        {       
+        {
         sudo "./$THISSCRIPTNAME"
         }
         elif ( command -v type "$THISSCRIPTNAME" >/dev/null 2>&1 );  then
@@ -64,7 +64,7 @@ _version() {
   # fedora_32 https://www.scootersoftware.com/bcompare-4.3.3.24545.i386.rpm
   # https://www.scootersoftware.com/bcompare-4.3.3.24545.x86_64.rpm
   # zz=dl4&platform=mac, zz=dl4&platform=linux, zz=dl4&platform=win
-   
+
   local PLATFORM="${1}"
   local PATTERN="${2}"
   # THOUGHT: local CODEFILE=$(curl -d "zz=dl4&platform=linux" -H "Content-Type: application/x-www-form-urlencoded" -X POST  -sSLo -  https://www.scootersoftware.com/download.php  2>&1;) # suppress only wget download messages, but keep wget output for variable
@@ -74,8 +74,8 @@ _version() {
   # fedora 32 local CODELASTESTBUILD=$(echo $CODEFILE | sed s/\</\\n\</g | grep "bcompare*.*.*.*.i386.rpm" | sed s/\"/\\n/g | grep "/" | cuet "/")
   wait
   [[ -z "${CODELASTESTBUILD}" ]] && failed "Beyond Compare Version not found! :${CODELASTESTBUILD}:"
-   
-  
+
+
   assert not empty "${USER_HOME}"
   assert not empty "${CODELASTESTBUILD}"
 
@@ -87,7 +87,7 @@ _version() {
   unset CODELASTESTBUILD
 } # end _version
 
-_darwin__64() { 
+_darwin__64() {
     local CODENAME=$(_version "mac" "BCompareOSX*.*.*.*.zip")
     # THOUGHT        local CODENAME="BCompareOSX-4.3.3.24545.zip"
     local URL="https://www.scootersoftware.com/${CODENAME}"
@@ -115,7 +115,7 @@ _ubuntu__32() {
     cd $USER_HOME/Downloads/
     _download "${URL}"
     sudo dpkg -i ${CODENAME}
-} # end _ubuntu__32 
+} # end _ubuntu__32
 
 _fedora__32() {
   local CODENAME=$(_version "linux" "bcompare*.*.*.*.i386.rpm")
@@ -126,17 +126,17 @@ _fedora__32() {
   _download "${TARGET_URL}"
   file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}"
   ensure rpm or "Canceling Install. Could not find rpm command to execute install"
-  
+
   # provide error handling , once learned goes here. LEarn under if, once learned here.
-  # Start loop while ERROR flag in case needs to try again, based on error 
+  # Start loop while ERROR flag in case needs to try again, based on error
   _try "rpm --import https://www.scootersoftware.com/RPM-GPG-KEY-scootersoftware"
   local msg=$(_try "rpm -ivh \"$USER_HOME/Downloads/${CODENAME}\"" )
   local ret=$?
-  if [ $ret -gt 0 ] ; then 
+  if [ $ret -gt 0 ] ; then
   {
     failed "${ret}:${msg}"
     # add error handling knowledge while learning.
-  } 
+  }
   else
   {
     passed Install with RPM success!
@@ -157,17 +157,17 @@ _fedora__64() {
   _download "${TARGET_URL}"
   file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}"
   ensure rpm or "Canceling Install. Could not find rpm command to execute install"
-  
+
   # provide error handling , once learned goes here. LEarn under if, once learned here.
-  # Start loop while ERROR flag in case needs to try again, based on error 
+  # Start loop while ERROR flag in case needs to try again, based on error
   _try "rpm --import https://www.scootersoftware.com/RPM-GPG-KEY-scootersoftware"
   local msg=$(_try "rpm -ivh \"$USER_HOME/Downloads/${CODENAME}\"" )
   local ret=$?
-  if [ $ret -gt 0 ] ; then 
+  if [ $ret -gt 0 ] ; then
   {
     failed "${ret}:${msg}"
     # add error handling knowledge while learning.
-  } 
+  }
   else
   {
     passed Install with RPM success!
@@ -196,7 +196,7 @@ _mingw__32() {
     cd Downloads
 	  curl -O $URL
 	  ${CODENAME}
-} # end 
+} # end
 
 
 _main() {
