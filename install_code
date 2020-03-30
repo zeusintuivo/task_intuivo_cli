@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #!/bin/bash
 #
 # @author Zeus Intuivo <zeus@intuivo.com>
@@ -221,14 +222,15 @@ _fedora__64() {
   local DOWNLOAD_DISPLAY_PAGE=$(curl -sSLo -  https://code.visualstudio.com/updates/  2>&1;) # suppress only wget download messages, but keep wget output for variable
 
 
-  local LASTEST_VERSION=$(echo "${DOWNLOAD_DISPLAY_PAGE}" | sed s/\</\\n\</g | grep ".strong.Update." | cuet "<strong>Update " )
+  local LASTEST_VERSION=$(echo "${DOWNLOAD_DISPLAY_PAGE}" | sed s/\</\\n\</g | grep ".strong.Update." | cuet "<strong>Update " | sort -n | tail -n -1)
   local TARGET_URL=$(echo  "${DOWNLOAD_DISPLAY_PAGE}" | sed s/\</\\n\</g | grep "${LASTEST_VERSION}" | grep 'rpm' | cut -d'"' -f2 )
   # local TARGET_URL="https://vscode-update.azurewebsites.net/latest/linux-rpm-x64/insider"
   local ARCHITECTURE=$(uname -m)
   wait
   [[ -z "${LASTEST_VERSION}" ]] && failed "Visual Studio Code Version not found! :${LASTEST_VERSION}:"
 
-  echo "Visual Studio Code Version found:" "${LASTEST_VERSION}"
+  Message "Visual Studio Code Version found LASTEST_VERSION:" "<${LASTEST_VERSION}>"
+  Message "Visual Studio Code Version found TARGET_URL:" "<${TARGET_URL}>"
 
   if [ -z "${LASTEST_VERSION}" ] ; then  # if empty
   {
@@ -268,25 +270,77 @@ _fedora__64() {
   mkdir -p "${download_folder}"
   file_exists_with_spaces "${download_folder}"
   cd "${download_folder}"
+  # TODO: Fragile providing name manually
   local NEW_FILENAME="code-${LASTEST_VERSION}-${folder_date}.el7.${ARCHITECTURE}.rpm"
-  rm -rf "${download_folder}/${NEW_FILENAME}"
-  file_does_not_exist_with_spaces "${download_folder}/${NEW_FILENAME}"
-  _download "${TARGET_URL}" "${download_folder}/" "${NEW_FILENAME}"
+  Message NEW_FILENAME: "${NEW_FILENAME}"
+
+  # Hash compare
+  # REF: https://askubuntu.com/questions/685775/bash-get-md5-of-online-file
+  ensure curl or "Canceling Install. Could not find curl command to execute install"
+  ensure md5sum or "Canceling Install. Could not find md5sum command to execute install"
+  ensure cut or "Canceling Install. Could not find cut command to execute install"
+
+  # wget -q -O- http://example.com/your_file | md5sum | sed 's:-$:local_file:' | md5sum -c
+  local HASHLOCAL HASHREMOTE="$(curl -sL "${TARGET_URL}" | md5sum | cut -d ' ' -f 1)"
+  if it_exists_with_spaces "${download_folder}/${NEW_FILENAME}" ; then
+  {
+    HASHLOCAL="$(md5sum "${download_folder}/${NEW_FILENAME}" | cut -d ' ' -f 1)"
+    if [ "$HASHREMOTE" == "$HASHLOCAL" ]; then
+        Message "Already" "downloaded using cached file ${download_folder}/${NEW_FILENAME}"
+    fi
+  } else {
+    Message Downloading
+    rm -rf "${download_folder}/${NEW_FILENAME}"
+    file_does_not_exist_with_spaces "${download_folder}/${NEW_FILENAME}"
+    _download "${TARGET_URL}" "${download_folder}/" "${NEW_FILENAME}"
+
+  }
+  fi
+
 
 
   _trap_try_start
-  local CODENAME=$(ls -1 "${download_folder}" | head -1)
+  local CODENAME=$(ls -1 "${download_folder}" | tail -1)
   _trap_catch_check
   assert not empty "${CODENAME}"
-  Showing ls -1 "${download_folder}"
-  echo "Downloaded filename:" "${CODENAME}"
 
+  Message Downloaded filename: "${CODENAME}"
+  Showing ls -1 "${download_folder}"
   file_exists_with_spaces "${download_folder}/${CODENAME}"
-  ensure rpm or "Canceling Install. Could not find rpm command to execute install"
+  local MAJOR MINOR MICRO BUILD ONE_VERSION_BEFORE NEW_FILENAME
+
+  ensure dnf or "Canceling Install. Could not find dnf command to execute install"
+    IFS=. read MAJOR MINOR MICRO <<EOF
+${LASTEST_VERSION##*-}
+EOF
+  if (( MICRO > 0 )) ; then
+  {
+    (( MICRO-- ))
+  }
+  else
+  {
+    MICRO=9
+    (( MINOR-- ))
+  }
+  fi
+  ONE_VERSION_BEFORE=${MAJOR}.${MINOR}.${MICRO}
+  OLD_FILENAME=$(echo "${NEW_FILENAME}" | sed s/$LASTEST_VERSION/$ONE_VERSION_BEFORE/g)
+  Message OLD_FILENAME: "${OLD_FILENAME}"
+  ensure cuet or "Canceling Install. Could not find cuet command to execute install"
+  local OLD_PACKAGE=$(echo $OLD_FILENAME | cuet '.rpm')
+  Message dnf -y remove "${OLD_PACKAGE}"
   _trap_try_start # _trap_catch_check
-  local msg=$(rpm -ivh "${download_folder}/${CODENAME}")
+  local msg=$(dnf -y remove "${OLD_PACKAGE}")
   _trap_catch_check
-  echo "${msg}"
+  Message "${msg}"
+
+
+  ensure rpm or "Canceling Install. Could not find rpm command to execute install"
+  Message rpm -ivh "${download_folder}/${CODENAME}"
+  _trap_try_start # _trap_catch_check
+  msg=$(rpm -ivh "${download_folder}/${CODENAME}")
+  _trap_catch_check
+  Message "${msg}"
 }
 
 _mingw__64() {
