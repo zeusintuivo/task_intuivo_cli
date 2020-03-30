@@ -14,7 +14,7 @@ mkdir _
 cd _
 mkdir clis
 cd clis
-git clone https://github.com/zeusintuivo/ssh_intuivo_cli.git 
+git clone https://github.com/zeusintuivo/ssh_intuivo_cli.git
 cd ssh_intuivo_cli/
 ./sshgeneratekeys future
 ./sshgeneratekeys zeus
