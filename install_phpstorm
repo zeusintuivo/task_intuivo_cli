@@ -361,7 +361,7 @@ Name=phpstorm
 Icon=$USER_HOME/_/software/phpstorm/bin/phpstorm.svg
 Exec="$USER_HOME/_/software/phpstorm/bin/phpstorm.sh" %f
 MimeType=application/x-mine;text/x-mine;text/plain;text/x-chdr;text/x-csrc;text/x-c++hdr;text/x-c++src;text/x-java;text/x-dsrc;text/x-pascal;text/x-perl;text/x-python;application/x-php;application/x-httpd-php3;application/x-httpd-php4;application/x-httpd-php5;application/xml;text/html;text/css;text/x-sql;text/x-diff;x-directory/normal;inode/directory;
-Comment=The Most Intelligent Ruby and Rails IDE
+Comment=The Most Intelligent Php IDE
 Categories=Development;IDE;
 Terminal=true
 StartupWMClass=jetbrains-phpstorm
@@ -474,14 +474,14 @@ softlink_exists_with_spaces "$USER_HOME/.local/share/applications/mimeapps.list>
   su - "${SUDO_USER}" -c "rm test12345.js.haml"
   su - "${SUDO_USER}" -c "rm test12345.html.haml"
   echo " "
-  echo "HINT: Add this to your config/initializers/better_errors.rb file "
+  echo "HINT: Add this to your config/initializers/better_errors.php file "
   echo "better_errors.rb
-  # ... /path_to_ruby_project/ ... /config/initializers/better_errors.rb
+  # ... /path_to_php_project/ ... /config/initializers/better_errors.php
 
-  if defined?(BetterErrors)
-    BetterErrors.editor = \"phpstorm://open?file=%{file}:%{line}\"
-    BetterErrors.editor = \"x-mine://open?file=%{file}:%{line}\"
-  end
+  if (defined?(\$BetterErrors) {
+    \$BetterErrors.editor = \"phpstorm://open?file=%{file}:%{line}\"
+    \$BetterErrors.editor = \"x-mine://open?file=%{file}:%{line}\"
+  }
   "
 } # end _fedora__64
 
