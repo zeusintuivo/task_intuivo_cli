@@ -129,6 +129,14 @@ download_install_package_control(){
   fi
   sudo cp -R "${target_download}"  "${target_dir}"
   rm -rf "${target_download}"
+  if it_exists_with_spaces "${target_dir2}/${target_package_name}/${target_package_name}" ; then
+    sudo mv "${target_dir2}/${target_package_name}/${target_package_name}" "${target_dir2}/${target_package_name}/${target_package_name}m"
+    sudo mv "${target_dir2}/${target_package_name}/${target_package_name}m" "${target_dir2}/"
+    sudo rm -rf "${target_dir2}/${target_package_name}m"
+    sudo mv "${target_dir2}/${target_package_name}m" "${target_dir2}/${target_package_name}"
+
+  fi
+  sudo chown -R "${SUDO_USER}" "${target_dir2}"
 }
 
 add_to_applications_list(){
