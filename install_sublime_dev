@@ -17,10 +17,10 @@ load_struct_testing_wget(){
 load_struct_testing_wget
 
 execute_as_sudo(){
-  if [ -z $SUDO_USER ] ; then 
-    sudo $THISSCRIPTNAME 
+  if [ -z $SUDO_USER ] ; then
+    sudo $THISSCRIPTNAME
     wait
-    exit 0 
+    exit 0
   fi
   # REF: http://superuser.com/questions/93385/run-part-of-a-bash-script-as-a-different-user
   # REF: http://superuser.com/questions/195781/sudo-is-there-a-command-to-check-if-i-have-sudo-and-or-how-much-time-is-left
@@ -68,7 +68,7 @@ download_sublime(){
   # https://download.sublimetext.com/sublime_text_3_build_3211_x64.tar.bz2
   local target_url="https://download.sublimetext.com/${1}"
   if ( command -v type wget >/dev/null 2>&1; ) ; then
-    wget --directory-prefix="${USER_HOME}/Downloads/" --quiet --no-check-certificate "${target_url}" 2>/dev/null 
+    wget --directory-prefix="${USER_HOME}/Downloads/" --quiet --no-check-certificate "${target_url}" 2>/dev/null
 
     # echo -e "\e[7m*** Downloading file to temp location...\e[0m"
     # # REF: about :> http://unix.stackexchange.com/questions/37507/what-does-do-here
