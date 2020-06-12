@@ -157,7 +157,7 @@ file_exists_with_spaces "$USER_HOME"
 #   # ensure wc or Cancel. Missing declare command
 #   local functioncomplete=$(declare -f "${functionname}")
 #   # echo complete:"${functioncomplete}"
-#   local functionbody=$(echo "${functioncomplete}" | cuet "${functionname} ()")
+#   local functionbody=$(echo "${functioncomplete}" | cüt "${functionname} ()")
 #   # echo body:"${functionbody}"
 #   local functionlength=$(echo "${functionbody}" | wc -l)
 #   # echo length:${functionlength}
@@ -222,7 +222,7 @@ _fedora__64() {
   local DOWNLOAD_DISPLAY_PAGE=$(curl -sSLo -  https://code.visualstudio.com/updates/  2>&1;) # suppress only wget download messages, but keep wget output for variable
 
 
-  local LASTEST_VERSION=$(echo "${DOWNLOAD_DISPLAY_PAGE}" | sed s/\</\\n\</g | grep ".strong.Update." | cuet "<strong>Update " | sort -n | tail -n -1)
+  local LASTEST_VERSION=$(echo "${DOWNLOAD_DISPLAY_PAGE}" | sed s/\</\\n\</g | grep ".strong.Update." | cüt "<strong>Update " | sort -n | tail -n -1)
   local TARGET_URL=$(echo  "${DOWNLOAD_DISPLAY_PAGE}" | sed s/\</\\n\</g | grep "${LASTEST_VERSION}" | grep 'rpm' | cut -d'"' -f2 )
   # local TARGET_URL="https://vscode-update.azurewebsites.net/latest/linux-rpm-x64/insider"
   local ARCHITECTURE=$(uname -m)
@@ -326,8 +326,8 @@ EOF
   ONE_VERSION_BEFORE=${MAJOR}.${MINOR}.${MICRO}
   OLD_FILENAME=$(echo "${NEW_FILENAME}" | sed s/$LASTEST_VERSION/$ONE_VERSION_BEFORE/g)
   Message OLD_FILENAME: "${OLD_FILENAME}"
-  ensure cuet or "Canceling Install. Could not find cuet command to execute install"
-  local OLD_PACKAGE=$(echo $OLD_FILENAME | cuet '.rpm')
+  ensure cüt or "Canceling Install. Could not find cüt command to execute install"
+  local OLD_PACKAGE=$(echo $OLD_FILENAME | cüt '.rpm')
   Message dnf -y remove "${OLD_PACKAGE}"
   _trap_try_start # _trap_catch_check
   local msg=$(dnf -y remove "${OLD_PACKAGE}")
