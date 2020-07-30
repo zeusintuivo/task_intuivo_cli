@@ -89,8 +89,6 @@ file_exists_with_spaces "$USER_HOME"
 
 
 _version() {
-
-
   local PLATFORM="${1}"
   local PATTERN="${2}"
 
@@ -181,7 +179,7 @@ _fedora__64() {
   # https://download-cf.jetbrains.com/webide/PhpStorm-2019.3.4.tar.gz
   local CODENAME=$(_version "linux" "PhpStorm*.*.*.tar.gz")
 
-  CODENAME=$(echo "PhpStorm-2019.3.4")
+  CODENAME=$(echo "PhpStorm-2020.2")
   local TARGET_URL="https://download-cf.jetbrains.com/webide/${CODENAME}.tar.gz"
   if  it_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}.tar.gz" ; then
   {
@@ -191,7 +189,7 @@ _fedora__64() {
   {
     file_exists_with_spaces $USER_HOME/Downloads
     cd $USER_HOME/Downloads
-    _download "${TARGET_URL}"
+    _download "${TARGET_URL}" $USER_HOME/Downloads  ${CODENAME}.tar.gz
     file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}.tar.gz"
   }
   fi
@@ -326,27 +324,31 @@ EOF
 # script opens URL in format phpstorm://open?file=%{file}:%{line} in phpstorm
 
 echo "\${@}"
-echo "\${@}" >>  $USER_HOME/_/work/velophil/projects/velotermin/requested.log
+echo "\${@}" >>  $USER_HOME/_/work/requested.log
 $USER_HOME/_/software/phpstorm/bin/pstorm-open.rb \${@}
 filetoopen=\$($USER_HOME/_/software/phpstorm/bin/pstorm-open.rb "\${@}")
 echo filetoopen "\${filetoopen}"
-echo "\${filetoopen}" >>  $USER_HOME/_/work/velophil/projects/velotermin/requestedfiletoopen.log
+echo "\${filetoopen}" >>  $USER_HOME/_/work/requestedfiletoopen.log
 mine "\${filetoopen}"
 
 EOF
+  mkdir -p $USER_HOME/_/work/
+  directory_exists_with_spaces $USER_HOME/_/work/
+  touch $USER_HOME/_/work/requestedfiletoopen.log
+  file_exists_with_spaces $USER_HOME/_/work/requestedfiletoopen.log
   file_exists_with_spaces "$USER_HOME/_/software/phpstorm/bin/pstorm-open.sh"
   chmod +x $USER_HOME/_/software/phpstorm/bin/pstorm-open.sh
 
- cat << EOF > $USER_HOME/.local/share/mime/packages/application-x-mine.xml
+ cat << EOF > $USER_HOME/.local/share/mime/packages/application-x-pstorm.xml
 <?xml version="1.0" encoding="UTF-8"?>
 <mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
-  <mime-type type="application/x-mine">
+  <mime-type type="application/x-pstorm">
     <comment>new mime type</comment>
-    <glob pattern="*.x-mine;*.rb;*.html;*.html.erb;*.js.erb;*.html.haml;*.js.haml;*.erb;*.haml;*.js"/>
+    <glob pattern="*.x-pstorm;*.rb;*.html;*.html.erb;*.js.erb;*.html.haml;*.js.haml;*.erb;*.haml;*.js"/>
   </mime-type>
 </mime-info>
 EOF
-  file_exists_with_spaces "$USER_HOME/.local/share/mime/packages/application-x-mine.xml"
+  file_exists_with_spaces "$USER_HOME/.local/share/mime/packages/application-x-pstorm.xml"
 
 
 
@@ -355,12 +357,12 @@ EOF
 # $USER_HOME/.local/share/applications/jetbrains-phpstorm.desktop
 [Desktop Entry]
 Encoding=UTF-8
-Version=2019.3.2
+Version=2020.2
 Type=Application
 Name=phpstorm
 Icon=$USER_HOME/_/software/phpstorm/bin/phpstorm.svg
 Exec="$USER_HOME/_/software/phpstorm/bin/phpstorm.sh" %f
-MimeType=application/x-mine;text/x-mine;text/plain;text/x-chdr;text/x-csrc;text/x-c++hdr;text/x-c++src;text/x-java;text/x-dsrc;text/x-pascal;text/x-perl;text/x-python;application/x-php;application/x-httpd-php3;application/x-httpd-php4;application/x-httpd-php5;application/xml;text/html;text/css;text/x-sql;text/x-diff;x-directory/normal;inode/directory;
+MimeType=application/x-pstorm;text/x-pstorm;text/plain;text/x-chdr;text/x-csrc;text/x-c++hdr;text/x-c++src;text/x-java;text/x-dsrc;text/x-pascal;text/x-perl;text/x-python;application/x-php;application/x-httpd-php3;application/x-httpd-php4;application/x-httpd-php5;application/xml;text/html;text/css;text/x-sql;text/x-diff;x-directory/normal;inode/directory;
 Comment=The Most Intelligent Php IDE
 Categories=Development;IDE;
 Terminal=true
@@ -397,9 +399,9 @@ EOF
   su - "${SUDO_USER}" -c "xdg-mime default pstorm-open.desktop x-scheme-handler/phpstorm"
   su - "${SUDO_USER}" -c "xdg-mime default pstorm-open.desktop text/phpstorm"
   su - "${SUDO_USER}" -c "xdg-mime default pstorm-open.desktop application/phpstorm"
-  su - "${SUDO_USER}" -c "xdg-mime default jetbrains-phpstorm.desktop x-scheme-handler/x-mine"
-  su - "${SUDO_USER}" -c "xdg-mime default jetbrains-phpstorm.desktop text/x-mine"
-  su - "${SUDO_USER}" -c "xdg-mime default jetbrains-phpstorm.desktop application/x-mine"
+  su - "${SUDO_USER}" -c "xdg-mime default jetbrains-phpstorm.desktop x-scheme-handler/x-pstorm"
+  su - "${SUDO_USER}" -c "xdg-mime default jetbrains-phpstorm.desktop text/x-pstorm"
+  su - "${SUDO_USER}" -c "xdg-mime default jetbrains-phpstorm.desktop application/x-pstorm"
 
 #   cat << EOF > $USER_HOME/.config/mimeapps.list
 #   cat << EOF > $USER_HOME/.local/share/applications/mimeapps.list
@@ -407,28 +409,29 @@ EOF
 # x-scheme-handler/phpstorm=pstorm-open.desktop
 # text/phpstorm=pstorm-open.desktop
 # application/phpstorm=pstorm-open.desktop
-# x-scheme-handler/x-mine=jetbrains-phpstorm.desktop
-# text/x-mine=jetbrains-phpstorm.desktop
-# application/x-mine=jetbrains-phpstorm.desktop
+# x-scheme-handler/x-pstorm=jetbrains-phpstorm.desktop
+# text/x-pstorm=jetbrains-phpstorm.desktop
+# application/x-pstorm=jetbrains-phpstorm.desktop
 
 # [Added Associations]
 # x-scheme-handler/phpstorm=pstorm-open.desktop;
 # text/phpstorm=pstorm-open.desktop;
 # application/phpstorm=pstorm-open.desktop;
-# x-scheme-handler/x-mine=jetbrains-phpstorm.desktop;
-# text/x-mine=jetbrains-phpstorm.desktop;
-# application/x-mine=jetbrains-phpstorm.desktop;
+# x-scheme-handler/x-pstorm=jetbrains-phpstorm.desktop;
+# text/x-pstorm=jetbrains-phpstorm.desktop;
+# application/x-pstorm=jetbrains-phpstorm.desktop;
 # EOF
 #   file_exists_with_spaces "$USER_HOME/.local/share/applications/mimeapps.list"
 #   file_exists_with_spaces "$USER_HOME/.config/mimeapps.list"
 ln -fs "$USER_HOME/.config/mimeapps.list" "$USER_HOME/.local/share/applications/mimeapps.list"
 softlink_exists_with_spaces "$USER_HOME/.local/share/applications/mimeapps.list>$USER_HOME/.config/mimeapps.list"
 
+file_exists_with_spaces "$USER_HOME/_/software/phpstorm/bin/pstorm-open.sh"
 
   su - "${SUDO_USER}" -c "xdg-mime query default x-scheme-handler/phpstorm"
-  su - "${SUDO_USER}" -c "xdg-mime query default x-scheme-handler/x-mine"
-  su - "${SUDO_USER}" -c "xdg-mime query default text/x-mine"
-  su - "${SUDO_USER}" -c "xdg-mime query default application/x-mine"
+  su - "${SUDO_USER}" -c "xdg-mime query default x-scheme-handler/x-pstorm"
+  su - "${SUDO_USER}" -c "xdg-mime query default text/x-pstorm"
+  su - "${SUDO_USER}" -c "xdg-mime query default application/x-pstorm"
   su - "${SUDO_USER}" -c "xdg-mime query default text/phpstorm"
   su - "${SUDO_USER}" -c "xdg-mime query default application/phpstorm"
   msg=$(_try "su - \"${SUDO_USER}\" -c \"xdg-mime query default x-scheme-handler/phpstorm\"")
@@ -461,9 +464,9 @@ softlink_exists_with_spaces "$USER_HOME/.local/share/applications/mimeapps.list>
   su - "${SUDO_USER}" -c "gio info test12345.js.haml  | grep \"standard::content-type\""
 
   su - "${SUDO_USER}" -c "gio mime x-scheme-handler/phpstorm"
-  su - "${SUDO_USER}" -c "gio mime x-scheme-handler/x-mine"
-  su - "${SUDO_USER}" -c "gio mime text/x-mine"
-  su - "${SUDO_USER}" -c "gio mime application/x-mine"
+  su - "${SUDO_USER}" -c "gio mime x-scheme-handler/x-pstorm"
+  su - "${SUDO_USER}" -c "gio mime text/x-pstorm"
+  su - "${SUDO_USER}" -c "gio mime application/x-pstorm"
   su - "${SUDO_USER}" -c "gio mime text/phpstorm"
   su - "${SUDO_USER}" -c "gio mime application/phpstorm"
   su - "${SUDO_USER}" -c "rm test12345.rb"
@@ -480,7 +483,7 @@ softlink_exists_with_spaces "$USER_HOME/.local/share/applications/mimeapps.list>
 
   if (defined?(\$BetterErrors) {
     \$BetterErrors.editor = \"phpstorm://open?file=%{file}:%{line}\"
-    \$BetterErrors.editor = \"x-mine://open?file=%{file}:%{line}\"
+    \$BetterErrors.editor = \"x-pstorm://open?file=%{file}:%{line}\"
   }
   "
 } # end _fedora__64
