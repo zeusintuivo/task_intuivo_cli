@@ -279,6 +279,8 @@ _fedora__64() {
   directory_exists_with_spaces "$USER_HOME/.local/share/mime/packages"
   file_exists_with_spaces "$USER_HOME/_/software/phpstorm/bin/phpstorm.sh"
 
+  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/_/software/phpstorm"
+
   # Now Proceed to register REF:  https://gist.github.com/c80609a/752e566093b1489bd3aef0e56ee0426c
   ensure cat or "Failed to use cat command does not exists"
   ensure xdg-mime or "Failed to install run xdg-mime"
@@ -314,6 +316,7 @@ end
 puts arg
 EOF
   file_exists_with_spaces "$USER_HOME/_/software/phpstorm/bin/pstorm-open.rb"
+  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/_/software/phpstorm/bin/pstorm-open.rb"
   chmod +x $USER_HOME/_/software/phpstorm/bin/pstorm-open.rb
 
 
@@ -329,14 +332,17 @@ $USER_HOME/_/software/phpstorm/bin/pstorm-open.rb \${@}
 filetoopen=\$($USER_HOME/_/software/phpstorm/bin/pstorm-open.rb "\${@}")
 echo filetoopen "\${filetoopen}"
 echo "\${filetoopen}" >>  $USER_HOME/_/work/requestedfiletoopen.log
-mine "\${filetoopen}"
+pstorm "\${filetoopen}"
 
 EOF
   mkdir -p $USER_HOME/_/work/
   directory_exists_with_spaces $USER_HOME/_/work/
+  chown $SUDO_USER:$SUDO_USER $USER_HOME/_/work/
   touch $USER_HOME/_/work/requestedfiletoopen.log
   file_exists_with_spaces $USER_HOME/_/work/requestedfiletoopen.log
+  chown $SUDO_USER:$SUDO_USER -R $USER_HOME/_/work/requestedfiletoopen.log
   file_exists_with_spaces "$USER_HOME/_/software/phpstorm/bin/pstorm-open.sh"
+  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/_/software/phpstorm/bin/pstorm-open.sh"
   chmod +x $USER_HOME/_/software/phpstorm/bin/pstorm-open.sh
 
  cat << EOF > $USER_HOME/.local/share/mime/packages/application-x-pstorm.xml
@@ -349,6 +355,7 @@ EOF
 </mime-info>
 EOF
   file_exists_with_spaces "$USER_HOME/.local/share/mime/packages/application-x-pstorm.xml"
+  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/.local/share/mime/packages/application-x-pstorm.xml"
 
 
 
@@ -369,6 +376,7 @@ Terminal=true
 StartupWMClass=jetbrains-phpstorm
 EOF
   file_exists_with_spaces "$USER_HOME/.local/share/applications/jetbrains-phpstorm.desktop"
+  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/.local/share/applications/jetbrains-phpstorm.desktop"
 
 
   cat << EOF > $USER_HOME/.local/share/applications/mimeinfo.cache
@@ -378,6 +386,7 @@ EOF
 x-scheme-handler/phpstorm=pstorm-open.desktop;
 EOF
   file_exists_with_spaces "$USER_HOME/.local/share/applications/mimeinfo.cache"
+  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/.local/share/applications/mimeinfo.cache"
 
   cat << EOF > $USER_HOME/.local/share/applications/pstorm-open.desktop
 # $USER_HOME/.local/share/applications/pstorm-open.desktop
@@ -392,6 +401,7 @@ Name=MineOpen
 Comment=BetterErrors
 EOF
   file_exists_with_spaces "$USER_HOME/.local/share/applications/pstorm-open.desktop"
+  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/.local/share/applications/pstorm-open.desktop"
 
   # xdg-mime default jetbrains-phpstorm.desktop text/plain;text/x-chdr;text/x-csrc;text/x-c++hdr;text/x-c++src;text/x-java;text/x-dsrc;text/x-pascal;text/x-perl;text/x-python;application/x-php;application/x-httpd-php3;application/x-httpd-php4;application/x-httpd-php5;application/xml;text/html;text/css;text/x-sql;text/x-diff;x-directory/normal;inode/directory;
   # xdg-mime default pstorm-open.desktop x-scheme-handler/phpstorm
@@ -425,6 +435,7 @@ EOF
 #   file_exists_with_spaces "$USER_HOME/.config/mimeapps.list"
 ln -fs "$USER_HOME/.config/mimeapps.list" "$USER_HOME/.local/share/applications/mimeapps.list"
 softlink_exists_with_spaces "$USER_HOME/.local/share/applications/mimeapps.list>$USER_HOME/.config/mimeapps.list"
+chown $SUDO_USER:$SUDO_USER -R  "$USER_HOME/.local/share/applications/mimeapps.list"
 
 file_exists_with_spaces "$USER_HOME/_/software/phpstorm/bin/pstorm-open.sh"
 
