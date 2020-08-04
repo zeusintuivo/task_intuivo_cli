@@ -57,21 +57,22 @@ load_struct_testing_wget(){
     ( ( ! command -v type passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
 } # end load_struct_testing_wget
 load_struct_testing_wget
-passed Caller user identified:$USER_HOME
+
+passed Caller user identified:$SUDO_USER
+passed Home identified:$USER_HOME
+file_exists_with_spaces "$USER_HOME"
 
 
 _version() {
-
-
   local PLATFORM="${1}"
   local PATTERN="${2}"
   # THOUGHT: local CODEFILE=$(curl -d "zz=dl4&platform=linux" -H "Content-Type: application/x-www-form-urlencoded" -X POST  -sSLo -  https://download-cf.jetbrains.com/ruby/download.php  2>&1;) # suppress only wget download messages, but keep wget output for variable
-  local CODEFILE=$(curl -d "zz=dl4&platform=${PLATFORM}" -H "Content-Type: application/x-www-form-urlencoded" -X POST  -sSLo -  https://download-cf.jetbrains.com/ruby/download.php  2>&1;) # suppress only wget download messages, but keep wget output for variable
+  local CODEFILE=$(curl -d "zz=dl4&platform=${PLATFORM}" -H "Content-Type: application/x-www-form-urlencoded" -X POST  -sSLo -  https://download-cf.jetbrains.com/ruby/download.phphttps://www.jetbrains.com/rubymine/download/\#section=linux  2>&1;) # suppress only wget download messages, but keep wget output for variable
   # THOUGHT: local CODELASTESTBUILD=$(echo $CODEFILE | sed s/\</\\n\</g | grep "RubyMine*.*.*.*.x86_64.rpm" | sed s/\"/\\n/g | grep "/" | cuet "/")
   local CODELASTESTBUILD=$(echo $CODEFILE | sed s/\</\\n\</g | grep "${PATTERN}" | sed s/\"/\\n/g | grep "/" | cuet "/")
   # fedora 32 local CODELASTESTBUILD=$(echo $CODEFILE | sed s/\</\\n\</g | grep "RubyMine*.*.*.*.i386.rpm" | sed s/\"/\\n/g | grep "/" | cuet "/")
   wait
-  [[ -z "${CODELASTESTBUILD}" ]] && failed "Beyond Compare Version not found! :${CODELASTESTBUILD}:"
+  [[ -z "${CODELASTESTBUILD}" ]] && failed "RubyMine Version not found! :${CODELASTESTBUILD}:"
 
 
   assert not empty "${USER_HOME}"
@@ -149,7 +150,7 @@ _fedora__32() {
 _fedora__64() {
   # THOUGHT  https://download-cf.jetbrains.com/ruby/RubyMine-2019.3.1.tar.gz
   local CODENAME=$(_version "linux" "RubyMine*.*.*.tar.gz")
-  CODENAME=$(echo "RubyMine-2019.3.2")
+  CODENAME=$(echo "RubyMine-2020.2")
   local TARGET_URL="https://download-cf.jetbrains.com/ruby/${CODENAME}.tar.gz"
   if  it_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}.tar.gz" ; then
   {
@@ -159,7 +160,7 @@ _fedora__64() {
   {
     file_exists_with_spaces $USER_HOME/Downloads
     cd $USER_HOME/Downloads
-    _download "${TARGET_URL}"
+    _download "${TARGET_URL}" $USER_HOME/Downloads  ${CODENAME}.tar.gz
     file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}.tar.gz"
   }
   fi
@@ -211,7 +212,11 @@ _fedora__64() {
     passed Install with Untar Unzip success!
   }
   fi
-  directory_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}"
+
+  local NEWDIRCODENAME=$(ls -1tr /home/zeus/Downloads/  | tail  -1)
+  local FROMUZIPPED="$USER_HOME/Downloads/${NEWDIRCODENAME}"
+  directory_exists_with_spaces  "${FROMUZIPPED}"
+  # directory_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}"
 
 
   if  it_exists_with_spaces "$USER_HOME/_/software/rubymine" ; then
@@ -245,7 +250,7 @@ _fedora__64() {
   mkdir -p "$USER_HOME/.local/share/mime/packages"
   directory_exists_with_spaces "$USER_HOME/.local/share/mime/packages"
   file_exists_with_spaces "$USER_HOME/_/software/rubymine/bin/rubymine.sh"
-
+  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/_/software/rubymine"
   # Now Proceed to register REF:  https://gist.github.com/c80609a/752e566093b1489bd3aef0e56ee0426c
   ensure cat or "Failed to use cat command does not exists"
   ensure xdg-mime or "Failed to install run xdg-mime"
@@ -281,8 +286,8 @@ end
 puts arg
 EOF
   file_exists_with_spaces "$USER_HOME/_/software/rubymine/bin/mine-open.rb"
+  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/_/software/rubymine/bin/mine-open.rb"
   chmod +x $USER_HOME/_/software/rubymine/bin/mine-open.rb
-
 
     cat << EOF > $USER_HOME/_/software/rubymine/bin/mine-open.sh
 #!/usr/bin/env bash
@@ -291,15 +296,22 @@ EOF
 # script opens URL in format rubymine://open?file=%{file}:%{line} in RubyMine
 
 echo "\${@}"
-echo "\${@}" >>  $USER_HOME/_/work/velophil/projects/velotermin/requested.log
+echo "\${@}" >>  $USER_HOME/_/work/requested.log
 $USER_HOME/_/software/rubymine/bin/mine-open.rb \${@}
 filetoopen=\$($USER_HOME/_/software/rubymine/bin/mine-open.rb "\${@}")
 echo filetoopen "\${filetoopen}"
-echo "\${filetoopen}" >>  $USER_HOME/_/work/velophil/projects/velotermin/requestedfiletoopen.log
+echo "\${filetoopen}" >>  $USER_HOME/_/work/requested.log
 mine "\${filetoopen}"
 
 EOF
+  mkdir -p $USER_HOME/_/work/
+  directory_exists_with_spaces $USER_HOME/_/work/
+  chown $SUDO_USER:$SUDO_USER $USER_HOME/_/work/
+  touch $USER_HOME/_/work/requestedfiletoopen.log
+  file_exists_with_spaces $USER_HOME/_/work/requestedfiletoopen.log
+  chown $SUDO_USER:$SUDO_USER -R $USER_HOME/_/work/requestedfiletoopen.log
   file_exists_with_spaces "$USER_HOME/_/software/rubymine/bin/mine-open.sh"
+  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/_/software/rubymine/bin/mine-open.sh"
   chmod +x $USER_HOME/_/software/rubymine/bin/mine-open.sh
 
  cat << EOF > $USER_HOME/.local/share/mime/packages/application-x-mine.xml
@@ -312,6 +324,7 @@ EOF
 </mime-info>
 EOF
   file_exists_with_spaces "$USER_HOME/.local/share/mime/packages/application-x-mine.xml"
+  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/.local/share/mime/packages/application-x-mine.xml"
 
 
 
@@ -332,6 +345,7 @@ Terminal=true
 StartupWMClass=jetbrains-rubymine
 EOF
   file_exists_with_spaces "$USER_HOME/.local/share/applications/jetbrains-rubymine.desktop"
+  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/.local/share/applications/jetbrains-rubymine.desktop"
 
 
   cat << EOF > $USER_HOME/.local/share/applications/mimeinfo.cache
@@ -341,6 +355,7 @@ EOF
 x-scheme-handler/rubymine=mine-open.desktop;
 EOF
   file_exists_with_spaces "$USER_HOME/.local/share/applications/mimeinfo.cache"
+  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/.local/share/applications/mimeinfo.cache"
 
   cat << EOF > $USER_HOME/.local/share/applications/mine-open.desktop
 # $USER_HOME/.local/share/applications/mine-open.desktop
@@ -355,6 +370,7 @@ Name=MineOpen
 Comment=BetterErrors
 EOF
   file_exists_with_spaces "$USER_HOME/.local/share/applications/mine-open.desktop"
+  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/.local/share/applications/mine-open.desktop"
 
   # xdg-mime default jetbrains-rubymine.desktop text/plain;text/x-chdr;text/x-csrc;text/x-c++hdr;text/x-c++src;text/x-java;text/x-dsrc;text/x-pascal;text/x-perl;text/x-python;application/x-php;application/x-httpd-php3;application/x-httpd-php4;application/x-httpd-php5;application/xml;text/html;text/css;text/x-sql;text/x-diff;x-directory/normal;inode/directory;
   # xdg-mime default mine-open.desktop x-scheme-handler/rubymine
@@ -388,7 +404,9 @@ EOF
 #   file_exists_with_spaces "$USER_HOME/.config/mimeapps.list"
 ln -fs "$USER_HOME/.config/mimeapps.list" "$USER_HOME/.local/share/applications/mimeapps.list"
 softlink_exists_with_spaces "$USER_HOME/.local/share/applications/mimeapps.list>$USER_HOME/.config/mimeapps.list"
+chown $SUDO_USER:$SUDO_USER -R  "$USER_HOME/.local/share/applications/mimeapps.list"
 
+file_exists_with_spaces "$USER_HOME/_/software/rubymine/bin/mine-open.sh"
 
   su - "${SUDO_USER}" -c "xdg-mime query default x-scheme-handler/rubymine"
   su - "${SUDO_USER}" -c "xdg-mime query default x-scheme-handler/x-mine"
