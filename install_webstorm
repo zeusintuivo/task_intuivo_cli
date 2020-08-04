@@ -180,7 +180,7 @@ _fedora__64() {
   # https://download-cf.jetbrains.com/webstorm/WebStorm-2019.3.4.tar.gz
   local CODENAME=$(_version "linux" "WebStorm*.*.*.tar.gz")
 
-  CODENAME=$(echo "WebStorm-2019.3.4")
+  CODENAME=$(echo "WebStorm-2020.2")
   local TARGET_URL="https://download-cf.jetbrains.com/webstorm/${CODENAME}.tar.gz"
   if  it_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}.tar.gz" ; then
   {
@@ -190,7 +190,7 @@ _fedora__64() {
   {
     file_exists_with_spaces $USER_HOME/Downloads
     cd $USER_HOME/Downloads
-    _download "${TARGET_URL}"
+    _download "${TARGET_URL}" $USER_HOME/Downloads  ${CODENAME}.tar.gz
     file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}.tar.gz"
   }
   fi
@@ -279,7 +279,7 @@ _fedora__64() {
   mkdir -p "$USER_HOME/.local/share/mime/packages"
   directory_exists_with_spaces "$USER_HOME/.local/share/mime/packages"
   file_exists_with_spaces "$USER_HOME/_/software/webstorm/bin/webstorm.sh"
-
+  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/_/software/webstorm"
   # Now Proceed to register REF:  https://gist.github.com/c80609a/752e566093b1489bd3aef0e56ee0426c
   ensure cat or "Failed to use cat command does not exists"
   ensure xdg-mime or "Failed to install run xdg-mime"
@@ -315,6 +315,7 @@ end
 puts arg
 EOF
   file_exists_with_spaces "$USER_HOME/_/software/webstorm/bin/webstorm-open.rb"
+  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/_/software/webstorm/bin/webstorm-open.rb"
   chmod +x $USER_HOME/_/software/webstorm/bin/webstorm-open.rb
 
 
@@ -325,18 +326,25 @@ EOF
 # script opens URL in format webstorm://open?file=%{file}:%{line} in webstorm
 
 echo "\${@}"
-echo "\${@}" >>  $USER_HOME/_/work/velophil/projects/velotermin/requested.log
+echo "\${@}" >>  $USER_HOME/_/work/requested.log
 $USER_HOME/_/software/webstorm/bin/webstorm-open.rb \${@}
 filetoopen=\$($USER_HOME/_/software/webstorm/bin/webstorm-open.rb "\${@}")
 echo filetoopen "\${filetoopen}"
-echo "\${filetoopen}" >>  $USER_HOME/_/work/velophil/projects/velotermin/requestedfiletoopen.log
+echo "\${filetoopen}" >>  $USER_HOME/_/work/requestedfiletoopen.log
 mine "\${filetoopen}"
 
 EOF
+  mkdir -p $USER_HOME/_/work/
+  directory_exists_with_spaces $USER_HOME/_/work/
+  chown $SUDO_USER:$SUDO_USER $USER_HOME/_/work/
+  touch $USER_HOME/_/work/requestedfiletoopen.log
+  file_exists_with_spaces $USER_HOME/_/work/requestedfiletoopen.log
+  chown $SUDO_USER:$SUDO_USER -R $USER_HOME/_/work/requestedfiletoopen.log
   file_exists_with_spaces "$USER_HOME/_/software/webstorm/bin/webstorm-open.sh"
+  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/_/software/webstorm/bin/webstorm-open.sh"
   chmod +x $USER_HOME/_/software/webstorm/bin/webstorm-open.sh
 
- cat << EOF > $USER_HOME/.local/share/mime/packages/application-x-mine.xml
+ cat << EOF > $USER_HOME/.local/share/mime/packages/application-x-wstorm.xml
 <?xml version="1.0" encoding="UTF-8"?>
 <mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
   <mime-type type="application/x-mine">
@@ -345,7 +353,8 @@ EOF
   </mime-type>
 </mime-info>
 EOF
-  file_exists_with_spaces "$USER_HOME/.local/share/mime/packages/application-x-mine.xml"
+  file_exists_with_spaces "$USER_HOME/.local/share/mime/packages/application-x-wstorm.xml"
+  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/.local/share/mime/packages/application-x-wstorm.xml"
 
 
 
@@ -366,15 +375,17 @@ Terminal=true
 StartupWMClass=jetbrains-webstorm
 EOF
   file_exists_with_spaces "$USER_HOME/.local/share/applications/jetbrains-webstorm.desktop"
+   chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/.local/share/applications/jetbrains-webstorm.desktop"
 
 
-  cat << EOF > $USER_HOME/.local/share/applications/mimeinfo.cache
+  cat << EOF > $USER_HOME/.local/share/applications/webstorm.mimeinfo.cache
 # $USER_HOME/.local/share/applications/mimeinfo.cache
 
 [MIME Cache]
 x-scheme-handler/webstorm=webstorm-open.desktop;
 EOF
-  file_exists_with_spaces "$USER_HOME/.local/share/applications/mimeinfo.cache"
+  file_exists_with_spaces "$USER_HOME/.local/share/applications/webstorm.mimeinfo.cache"
+  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/.local/share/applications/webstorm.mimeinfo.cache"
 
   cat << EOF > $USER_HOME/.local/share/applications/webstorm-open.desktop
 # $USER_HOME/.local/share/applications/webstorm-open.desktop
@@ -389,6 +400,7 @@ Name=MineOpen
 Comment=BetterErrors
 EOF
   file_exists_with_spaces "$USER_HOME/.local/share/applications/webstorm-open.desktop"
+  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/.local/share/applications/webstorm-open.desktop"
 
   # xdg-mime default jetbrains-webstorm.desktop text/plain;text/x-chdr;text/x-csrc;text/x-c++hdr;text/x-c++src;text/x-java;text/x-dsrc;text/x-pascal;text/x-perl;text/x-python;application/x-php;application/x-httpd-php3;application/x-httpd-php4;application/x-httpd-php5;application/xml;text/html;text/css;text/x-sql;text/x-diff;x-directory/normal;inode/directory;
   # xdg-mime default webstorm-open.desktop x-scheme-handler/webstorm
@@ -422,6 +434,8 @@ EOF
 #   file_exists_with_spaces "$USER_HOME/.config/mimeapps.list"
 ln -fs "$USER_HOME/.config/mimeapps.list" "$USER_HOME/.local/share/applications/mimeapps.list"
 softlink_exists_with_spaces "$USER_HOME/.local/share/applications/mimeapps.list>$USER_HOME/.config/mimeapps.list"
+chown $SUDO_USER:$SUDO_USER -R  "$USER_HOME/.local/share/applications/mimeapps.list"
+file_exists_with_spaces "$USER_HOME/_/software/webstorm/bin/webstorm-open.sh"
 
 
   su - "${SUDO_USER}" -c "xdg-mime query default x-scheme-handler/webstorm"

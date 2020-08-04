@@ -379,14 +379,14 @@ EOF
   chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/.local/share/applications/jetbrains-phpstorm.desktop"
 
 
-  cat << EOF > $USER_HOME/.local/share/applications/mimeinfo.cache
+  cat << EOF > $USER_HOME/.local/share/applications/phpstorm.mimeinfo.cache
 # $USER_HOME/.local/share/applications/mimeinfo.cache
 
 [MIME Cache]
 x-scheme-handler/phpstorm=pstorm-open.desktop;
 EOF
-  file_exists_with_spaces "$USER_HOME/.local/share/applications/mimeinfo.cache"
-  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/.local/share/applications/mimeinfo.cache"
+  file_exists_with_spaces "$USER_HOME/.local/share/applications/phpstorm.mimeinfo.cache"
+  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/.local/share/applications/phpstorm.mimeinfo.cache"
 
   cat << EOF > $USER_HOME/.local/share/applications/pstorm-open.desktop
 # $USER_HOME/.local/share/applications/pstorm-open.desktop
