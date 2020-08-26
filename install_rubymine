@@ -12,7 +12,7 @@ execute_as_sudo(){
   if [ -z $SUDO_USER ] ; then
     if [[ -z "$THISSCRIPTNAME" ]] ; then
     {
-        echo "error You need to add THISSCRIPTNAME vairable like this:"
+        echo "error You need to add THISSCRIPTNAME variable like this:"
         echo "     THISSCRIPTNAME=\`basename \"\$0\"\`"
     }
     else
