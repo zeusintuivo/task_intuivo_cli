@@ -66,17 +66,17 @@ file_exists_with_spaces "$USER_HOME"
 _version() {
   local PLATFORM="${1}"
   local PATTERN="${2}"
-  # THOUGHT: local CODEFILE=$(curl -d "zz=dl4&platform=linux" -H "Content-Type: application/x-www-form-urlencoded" -X POST  -sSLo -  https://www.jetbrains.com/phpstorm/download/#section=linux  2>&1;) # suppress only wget download messages, but keep wget output for variable
+  
   local CODEFILE=$(curl -d "zz=dl4&platform=${PLATFORM}" -H "Content-Type: application/x-www-form-urlencoded" -X POST  -sSLo -  https://www.jetbrains.com/phpstorm/download/\#section=linux  2>&1;) # suppress only wget download messages, but keep wget output for variable
-  # THOUGHT: local CODELASTESTBUILD=$(echo $CODEFILE | sed s/\</\\n\</g | grep "PhpStorm*.*.*.*.x86_64.rpm" | sed s/\"/\\n/g | grep "/" | cüt "/")
+  
   local CODELASTESTBUILD=$(echo $CODEFILE | sed s/\</\\n\</g | grep "${PATTERN}" | sed s/\"/\\n/g | grep "/" | cüt "/")
   # fedora 32 local CODELASTESTBUILD=$(echo $CODEFILE | sed s/\</\\n\</g | grep "PhpStorm*.*.*.*.i386.rpm" | sed s/\"/\\n/g | grep "/" | cüt "/")
   wait
   [[ -z "${CODELASTESTBUILD}" ]] && failed "PhpStorm Version not found! :${CODELASTESTBUILD}:"
 
 
-  assert not empty "${USER_HOME}"
-  assert not empty "${CODELASTESTBUILD}"
+  # assert not empty "${USER_HOME}"
+  # assert not empty "${CODELASTESTBUILD}"
 
   local CODENAME="${CODELASTESTBUILD}"
   echo "${CODELASTESTBUILD}"

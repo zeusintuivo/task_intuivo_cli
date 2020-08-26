@@ -19,17 +19,17 @@ execute_as_sudo(){
     {
         if [ -e "./$THISSCRIPTNAME" ] ; then
         {
-        sudo "./$THISSCRIPTNAME"
+          sudo "./$THISSCRIPTNAME"
         }
         elif ( command -v type "$THISSCRIPTNAME" >/dev/null 2>&1 );  then
         {
-        echo "sudo sudo sudo "
-        sudo "$THISSCRIPTNAME"
+          echo "sudo sudo sudo "
+          sudo "$THISSCRIPTNAME"
         }
         else
         {
-        echo -e "\033[05;7m*** Failed to find script to recall it as sudo ...\033[0m"
-        exit 1
+          echo -e "\033[05;7m*** Failed to find script to recall it as sudo ...\033[0m"
+          exit 1
         }
         fi
     }
@@ -57,7 +57,10 @@ load_struct_testing_wget(){
     ( ( ! command -v type passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
 } # end load_struct_testing_wget
 load_struct_testing_wget
-passed Caller user identified:$USER_HOME
+
+passed Caller user identified:$SUDO_USER
+passed Home identified:$USER_HOME
+file_exists_with_spaces "$USER_HOME"
 
 
 _version() {
@@ -76,8 +79,8 @@ _version() {
   [[ -z "${CODELASTESTBUILD}" ]] && failed "Beyond Compare Version not found! :${CODELASTESTBUILD}:"
 
 
-  assert not empty "${USER_HOME}"
-  assert not empty "${CODELASTESTBUILD}"
+  # assert not empty "${USER_HOME}"
+  # assert not empty "${CODELASTESTBUILD}"
 
   local CODENAME="${CODELASTESTBUILD}"
   echo "${CODELASTESTBUILD}"
@@ -123,7 +126,7 @@ _fedora__32() {
   local TARGET_URL="https://www.scootersoftware.com/${CODENAME}"
   file_exists_with_spaces $USER_HOME/Downloads
   cd $USER_HOME/Downloads
-  _download "${TARGET_URL}"
+  _download "${TARGET_URL}" "${USER_HOME}/Downloads" "${CODENAME}"
   file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}"
   ensure rpm or "Canceling Install. Could not find rpm command to execute install"
 
@@ -152,14 +155,34 @@ _fedora__64() {
   local CODENAME=$(_version "linux" "bcompare*.*.*.*.x86_64.rpm")
   # THOUGHT  https://www.scootersoftware.com/bcompare-4.3.3.24545.x86_64.rpm
   local TARGET_URL="https://www.scootersoftware.com/${CODENAME}"
-  file_exists_with_spaces $USER_HOME/Downloads
-  cd $USER_HOME/Downloads
-  _download "${TARGET_URL}"
-  file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}"
-  ensure rpm or "Canceling Install. Could not find rpm command to execute install"
+  if  it_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}" ; then
+  {
+    file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}"
+  }
+  else
+  {
+    file_exists_with_spaces $USER_HOME/Downloads
+    cd $USER_HOME/Downloads
+    echo _download "${TARGET_URL}" "${USER_HOME}/Downloads" "${CODENAME}"
+    _download "${TARGET_URL}" "${USER_HOME}/Downloads" "${CODENAME}"
+    file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}"
+    echo  _download "${TARGET_URL}" "${USER_HOME}/Downloads" "${CODENAME}"
+  }
+  fi
+
+  ensure tar or "Canceling Install. Could not find tar command to execute unzip"
+  ensure awk or "Canceling Install. Could not find awk command to execute unzip"
+  ensure pv or "Canceling Install. Could not find pv command to execute unzip"
+  ensure du or "Canceling Install. Could not find du command to execute unzip"
+  ensure gzip or "Canceling Install. Could not find gzip command to execute unzip"
+  ensure gio or "Canceling Install. Could not find gio command to execute gio"
+  ensure update-mime-database or "Canceling Install. Could not find update-mime-database command to execute update-mime-database"
+  ensure update-desktop-database or "Canceling Install. Could not find update-desktop-database command to execute update"
+  ensure touch or "Canceling Install. Could not find touch command to execute touch"
 
   # provide error handling , once learned goes here. LEarn under if, once learned here.
   # Start loop while ERROR flag in case needs to try again, based on error
+  cd $USER_HOME/Downloads
   _try "rpm --import https://www.scootersoftware.com/RPM-GPG-KEY-scootersoftware"
   local msg=$(_try "rpm -ivh \"$USER_HOME/Downloads/${CODENAME}\"" )
   local ret=$?
