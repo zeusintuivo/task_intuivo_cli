@@ -66,9 +66,9 @@ file_exists_with_spaces "$USER_HOME"
 _version() {
   local PLATFORM="${1}"
   local PATTERN="${2}"
-  
+
   local CODEFILE=$(curl -d "zz=dl4&platform=${PLATFORM}" -H "Content-Type: application/x-www-form-urlencoded" -X POST  -sSLo -  https://www.jetbrains.com/phpstorm/download/\#section=linux  2>&1;) # suppress only wget download messages, but keep wget output for variable
-  
+
   local CODELASTESTBUILD=$(echo $CODEFILE | sed s/\</\\n\</g | grep "${PATTERN}" | sed s/\"/\\n/g | grep "/" | cüt "/")
   # fedora 32 local CODELASTESTBUILD=$(echo $CODEFILE | sed s/\</\\n\</g | grep "PhpStorm*.*.*.*.i386.rpm" | sed s/\"/\\n/g | grep "/" | cüt "/")
   wait
