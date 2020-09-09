@@ -101,7 +101,7 @@ _ubuntu__64() {
         echo  ...then, update your local package index, then finally install the cf CLI
         sudo $COMANDDER update -y
         sudo $COMANDDER install -y cf-cli
-        sudo snap install cf-cli
+        yes | sudo snap install cf-cli -y
     }
     fi
     verify_is_installed cf
@@ -115,8 +115,8 @@ _fedora__64() {
     {
         Installing cloudfoundry cf 7
         sudo wget -O /etc/yum.repos.d/cloudfoundry-cli.repo https://packages.cloudfoundry.org/fedora/cloudfoundry-cli.repo
-        # sudo yum install cf6-cli
-        sudo yum install cf7-cli
+        # sudo $COMANDDER install -y cf6-cli
+        yes | sudo $COMANDDER install -y cf7-cli
     }
     fi
     verify_is_installed cf
