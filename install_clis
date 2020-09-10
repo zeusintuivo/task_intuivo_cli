@@ -67,7 +67,7 @@ _checka_node_commander() {
     if is_not_installed npm  ; then
     {
         Installing Node.js
-        sudo $COMANDDER install -y nodejs
+        $COMANDDER install -y nodejs
     }
     fi
     verify_is_installed npm
@@ -75,14 +75,16 @@ _checka_node_commander() {
 }
 _checka_tools_commander(){
     local COMANDDER="$1"
-    is_not_installed xclip && sudo $COMANDDER  install xclip -y
-    is_not_installed tree && sudo $COMANDDER  install tree -y
-    is_not_installed ag && sudo $COMANDDER -y install the_silver_searcher
-    is_not_installed ack && sudo $COMANDDER -y install ack
+    is_not_installed xclip && $COMANDDER  install xclip -y
+    is_not_installed tree &&  $COMANDDER  install tree -y
+    is_not_installed ag &&    $COMANDDER -y install the_silver_searcher
+    is_not_installed ack &&   $COMANDDER -y install ack
+    is_not_installed pv &&    $COMANDDER -y install pv
     verify_is_installed xclip
     verify_is_installed tree
     verify_is_installed ag
     verify_is_installed ack
+    verify_is_installed pv
 }
 
 _ubuntu__64() {
@@ -96,12 +98,12 @@ _ubuntu__64() {
     if  it_does_not_exist_with_spaces /etc/apt/sources.list.d/cloudfoundry-cli.list ; then
     {
         Installing cloudfoundry cf 7
-        wget -q -O - https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | sudo apt-key add -
+        wget -q -O - https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | apt-key add -
         echo "deb https://packages.cloudfoundry.org/debian stable main" | sudo tee /etc/apt/sources.list.d/cloudfoundry-cli.list
         echo  ...then, update your local package index, then finally install the cf CLI
-        sudo $COMANDDER update -y
-        sudo $COMANDDER install -y cf-cli
-        yes | sudo snap install cf-cli -y
+        $COMANDDER update -y
+        $COMANDDER install -y cf-cli
+        snap install cf-cli
     }
     fi
     verify_is_installed cf
@@ -114,9 +116,9 @@ _fedora__64() {
     if  it_does_not_exist_with_spaces /etc/yum.repos.d/cloudfoundry-cli.repo ; then
     {
         Installing cloudfoundry cf 7
-        sudo wget -O /etc/yum.repos.d/cloudfoundry-cli.repo https://packages.cloudfoundry.org/fedora/cloudfoundry-cli.repo
-        # sudo $COMANDDER install -y cf6-cli
-        yes | sudo $COMANDDER install -y cf7-cli
+        wget -O /etc/yum.repos.d/cloudfoundry-cli.repo https://packages.cloudfoundry.org/fedora/cloudfoundry-cli.repo
+        # sudo yum install cf6-cli
+        $COMANDDER -y install cf7-cli
     }
     fi
     verify_is_installed cf
@@ -126,9 +128,9 @@ _fedora__64() {
 _darwin__64() {
     COMANDDER="brew"
     echo mac?
-    brew install nodejs
+    $COMANDDER install nodejs
     # version 6 brew install cloudfoundry/tap/cf-cli
-    brew install cloudfoundry/tap/cf-cli@7
+    $COMANDDER install cloudfoundry/tap/cf-cli@7
 }
 
 determine_os_and_fire_action
@@ -136,10 +138,10 @@ determine_os_and_fire_action
 ensure npm or "Canceling Install. Could not find npm"
 ensure node or "Canceling Install. Could not find node"
 ensure cf or "Canceling Install. Could not find cf"
-MTASCHECK=$(cf mtas --help)
+MTASCHECK=$(su -c $SUDO_USER -c 'cf mtas --help')
 if [[ -n "$MTASCHECK" ]] &&  [[ "$MTASCHECK" == *"FAILED"* ]]  ; then
 {
-    yes | cf install-plugin multiapps
+    su - $SUDO_SUER -c 'yes | cf install-plugin multiapps'
 }
 fi
 
@@ -150,19 +152,19 @@ if [[ -n "$MTASCHECK" ]] &&  [[ "$MTASCHECK" != *"FAILED"* ]]  ; then
 fi
 
 ensure git or "Canceling Install. Could not find git"
-CURRENTGITUSER=$(git config --global --get user.name)
-CURRENTGITEMAIL=$(git config --global --get user.email)
+CURRENTGITUSER=$(su - $SUDO_USER -c 'git config --global --get user.name')
+CURRENTGITEMAIL=$(su - $SUDO_USER -c 'git config --global --get user.email')
 
 if [[ -z "$CURRENTGITEMAIL" ]] ; then
 {
     Configuring git user.email with  $SUDO_USER@$(hostname)
-    git config --global user.email $SUDO_USER@$(hostname)
+    su - $SUDO_USER -c 'git config --global user.email '$SUDO_USER'@$(hostname)'
 }
 fi
 if [[ -z "$CURRENTGITUSER" ]] ; then
 {
     Configuring git user.name with  $SUDO_USER
-    git config --global user.name $SUDO_USER
+    su - $SUDO_USER -c 'git config --global user.name '$SUDO_USER
 }
 fi
 
@@ -171,42 +173,42 @@ _install_npm_utils() {
     # Global node utils
     if  is_not_installed live-server  ; then
     {
-        npm i -g nodemon live-server
+        su - $SUDO_USER -c 'npm i -g nodemon live-server'
     }
     fi
     verify_is_installed live-server
     if  is_not_installed jest  ; then
     {
-        npm i -g nodemon jest
+        su - $SUDO_USER -c 'npm i -g nodemon jest'
     }
     fi
     verify_is_installed jest
-    CHAINSTALLED=$(npm -g info chai)
+    CHAINSTALLED=$(su - $SUDO_USER -c 'npm -g info chai >/dev/null 2>&1')
     if [[ -n "$CHAINSTALLED" ]] &&  [[ "$CHAINSTALLED" == *"npm ERR"* ]]  ; then
     {
         Installing npm chai
-        npm i -g nodemon chai
+        su - $SUDO_USER -c 'npm i -g nodemon chai'
     }
     fi
-    MOCHAINSTALLED=$(npm -g info mocha)
+    MOCHAINSTALLED=$(su - $SUDO_USER -c 'npm -g info mocha >/dev/null 2>&1')
     if [[ -n "$MOCHAINSTALLED" ]] &&  [[ "$MOCHAINSTALLED" == *"npm ERR"* ]]  ; then
     {
         Installing npm mocha
-        npm i -g nodemon mocha
+        su - $SUDO_USER -c 'npm i -g nodemon mocha'
     }
     fi
     local ret
-    msg=$(su - $SUDO_USER -c 'cds')
+    msg=$(su - $SUDO_USER -c 'cds >/dev/null 2>&1')
     ret=$?
     if [ $ret -gt 0 ] ; then
     {
         Installing npm cds
-        npm i -g @sap/cds-dk
+        su - $SUDO_USER -c 'npm i -g @sap/cds-dk'
         msg=$(su - $SUDO_USER -c 'cds')
         ret=$?
         if [ $ret -gt 0 ] ; then
         {
-            failed "${ret}:${msg}"
+            echo failed "${ret}:${msg}"
         }
         else
         {
@@ -221,48 +223,76 @@ _install_npm_utils() {
     fi
 }
 
+_if_not_is_installed(){
+	local -i ret
+        local msg
+	ret=0
+ 	msg=$($COMANDDER info $1  >/dev/null 2>&1)
+        ret=$?
+	[ $ret -gt 0 ] && return 1
+	[[ "$msg" == *"Error"* ]] && return 1
+        return 0
+}
+_if_not_contains(){
+        local -i ret
+        local msg
+        ret=0
+        msg=$(cat -n "$1" | grep "$2" >/dev/null 2>&1)
+        ret=$?
+	[ $ret -gt 0 ] && return 1
+        [[ "$msg" == *"No such"* ]] && return 1
+        [[ "$msg" == *"Permission denied"* ]] && return 1
+        return 0
+}
 
 _install_nvm() {
-    local ret
-    msg=$(su - $SUDO_USER -c 'nvm')
+    local -i ret 
+    local msg
+[ -s "$USER_HOME/.nvm/nvm.sh" ] && . "$USER_HOME/.nvm/nvm.sh" # This loads nvm
+
+    msg=$(nvm >/dev/null 2>&1)
     ret=$?
-    if [ $ret -gt 0 ] ; then
+# echo $ret:$msg
+
+    if is_not_installed nvm ; then  # [ $ret -gt 0 ] ; then
     {
+# exit 0
         Installing nvm Node Version Manager
 Installing  nvm setup
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash
+su - $SUDO_USER -c 'HOME='$USER_HOME' curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash'
+
 export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${USER_HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+[ -s "$USER_HOME/.nvm/nvm.sh" ] && \. "$USER_HOME/.nvm/nvm.sh" # This loads nvm
 
 Configuring  nvm setup
 
-echo '
-export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${USER_HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
+_if_not_contains "$USER_HOME/.bash_profile" "NVM_DIR/nvm.sh" && echo '
+export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
 '  >> $USER_HOME/.bash_profile
 
 file_exists_with_spaces "$USER_HOME/.bash_profile"
 
-echo '
-export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${USER_HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
+_if_not_contains "$USER_HOME/.bashrc" "NVM_DIR/nvm.sh" &&  echo '
+export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
 '  >> $USER_HOME/.bashrc
 
 file_exists_with_spaces "$USER_HOME/.bashrc"
 
 
-echo '
-export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${USER_HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
+_if_not_contains "$USER_HOME/.zshrc" "NVM_DIR/nvm.sh" &&  echo '
+export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
 '  >> $USER_HOME/.zshrc
 
 file_exists_with_spaces "$USER_HOME/.zshrc"
 
-        msg=$(su - $SUDO_USER -c 'nvm')
+        msg=$(su - $SUDO_USER -c 'nvm' >/dev/null 2>&1)
         ret=$?
         if [ $ret -gt 0 ] ; then
         {
-            failed "${ret}:${msg}"
+            echo nvm second check failed "${ret}:${msg}"
         }
         else
         {
@@ -282,11 +312,10 @@ file_exists_with_spaces "$USER_HOME/.zshrc"
 _install_nvm_version(){
     local TARGETVERSION="${1}"
     Configuring nvm node ${TARGETVERSION}
-    export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${USER_HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
-    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+    [ -s "$USER_HOME/.nvm/nvm.sh" ] && . "$USER_HOME/.nvm/nvm.sh" # This loads nvm
 
 
-    local VERSION12=$(su - $SUDO_USER -c 'nvm ls' | grep "v${TARGETVERSION}" |tail -1 )
+    local VERSION12=$(nvm ls | grep "v${TARGETVERSION}" |tail -1 >/dev/null 2>&1 )
     if [[ -n "$VERSION12" ]] ; then
     {
         if [[ "$VERSION12" == *"not found"* ]] || [[ "$VERSION12" == *"nvm help"* ]]  ; then
@@ -301,7 +330,7 @@ _install_nvm_version(){
         else
         {
             Installing node using nvm install  "${TARGETVERSION}"
-            su - $SUDO_USER -c 'nvm install "${TARGETVERSION}"'
+	    VERSION12=$(nvm ls | grep "v${TARGETVERSION}" |tail -1 >/dev/null 2>&1 )
             if [[ -n "$VERSION12" ]] ; then
             {
                 if [[ "$VERSION12" == *"not found"* ]] || [[ "$VERSION12" == *"nvm help"* ]]  ; then
@@ -331,7 +360,7 @@ _install_nvm_version(){
     else
     {
         Installing node using nvm install  "${TARGETVERSION}"
-        su - $SUDO_USER -c 'nvm install "${TARGETVERSION}"'
+	VERSION12=$(nvm ls | grep "v${TARGETVERSION}" |tail -1 >/dev/null 2>&1 )
             if [[ -n "$VERSION12" ]] ; then
             {
                 if [[ "$VERSION12" == *"not found"* ]] || [[ "$VERSION12" == *"nvm help"* ]]  ; then
@@ -354,9 +383,13 @@ _install_nvm_version(){
     fi
     Setting . nvm use "${TARGETVERSION}"
     # su - $SUDO_USER -c '. ${USER_HOME}/.nvm/nvm.sh && ${USER_HOME}/.nvm/nvm.sh use "${TARGETVERSION}"'
-    ${USER_HOME}/.nvm/nvm.sh && . ${USER_HOME}/.nvm/nvm.sh use "${TARGETVERSION}"
+    chown -R $SUDO_USER:$SUDO_USER $USER_HOME/.nvm
+    nvm install ${TARGETVERSION}
+    chown -R $SUDO_USER:$SUDO_USER $USER_HOME/.nvm
+    nvm use ${TARGETVERSION}
+    # su - $SUDO_USER -c ''${USER_HOME}'/.nvm/nvm.sh && . '${USER_HOME}'/.nvm/nvm.sh && nvm use "${TARGETVERSION}"'
     # node --version
-    nvm use "${TARGETVERSION}"
+    #nvm use "${TARGETVERSION}"
 }
 
 _install_npm_utils
@@ -370,16 +403,58 @@ _install_npm_utils
 
 _install_nvm_version 14
 _install_npm_utils
+
+
+_install_nerd_fonts(){
+
+    if  it_does_not_exist_with_spaces "$USER_HOME/.nerd-fonts" ; then
+    {
+
+
+	cd $USER_HOME
+	su - $SUDO_USER -c 'git clone --depth=1 https://github.com/ryanoasis/nerd-fonts $USER_HOME/.nerd-fonts'
+	directory_exists_with_spaces "$U[[ "$msg" == *"No such"* ]]SER_HOME/.nerd-fonts"
+	file_exists_with_spaces "$USER_HOME/.nerd-fonts/install.sh"
+	chown -R $SUDO_USER $USER_HOME/.nerd-fonts
+
+	cd $USER_HOME/.nerd-fonts
+	su - $SUDO_USER -c  ./install.sh
+   }
+   fi
+}
 _setup_ohmy(){
     if  it_does_not_exist_with_spaces "$USER_HOME/.oh-my-zsh/" ; then
     {
         Installing ohmy
-        wget -q -O - https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | sudo apt-key add -
-        # install ohmyzsh
-        sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+        if [[ "$COMANDDER" == *"apt-get"* ]]  ; then
+        {
+           wget -q -O - https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | apt-key add -
+        }
+        elif [[ "$COMANDDER" == *"dnf"* ]]  ; then
+        {
+	   $COMANDDER install -y git wget curl ruby ruby-devel zsh util-linux-user redhat-rpm-config gcc gcc-c++ make
+        }
+        fi
 
-        echo Test ohmyzsh
-        directory_exists_with_spaces "$USER_HOME/.oh-my-zsh/"
+
+	_install_nerd_fonts
+
+	_if_not_is_installed fontawesome-fonts && $COMANDDER -y install fontawesome-fonts
+	_if_not_is_installed powerline && $COMANDDER -y install powerline vim-powerline tmux-powerline powerline-fonts
+	echo REF: https://fedoramagazine.org/tuning-your-bash-or-zsh-shell-in-workstation-and-silverblue/
+	if [ -f `which powerline-daemon` ]; then
+	{
+	  powerline-daemon -q
+	  POWERLINE_BASH_CONTINUATION=1
+	  POWERLINE_BASH_SELECT=1
+	  . /usr/share/powerline/bash/powerline.sh
+	}
+	fi
+        # install ohmyzsh
+        su - $SUDO_USER -c 'bash "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"'
+
+        echo Testing ohmyzsh
+        directory_exists_with_spaces "$USER_HOME/.oh-my-zsh"
     }
     else
     {
@@ -389,9 +464,30 @@ _setup_ohmy(){
 }
 _setup_ohmy
 
+it_does_not_exist_with_spaces ${USER_HOME}/.oh-my-zsh/themes/powerlevel10k && git clone https://github.com/romkatv/powerlevel10k.git ${USER_HOME}/.oh-my-zsh/themes/powerlevel10k
+_if_not_contains "$USER_HOME/.zshrc" "powerlevel10k" && echo "ZSH_THEME=powerlevel10k/powerlevel10k" >> $USER_HOME/.zshrc
+
+it_does_not_exist_with_spaces ${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting &&  git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
+it_does_not_exist_with_spaces ${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions &&  git clone https://github.com/zsh-users/zsh-autosuggestions ${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions
+
+_if_not_contains "$USER_HOME/.zshrc" "zsh-syntax-highlighting" echo "plugins=(git zsh-syntax-highlighting zsh-autosuggestions)"   >> $USER_HOME/.zshrc
+
+COMANDDER=gem
+_if_not_is_installed colorls && (yes | $COMANDDER install colorls) && yes | ($COMANDDER update colorls)
+
+_if_not_contains "$USER_HOME/.zshrc" "colorls" && echo "alias ll='colorls -lA --sd --gs --group-directories-first'" >> $USER_HOME/.zshrc
+_if_not_contains "$USER_HOME/.zshrc" "colorls" && echo "alias ls='colorls --group-directories-first'" >> $USER_HOME/.zshrc
+
+_if_not_contains "$USER_HOME/.bashrc" "colorls" && echo "alias ll='colorls -lA --sd --gs --group-directories-first'" >> $USER_HOME/.bashrc
+_if_not_contains "$USER_HOME/.bashrc" "colorls" && echo "alias ls='colorls --group-directories-first'" >> $USER_HOME/.bashrc
+
 
 _setup_clis(){
-    Installing Clis
+	local -i ret
+        local msg
+        ret=0
+
+	Installing Clis
    if  it_does_not_exist_with_spaces "$USER_HOME/_/clis" ; then
     {
         mkdir -p $USER_HOME/_/clis
@@ -405,8 +501,11 @@ _setup_clis(){
     {
         cd $USER_HOME/_/clis
         Installing Clis pre work  bash_intuivo_cli  for link_folder_scripts
-        git clone https://github.com/zeusintuivo/bash_intuivo_cli.git
+        yes | git clone git@github.com:zeusintuivo/bash_intuivo_cli.git
+        it_does_not_exist_with_spaces ${USER_HOME}/_/clis/bash_intuivo_cli && yes | git clone https://github.com/zeusintuivo/bash_intuivo_cli.git
         cd $USER_HOME/_/clis/bash_intuivo_cli
+        git remote remove origin
+        git remote add origin git@github.com:zeusintuivo/bash_intuivo_cli.git
         ./link_folder_scripts
     } else {
         passed clis: bash_intuivo_cli folder exists
@@ -416,14 +515,35 @@ _setup_clis(){
     {
         cd $USER_HOME/_/clis
         Installing No. 2 Clis pre work  bash_intuivo_cli  for link_folder_scripts
-        git clone https://github.com/zeusintuivo/bash_intuivo_cli.git
+        yes | git clone git@github.com:zeusintuivo/bash_intuivo_cli.git
+        it_does_not_exist_with_spaces ${USER_HOME}/_/clis/bash_intuivo_cli && yes | git clone https://github.com/zeusintuivo/bash_intuivo_cli.git
+        chown -R $SUDO_USER:$SUDO_USER $USER_HOME/_/clis/bash_intuivo_cli
         cd $USER_HOME/_/clis/bash_intuivo_cli
+        git remote remove origin
+        git remote add origin git@github.com:zeusintuivo/bash_intuivo_cli.git
         ./link_folder_scripts
     } else {
         passed clis: bash_intuivo_cli folder exists
     }
     fi
-
+    if  it_does_not_exist_with_spaces ${USER_HOME}/_/clis/ssh_intuivo_cli ; then
+    {
+        cd $USER_HOME/_/clis
+        Installing No. 3 Clis pre work ssh_intuivo_cli  for link_folder_scripts
+        yes | git clone git@github.com:zeusintuivo/ssh_intuivo_cli.git
+        it_does_not_exist_with_spaces ${USER_HOME}/_/clis/ssh_intuivo_cli && yes | git clone https://github.com/zeusintuivo/ssh_intuivo_cli.git
+        cd $USER_HOME/_/clis/ssh_intuivo_cli
+        chown -R $SUDO_USER:$SUDO_USER $USER_HOME/_/clis/ssh_intuivo_cli
+        chown -R $SUDO_USER:$SUDO_USER $USER_HOME/.ssh
+        git remote remove origin
+        git remote add origin git@github.com:zeusintuivo/ssh_intuivo_cli.git
+        link_folder_scripts
+        ./sshswitchkey zeus
+    } else {
+        passed clis: ssh_intuivo_cli folder exists
+    }
+    fi
+# rm -rf $USER_HOME/_/clis/ssh_intuivo_cli
 
 clis="
 bin
@@ -432,10 +552,10 @@ docker_intuivo_cli
 execute_command_intuivo_cli
 git_intuivo_cli
 guake_intuivo_cli
-java_intuivo_cli
 journal_intuivo_cli
 ruby_intuivo_cli
 ssh_intuivo_cli
+task_intuivo_cli
 "
 
 
@@ -447,13 +567,27 @@ while read -r ONE ; do
         if  it_does_not_exist_with_spaces "$USER_HOME/_/clis/${ONE}" ; then
         {
             cd $USER_HOME/_/clis
-            git clone https://github.com/zeusintuivo/${ONE}.git
+            yes | git clone git@github.com:zeusintuivo/${ONE}.git
+            it_does_not_exist_with_spaces ${USER_HOME}/_/clis/${ONE} && yes | git clone https://github.com/zeusintuivo/${ONE}.git
             cd $USER_HOME/_/clis/${ONE}
+            chown -R $SUDO_USER:$SUDO_USER $USER_HOME/_/clis/${ONE}
+	    git remote remove origin
+            git remote add origin git@github.com:zeusintuivo/${ONE}.git
             directory_exists_with_spaces $USER_HOME/_/clis/${ONE}
-            sudo chown -R $SUDO_USER:$SUDO_USER $USER_HOME/_/clis/${ONE}
             link_folder_scripts
         } else {
+            Installing else $ONE
             passed clis: ${ONE} folder exists
+	    cd $USER_HOME/_/clis/${ONE}
+	    chown -R $SUDO_USER:$SUDO_USER $USER_HOME/_/clis/${ONE}
+            pwd
+            link_folder_scripts
+            # msg=$(link_folder_scripts)
+            ret=$?
+            Configuring existed with $ret
+            [ $ret -gt 0 ] && Configuring $ONE existed with $ret
+            # [ $ret -gt 0 ] && failed clis: execute link_folder_scripts && echo -E $msg && pwd
+
         }
         fi
     }
@@ -462,7 +596,7 @@ while read -r ONE ; do
 done <<< ${clis}
 if  softlink_exists_with_spaces "/usr/local/bin/added>$USER_HOME/_/clis/git_intuivo_cli/en/added" ; then
 {
-    passed clis: ${ONE} folder exists and is linked
+    passed clis: git_intuivo_cli/en folder exists and is linked
 } else {
     Configuring extra work git_intuivo_cli/en
     directory_exists_with_spaces $USER_HOME/_/clis/git_intuivo_cli/en
@@ -471,6 +605,7 @@ if  softlink_exists_with_spaces "/usr/local/bin/added>$USER_HOME/_/clis/git_intu
 }
 fi
 
+chown -R $SUDO_USER:$SUDO_USER $USER_HOME/_/clis
 
 }
 _setup_clis
@@ -479,26 +614,26 @@ _setup_mycd(){
     if it_does_not_exist_with_spaces $USER_HOME/.mycd  ; then
     {
         # My CD
-        cd $USER_HOME/
-        git clone https://gist.github.com/jesusalc/b14a57ec9024ff1a3889be6b2c968bb7 .mycd
+        cd $USER_HOME
+        yes | git clone https://gist.github.com/jesusalc/b14a57ec9024ff1a3889be6b2c968bb7 .mycd
         chown $SUDO_USER:$SUDO_USER -R   $USER_HOME/.mycd
         chmod +x  $USER_HOME/.mycd/mycd.sh
 
         # Add to MAC Bash:
-        echo '. $USER_HOME/.mycd/mycd.sh' >> $USER_HOME/.bash_profile
+        _if_not_contains "$USER_HOME/.bash_profile" "mycd" && echo '. $HOME/.mycd/mycd.sh' >> $USER_HOME/.bash_profile
         # Add to Linux Bash:
 
-        echo '. $USER_HOME/.mycd/mycd.sh' >> $USER_HOME/.bashrc
+        _if_not_contains "$USER_HOME/.bashrc" "mycd" && echo '. $HOME/.mycd/mycd.sh' >> $USER_HOME/.bashrc
 
         # Add to Zsh:
 
-        echo '. $USER_HOME/.mycd/mycd.sh' >> $USER_HOME/.zshrc
+        _if_not_contains "$USER_HOME/.zshrc" "mycd" &&  echo '. $HOME/.mycd/mycd.sh' >> $USER_HOME/.zshrc
 
         # OR - Add .dir_bash_history to the GLOBAL env .gitignore, ignore:
         mkdir -p   $USER_HOME/.config/git
         chown $SUDO_USER:$SUDO_USER -R $USER_HOME/.config/git
         touch  $USER_HOME/.config/git/ignore
-        echo '.dir_bash_history' >> $USER_HOME/.config/git/ignore
+        _if_not_contains $USER_HOME/.config/git/ignore  ".dir_bash_history" &&  echo '.dir_bash_history' >> $USER_HOME/.config/git/ignore
     } else {
         passed that: mycd is installed
     }
