@@ -64,21 +64,20 @@ file_exists_with_spaces "$USER_HOME"
 COMANDDER=""
 _checka_node_commander() {
     local COMANDDER="$1"
-    if is_not_installed npm  ; then
-    {
-        Installing Node.js
-        $COMANDDER install -y nodejs
-    }
-    fi
+    is_not_installed npm &&  $COMANDDER install -y npm             # Ubuntu only
+    is_not_installed node && $COMANDDER install -y nodejs          # In Fedora installs npm and node
+    is_not_installed node && $COMANDDER install -y nodejs-legacy   # Ubuntu only
     verify_is_installed npm
     verify_is_installed node
 }
 _checka_tools_commander(){
     local COMANDDER="$1"
-    is_not_installed xclip && $COMANDDER  install xclip -y
-    is_not_installed tree &&  $COMANDDER  install tree -y
+    is_not_installed xclip && $COMANDDER -y install xclip
+    is_not_installed tree &&  $COMANDDER -y install tree
     is_not_installed ag &&    $COMANDDER -y install the_silver_searcher
+    is_not_installed ag &&    $COMANDDER -y install silversearcher-ag  # Ubuntu only
     is_not_installed ack &&   $COMANDDER -y install ack
+    is_not_installed ack &&   $COMANDDER -y install ack-grep           # Ubuntu only
     is_not_installed pv &&    $COMANDDER -y install pv
     verify_is_installed xclip
     verify_is_installed tree
@@ -106,6 +105,7 @@ _ubuntu__64() {
         snap install cf-cli
     }
     fi
+    chown $SUDO_USER -R $USER_HOME/.cf
     verify_is_installed cf
     _checka_tools_commander $COMANDDER
 }
@@ -138,10 +138,10 @@ determine_os_and_fire_action
 ensure npm or "Canceling Install. Could not find npm"
 ensure node or "Canceling Install. Could not find node"
 ensure cf or "Canceling Install. Could not find cf"
-MTASCHECK=$(su -c $SUDO_USER -c 'cf mtas --help')
+MTASCHECK=$(cf mtas --help >/dev/null 2>&1)
 if [[ -n "$MTASCHECK" ]] &&  [[ "$MTASCHECK" == *"FAILED"* ]]  ; then
 {
-    su - $SUDO_SUER -c 'yes | cf install-plugin multiapps'
+    yes | cf install-plugin multiapps
 }
 fi
 
@@ -169,58 +169,56 @@ if [[ -z "$CURRENTGITUSER" ]] ; then
 fi
 
 _install_npm_utils() {
-
+    chown $SUDO_USER -R $USER_HOME/.npm
+    chown $SUDO_USER -R $USER_HOME/.nvm
     # Global node utils
+    is_not_installed nodemon  && npm i -g nodemon
     if  is_not_installed live-server  ; then
     {
-        su - $SUDO_USER -c 'npm i -g nodemon live-server'
+        npm i -g live-server
     }
     fi
     verify_is_installed live-server
-    if  is_not_installed jest  ; then
-    {
-        su - $SUDO_USER -c 'npm i -g nodemon jest'
-    }
-    fi
-    verify_is_installed jest
+    verify_is_installed nodemon
+    # is_not_installed jest &&  npm i -g jest
+    # verify_is_installed jest
     CHAINSTALLED=$(su - $SUDO_USER -c 'npm -g info chai >/dev/null 2>&1')
     if [[ -n "$CHAINSTALLED" ]] &&  [[ "$CHAINSTALLED" == *"npm ERR"* ]]  ; then
     {
         Installing npm chai
-        su - $SUDO_USER -c 'npm i -g nodemon chai'
+        npm i -g chai
     }
     fi
     MOCHAINSTALLED=$(su - $SUDO_USER -c 'npm -g info mocha >/dev/null 2>&1')
     if [[ -n "$MOCHAINSTALLED" ]] &&  [[ "$MOCHAINSTALLED" == *"npm ERR"* ]]  ; then
     {
-        Installing npm mocha
-        su - $SUDO_USER -c 'npm i -g nodemon mocha'
+        npm i -g mocha
     }
     fi
-    local ret
-    msg=$(su - $SUDO_USER -c 'cds >/dev/null 2>&1')
-    ret=$?
-    if [ $ret -gt 0 ] ; then
-    {
-        Installing npm cds
-        su - $SUDO_USER -c 'npm i -g @sap/cds-dk'
-        msg=$(su - $SUDO_USER -c 'cds')
-        ret=$?
-        if [ $ret -gt 0 ] ; then
-        {
-            echo failed "${ret}:${msg}"
-        }
-        else
-        {
-            passed that: cds got installed
-        }
-        fi
-    }
-    else
-    {
-        passed that: cds is installed
-    }
-    fi
+    local ret msg
+    #msg=$(su - $SUDO_USER -c 'cds >/dev/null 2>&1')
+    #ret=$?
+    #if [ $ret -gt 0 ] ; then
+    #{
+        Installing --skipped npm cds
+    #    npm i -g @sap/cds-dk
+    #    msg=$(su - $SUDO_USER -c 'cds')
+    #    ret=$?
+    #    if [ $ret -gt 0 ] ; then
+    #    {
+    #        echo failed "${ret}:${msg}"
+    #    }
+    #    else
+    #    {
+    #        passed that: cds got installed
+    #    }
+    #    fi
+    #}
+    #else
+    #{
+    #    passed that: cds is installed
+    #}
+    #fi
 }
 
 _if_not_is_installed(){
@@ -230,36 +228,46 @@ _if_not_is_installed(){
  	msg=$($COMANDDER info $1  >/dev/null 2>&1)
         ret=$?
 	[ $ret -gt 0 ] && return 1
-	[[ "$msg" == *"Error"* ]] && return 1
+        [[ "$msg" == *"No such"* ]] && return 1
+        [[ "$msg" == *"nicht gefunden"* ]] && return 1
+	[[ "$msg" == *"Error"*   ]] && return 1
         return 0
 }
 _if_not_contains(){
         local -i ret
         local msg
         ret=0
-        msg=$(cat -n "$1" | grep "$2" >/dev/null 2>&1)
+        [ ! -e "$1" ] && return 1
+        msg=$(cat -n "$1" >/dev/null 2>&1)
         ret=$?
 	[ $ret -gt 0 ] && return 1
         [[ "$msg" == *"No such"* ]] && return 1
+        [[ "$msg" == *"nicht gefunden"* ]] && return 1
+        [[ "$msg" == *"Permission denied"* ]] && return 1
+        ret=0
+	msg=$(echo "$msg" | grep "$2" >/dev/null 2>&1)
+        ret=$?
+	[ $ret -gt 0 ] && return 1
+        [[ "$msg" == *"No such"* ]] && return 1
+        [[ "$msg" == *"nicht gefunden"* ]] && return 1
         [[ "$msg" == *"Permission denied"* ]] && return 1
         return 0
 }
 
 _install_nvm() {
-    local -i ret 
+    local -i ret
     local msg
-[ -s "$USER_HOME/.nvm/nvm.sh" ] && . "$USER_HOME/.nvm/nvm.sh" # This loads nvm
+    chown $SUDO_USER -R $USER_HOME/.config
+    [ -s "$USER_HOME/.nvm/nvm.sh" ] && . "$USER_HOME/.nvm/nvm.sh" # This loads nvm
 
     msg=$(nvm >/dev/null 2>&1)
     ret=$?
-# echo $ret:$msg
 
     if is_not_installed nvm ; then  # [ $ret -gt 0 ] ; then
     {
-# exit 0
         Installing nvm Node Version Manager
-Installing  nvm setup
-su - $SUDO_USER -c 'HOME='$USER_HOME' curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash'
+        Installing  nvm setup
+        su - $SUDO_USER -c 'HOME='$USER_HOME' curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash'
 
 export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${USER_HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
 [ -s "$USER_HOME/.nvm/nvm.sh" ] && \. "$USER_HOME/.nvm/nvm.sh" # This loads nvm
@@ -395,14 +403,14 @@ _install_nvm_version(){
 _install_npm_utils
 
 _install_nvm
-_install_nvm_version 10
-_install_npm_utils
+#_install_nvm_version 10
+#_install_npm_utils
 
-_install_nvm_version 12
-_install_npm_utils
+#_install_nvm_version 12
+#_install_npm_utils
 
-_install_nvm_version 14
-_install_npm_utils
+#_install_nvm_version 14
+#_install_npm_utils
 
 
 _install_nerd_fonts(){
@@ -412,8 +420,8 @@ _install_nerd_fonts(){
 
 
 	cd $USER_HOME
-	su - $SUDO_USER -c 'git clone --depth=1 https://github.com/ryanoasis/nerd-fonts $USER_HOME/.nerd-fonts'
-	directory_exists_with_spaces "$U[[ "$msg" == *"No such"* ]]SER_HOME/.nerd-fonts"
+	git clone --depth=1 https://github.com/ryanoasis/nerd-fonts $USER_HOME/.nerd-fonts
+	directory_exists_with_spaces "$USER_HOME/.nerd-fonts"
 	file_exists_with_spaces "$USER_HOME/.nerd-fonts/install.sh"
 	chown -R $SUDO_USER $USER_HOME/.nerd-fonts
 
@@ -461,8 +469,7 @@ _setup_ohmy(){
         passed that: ohmy is installed
     }
     fi
-}
-_setup_ohmy
+
 
 it_does_not_exist_with_spaces ${USER_HOME}/.oh-my-zsh/themes/powerlevel10k && git clone https://github.com/romkatv/powerlevel10k.git ${USER_HOME}/.oh-my-zsh/themes/powerlevel10k
 _if_not_contains "$USER_HOME/.zshrc" "powerlevel10k" && echo "ZSH_THEME=powerlevel10k/powerlevel10k" >> $USER_HOME/.zshrc
@@ -471,6 +478,9 @@ it_does_not_exist_with_spaces ${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-syntax-
 it_does_not_exist_with_spaces ${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions &&  git clone https://github.com/zsh-users/zsh-autosuggestions ${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions
 
 _if_not_contains "$USER_HOME/.zshrc" "zsh-syntax-highlighting" echo "plugins=(git zsh-syntax-highlighting zsh-autosuggestions)"   >> $USER_HOME/.zshrc
+
+}
+#_setup_ohmy
 
 COMANDDER=gem
 _if_not_is_installed colorls && (yes | $COMANDDER install colorls) && yes | ($COMANDDER update colorls)
@@ -593,7 +603,7 @@ while read -r ONE ; do
     }
     fi
 }
-done <<< ${clis}
+done <<< "${clis}"
 if  softlink_exists_with_spaces "/usr/local/bin/added>$USER_HOME/_/clis/git_intuivo_cli/en/added" ; then
 {
     passed clis: git_intuivo_cli/en folder exists and is linked
