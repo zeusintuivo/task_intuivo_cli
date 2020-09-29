@@ -54,9 +54,6 @@ execute_as_sudo(){
     echo "Needs to run as sudo ... ${0}"
   fi
 }
-execute_as_sudo
-
-USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
 
 load_struct_testing_wget(){
     local provider="$USER_HOME/_/clis/execute_command_intuivo_cli/struct_testing"
@@ -69,6 +66,8 @@ load_struct_testing_wget
 passed Caller user identified:$SUDO_USER
 passed Home identified:$USER_HOME
 file_exists_with_spaces "$USER_HOME"
+execute_as_sudo
+USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
 
 _version() {
     local _sublime_string=$(curl -L https://www.sublimetext.com/3dev  2>/dev/null | sed -n "/<p\ class=\"latest\">/,/<\/div>/p" | head -1)  # suppress only wget download messages, but keep wget output for variable
