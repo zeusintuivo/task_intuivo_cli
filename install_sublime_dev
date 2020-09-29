@@ -6,7 +6,57 @@
 # SUDO_USER only exists during execution of sudo
 # REF: https://stackoverflow.com/questions/7358611/get-users-home-directory-when-they-run-a-script-as-root
 # Global:
+
+function kill(){
+  echo Control Package Control
+  ls -lad /opt/sublime_text/Packages/Package\ Control.sublime-package
+  ls -lad /home/zeus/.config/sublime-text-3/Installed\ Packages/Package\ Control.sublime-package
+}
+trap kill EXIT
+trap kill INT
 THISSCRIPTNAME=`basename "$0"`
+
+execute_as_sudo(){
+  if [ -z $SUDO_USER ] ; then
+    if [[ -z "$THISSCRIPTNAME" ]] ; then
+    {
+        echo "error You need to add THISSCRIPTNAME variable like this:"
+        echo "     THISSCRIPTNAME=\`basename \"\$0\"\`"
+    }
+    else
+    {
+        if [ -e "./$THISSCRIPTNAME" ] ; then
+        {
+          sudo "./$THISSCRIPTNAME"
+        }
+        elif ( command -v type "$THISSCRIPTNAME" >/dev/null 2>&1 );  then
+        {
+          echo "sudo sudo sudo "
+          sudo "$THISSCRIPTNAME"
+        }
+        else
+        {
+          echo -e "\033[05;7m*** Failed to find script to recall it as sudo ...\033[0m"
+          exit 1
+        }
+        fi
+    }
+    fi
+    wait
+    exit 0
+  fi
+  # REF: http://superuser.com/questions/93385/run-part-of-a-bash-script-as-a-different-user
+  # REF: http://superuser.com/questions/195781/sudo-is-there-a-command-to-check-if-i-have-sudo-and-or-how-much-time-is-left
+  local CAN_I_RUN_SUDO=$(sudo -n uptime 2>&1|grep "load"|wc -l)
+  if [ ${CAN_I_RUN_SUDO} -gt 0 ]; then
+    echo -e "\033[01;7m*** Installing as sudo...\033[0m"
+  else
+    echo "Needs to run as sudo ... ${0}"
+  fi
+}
+execute_as_sudo
+
+USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
 
 load_struct_testing_wget(){
     local provider="$USER_HOME/_/clis/execute_command_intuivo_cli/struct_testing"
@@ -16,28 +66,11 @@ load_struct_testing_wget(){
 } # end load_struct_testing_wget
 load_struct_testing_wget
 
-execute_as_sudo(){
-  if [ -z $SUDO_USER ] ; then
-    sudo $THISSCRIPTNAME
-    wait
-    exit 0
-  fi
-  # REF: http://superuser.com/questions/93385/run-part-of-a-bash-script-as-a-different-user
-  # REF: http://superuser.com/questions/195781/sudo-is-there-a-command-to-check-if-i-have-sudo-and-or-how-much-time-is-left
-  local CAN_I_RUN_SUDO=$(sudo -n uptime 2>&1|grep "load"|wc -l)
-  if [ ${CAN_I_RUN_SUDO} -gt 0 ]; then
-    passed "\e[7m*** Installing as sudo...\e[0m"
-  else
-    failed "Needs to run as sudo ... ${0}"
-  fi
-}
-execute_as_sudo
+passed Caller user identified:$SUDO_USER
+passed Home identified:$USER_HOME
+file_exists_with_spaces "$USER_HOME"
 
-USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
-passed Caller user identified:$USER_HOME
-
-
-get_lastest_sublime_version() {
+_version() {
     local _sublime_string=$(curl -L https://www.sublimetext.com/3dev  2>/dev/null | sed -n "/<p\ class=\"latest\">/,/<\/div>/p" | head -1)  # suppress only wget download messages, but keep wget output for variable
     local _sublime_build_line=$(echo "${_sublime_string}" | grep 'Build ....')
     if [ -z "${_sublime_build_line}" ] ; then
@@ -67,76 +100,79 @@ download_sublime(){
   # https://download.sublimetext.com/sublime_text_3_build_3210_x32.tar.bz2
   # https://download.sublimetext.com/sublime_text_3_build_3211_x64.tar.bz2
   local target_url="https://download.sublimetext.com/${1}"
-  if ( command -v type wget >/dev/null 2>&1; ) ; then
-    wget --directory-prefix="${USER_HOME}/Downloads/" --quiet --no-check-certificate "${target_url}" 2>/dev/null
 
-    # echo -e "\e[7m*** Downloading file to temp location...\e[0m"
-    # # REF: about :> http://unix.stackexchange.com/questions/37507/what-does-do-here
-    # :> wgetrc   # here :> equals to Equivalent to the following: cat /dev/null > wgetrc which Nulls out the file called "wgetrc" in the current directory. As in creates an empty file "wgetrc" if one doesn't exist or overwrites one with nothing if it does.
-    # echo "noclobber = off" >> wgetrc
-    # echo "dir_prefix = ." >> wgetrc
-    # echo "dirstruct = off" >> wgetrc
-    # echo "verbose = on" >> wgetrc
-    # echo "progress = bar:default" >> wgetrc
-    # echo "tries = 3" >> wgetrc
+  _download "${target_url}" $USER_HOME/Downloads  ${1}
 
-    # WGETRC=wgetrc wget --quiet --no-check-certificate "${target_url}" 2>/dev/null   # suppress only wget download messages, but keep wget output for variable
-    # echo -e "\e[7m*** Download completed.\e[0m"
-    # rm -f wgetrc
-  elif ( command -v type curl >/dev/null 2>&1; ); then
-    curl -O "${target_url}" 2>/dev/null   # suppress only wget download messages, but keep wget output for variable
-  else
-    failed "I cannot find wget or curl to download! ${target_url}"
-  fi
+  # if ( command -v type wget >/dev/null 2>&1; ) ; then
+  #   wget --directory-prefix="${USER_HOME}/Downloads/" --quiet --no-check-certificate "${target_url}" 2>/dev/null
+  #
+  #   # echo -e "\e[7m*** Downloading file to temp location...\e[0m"
+  #   # # REF: about :> http://unix.stackexchange.com/questions/37507/what-does-do-here
+  #   # :> wgetrc   # here :> equals to Equivalent to the following: cat /dev/null > wgetrc which Nulls out the file called "wgetrc" in the current directory. As in creates an empty file "wgetrc" if one doesn't exist or overwrites one with nothing if it does.
+  #   # echo "noclobber = off" >> wgetrc
+  #   # echo "dir_prefix = ." >> wgetrc
+  #   # echo "dirstruct = off" >> wgetrc
+  #   # echo "verbose = on" >> wgetrc
+  #   # echo "progress = bar:default" >> wgetrc
+  #   # echo "tries = 3" >> wgetrc
+  #
+  #   # WGETRC=wgetrc wget --quiet --no-check-certificate "${target_url}" 2>/dev/null   # suppress only wget download messages, but keep wget output for variable
+  #   # echo -e "\e[7m*** Download completed.\e[0m"
+  #   # rm -f wgetrc
+  # elif ( command -v type curl >/dev/null 2>&1; ); then
+  #   curl -O "${target_url}" 2>/dev/null   # suppress only wget download messages, but keep wget output for variable
+  # else
+  #   failed "I cannot find wget or curl to download! ${target_url}"
+  # fi
 }
 
 download_install_package_control(){
   # Package Control - The Sublime Text Package Manager: https://sublime.wbond.net
-  local target_dir=/opt/sublime_text/Packages/
-  local target_dir2=$USER_HOME/.config/sublime-text-3/Installed\ Packages/
-  local target_package_name=Package\ Control.sublime-package
-  local target_download=$USER_HOME/$target_package_name
+  local __pc_dir_opt_s_p__=/opt/sublime_text/Packages/
+  local __pc_dir_config_s_ip__=$USER_HOME/.config/sublime-text-3/Installed\ Packages/
+  local __pc_download_filename__=Package\ Control.sublime-package
+  local __pc_download_filepath__=$USER_HOME/$__pc_download_filename__
   local target_url="https://packagecontrol.io/Package%20Control.sublime-package"
-  mkdir -p "${target_dir2}"
-  directory_exists "
-  ${target_dir}
-  "
-  directory_exists_with_spaces "${target_dir2}"
+  it_does_not_exist "${__pc_dir_opt_s_p__}" && mkdir  -p "${__pc_dir_opt_s_p__}"
+  it_does_not_exist "${__pc_dir_opt_s_p__}" && mkdir -p "${__pc_dir_config_s_ip__}"
+  directory_exists_with_spaces "${__pc_dir_opt_s_p__}"
+  directory_exists_with_spaces "${__pc_dir_config_s_ip__}"
 
-  if [ ! -e "${target_dir}" ] ; then
-    failed "I cannot find target directory where sublime is installed or Packages folder! ${target_dir}"
+  if [ ! -e "${__pc_dir_opt_s_p__}" ] ; then
+    failed "I cannot find target directory where sublime is installed or Packages folder! ${__pc_dir_opt_s_p__}"
   fi
   if ( command -v type wget >/dev/null 2>&1; ) ; then
-    wget --directory-prefix="${target_download}" --quiet --no-check-certificate "${target_url}" 2>/dev/null   # suppress only wget download messages, but keep wget output for variable
+    wget --directory-prefix="${__pc_download_filepath__}" --quiet --no-check-certificate "${target_url}" 2>/dev/null   # suppress only wget download messages, but keep wget output for variable
   elif ( command -v type curl >/dev/null 2>&1; ); then
-    curl -o "${target_download}" "${target_url}" 2>/dev/null   # suppress only wget download messages, but keep wget output for variable
+    curl -o "${__pc_download_filepath__}" "${target_url}" 2>/dev/null   # suppress only wget download messages, but keep wget output for variable
   else
     failed "I cannot find wget or curl to download! ${target_url}"
   fi
-  directory_exists_with_spaces "${target_download}"
-
-  if [ ! -e "${target_download}" ] ; then
-    failed "I cannot find target donwloaded where the Packages was supposed to be! ${target_download}"
+  directory_does_not_exists_with_spaces "${__pc_download_filepath__}"
+  if [ ! -e "${__pc_download_filepath__}" ] ; then
+    failed "I cannot find target downloaded where the Packages was supposed to be! ${__pc_download_filepath__}"
   fi
+  file_exists_with_spaces "${__pc_download_filepath__}"
 
-  if it_exists_with_spaces "${target_dir2}/${target_package_name}" ; then
-    rm -rf "${target_dir2}/${target_package_name}"
+exit 0
+  if it_exists_with_spaces "${__pc_dir_config_s_ip__}/${__pc_download_filename__}" ; then
+    rm -rf "${__pc_dir_config_s_ip__}/${__pc_download_filename__}"
   fi
-  sudo cp -R "${target_download}"  "${target_dir2}"
+  sudo cp -R "${__pc_download_filepath__}"  "${__pc_dir_config_s_ip__}"
 
-  if it_exists_with_spaces "${target_dir}/${target_package_name}" ; then
-    rm -rf "${target_dir}/${target_package_name}"
+  if it_exists_with_spaces "${__pc_dir_opt_s_p__}/${__pc_download_filename__}" ; then
+    rm -rf "${__pc_dir_opt_s_p__}/${__pc_download_filename__}"
   fi
-  sudo cp -R "${target_download}"  "${target_dir}"
-  rm -rf "${target_download}"
-  if it_exists_with_spaces "${target_dir2}/${target_package_name}/${target_package_name}" ; then
-    sudo mv "${target_dir2}/${target_package_name}/${target_package_name}" "${target_dir2}/${target_package_name}/${target_package_name}m"
-    sudo mv "${target_dir2}/${target_package_name}/${target_package_name}m" "${target_dir2}/"
-    sudo rm -rf "${target_dir2}/${target_package_name}m"
-    sudo mv "${target_dir2}/${target_package_name}m" "${target_dir2}/${target_package_name}"
+  sudo cp -R "${__pc_download_filepath__}"  "${__pc_dir_opt_s_p__}"
+  rm -rf "${__pc_download_filepath__}"
+  if it_exists_with_spaces "${__pc_dir_config_s_ip__}/${__pc_download_filename__}/${__pc_download_filename__}" ; then
+    sudo mv "${__pc_dir_config_s_ip__}/${__pc_download_filename__}/${__pc_download_filename__}" "${__pc_dir_config_s_ip__}/${__pc_download_filename__}/${__pc_download_filename__}m"
+    sudo mv "${__pc_dir_config_s_ip__}/${__pc_download_filename__}/${__pc_download_filename__}m" "${__pc_dir_config_s_ip__}/"
+    sudo rm -rf "${__pc_dir_config_s_ip__}/${__pc_download_filename__}m"
+    sudo mv "${__pc_dir_config_s_ip__}/${__pc_download_filename__}m" "${__pc_dir_config_s_ip__}/${__pc_download_filename__}"
 
   fi
-  sudo chown -R "${SUDO_USER}" "${target_dir2}"
+  sudo chown -R "${SUDO_USER}" "${__pc_dir_config_s_ip__}"
 }
 
 add_to_applications_list(){
@@ -185,8 +221,8 @@ add_to_applications_list(){
 EOF
 }
 
-install_darwin_lastest_sublime_64() {
-    local SUBLIMEDEVLASTESTBUILD=$(get_lastest_sublime_version)
+_darwin__64() {
+    local SUBLIMEDEVLASTESTBUILD=$(_version)
     local SUBLIMENAME="Sublime%20Text%20Build%20${SUBLIMEDEVLASTESTBUILD}.dmg"
     local SUBLIMENAME_4_HDUTIL="Sublime Text Build ${SUBLIMEDEVLASTESTBUILD}.dmg"
     wait
@@ -202,7 +238,7 @@ install_darwin_lastest_sublime_64() {
     wait
     sudo hdiutil detach /Volumes/Sublime\ Text
     wait
-} # end install_darwin_lastest_sublime_64
+} # end _darwin__64
 
 add_to_repo() {
     if  is_not_included "sublime-text" "$(dnf repolist)" ; then
@@ -217,11 +253,11 @@ add_to_repo() {
 }
 add_to_repo
 
-install_linux_fedora_lastest_sublime_64() {
+_fedora__64() {
     execute_as_sudo
     add_to_repo
 
-    local SUBLIMEDEVLASTESTBUILD=$(get_lastest_sublime_version)
+    local SUBLIMEDEVLASTESTBUILD=$(_version)
     local SUBLIMEDEVLASTESTBUILD=3211
     echo $SUBLIMEDEVLASTESTBUILD
     local SUBLIMENAME="sublime-text-${SUBLIMEDEVLASTESTBUILD}-1.x86_64.rpm"
@@ -253,11 +289,11 @@ install_linux_fedora_lastest_sublime_64() {
     passed "Run with: subl"
     passed "\e[7m*** That's all. Have fun Sublime Texting ;)\e[0m"
 
-} # end install_linux_fedora_lastest_sublime_64
+} # end _fedora__64
 
-install_linux_fedora_lastest_sublime_32() {
+_fedora__32() {
     execute_as_sudo
-    local SUBLIMEDEVLASTESTBUILD=$(get_lastest_sublime_version)
+    local SUBLIMEDEVLASTESTBUILD=$(_version)
     local SUBLIMENAME="sublime_text_3_build_${SUBLIMEDEVLASTESTBUILD}_x32.tar.bz2"
     wait
     cd $USER_HOME/Downloads/
@@ -285,11 +321,11 @@ install_linux_fedora_lastest_sublime_32() {
     passed "Sublime Text 3 installed successfully!"
     passed "Run with: subl"
 
-} # end install_linux_fedora_lastest_sublime_32
+} # end _fedora__32
 
-install_linux_ubuntu_lastest_sublime_64() {
+_ubuntu__64() {
     execute_as_sudo
-    local SUBLIMEDEVLASTESTBUILD=$(get_lastest_sublime_version)
+    local SUBLIMEDEVLASTESTBUILD=$(_version)
     echo " version ${SUBLIMEDEVLASTESTBUILD}"
     local SUBLIMENAME="sublime-text_build-${SUBLIMEDEVLASTESTBUILD}_amd64.deb"
     echo " looking for file ${SUBLIMENAME} online"
@@ -302,11 +338,11 @@ install_linux_ubuntu_lastest_sublime_64() {
     echo "installing "
     sudo dpkg -i ${SUBLIMENAME}
     wait
-} # end install_linux_ubuntu_lastest_sublime_64
+} # end _ubuntu__64
 
-install_linux_lastest_sublime_32() {
+_linux__32() {
     execute_as_sudo
-    local SUBLIMEDEVLASTESTBUILD=$(get_lastest_sublime_version)
+    local SUBLIMEDEVLASTESTBUILD=$(_version)
     local SUBLIMENAME="sublime-text_build-${SUBLIMEDEVLASTESTBUILD}_i386.deb"
     wait
     cd ~/Downloads/
@@ -314,9 +350,9 @@ install_linux_lastest_sublime_32() {
     wait
     sudo dpkg -i ${SUBLIMENAME}
     wait
-} # end install_linux_lastest_sublime_32
+} # end _linux__32
 
-install_windows_lastest_sublime_64() {
+_windows__64() {
     local SUBLIMEDEVLASTESTBUILD=$(curl -L https://www.sublimetext.com/3dev | sed -n "/<p\ class=\"latest\">/,/<\/div>/p" | head -1 | grep 'Build ....' | cut -c42-45)
     wait
     local SUBLIMENAME="Sublime%20Text%20Build%20${SUBLIMEDEVLASTESTBUILD}%20x64%20Setup.exe"
@@ -326,9 +362,9 @@ install_windows_lastest_sublime_64() {
     curl -O https://download.sublimetext.com/${SUBLIMENAME}
     ${SUBLIMENAME}
     wait
-} # end install_windows_lastest_sublime_64
+} # end _windows__64
 
-install_windows_lastest_sublime_32() {
+_windows__32() {
     local SUBLIMEDEVLASTESTBUILD=$(curl -L https://www.sublimetext.com/3dev | sed -n "/<p\ class=\"latest\">/,/<\/div>/p" | head -1 | grep 'Build ....' | cut -c42-45)
     wait
     local SUBLIMENAME="Sublime%20Text%20Build%20${SUBLIMEDEVLASTESTBUILD}%20Setup.exe"
@@ -338,54 +374,6 @@ install_windows_lastest_sublime_32() {
     curl -O https://download.sublimetext.com/${SUBLIMENAME}
     ${SUBLIMENAME}
     wait
-} # end install_windows_lastest_sublime_32
-
-
-determine_os_and_fire_action(){
-  # check operation systems
-  if [[ "$(uname)" == "Darwin" ]] ; then
-    # Do something under Mac OS X platform
-      [[ "$(uname -m)" == "x86_64" ]] && install_darwin_lastest_sublime_64 "$@"
-      [[ "$(uname -m)" == "i686"   ]] && install_darwin_lastest_sublime_64 "$@"
-  elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]] ; then
-    # Do something under GNU/Linux platform
-    # Determine OS platform
-    local UNAME=$(uname | tr "[:upper:]" "[:lower:]")
-    local DISTRO=""
-    # If Linux, try to determine specific distribution
-    if [ "$UNAME" == "linux" ]; then
-        # If available, use LSB to identify distribution
-        if [ -f /etc/lsb-release -o -d /etc/lsb-release.d ]; then
-            DISTRO=$(lsb_release -i | cut -d: -f2 | sed s/'^\t'//)
-        # Otherwise, use release info file
-        else
-            DISTRO=$(ls -d /etc/[A-Za-z]*[_-][rv]e[lr]* | grep -v "lsb" | cut -d'/' -f3 | cut -d'-' -f1 | cut -d'_' -f1)
-        fi
-    fi
-
-    if [[ "$DISTRO" == *"edora"* ]]; then
-      {
-        [[ "$(uname -i)" == "x86_64" ]] && install_linux_fedora_lastest_sublime_64 "$@"
-        [[ "$(uname -i)" == "i686"   ]] && install_linux_fedora_lastest_sublime_32 "$@"
-      }
-    elif [[ "$DISTRO" == *"untu"* ]]; then
-      {
-        # ubuntu lsb_release -i | sed 's/Distributor\ ID://g' = \tUbuntu\n
-        [[ "$(uname -i)" == "x86_64" ]] && install_linux_ubuntu_lastest_sublime_64 "$@"
-        [[ "$(uname -i)" == "i686"   ]] && install_linux_lastest_sublime_32 "$@"
-      }
-    fi
-    # For everything else (or if above failed), just use generic identifier
-    unset UNAME
-    unset DISTRO
-
-  elif [[ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]] ; then
-    # Do something under Windows NT platform
-      [[ "$(uname -i)" == "x86_64" ]] && install_windows_lastest_sublime_64 "$*"
-      [[ "$(uname -i)" == "i686"   ]] && install_windows_lastest_sublime_32 "$*"
-    install_windows_lastest_sublime_64 "$*"
-    # nothing here
-  fi
-}
+} # end _windows__32
 
 determine_os_and_fire_action
