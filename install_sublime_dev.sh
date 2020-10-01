@@ -7,20 +7,7 @@ set -E -o functrace
 # SUDO_USER only exists during execution of sudo
 # REF: https://stackoverflow.com/questions/7358611/get-users-home-directory-when-they-run-a-script-as-root
 # Global:
-
-function tkill(){
-  echo -e "\033[01;7m*** $THISSCRIPTNAME Exit ...\033[0m"
-  ls -lad /opt/sublime_text/Packages/Package\ Control.sublime-package
-  tree /opt/sublime_text/Packages/Package\ Control.sublime-package
-  ls -lad /home/zeus/.config/sublime-text-3/Installed\ Packages/Package\ Control.sublime-package
-  tree /home/zeus/.config/sublime-text-3/Installed\ Packages/Package\ Control.sublime-package
-}
-#trap kill ERR
-trap tkill EXIT
-#trap kill INT
 THISSCRIPTNAME=`basename "$0"`
-
-echo hsasas
 
 execute_as_sudo(){
   if [ -z $SUDO_USER ] ; then
@@ -53,14 +40,28 @@ execute_as_sudo(){
   fi
   # REF: http://superuser.com/questions/93385/run-part-of-a-bash-script-as-a-different-user
   # REF: http://superuser.com/questions/195781/sudo-is-there-a-command-to-check-if-i-have-sudo-and-or-how-much-time-is-left
-  local CAN_I_RUN_SUDO=$(sudo -n uptime 2>&1|grep "load"|wc -l)
+  local -i CAN_I_RUN_SUDO=$(sudo -n uptime 2>&1|grep "load"|wc -l)
   if [ ${CAN_I_RUN_SUDO} -gt 0 ]; then
     echo -e "\033[01;7m*** $CAN_I_RUN_SUDO Installing as sudo...\033[0m"
   else
     echo "Needs to run as sudo ... ${0}"
   fi
 } # end execute_as_sudo
-echo hola && exit 0
+execute_as_sudo
+
+function kill(){
+  echo -e "\033[01;7m*** $THISSCRIPTNAME Exit ...\033[0m"
+  ls -lad /opt/sublime_text/Packages/Package\ Control.sublime-package
+  tree /opt/sublime_text/Packages/Package\ Control.sublime-package
+  ls -lad /home/zeus/.config/sublime-text-3/Installed\ Packages/Package\ Control.sublime-package
+  tree /home/zeus/.config/sublime-text-3/Installed\ Packages/Package\ Control.sublime-package
+}
+#trap kill ERR
+trap kill EXIT
+#trap kill INT
+
+USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
+
 load_struct_testing_wget(){
     local provider="$USER_HOME/_/clis/execute_command_intuivo_cli/struct_testing"
     [   -e "${provider}"  ] && source "${provider}"
@@ -69,11 +70,11 @@ load_struct_testing_wget(){
 } # end load_struct_testing_wget
 load_struct_testing_wget
 
-passed Caller user identified:$SUDO_USER
 passed Home identified:$USER_HOME
+passed Caller user identified:$SUDO_USER
 file_exists_with_spaces "$USER_HOME"
-execute_as_sudo
-USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
+
+
 
 _version() {
     local _sublime_string=$(curl -L https://www.sublimetext.com/3dev  2>/dev/null | sed -n "/<p\ class=\"latest\">/,/<\/div>/p" | head -1)  # suppress only wget download messages, but keep wget output for variable
