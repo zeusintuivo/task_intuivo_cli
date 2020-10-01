@@ -3,11 +3,18 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 #
-set -E -o functrace   # Strict and Report Errors
-. ./execute_as_sudo.sh
-. ./add_error_trap.sh
-echo hei
-exit 0
+# . ./add_error_trap.sh
+THISSCRIPTNAME=`basename "$0"`
+# . ./execute_as_sudo.sh
+
+
+function on_int() {
+    echo -e " ☠ ${LIGHTPINK} KILL EXECUTION SIGNAL SEND ${RESET}"
+    echo -e " ☠ ${YELLOW_OVER_DARKBLUE}  ${*} ${RESET}"
+    exit 69;
+}
+trap on_int INT
+
 load_execute_command(){
     # : Execute "${@}"
     #
@@ -17,15 +24,18 @@ load_execute_command(){
     # · • Say "${@}"
     # “ Comment "${@}"
     #
+    local -i _err
+    local _msg
     local URL=""
     local EXECOMCLI=""
     local provider=""
     [ -d "/_/clis/execute_command_intuivo_cli/" ] &&  provider="file:///_/clis/execute_command_intuivo_cli/"
     [ ! -d "/_/clis/execute_command_intuivo_cli/" ] && provider="https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/"
     local BASH_SCRIPTS="
+execute_as_sudo.sh
+add_error_trap.sh
 execute_command
 struct_testing
-
 "
     while read -r ONE_SCRIPT; do
         # if not empty
@@ -33,8 +43,13 @@ struct_testing
             URL="${provider}${ONE_SCRIPT}"
             EXECOMCLI=$(curl $URL  2>/dev/null )   # suppress only curl download messages, but keep curl output for variable
             eval """${EXECOMCLI}"""
-            anounce $URL Loaded
-
+            err=$?
+            if [ $err -ne 0 ] ;  then
+              _msg=$(eval """${EXECOMCLI}""" 2>&1 )
+              echo -e "\nERROR with ${ONE_SCRIPT}\nurl: ${URL} \neval: ${EXECOMCLI} \nresult: \n${_msg} \n\n"
+              exit 1
+            fi
+            echo $URL Loaded
         fi
     done <<< "${BASH_SCRIPTS}"
     unset URL
@@ -45,6 +60,8 @@ struct_testing
 } # end function load_execute_command
 load_execute_command
 
+echo hei
+exit 0
 
 exit 0
 

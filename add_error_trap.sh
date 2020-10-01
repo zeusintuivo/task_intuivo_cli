@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-THISSCRIPTNAME=`basename "$0"`
+# THISSCRIPTNAME=`basename "$0"`
 DEBUG_VERB_READING_LOGIC=$DEBUG || 0
 LIGHTPINK="\033[1;204m"
 TO_LIGHTPINK="\o033[1;204m\o033[48;5;0m"    # Notice the only the \o changes NOT \[]
@@ -53,33 +53,54 @@ function colorize(){
 }
 
 function on_error() {
+  local -n _lineno="${1:-LINENO}"
+  local -n _bash_lineno="${2:-BASH_LINENO}"
+  local _last_command="${3:-BASH_COMMAND}"
+  local _funccaller="${4:-FUNCNAME}"
+  local _code="${5:-0}"
   local __caller=$(caller)
   local __line=$(echo "${__caller}" | cut -d' ' -f1)
   local __script=$(echo "${__caller}" | cut -d' ' -f2)
   echo -e " ☠ ${LIGHTPINK} KILL EXECUTION SIGNAL SEND ${RESET}"
-  echo -e " ☠ ${YELLOW_OVER_DARKBLUE}  ${*} ${RESET}"
-  echo "${1}" >&2
-  echo "${2}" >&2
-  echo "${3}" >&2
-  echo "Error occurred:"  >&2
+  # echo -e " ☠ ${YELLOW_OVER_DARKBLUE}  ${*} ${RESET}"
+
+  # Tests
+  # echo "Total args ${#} should be 10 " >&2
+  # echo "0 ${0} should be caller of the error script " >&2
+  # echo "1 ${1} should be LINENO" >&2
+  # echo "2 ${2} should be BASH_LINENO" >&2
+  # echo "3 ${3} should be BASH_COMMAND" >&2
+  # echo "4 ${4} should be FUNCNAME" >&2
+  # echo "5 ${5} \$FUNCNAME should be a function name or string that thinks is a function name" >&2
+  # echo "6 ${6} \$BASH_COMMAND" >&2
+  # echo "7 ${7} \$BASH_LINENO" >&2
+  # echo "8 ${8} \$LINENO" >&2
+  # echo "9 ${9} \$0 should be caller of the error script " >&2
+  # echo "10 ${10} \$\? error exit number " >&2
+  # echo "- ${__caller} \$__caller  " >&2
+  # echo "${__script}"  >&2
+  echo " "  >&2 # Spacer
   # Test coloring one line
   # awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?">>>":""),$0 }' L="${__line}" "${__script}" | pygmentize -l bash |  grep "102" | hexdump -C  >&2
   # awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?">>>":""),$0 }' L="${__line}" "${__script}" | pygmentize -l bash |  grep "140"  | change_hightlight | hexdump -C >&2
   # awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?">>>":""),$0 }' L="${__line}" "${__script}" | pygmentize -l bash |  grep "140"  | change_hightlight  >&2
-  awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?">>>":""),$0 }' L="${__line}" "${__script}"  | colorize  >&2
+  awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"err » » » > ":""),$0 }' L="${__line}" "${__script}"  | colorize  >&2
   # echo -e " ☠ ${LIGHTPINK}ERROR DURING EXECUTION SIGNAL SEND ${RESET}" | colorize    >&2
   # echo -e " ☠ SCRIPT EXECUTING  ${0}  ${RESET}"  >&2
   # echo -e " ☠ ERROR ON _code ${_code}  ${@} ${RESET}"  | colorize    >&2
   # echo -e "${YELLOW_OVER_DARKBLUE} ${__script}:${__line} ${RESET}"  | colorize    >&2
   # echo -e " ☠ ERROR ON   ${*} ${RESET}"  | colorize  >&2
 
-  echo -e " ☠ SCRIPT ERROR  >>>\n${__script}:${__line} ${3}()  ${RESET}"  >&2
-  echo -e " ☠ CALLED FROM ERROR  \n${__script}:${2} ${3}()  ${RESET}"  >&2
-  echo -e " ☠ PWD  \n$(pwd)  ${RESET}"  >&2
-  echo -e " ☠ BASH_COMMAND  \n$(eval ${BASH_COMMAND})  ${RESET}"  >&2
+  echo -e " ☠ ${LIGHTPINK} SCRIPT » » » >${RESET}\n${__script}:${__line} ${5}()  ${RESET}"  >&2
+  # echo $(echo  "$(eval ${_code} )" 2>&1 | cut -d':' -f1)  >&2
+  # echo $(eval ${_code} )  >&2
+  echo -e " ☠ ${LIGHTPINK} CALLED FROM  ${RESET}${9}:${8} ${5}()  ${RESET}"  >&2
+  echo -e " ☠ ${LIGHTPINK} PWD ${RESET} $(pwd)  ${RESET}"  >&2
+  env | grep SUDO  >&2
+  # code-insiders -g "${__script}:${__line}"&
+  # echo -e " ☠ ${LIGHTPINK} ${_last_command}  ${RESET}"  >&2
   # echo -e " ☠ Variables  \n$(declare -p)  ${RESET}"  >&2  # Show  all variables declared
-  code-insiders -g "${__script}:${__line}"&
-  exit 69;
+  # exit 69;
 }
 set -E -o functrace
-trap 'on_error $0 ${LINENO} $FUNCNAME $BASHCOMMAND $BASH_LINENO LINENO BASH_LINENO ${BASH_COMMAND} "${?}" ' ERR
+trap 'on_error LINENO BASH_LINENO BASH_COMMAND FUNCNAME $FUNCNAME $BASH_COMMAND $BASH_LINENO $LINENO $0  "${?}" ' ERR
