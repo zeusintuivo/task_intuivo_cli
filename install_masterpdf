@@ -22,7 +22,7 @@ execute_as_sudo(){
         {
           sudo "./$THISSCRIPTNAME"
         }
-        elif ( command -v type "$THISSCRIPTNAME" >/dev/null 2>&1 );  then
+        elif ( command -v "$THISSCRIPTNAME" >/dev/null 2>&1 );  then
         {
           echo "sudo sudo sudo "
           sudo "$THISSCRIPTNAME"
@@ -55,7 +55,7 @@ load_struct_testing_wget(){
     local provider="$USER_HOME/_/clis/execute_command_intuivo_cli/struct_testing"
     [   -e "${provider}"  ] && source "${provider}"
     [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
-    ( ( ! command -v type passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
+    ( ( ! command -v passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
 } # end load_struct_testing_wget
 load_struct_testing_wget
 
@@ -92,7 +92,7 @@ _download_just_download() {
   _trap_catch_check
   # wget --directory-prefix="${USER_HOME}/Downloads/" --quiet --no-check-certificate "${target_url}" 2>/dev/null
   echo -e "\033[01;7m*** Downloading file to temp location...\033[0m"
-  if ( command -v type wget >/dev/null 2>&1; ) ; then
+  if ( command -v wget >/dev/null 2>&1; ) ; then
     # # REF: about :> http://unix.stackexchange.com/questions/37507/what-does-do-here
     _trap_try_start
     :> wgetrc   # here :> equals to Equivalent to the following: cat /dev/null > wgetrc which Nulls out the file called "wgetrc" in the current directory. As in creates an empty file "wgetrc" if one doesn't exist or overwrites one with nothing if it does.
@@ -114,7 +114,7 @@ _download_just_download() {
     echo -e "\033[7m*** Download Wget executed completed.\033[0m"
     rm -f wgetrc
     file_does_not_exist_with_spaces wgetrc
-  elif ( command -v type curl >/dev/null 2>&1; ); then
+  elif ( command -v curl >/dev/null 2>&1; ); then
     curl -O "${target_url}" 2>/dev/null   # suppress only wget download messages, but keep wget output for variable
     _assure_success
   else

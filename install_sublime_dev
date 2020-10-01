@@ -35,7 +35,7 @@ execute_as_sudo(){
         {
           sudo "./$THISSCRIPTNAME"
         }
-        elif ( command -v type "$THISSCRIPTNAME" >/dev/null 2>&1 );  then
+        elif ( command -v "$THISSCRIPTNAME" >/dev/null 2>&1 );  then
         {
           echo "sudo sudo sudo "
           sudo "$THISSCRIPTNAME"
@@ -65,7 +65,7 @@ load_struct_testing_wget(){
     local provider="$USER_HOME/_/clis/execute_command_intuivo_cli/struct_testing"
     [   -e "${provider}"  ] && source "${provider}"
     [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
-    ( ( ! command -v type passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
+    ( ( ! command -v passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
 } # end load_struct_testing_wget
 load_struct_testing_wget
 
@@ -108,7 +108,7 @@ download_sublime(){
 
   _download "${target_url}" $USER_HOME/Downloads  ${1}
 
-  # if ( command -v type wget >/dev/null 2>&1; ) ; then
+  # if ( command -v wget >/dev/null 2>&1; ) ; then
   #   wget --directory-prefix="${USER_HOME}/Downloads/" --quiet --no-check-certificate "${target_url}" 2>/dev/null
   #
   #   # echo -e "\e[7m*** Downloading file to temp location...\e[0m"
@@ -124,7 +124,7 @@ download_sublime(){
   #   # WGETRC=wgetrc wget --quiet --no-check-certificate "${target_url}" 2>/dev/null   # suppress only wget download messages, but keep wget output for variable
   #   # echo -e "\e[7m*** Download completed.\e[0m"
   #   # rm -f wgetrc
-  # elif ( command -v type curl >/dev/null 2>&1; ); then
+  # elif ( command -v curl >/dev/null 2>&1; ); then
   #   curl -O "${target_url}" 2>/dev/null   # suppress only wget download messages, but keep wget output for variable
   # else
   #   failed "I cannot find wget or curl to download! ${target_url}"
@@ -146,9 +146,9 @@ download_install_package_control(){
   if [ ! -e "${__pc_dir_opt_s_p__}" ] ; then
     failed "I cannot find target directory where sublime is installed or Packages folder! ${__pc_dir_opt_s_p__}"
   fi
-  if ( command -v type wget >/dev/null 2>&1; ) ; then
+  if ( command -v wget >/dev/null 2>&1; ) ; then
     wget --directory-prefix="${__pc_download_filepath__}" --quiet --no-check-certificate "${target_url}" 2>/dev/null   # suppress only wget download messages, but keep wget output for variable
-  elif ( command -v type curl >/dev/null 2>&1; ); then
+  elif ( command -v curl >/dev/null 2>&1; ); then
     curl -o "${__pc_download_filepath__}" "${target_url}" 2>/dev/null   # suppress only wget download messages, but keep wget output for variable
   else
     failed "I cannot find wget or curl to download! ${target_url}"

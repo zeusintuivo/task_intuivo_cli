@@ -3,51 +3,52 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 #
-set -E -o functrace
-# SUDO_USER only exists during execution of sudo
-# REF: https://stackoverflow.com/questions/7358611/get-users-home-directory-when-they-run-a-script-as-root
-# Global:
-THISSCRIPTNAME=`basename "$0"`
+set -E -o functrace   # Strict and Report Errors
+. ./execute_as_sudo.sh
+. ./add_error_trap.sh
+echo hei
+exit 0
+load_execute_command(){
+    # : Execute "${@}"
+    #
+    # !!! ¡ ☠ Say error "${@}" and exit
+    #
+    # - Anounce "${@}"
+    # · • Say "${@}"
+    # “ Comment "${@}"
+    #
+    local URL=""
+    local EXECOMCLI=""
+    local provider=""
+    [ -d "/_/clis/execute_command_intuivo_cli/" ] &&  provider="file:///_/clis/execute_command_intuivo_cli/"
+    [ ! -d "/_/clis/execute_command_intuivo_cli/" ] && provider="https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/"
+    local BASH_SCRIPTS="
+execute_command
+struct_testing
 
-execute_as_sudo(){
-  if [ -z $SUDO_USER ] ; then
-    if [[ -z "$THISSCRIPTNAME" ]] ; then
-    {
-        echo "error You need to add THISSCRIPTNAME variable like this:"
-        echo "     THISSCRIPTNAME=\`basename \"\$0\"\`"
-    }
-    else
-    {
-        if [ -e "./$THISSCRIPTNAME" ] ; then
-        {
-          sudo "./$THISSCRIPTNAME"
-        }
-        elif ( command -v type "$THISSCRIPTNAME" >/dev/null 2>&1 );  then
-        {
-          echo "sudo sudo sudo "
-          sudo "$THISSCRIPTNAME"
-        }
-        else
-        {
-          echo -e "\033[05;7m*** Failed to find script to recall it as sudo ...\033[0m"
-          exit 1
-        }
+"
+    while read -r ONE_SCRIPT; do
+        # if not empty
+        if [ ! -z "${ONE_SCRIPT}" ] ; then
+            URL="${provider}${ONE_SCRIPT}"
+            EXECOMCLI=$(curl $URL  2>/dev/null )   # suppress only curl download messages, but keep curl output for variable
+            eval """${EXECOMCLI}"""
+            anounce $URL Loaded
+
         fi
-    }
-    fi
-    wait
-    exit 0
-  fi
-  # REF: http://superuser.com/questions/93385/run-part-of-a-bash-script-as-a-different-user
-  # REF: http://superuser.com/questions/195781/sudo-is-there-a-command-to-check-if-i-have-sudo-and-or-how-much-time-is-left
-  local -i CAN_I_RUN_SUDO=$(sudo -n uptime 2>&1|grep "load"|wc -l)
-  if [ ${CAN_I_RUN_SUDO} -gt 0 ]; then
-    echo -e "\033[01;7m*** $CAN_I_RUN_SUDO Installing as sudo...\033[0m"
-  else
-    echo "Needs to run as sudo ... ${0}"
-  fi
-} # end execute_as_sudo
-execute_as_sudo
+    done <<< "${BASH_SCRIPTS}"
+    unset URL
+    unset EXECOMCLI
+    unset ONE_SCRIPT
+    unset BASH_SCRIPTS
+    unset provider
+} # end function load_execute_command
+load_execute_command
+
+
+exit 0
+
+
 
 function kill(){
   echo -e "\033[01;7m*** $THISSCRIPTNAME Exit ...\033[0m"
@@ -60,13 +61,12 @@ function kill(){
 trap kill EXIT
 #trap kill INT
 
-USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
 
 load_struct_testing_wget(){
     local provider="$USER_HOME/_/clis/execute_command_intuivo_cli/struct_testing"
     [   -e "${provider}"  ] && source "${provider}"
     [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
-    ( ( ! command -v type passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
+    ( ( ! command -v passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
 } # end load_struct_testing_wget
 load_struct_testing_wget
 
@@ -109,7 +109,7 @@ download_sublime(){
 
   _download "${target_url}" $USER_HOME/Downloads  ${1}
 
-  # if ( command -v type wget >/dev/null 2>&1; ) ; then
+  # if ( command -v wget >/dev/null 2>&1; ) ; then
   #   wget --directory-prefix="${USER_HOME}/Downloads/" --quiet --no-check-certificate "${target_url}" 2>/dev/null
   #
   #   # echo -e "\e[7m*** Downloading file to temp location...\e[0m"
@@ -125,7 +125,7 @@ download_sublime(){
   #   # WGETRC=wgetrc wget --quiet --no-check-certificate "${target_url}" 2>/dev/null   # suppress only wget download messages, but keep wget output for variable
   #   # echo -e "\e[7m*** Download completed.\e[0m"
   #   # rm -f wgetrc
-  # elif ( command -v type curl >/dev/null 2>&1; ); then
+  # elif ( command -v curl >/dev/null 2>&1; ); then
   #   curl -O "${target_url}" 2>/dev/null   # suppress only wget download messages, but keep wget output for variable
   # else
   #   failed "I cannot find wget or curl to download! ${target_url}"
@@ -147,9 +147,9 @@ download_install_package_control(){
   if [ ! -e "${__pc_dir_opt_s_p__}" ] ; then
     failed "I cannot find target directory where sublime is installed or Packages folder! ${__pc_dir_opt_s_p__}"
   fi
-  if ( command -v type wget >/dev/null 2>&1; ) ; then
+  if ( command -v wget >/dev/null 2>&1; ) ; then
     wget --directory-prefix="${__pc_download_filepath__}" --quiet --no-check-certificate "${target_url}" 2>/dev/null   # suppress only wget download messages, but keep wget output for variable
-  elif ( command -v type curl >/dev/null 2>&1; ); then
+  elif ( command -v curl >/dev/null 2>&1; ); then
     curl -o "${__pc_download_filepath__}" "${target_url}" 2>/dev/null   # suppress only wget download messages, but keep wget output for variable
   else
     failed "I cannot find wget or curl to download! ${target_url}"
@@ -261,7 +261,7 @@ add_to_repo
 _fedora__64() {
     execute_as_sudo
     add_to_repo
-exit 0 
+exit 0
     local SUBLIMEDEVLASTESTBUILD=$(_version)
     local SUBLIMEDEVLASTESTBUILD=3211
     echo $SUBLIMEDEVLASTESTBUILD
