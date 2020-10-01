@@ -84,7 +84,7 @@ function on_error() {
   # awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?">>>":""),$0 }' L="${__line}" "${__script}" | pygmentize -l bash |  grep "102" | hexdump -C  >&2
   # awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?">>>":""),$0 }' L="${__line}" "${__script}" | pygmentize -l bash |  grep "140"  | change_hightlight | hexdump -C >&2
   # awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?">>>":""),$0 }' L="${__line}" "${__script}" | pygmentize -l bash |  grep "140"  | change_hightlight  >&2
-  awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"err » » » > ":""),$0 }' L="${__line}" "${__script}"  | colorize  >&2
+  awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"err » » » > ":""),$0 }' L="${__line}" "${__script}"| colorize >&2
   # echo -e " ☠ ${LIGHTPINK}ERROR DURING EXECUTION SIGNAL SEND ${RESET}" | colorize    >&2
   # echo -e " ☠ SCRIPT EXECUTING  ${0}  ${RESET}"  >&2
   # echo -e " ☠ ERROR ON _code ${_code}  ${@} ${RESET}"  | colorize    >&2

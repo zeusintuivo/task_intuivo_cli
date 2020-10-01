@@ -14,6 +14,58 @@ function on_int() {
     exit 69;
 }
 trap on_int INT
+load_task(){
+    # : Execute "${@}"
+    #
+    # !!! ¡ ☠ Say error "${@}" and exit
+    #
+    # - Anounce "${@}"
+    # · • Say "${@}"
+    # “ Comment "${@}"
+    #
+    local -i _err
+    local _msg
+    local _url=""
+    local _execoncli=""
+    local provider=""
+    [ -d "${HOME}/_/clis/task_intuivo_cli/" ] &&  provider="file://${HOME}/_/clis/task_intuivo_cli/"
+    [ ! -d "${HOME}/_/clis/task_intuivo_cli/" ] && provider="https://raw.githubusercontent.com/zeusintuivo/task_intuivo_cli/master/"
+    local _one
+# add_error_trap.sh
+    local _scripts="
+execute_as_sudo.sh
+"
+
+    while read -r _one; do
+        # if not empty
+        if [ ! -z "${_one}" ] ; then
+            _url="${provider}${_one}"
+            _execoncli=$(curl $_url -o - > "/tmp/${_one}"  2>&1 )   # suppress only c_url download messages, but keep c_url output for variable
+            err=$?
+            if [ $err -ne 0 ] ;  then
+              echo -e "\nERROR with ${_err} ${_one}\n_url: ${_url}\nresult: \n${_execoncli} \n\n"
+              exit 1
+            fi
+            # echo """${_execoncli}""" | bash
+            .  "/tmp/${_one}"
+            # "${_execoncli}"
+             exit 0
+            err=$?
+            if [ $err -ne 0 ] ;  then
+              _msg=$(eval """${_execoncli}""" 2>&1 )
+              echo -e "\nERROR with ${_one}\n_url: ${_url} \neval: ${_execoncli} \nresult: \n${_msg} \n\n"
+              exit 1
+            fi
+            echo $_url Loaded
+        fi
+    done <<< "${_scripts}"
+    unset _url
+    unset _execoncli
+    unset _one
+    unset _scripts
+    unset provider
+} # end function load_task
+load_task
 
 load_execute_command(){
     # : Execute "${@}"
@@ -26,36 +78,35 @@ load_execute_command(){
     #
     local -i _err
     local _msg
-    local URL=""
-    local EXECOMCLI=""
+    local _url=""
+    local _execoncli=""
     local provider=""
-    [ -d "/_/clis/execute_command_intuivo_cli/" ] &&  provider="file:///_/clis/execute_command_intuivo_cli/"
-    [ ! -d "/_/clis/execute_command_intuivo_cli/" ] && provider="https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/"
-    local BASH_SCRIPTS="
-execute_as_sudo.sh
-add_error_trap.sh
+    [ -d "${HOME}/_/clis/execute_command_intuivo_cli/" ] &&  provider="file://${HOME}/_/clis/execute_command_intuivo_cli/"
+    [ ! -d "${HOME}/_/clis/execute_command_intuivo_cli/" ] && provider="https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/"
+    local _one
+    local _scripts="
 execute_command
 struct_testing
 "
-    while read -r ONE_SCRIPT; do
+    while read -r _one; do
         # if not empty
-        if [ ! -z "${ONE_SCRIPT}" ] ; then
-            URL="${provider}${ONE_SCRIPT}"
-            EXECOMCLI=$(curl $URL  2>/dev/null )   # suppress only curl download messages, but keep curl output for variable
-            eval """${EXECOMCLI}"""
+        if [ ! -z "${_one}" ] ; then
+            _url="${provider}${_one}"
+            _execoncli=$(curl $_url  2>/dev/null )   # suppress only c_url download messages, but keep c_url output for variable
+            eval """${_execoncli}"""
             err=$?
             if [ $err -ne 0 ] ;  then
-              _msg=$(eval """${EXECOMCLI}""" 2>&1 )
-              echo -e "\nERROR with ${ONE_SCRIPT}\nurl: ${URL} \neval: ${EXECOMCLI} \nresult: \n${_msg} \n\n"
+              _msg=$(eval """${_execoncli}""" 2>&1 )
+              echo -e "\nERROR with ${_one}\n_url: ${_url} \neval: ${_execoncli} \nresult: \n${_msg} \n\n"
               exit 1
             fi
-            echo $URL Loaded
+            echo $_url Loaded
         fi
-    done <<< "${BASH_SCRIPTS}"
-    unset URL
-    unset EXECOMCLI
-    unset ONE_SCRIPT
-    unset BASH_SCRIPTS
+    done <<< "${_scripts}"
+    unset _url
+    unset _execoncli
+    unset _one
+    unset _scripts
     unset provider
 } # end function load_execute_command
 load_execute_command
@@ -67,15 +118,15 @@ exit 0
 
 
 
-function kill(){
-  echo -e "\033[01;7m*** $THISSCRIPTNAME Exit ...\033[0m"
-  ls -lad /opt/sublime_text/Packages/Package\ Control.sublime-package
-  tree /opt/sublime_text/Packages/Package\ Control.sublime-package
-  ls -lad /home/zeus/.config/sublime-text-3/Installed\ Packages/Package\ Control.sublime-package
-  tree /home/zeus/.config/sublime-text-3/Installed\ Packages/Package\ Control.sublime-package
-}
-#trap kill ERR
-trap kill EXIT
+# function kill(){
+#   echo -e "\033[01;7m*** $THISSCRIPTNAME Exit ...\033[0m"
+#   ls -lad /opt/sublime_text/Packages/Package\ Control.sublime-package
+#   tree /opt/sublime_text/Packages/Package\ Control.sublime-package
+#   ls -lad /home/zeus/.config/sublime-text-3/Installed\ Packages/Package\ Control.sublime-package
+#   tree /home/zeus/.config/sublime-text-3/Installed\ Packages/Package\ Control.sublime-package
+# }
+# #trap kill ERR
+# trap kill EXIT
 #trap kill INT
 
 
