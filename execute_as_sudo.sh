@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
@@ -6,7 +7,7 @@
 # SUDO_USER only exists during execution of sudo
 # REF: https://stackoverflow.com/questions/7358611/get-users-home-directory-when-they-run-a-script-as-root
 # Global:
-# THISSCRIPTNAME=`basename "$0"`
+THISSCRIPTNAME=`basename "$0"`
 
 execute_as_sudo(){
   if [ -z $SUDO_USER ] ; then
