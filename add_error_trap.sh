@@ -101,6 +101,6 @@ function on_error() {
   # echo -e " ☠ ${LIGHTPINK} ${_last_command}  ${RESET}"  >&2
   # echo -e " ☠ Variables  \n$(declare -p)  ${RESET}"  >&2  # Show  all variables declared
   # exit 69;
-}
+} # end  on_error
 set -E -o functrace
 trap 'on_error LINENO BASH_LINENO BASH_COMMAND FUNCNAME $FUNCNAME $BASH_COMMAND $BASH_LINENO $LINENO $0  "${?}" ' ERR

@@ -6,7 +6,8 @@
 # . ./add_error_trap.sh
 THISSCRIPTNAME=`basename "$0"`
 # . ./execute_as_sudo.sh
-
+THISSCRIPTNAME="$(pwd)/$THISSCRIPTNAME"
+# export THISSCRIPTNAME=`basename "$0"`
 
 function on_int() {
     echo -e " ☠ ${LIGHTPINK} KILL EXECUTION SIGNAL SEND ${RESET}"
@@ -14,7 +15,8 @@ function on_int() {
     exit 69;
 }
 trap on_int INT
-load_task(){
+
+boostrap_intuivo_bash_app(){
     # : Execute "${@}"
     #
     # !!! ¡ ☠ Say error "${@}" and exit
@@ -27,89 +29,159 @@ load_task(){
     local _msg
     local _url=""
     local _execoncli=""
-    local provider=""
-    [ -d "${HOME}/_/clis/task_intuivo_cli/" ] &&  provider="file://${HOME}/_/clis/task_intuivo_cli/"
-    [ ! -d "${HOME}/_/clis/task_intuivo_cli/" ] && provider="https://raw.githubusercontent.com/zeusintuivo/task_intuivo_cli/master/"
-    local _one
-# add_error_trap.sh
-    local _scripts="
-execute_as_sudo.sh
+    local -r _filelocal="${HOME}/_/clis/"
+    local _project=""
+    local -r _fileremote="https://raw.githubusercontent.com/zeusintuivo/"
+    [[ -d "${_filelocal}" ]] &&  local -r _provider="${_filelocal}"
+    [[ ! -d "${_filelocal}" ]] &&  local -r _provider="${_fileremote}"
+    local _one=""
+    local _script=""
+    local _tmp_file=""
+    local _function_test=""
+# Project  /  script / test function test if loaded should exist
+    local -r _scripts="
+task_intuivo_cli/add_error_trap.sh:on_error
+task_intuivo_cli/execute_as_sudo.sh:execute_as_sudo
+execute_command_intuivo_cli/execute_command:_execute_command_worker
+execute_command_intuivo_cli/struct_testing:passed
 "
-
     while read -r _one; do
-        # if not empty
-        if [ ! -z "${_one}" ] ; then
-            _url="${provider}${_one}"
-            _execoncli=$(curl $_url -o - > "/tmp/${_one}"  2>&1 )   # suppress only c_url download messages, but keep c_url output for variable
-            err=$?
-            if [ $err -ne 0 ] ;  then
-              echo -e "\nERROR with ${_err} ${_one}\n_url: ${_url}\nresult: \n${_execoncli} \n\n"
-              exit 1
-            fi
-            # echo """${_execoncli}""" | bash
-            .  "/tmp/${_one}"
-            # "${_execoncli}"
-             exit 0
-            err=$?
-            if [ $err -ne 0 ] ;  then
-              _msg=$(eval """${_execoncli}""" 2>&1 )
-              echo -e "\nERROR with ${_one}\n_url: ${_url} \neval: ${_execoncli} \nresult: \n${_msg} \n\n"
-              exit 1
-            fi
-            echo $_url Loaded
+    {
+      [[ -z "${_one}" ]] && continue                         # if  empt loop again
+      # ( declare -p "${_one}"  &>/dev/null )  && continue     # if not  empty and defined
+      (( DEBUG )) && echo ----------_one:: $_one
+      (( DEBUG )) && echo -----_provider:: $_provider
+
+      # First part read _one and distribute values
+      if [[ "${_one}" == *"/"*  ]] ; then
+      {
+        _project=$(echo "${_one}" | cut -d\/ -f1  2>&1)
+        _script=$(echo "${_one}" | cut -d\/ -f2  2>&1 )
+        if [[ "${_script}" == *:*  ]] ; then
+        {
+          _function_test=$(echo "${_script}" | cut -d\: -f2  2>&1 )
+          _script=$(echo "${_script}" | cut -d\: -f1  2>&1)
+        }
         fi
+        (( DEBUG )) && echo ------_project:: $_project
+        (( DEBUG )) && echo -------_script:: $_script
+        if [[ "${_provider}" == "^https://"*  ]] ; then
+        {
+          _url="${_provider}/${_project}/master/${_script}"
+        } else {
+          _url="${_provider}/${_project}/${_script}"
+        }
+        fi
+      } else {
+        if [[ "${_one}" == *:*  ]] ; then
+        {
+          _function_test=$(echo "${_one}" | cut -d: -f2  2>&1 )
+          _one=$(echo "${_one}" | cut -d: -f1  2>&1)
+        }
+        fi
+        _url="${_provider}/${_one}"
+      }
+      fi
+      _tmp_file="/tmp/${_script}"
+      (( DEBUG )) && echo -----_tmp_file:: $_tmp_file
+      (( DEBUG )) && echo _function_test:: $_function_test
+      (( DEBUG )) && echo ----------_url:: $_url
+
+      # Second part distributed values downloads
+      if [[ "${_provider}" == "^https://"*  ]] ; then
+      {
+        (( DEBUG )) && echo "is ^https://"
+        _execoncli=$(wget --quiet --no-check-certificate  "${_url}" -O -  2>&1  )   # suppress only c_url download messages, but keep c_url output for variable
+        err=$?
+        if [ $err -ne 0 ] ;  then
+        {
+          echo -e "\nERROR downloading ${_one}\n_url: ${_url} \n_execoncli: ${_execoncli}  \n_err: ${_err} \n\n"
+          exit 1
+        }
+        fi
+        # Eval
+        # +  just evals
+        # _msg=$(eval """${_execoncli}""" 2>&1 )
+        # err=$?
+        # if [ $err -ne 0 ] ;  then
+        # {
+        #   _msg=$(eval """${_execoncli}""" 2>&1 )
+        #   echo -e "\nERROR with ${_one}\n_url: ${_url} \neval: ${_execoncli} \nresult: \n${_msg} \n\n"
+        #   exit 1
+        # }
+        # fi
+
+        # Source
+        #  + writes to tmp and sources
+        #  ++ writes to tmp
+        _msg=$(echo "${_execoncli}" > "${_tmp_file}" 2>&1 )
+        err=$?
+        (( DEBUG )) && echo "---- write tmp err: $_err"
+        if [ $err -ne 0 ] ;  then
+        {
+          echo -e "\nERROR trying to write \n_tmpfile=${_tmp_file} \n_script: ${_one} \n_msg: ${_msg} \n_err: ${_err}  \n\n"
+          exit 1
+        }
+        fi
+        #  ++ sources
+        [[ ! -e "${_tmp_file}" ]]  && echo -e "\nERROR Local tmp File does not exists or cannot be accessed: \n${_tmp_file}" && exit 1
+        . "${_tmp_file}"
+        err=$?
+        if [ $err -ne 0 ] ;  then
+        {
+          _msg=$(. "${_tmp_file}" 2>&1 )
+          echo -e "\nERROR sourcing from file \n_tmpfile=${_tmp_file} \n_script: ${_one} \n_msg: ${_msg} \n_err: ${_err}  \n\n"
+          exit 1
+        }
+        fi
+      }
+      else
+      {
+        (( DEBUG )) && echo "-----is a file:: $_url "
+        [[ ! -e "$_url" ]]  && echo -e "\nERROR Local File does not exists  or cannot be accessed: \n ${_url}" && exit 1
+        (( DEBUG )) && echo "----file exits:: $_url"
+        . "${_url}"
+        # . /home/zeus/_/clis/task_intuivo_cli/add_error_trap.sh
+        err=$?
+        (( DEBUG )) && echo "---- source err: $_err"
+        if [ $err -ne 0 ] ;  then
+        {
+          _msg=$(. "${_url}" 2>&1 )
+          echo -e "\nERROR sourcing from file \n_url=${_url} \n_script: ${_one} \n_msg: ${_msg} \n_err: ${_err}  \n\n"
+          exit 1
+        }
+        fi
+      }
+      fi
+      # Test function exitance if loaded propertly
+      # type -f on_error
+      (( DEBUG )) &&  echo -------command:: $(command -v on_error )
+      #  ( ( ! command -v passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
+      if ( ( ! command -v "${_function_test}" >/dev/null 2>&1; ) && exit 69; ) ;  then
+      {
+        # cat "${_tmp_file}"
+        echo -e "\n \n  ERROR! Loading < ${_script} > \n\n Could not find function test < $_function_test > \n \n " && exit 1;
+      }
+      else
+      {
+        echo $_url Loaded Correclty
+      }
+      fi
+    }
     done <<< "${_scripts}"
+    unset _err
+    unset _msg
     unset _url
     unset _execoncli
     unset _one
-    unset _scripts
-    unset provider
-} # end function load_task
-load_task
-
-load_execute_command(){
-    # : Execute "${@}"
-    #
-    # !!! ¡ ☠ Say error "${@}" and exit
-    #
-    # - Anounce "${@}"
-    # · • Say "${@}"
-    # “ Comment "${@}"
-    #
-    local -i _err
-    local _msg
-    local _url=""
-    local _execoncli=""
-    local provider=""
-    [ -d "${HOME}/_/clis/execute_command_intuivo_cli/" ] &&  provider="file://${HOME}/_/clis/execute_command_intuivo_cli/"
-    [ ! -d "${HOME}/_/clis/execute_command_intuivo_cli/" ] && provider="https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/"
-    local _one
-    local _scripts="
-execute_command
-struct_testing
-"
-    while read -r _one; do
-        # if not empty
-        if [ ! -z "${_one}" ] ; then
-            _url="${provider}${_one}"
-            _execoncli=$(curl $_url  2>/dev/null )   # suppress only c_url download messages, but keep c_url output for variable
-            eval """${_execoncli}"""
-            err=$?
-            if [ $err -ne 0 ] ;  then
-              _msg=$(eval """${_execoncli}""" 2>&1 )
-              echo -e "\nERROR with ${_one}\n_url: ${_url} \neval: ${_execoncli} \nresult: \n${_msg} \n\n"
-              exit 1
-            fi
-            echo $_url Loaded
-        fi
-    done <<< "${_scripts}"
-    unset _url
-    unset _execoncli
-    unset _one
-    unset _scripts
-    unset provider
-} # end function load_execute_command
-load_execute_command
+    unset _script
+    unset _project
+    unset _tmp_file
+    unset _function_test
+    # unset _scripts # unset: _scripts: cannot unset: readonly variable ..is normal behavoir or bash as of now
+    # unset _provider  # unset: _scripts: cannot unset: readonly variable ..is normal behavoir or bash as of now
+} # end function boostrap_intuivo_bash_app
+boostrap_intuivo_bash_app
 
 echo hei
 exit 0
@@ -127,13 +199,13 @@ exit 0
 # }
 # #trap kill ERR
 # trap kill EXIT
-#trap kill INT
+# #trap kill INT
 
 
 load_struct_testing_wget(){
-    local provider="$USER_HOME/_/clis/execute_command_intuivo_cli/struct_testing"
-    [   -e "${provider}"  ] && source "${provider}"
-    [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
+    local _provider="$USER_HOME/_/clis/execute_command_intuivo_cli/struct_testing"
+    [   -e "${_provider}"  ] && source "${_provider}"
+    [ ! -e "${_provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
     ( ( ! command -v passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
 } # end load_struct_testing_wget
 load_struct_testing_wget
