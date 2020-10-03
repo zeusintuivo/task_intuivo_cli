@@ -49,7 +49,7 @@ function change_hightlight(){
 # exit 0
 
 function colorize(){
-  pygmentize -l bash | change_hightlight | xargs -0I {} echo -e {}"${RESET}"
+  pygmentize -l bash | change_hightlight | xargs -I {} echo -e "{}${RESET}"
 }
 
 function on_error() {

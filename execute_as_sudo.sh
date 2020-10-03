@@ -3,24 +3,136 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 #
-# set -E -o functrace   # Strict and Report Errors
 # SUDO_USER only exists during execution of sudo
 # REF: https://stackoverflow.com/questions/7358611/get-users-home-directory-when-they-run-a-script-as-root
 # Global:
-if [ -n ${1-x} ] && [[ "$1" == "--test" ]]; then
-  THISSCRIPTNAME=`basename "$0"`
+if [ -n ${1-x} ] ; then
+{
+  if [[ "$1" == "--test" ]]; then
+  {
+    DEBUG=1
+    set -xE -o functrace   # Strict and Report Errors
+    THISSCRIPTNAME=`basename "$0"`
+  }
+  fi
+}
 fi
+
+
+# typeset -gr CAN_I_RUN_SUDO=$(sudo -n uptime 2>&1|grep "load"|wc -l)
+# if [ ${CAN_I_RUN_SUDO} -gt 0 ]; then
+#   echo -e "\033[01;7m * * * Executing as sudo * * * \033[0m"
+# else
+#   echo "Needs to run as sudo ... ${0}"
+#   if [ -z "${THISSCRIPTNAME+x}" ] ; then
+#   {
+#       echo "error You need to add THISSCRIPTNAME variable like this:"
+#       echo "     THISSCRIPTNAME=\`basename \"\$0\"\`"
+#       typeset  __SOURCE__="${BASH_SOURCE[0]}"
+#       while [[ -h "${__SOURCE__}" ]]; do
+#           __SOURCE__="$(find "${__SOURCE__}" -type l -ls | sed -n 's@^.* -> \(.*\)@\1@p')"
+#       done
+#       typeset __DIR__="$(cd -P "$(dirname "${__SOURCE__}")" && pwd)"
+#       # echo __SOURCE__ $__SOURCE__
+#       # echo __DIR__ $__DIR__
+#       echo "before calling $__SOURCE__"
+#   }
+#   fi
+#   sudo $THISSCRIPTNAME
+# fi
+# # TESTs
+# # env | grep SUDO
+# # echo "hi"
+# # echo "${SUDO_USER}"
+# # echo ho
+# # [ -n "${HOME+x}" ] && echo "HOME 1"
+# # [ -n "${HOME+x}" ] && echo "HOME 12"
+# # [ -n "${CAN_I_RUN_SUDO2+x}" ] && echo "CAN_I_RUN_SUDO2 null"
+# # [ -n "${CAN_I_RUN_SUDO+x}" ] && echo "CAN_I_RUN_SUDO 12"
+# # [ -n "${SUDO_USER+x}" ] && echo "SUDO_USER 111"
+# # ( declare -p "HOME" ) && echo "HOME 2"
+
+ if ( command -v declare >/dev/null 2>&1; ) ; then
+ {
+  function ensure_is_defined_and_not_empty(){
+    # Sample use
+    #  ( declare -p "HOME"  &>/dev/null )    @ Is HOME declared and not empty?
+    #  [ -n "${HOME+x}" ] && echo "HOME 1"   @ Is HOME declared and not empty?
+    #  ensure_is_defined_and_not_empty HOME  && echo "HOME ensure_is_defined_and_not_empty 1"
+    ( declare -p "${1}"  &>/dev/null ) ||  ( echo ""${1}" ensure_is_defined_and_not_empty failed " ; exit 1 ; return 1);
+  }
+ }
+ elif ( command -v typeset >/dev/null 2>&1; ) ; then   # shell korn has no declare
+ {
+  function ensure_is_defined_and_not_empty(){
+    # Sample use
+    #  ( typeset -p "HOME"  &>/dev/null )    @ Is HOME declared and not empty?
+    #  [ -n "${HOME+x}" ] && echo "HOME 1"   @ Is HOME declared and not empty?
+    #  ensure_is_defined_and_not_empty HOME  && echo "HOME ensure_is_defined_and_not_empty 1"
+    ( typeset -p "${1}"  &>/dev/null ) || ( echo ""${1}" ensure_is_defined_and_not_empty failed" ; exit 1 ; return 1) ;
+  }
+ } else {                                         # sometimes declare or typeset are not available
+  # Function not completed yet how to pass a name and read it as variable?
+  function ensure_is_defined_and_not_empty(){
+  #   # Sample use
+  #   #  ( declare -p "HOME"  &>/dev/null )    @ Is HOME declared and not empty?
+  #   #  [ -n "${HOME+x}" ] && echo "HOME 1"   @ Is HOME declared and not empty?
+  #   #  ensure_is_defined_and_not_empty HOME  && echo "HOME ensure_is_defined_and_not_empty 1"
+  #   local -n _lineno="${1:-WAWA}"  this read something called WAWA but WAWA is hardcoded
+  #   [ -z "${${1}+x}" ]  &&  echo ""${1}" ensure_is_defined_and_not_empty failed"  && exit 1
+    return 0
+  }
+ }
+ fi
+ # Tess for the function
+
+# # execute_as_sudo
+
+# # ensure_is_defined_and_not_empty HOME
+# # ensure_is_defined_and_not_empty USER_HOME
+# # ensure_is_defined_and_not_empty SUDO_USER
+# # declare -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
+# # echo $SUDO_USER
+
+#   function sudo_check(){
+#     typeset -gri AMISUDO=$(sudo -n uptime 2>&1|grep "load"|wc -l)
+#     if [ ${AMISUDO} -gt 0 ]; then
+#       echo -e "\033[01;7m * * * Executing as sudo * * * \033[0m"
+#       # ( declare -p "SUDO_USER"  &>/dev/null ) || echo "SUDO_USER DEFINED FAILED"
+#       # ( declare -p "HME"  &>/dev/null ) || echo "UNDEFINED"
+#       # echo $SUDO_USER
+#       # echo $HOME
+#       # ensure_is_defined_and_not_empty HOME
+#       # ensure_is_defined_and_not_empty SUDO_USER
+#       # declare -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
+#       # ensure_is_defined_and_not_empty USER_HOME
+#       return 0
+#     else
+#       echo "Needs to run as sudo ... ${0}"
+#       # execute_as_sudo
+#       # echo exited
+#       return 0
+#     fi
+#   } # end AMISUDO
+
+# # if (( DEBUG )) ; then
+# # {
+# #   whoami
+# #   sudo_check
+# # }
+# # fi
+
 execute_as_sudo(){
   if [ -z $SUDO_USER ] ; then
     if [ -z "${THISSCRIPTNAME+x}" ] ; then
     {
         echo "error You need to add THISSCRIPTNAME variable like this:"
         echo "     THISSCRIPTNAME=\`basename \"\$0\"\`"
-        local __SOURCE__="${BASH_SOURCE[0]}"
+        typeset  __SOURCE__="${BASH_SOURCE[0]}"
         while [[ -h "${__SOURCE__}" ]]; do
             __SOURCE__="$(find "${__SOURCE__}" -type l -ls | sed -n 's@^.* -> \(.*\)@\1@p')"
         done
-        local __DIR__="$(cd -P "$(dirname "${__SOURCE__}")" && pwd)"
+        typeset __DIR__="$(cd -P "$(dirname "${__SOURCE__}")" && pwd)"
         # echo __SOURCE__ $__SOURCE__
         # echo __DIR__ $__DIR__
         echo "before calling $__SOURCE__"
@@ -29,12 +141,12 @@ execute_as_sudo(){
     {
         if [ -e "./$THISSCRIPTNAME" ] ; then
         {
-          sudo "./$THISSCRIPTNAME"  # <-- You need to add THISSCRIPTNAME variable like this: THISSCRIPTNAME=`basename "$0"`
+          sudo "./$THISSCRIPTNAME"
         }
         elif ( command -v "$THISSCRIPTNAME" >/dev/null 2>&1 );  then
         {
-          echo "sudo sudo sudo $THISSCRIPTNAME"
-          sudo $THISSCRIPTNAME
+          echo "sudo sudo sudo "
+          sudo "$THISSCRIPTNAME"
         }
         else
         {
@@ -51,57 +163,8 @@ execute_as_sudo(){
   # REF: http://superuser.com/questions/195781/sudo-is-there-a-command-to-check-if-i-have-sudo-and-or-how-much-time-is-left
   local CAN_I_RUN_SUDO=$(sudo -n uptime 2>&1|grep "load"|wc -l)
   if [ ${CAN_I_RUN_SUDO} -gt 0 ]; then
-    echo -e "\033[01;7m * * * Executing as sudo * * * \033[0m"
+    echo -e "\033[01;7m*** Installing as sudo...\033[0m"
   else
     echo "Needs to run as sudo ... ${0}"
   fi
 }
-execute_as_sudo
-declare -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
-
-# TESTs
-# env | grep SUDO
-# echo "hi"
-# echo "${SUDO_USER}"
-# echo ho
-# [ -n "${HOME+x}" ] && echo "HOME 1"
-# [ -n "${HOME+x}" ] && echo "HOME 12"
-# [ -n "${CAN_I_RUN_SUDO2+x}" ] && echo "CAN_I_RUN_SUDO2 null"
-# [ -n "${CAN_I_RUN_SUDO+x}" ] && echo "CAN_I_RUN_SUDO 12"
-# [ -n "${SUDO_USER+x}" ] && echo "SUDO_USER 111"
-# ( declare -p "HOME" ) && echo "HOME 2"
-
- if ( command -v declare >/dev/null 2>&1; ) ; then
- {
-  function ensure_is_defined_and_not_empty(){
-    # Sample use
-    #  ( declare -p "HOME"  &>/dev/null )    @ Is HOME declared and not empty?
-    #  [ -n "${HOME+x}" ] && echo "HOME 1"   @ Is HOME declared and not empty?
-    #  ensure_is_defined_and_not_empty HOME  && echo "HOME ensure_is_defined_and_not_empty 1"
-    ( declare -p "${1}"  &>/dev/null )
-  }
- }
- elif ( command -v typeset >/dev/null 2>&1; ) ; then   # shell korn has no declare
- {
-  function ensure_is_defined_and_not_empty(){
-    # Sample use
-    #  ( typeset -p "HOME"  &>/dev/null )    @ Is HOME declared and not empty?
-    #  [ -n "${HOME+x}" ] && echo "HOME 1"   @ Is HOME declared and not empty?
-    #  ensure_is_defined_and_not_empty HOME  && echo "HOME ensure_is_defined_and_not_empty 1"
-    ( typeset -p "${1}"  &>/dev/null )
-  }
- } else {                                         # sometimes declare or typeset are not available
-  function ensure_is_defined_and_not_empty(){
-    # Sample use
-    #  ( declare -p "HOME"  &>/dev/null )    @ Is HOME declared and not empty?
-    #  [ -n "${HOME+x}" ] && echo "HOME 1"   @ Is HOME declared and not empty?
-    #  ensure_is_defined_and_not_empty HOME  && echo "HOME ensure_is_defined_and_not_empty 1"
-    [ -n "${${1}+x}" ]
-  }
- }
- fi
- # Tess for the function
-ensure_is_defined_and_not_empty HOME  || echo "HOME ensure_is_defined_and_not_empty 1" && exit 1
-ensure_is_defined_and_not_empty USER_HOME  || echo "USER_HOME ensure_is_defined_and_not_empty 1"  && exit 1
-ensure_is_defined_and_not_empty SUDO_USER  || echo "SUDO_USER ensure_is_defined_and_not_empty 1"  && exit 1
-

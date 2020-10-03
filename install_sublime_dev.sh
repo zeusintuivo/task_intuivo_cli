@@ -4,18 +4,102 @@
 #
 #
 # . ./add_error_trap.sh
-THISSCRIPTNAME=`basename "$0"`
-# . ./execute_as_sudo.sh
-THISSCRIPTNAME="$(pwd)/$THISSCRIPTNAME"
-# export THISSCRIPTNAME=`basename "$0"`
+typeset -gr THISSCRIPTNAME="$(pwd)/$(basename "$0")"
+# load_execute_as_sudo(){
+#     local provider="$HOME/_/clis/task_intuivo_cli/execute_as_sudo.sh"
+#     [   -e "${provider}"  ] && source "${provider}"
+#     [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/task_intuivo_cli/master/execute_as_sudo.sh -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
+#     ( ( ! command -v execute_as_sudo >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
+# } # end execute_as_sudo
+# load_execute_as_sudo
+# typeset -gr CAN_I_RUN_SUDO=$(sudo -n uptime 2>&1|grep "load"|wc -l)
+#   if [ ${CAN_I_RUN_SUDO} -gt 0 ]; then
+#     echo -e "\033[01;7m * * * Executing as sudo * * * \033[0m"
+#   else
+#     echo "Needs to run as sudo ... ${0}"
+#     sudo $THISSCRIPTNAME
+# fi
+# THISSCRIPTNAME=`basename "$0"`
 
+execute_as_sudo(){
+  if [ -z $SUDO_USER ] ; then
+    if [ -z "${THISSCRIPTNAME+x}" ] ; then
+    {
+        echo "error You need to add THISSCRIPTNAME variable like this:"
+        echo "     THISSCRIPTNAME=\`basename \"\$0\"\`"
+        typeset  __SOURCE__="${BASH_SOURCE[0]}"
+        while [[ -h "${__SOURCE__}" ]]; do
+            __SOURCE__="$(find "${__SOURCE__}" -type l -ls | sed -n 's@^.* -> \(.*\)@\1@p')"
+        done
+        typeset __DIR__="$(cd -P "$(dirname "${__SOURCE__}")" && pwd)"
+        # echo __SOURCE__ $__SOURCE__
+        # echo __DIR__ $__DIR__
+        echo "before calling $__SOURCE__"
+        echo "or call direclty as sudo $__SOURCE__ then you dont need THISSCRIPTNAME to be defined"
+    }
+    else
+    {
+        if [ -e "./$THISSCRIPTNAME" ] ; then
+        {
+          sudo "./$THISSCRIPTNAME"
+        }
+        elif ( command -v "$THISSCRIPTNAME" >/dev/null 2>&1 );  then
+        {
+          echo "sudo sudo sudo "
+          sudo "$THISSCRIPTNAME"
+        }
+        else
+        {
+          echo -e "\033[05;7m*** Failed to find script to recall it as sudo ...\033[0m"
+          exit 1
+        }
+        fi
+    }
+    fi
+    wait
+    exit 0
+  fi
+  # REF: http://superuser.com/questions/93385/run-part-of-a-bash-script-as-a-different-user
+  # REF: http://superuser.com/questions/195781/sudo-is-there-a-command-to-check-if-i-have-sudo-and-or-how-much-time-is-left
+  local CAN_I_RUN_SUDO=$(sudo -n uptime 2>&1|grep "load"|wc -l)
+  if [ ${CAN_I_RUN_SUDO} -gt 0 ]; then
+    echo -e "\033[01;7m*** Installing as sudo...\033[0m"
+  else
+    echo "Needs to run as sudo ... ${0}"
+  fi
+}
+function ensure_is_defined_and_not_empty(){
+  # Sample use
+  #  ( declare -p "HOME"  &>/dev/null )    @ Is HOME declared and not empty?
+  #  [ -n "${HOME+x}" ] && echo "HOME 1"   @ Is HOME declared and not empty?
+  #  ensure_is_defined_and_not_empty HOME  && echo "HOME ensure_is_defined_and_not_empty 1"
+  ( declare -p "${1}"  &>/dev/null ) ||  ( echo ""${1}" ensure_is_defined_and_not_empty failed " ; exit 1 ; return 1);
+}
+
+execute_as_sudo
+
+# USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
+ensure_is_defined_and_not_empty HOME
+ensure_is_defined_and_not_empty SUDO_USER
+ensure_is_defined_and_not_empty SUDO_GID
+ensure_is_defined_and_not_empty SUDO_COMMAND
+declare -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
+ensure_is_defined_and_not_empty USER_HOME
+echo $SUDO_USER
+env | grep SUDO
+
+exit 0
+# . ./execute_as_sudo.sh
+# THISSCRIPTNAME="$(pwd)/$THISSCRIPTNAME"
+# export THISSCRIPTNAME=`basename "$0"`
+# DEBUG=1
+ (( DEBUG )) && echo "THISSCRIPTNAME:: $THISSCRIPTNAME"
 function on_int() {
     echo -e " ☠ ${LIGHTPINK} KILL EXECUTION SIGNAL SEND ${RESET}"
     echo -e " ☠ ${YELLOW_OVER_DARKBLUE}  ${*} ${RESET}"
     exit 69;
 }
 trap on_int INT
-
 boostrap_intuivo_bash_app(){
     # : Execute "${@}"
     #
@@ -29,28 +113,30 @@ boostrap_intuivo_bash_app(){
     local _msg
     local _url=""
     local _execoncli=""
-    local -r _filelocal="${HOME}/_/clis/"
+    (( DEBUG )) && echo "----------HOME:: $HOME"
+    local -r _filelocal="${HOME}/_/clis"
     local _project=""
-    local -r _fileremote="https://raw.githubusercontent.com/zeusintuivo/"
+    local -r _fileremote="https://raw.githubusercontent.com/zeusintuivo"
     [[ -d "${_filelocal}" ]] &&  local -r _provider="${_filelocal}"
     [[ ! -d "${_filelocal}" ]] &&  local -r _provider="${_fileremote}"
     local _one=""
     local _script=""
     local _tmp_file=""
     local _function_test=""
-# Project  /  script / test function test if loaded should exist
-    local -r _scripts="
-task_intuivo_cli/add_error_trap.sh:on_error
-task_intuivo_cli/execute_as_sudo.sh:execute_as_sudo
+    # Project  /  script / test function test if loaded should exist
+    local -ra _scripts=$(grep -v "^#" <<<"
+# task_intuivo_cli/execute_as_sudo.sh:sudo_check
+# task_intuivo_cli/add_error_trap.sh:on_error
 execute_command_intuivo_cli/execute_command:_execute_command_worker
 execute_command_intuivo_cli/struct_testing:passed
-"
+" )
+    (( DEBUG )) && echo "------_scripts:: $_scripts"
     while read -r _one; do
     {
       [[ -z "${_one}" ]] && continue                         # if  empt loop again
       # ( declare -p "${_one}"  &>/dev/null )  && continue     # if not  empty and defined
-      (( DEBUG )) && echo ----------_one:: $_one
-      (( DEBUG )) && echo -----_provider:: $_provider
+      (( DEBUG )) && echo "----------_one:: $_one"
+      (( DEBUG )) && echo "-----_provider:: $_provider"
 
       # First part read _one and distribute values
       if [[ "${_one}" == *"/"*  ]] ; then
@@ -63,9 +149,9 @@ execute_command_intuivo_cli/struct_testing:passed
           _script=$(echo "${_script}" | cut -d\: -f1  2>&1)
         }
         fi
-        (( DEBUG )) && echo ------_project:: $_project
-        (( DEBUG )) && echo -------_script:: $_script
-        if [[ "${_provider}" == "^https://"*  ]] ; then
+        (( DEBUG )) && echo "------_project:: $_project"
+        (( DEBUG )) && echo "-------_script:: $_script"
+        if [[ "${_provider}" == *"https://"*  ]] ; then
         {
           _url="${_provider}/${_project}/master/${_script}"
         } else {
@@ -83,19 +169,20 @@ execute_command_intuivo_cli/struct_testing:passed
       }
       fi
       _tmp_file="/tmp/${_script}"
-      (( DEBUG )) && echo -----_tmp_file:: $_tmp_file
+      (( DEBUG )) && echo "-----_tmp_file:: $_tmp_file"
       (( DEBUG )) && echo _function_test:: $_function_test
-      (( DEBUG )) && echo ----------_url:: $_url
+      (( DEBUG )) && echo "----------_url:: $_url"
 
       # Second part distributed values downloads
-      if [[ "${_provider}" == "^https://"*  ]] ; then
+      if [[ "${_provider}" == *"https://"*  ]] ; then
       {
-        (( DEBUG )) && echo "is ^https://"
-        _execoncli=$(wget --quiet --no-check-certificate  "${_url}" -O -  2>&1  )   # suppress only c_url download messages, but keep c_url output for variable
+        (( DEBUG )) && echo "is https://"
+        _execoncli=$(wget --quiet --no-check-certificate  ${_url} -O -  2>/dev/null )   # suppress only c_url download messages, but keep c_url output for variable
         err=$?
         if [ $err -ne 0 ] ;  then
         {
-          echo -e "\nERROR downloading ${_one}\n_url: ${_url} \n_execoncli: ${_execoncli}  \n_err: ${_err} \n\n"
+          echo -e "tried: _execoncli=\$(wget --quiet --no-check-certificate  ${_url} -O -  2>&1 )"
+          echo -e "\nERROR downloading ${_script}\n_url: ${_url} \n_execoncli: ${_execoncli}  \n_err: ${_err} \n\n"
           exit 1
         }
         fi
@@ -116,7 +203,7 @@ execute_command_intuivo_cli/struct_testing:passed
         #  ++ writes to tmp
         _msg=$(echo "${_execoncli}" > "${_tmp_file}" 2>&1 )
         err=$?
-        (( DEBUG )) && echo "---- write tmp err: $_err"
+        # (( DEBUG )) && echo "---- write tmp err: $_err"
         if [ $err -ne 0 ] ;  then
         {
           echo -e "\nERROR trying to write \n_tmpfile=${_tmp_file} \n_script: ${_one} \n_msg: ${_msg} \n_err: ${_err}  \n\n"
@@ -143,7 +230,7 @@ execute_command_intuivo_cli/struct_testing:passed
         . "${_url}"
         # . /home/zeus/_/clis/task_intuivo_cli/add_error_trap.sh
         err=$?
-        (( DEBUG )) && echo "---- source err: $_err"
+        # (( DEBUG )) && echo "---- source err: $_err"
         if [ $err -ne 0 ] ;  then
         {
           _msg=$(. "${_url}" 2>&1 )
@@ -155,7 +242,7 @@ execute_command_intuivo_cli/struct_testing:passed
       fi
       # Test function exitance if loaded propertly
       # type -f on_error
-      (( DEBUG )) &&  echo -------command:: $(command -v on_error )
+      (( DEBUG )) &&  echo "-------command:: $(command -v on_error )"
       #  ( ( ! command -v passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
       if ( ( ! command -v "${_function_test}" >/dev/null 2>&1; ) && exit 69; ) ;  then
       {
@@ -183,7 +270,42 @@ execute_command_intuivo_cli/struct_testing:passed
 } # end function boostrap_intuivo_bash_app
 boostrap_intuivo_bash_app
 
-echo hei
+# echo hei
+# function sudo_check(){
+#   typeset -gr AMISUDO=$(sudo -n uptime 2>&1|grep "load"|wc -l)
+#   if [ ${AMISUDO} -gt 0 ]; then
+#     echo -e "\033[01;7m * * * Executing as sudo * * * \033[0m"
+#     return 0
+#   else
+#     echo "Needs to run as sudo ... ${0}"
+#     execute_as_sudo
+#     return 0
+#   fi
+# }
+DEBUG=1
+  # set -xE -o functrace   # Strict and Report Errors
+function ensure_is_defined_and_not_empty(){
+    # Sample use
+    #  ( declare -p "HOME"  &>/dev/null )    @ Is HOME declared and not empty?
+    #  [ -n "${HOME+x}" ] && echo "HOME 1"   @ Is HOME declared and not empty?
+    #  ensure_is_defined_and_not_empty HOME  && echo "HOME ensure_is_defined_and_not_empty 1"
+    ( declare -p "${1}"  &>/dev/null ) ||  ( echo ""${1}" ensure_is_defined_and_not_empty failed " ; exit 1 ; return 1);
+  }
+# sudo_check
+# declare -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
+# ensure_is_defined_and_not_empty HOME
+
+# ensure_is_defined_and_not_empty SUDO_USER
+echo $SUDO_USER
+env | grep SUDO
+declare -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
+# ensure_is_defined_and_not_empty USER_HOME
+
+
+# ensure_is_defined_and_not_empty HOME  || echo "HOME ensure_is_defined_and_not_empty 1" && exit 1
+# ensure_is_defined_and_not_empty USER_HOME  || echo "USER_HOME ensure_is_defined_and_not_empty 1"  && exit 1
+# ensure_is_defined_and_not_empty SUDO_USER  || echo "SUDO_USER ensure_is_defined_and_not_empty 1"  && exit 1
+
 exit 0
 
 exit 0
