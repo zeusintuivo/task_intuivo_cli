@@ -57,55 +57,95 @@ function colorize(){
   done <<< "$(pygmentize -l bash | change_hightlight)"
 }
 
-function on_error() {
-  local -n _lineno="${1:-LINENO}"
-  local -n _bash_lineno="${2:-BASH_LINENO}"
-  local _last_command="${3:-BASH_COMMAND}"
-  local _funccaller="${4:-FUNCNAME}"
-  local _code="${5:-0}"
+function _trap_on_error() {
+  local __trapped_script_name="${1:-0}"
+  local -i __trapped_error_exit_num="${2:-0}"
+  local -ni _this_lineno="${3:-LINENO}"
+  local -ni _this_last_error_bash_lineno="${4:-BASH_LINENO}"
+  local -n _this_last_error_funcname="${5:-FUNCNAME}"
+  local -n _this_last_command="${6:-BASH_COMMAND}"
+  local __trapped_function="${7:-0}"
+  local -i __trapped_bash_line_before="${8:-0}"
+  local -i __trapped_line="${9:-0}"
+  local __trapped_bash_command="${@:10}"
   local __caller=$(caller)
-  local __line=$(echo "${__caller}" | cut -d' ' -f1)
-  local __script=$(echo "${__caller}" | cut -d' ' -f2)
+  local -i __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+  local __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
   echo -e " ☠ ${LIGHTPINK} KILL EXECUTION SIGNAL SEND ${RESET}"
   # echo -e " ☠ ${YELLOW_OVER_DARKBLUE}  ${*} ${RESET}"
-
+  #  DEBUG=1
   # Tests
-  # echo "Total args ${#} should be 10 " >&2
-  # echo "0 ${0} should be caller of the error script " >&2
-  # echo "1 ${1} should be LINENO" >&2
-  # echo "2 ${2} should be BASH_LINENO" >&2
-  # echo "3 ${3} should be BASH_COMMAND" >&2
-  # echo "4 ${4} should be FUNCNAME" >&2
-  # echo "5 ${5} \$FUNCNAME should be a function name or string that thinks is a function name" >&2
-  # echo "6 ${6} \$BASH_COMMAND" >&2
-  # echo "7 ${7} \$BASH_LINENO" >&2
-  # echo "8 ${8} \$LINENO" >&2
-  # echo "9 ${9} \$0 should be caller of the error script " >&2
-  # echo "10 ${10} \$\? error exit number " >&2
-  # echo "- ${__caller} \$__caller  " >&2
-  # echo "${__script}"  >&2
+  (( DEBUG )) && echo "Total args ${#} should be 12++ .. more for BASH_COMMAND that vary and provide more  " >&2
+  (( DEBUG )) && echo " " >&2
+  (( DEBUG )) && echo "0 ${0} should be scriptname this" >&2
+  (( DEBUG )) && echo ". caller $(caller) vs "  >&2
+  (( DEBUG )) && echo "1 ${__trapped_script_name} should be scriptname error  " >&2
+  (( DEBUG )) && echo "2 ${__trapped_error_exit_num} error exit " >&2
+  (( DEBUG )) && echo "3 ${_this_lineno} ${3} should be LINENO this line form this script" >&2
+  (( DEBUG )) && echo "4 ${_this_last_error_bash_lineno} ${4} should be BASH_LINENO line form scriptname error" >&2
+  (( DEBUG )) && echo "5 ${_this_last_error_funcname} ${5} should be FUNCNAME this function from this script" >&2
+  (( DEBUG )) && echo "6 ${_this_last_command} ${6} should be BASH_COMMAND from scriptname error" >&2
+  (( DEBUG )) && echo "7 ${__trapped_function} == ${7} \$FUNCNAME of scripterror function that triggered this trap" >&2
+  # Arrays with ${#} or calle equal to stack trace
+  #       BASH_SOURCE[@] : BASH_LINENO[@]   FUNCNAME[@]
+  (( DEBUG )) && echo "8 ${__trapped_bash_line_before} ==  ${8} \$BASH_LINENO of scripterror function that triggered this trap before FUNCNAME -1 " >&2
+  (( DEBUG )) && echo "8.0 ${BASH_LINENO[0]} ==  ${9} \$BASH_LINENO[0] of scripterror function that triggered this trap  " >&2
+  (( DEBUG )) && echo "8.1 ${BASH_LINENO[1]} ==  ${8} \$BASH_LINENO[1] of scripterror function that triggered this trap  " >&2
+  (( DEBUG )) && echo "9 ${__trapped_line} == ${9} \$LINENO of scripterror function that triggered this trap" >&2
+  (( DEBUG )) && echo "10 ${__trapped_bash_command} == ${@:10} \$BASH_COMMAND of scripterror function that triggered this trap" >&2
+  # Tests of global ENV vars and declared envinroment vars
+  # env | grep SUDO  >&2
+  # typeset -p | grep TRACE  >&2
+  # typeset -p | grep STACK  >&2
+  # typeset -p | grep FUNC  >&2
+  # typeset -p | grep LINE  >&2
+  # typeset -p | grep SUDO  >&2
+  # typeset -p | grep ERR  >&2
+  # declare -p | grep BASH  >&2
+  # declare -p | grep CLI  >&2
   echo " "  >&2 # Spacer
   # Test coloring one line
-  # awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?">>>":""),$0 }' L="${__line}" "${__script}" | pygmentize -l bash |  grep "102" | hexdump -C  >&2
-  # awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?">>>":""),$0 }' L="${__line}" "${__script}" | pygmentize -l bash |  grep "140"  | change_hightlight | hexdump -C >&2
-  # awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?">>>":""),$0 }' L="${__line}" "${__script}" | pygmentize -l bash |  grep "140"  | change_hightlight  >&2
-  awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"err » » » > ":""),$0 }' L="${__line}" "${__script}"| colorize >&2
+  # awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?">>>":""),$0 }' L="${__caller_line}" "${__caller_script_name}" | pygmentize -l bash |  grep "102" | hexdump -C  >&2
+  # awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?">>>":""),$0 }' L="${__caller_line}" "${__caller_script_name}" | pygmentize -l bash |  grep "140"  | change_hightlight | hexdump -C >&2
+  # awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?">>>":""),$0 }' L="${__caller_line}" "${__caller_script_name}" | pygmentize -l bash |  grep "140"  | change_hightlight  >&2
+  awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"| colorize >&2
   # echo -e " ☠ ${LIGHTPINK}ERROR DURING EXECUTION SIGNAL SEND ${RESET}" | colorize    >&2
   # echo -e " ☠ SCRIPT EXECUTING  ${0}  ${RESET}"  >&2
-  # echo -e " ☠ ERROR ON _code ${_code}  ${@} ${RESET}"  | colorize    >&2
-  # echo -e "${YELLOW_OVER_DARKBLUE} ${__script}:${__line} ${RESET}"  | colorize    >&2
+  echo " "  >&2 # Spacer
+  # echo -e " ☠ ${LIGHTPINK} ERROR ON ${RESET} ${__trapped_script_name}  ${RESET}"     >&2
+  # echo -e "${YELLOW_OVER_DARKBLUE} ${__caller_script_name}:${__caller_line} ${RESET}"  | colorize    >&2
   # echo -e " ☠ ERROR ON   ${*} ${RESET}"  | colorize  >&2
+  echo -e " ☠ ${LIGHTPINK} PWD: ${RESET} $(pwd)  ${RESET}"  >&2
+  echo -e " ☠ ${LIGHTPINK} SCRIPT » » » >${RESET}\n${__caller_script_name}:${__caller_line} \t ${__trapped_function}()  ${RESET}"  >&2
+  # echo $(echo  "$(eval ${__trapped_bash_command} )" 2>&1 | cut -d':' -f1)  >&2
+  # echo " "  >&2 # Spacer
+  echo -e " ☠ ${LIGHTPINK} OFFENDING COMMAND: ${RESET}${__trapped_bash_command}  ${RESET}"  >&2
+  echo -e " ☠ ${LIGHTPINK} OFFENDING e x i t: ${RESET}${__trapped_error_exit_num}  ${RESET} "  >&2
+  # local __bash_error<<< "$(eval ${__trapped_bash_command} >&2 )"
+  echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+  eval "${__trapped_bash_command}"  >&2
+  local __bash_source=""
+  local -i _error_count=${#BASH_LINENO[@]}
+  (( _error_count-- ))
+  local -i _counter=0
+  local -i _counter_offset=0
+  echo -e " ☠ ${LIGHTPINK} ERROR STACK TRACE: ${len}  ${RESET}"  >&2
+  echo -e "${BRIGHT_BLUE87} ${__caller_script_name}:${__caller_line} \t\t ${__trapped_function}() ${RESET}"  >&2
+  for (( _counter=1; _counter<${_error_count}; _counter++ )); do
+      (( _counter_offset=_counter + 1 ))
+      echo -e "${BRIGHT_BLUE87} ${BASH_SOURCE[$_counter_offset]}:${BASH_LINENO[$_counter]} \t\t ${FUNCNAME[$_counter_offset]}() ${RESET}"  >&2
+  done
 
-  echo -e " ☠ ${LIGHTPINK} SCRIPT » » » >${RESET}\n${__script}:${__line} ${5}()  ${RESET}"  >&2
-  echo $(echo  "$(eval ${_code} )" 2>&1 | cut -d':' -f1)  >&2
-  # echo $(eval ${_code} )  >&2
-  echo -e " ☠ ${LIGHTPINK} CALLED FROM  ${RESET}${9}:${8} ${5}()  ${RESET}"  >&2
-  echo -e " ☠ ${LIGHTPINK} PWD ${RESET} $(pwd)  ${RESET}"  >&2
   # env | grep SUDO  >&2
-  # code-insiders -g "${__script}:${__line}"&
-  # echo -e " ☠ ${LIGHTPINK} ${_last_command}  ${RESET}"  >&2
+  # if not defined and not empty try code normal
+  ( typeset -p "SUDO_USER"  &>/dev/null ) ||  code -g "${__caller_script_name}:${__caller_line}"&
+  # if defined and not empty
+  # ( typeset -p "SUDO_USER"  &>/dev/null ) && echo "sudo user " >&2
+  ( typeset -p "SUDO_USER"  &>/dev/null ) &&  su - $SUDO_USER -c 'code -g '"${__caller_script_name}':'${__caller_line}"''&
   # echo -e " ☠ Variables  \n$(declare -p)  ${RESET}"  >&2  # Show  all variables declared
-  # exit 69;
-} # end  on_error
+  exit ${__trapped_error_exit_num};
+} # end  _trap_on_error
+
 set -E -o functrace
-trap 'on_error LINENO BASH_LINENO BASH_COMMAND FUNCNAME $FUNCNAME $BASH_COMMAND $BASH_LINENO $LINENO $0  "${?}" ' ERR
+#                      1   2       3      4          5       6            7          8            9         10
+trap '_trap_on_error  $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND' ERR

@@ -281,15 +281,15 @@ boostrap_intuivo_bash_app
 
 _version() {
     local -i _err
-    local _sublime_version_page=$(curl -L https://www.sublimetext.com/3dev  2>/dev/null )  # suppress only wget download messages, but keep wget output for variable
-    _err=$?
-    echo -e "----------------err> ${_err} \n"
-    local _sublime_string=$(echo "${_sublime_version_page}" | sed -n "/<p\ class=\"latest\">/,/<\/div>/p" | head -1)  # suppress only wget download messages, but keep wget output for variable
+    # local _sublime_version_page=$(curl -L https://www.sublimetext.com/3dev  2>/dev/null )  # suppress only wget download messages, but keep wget output for variable
+    # set -x
+    local _sublime_version_page=""
+    _sublime_version_page=$(curl -L https://www.sublimetext.com/3dev  2>&1 )  # stout and stderr both get
     _err=$?
     echo -e "----------------err> ${_err} \n "
-    set -x
+    exit 0
+    local _sublime_string=$(echo "${_sublime_version_page}" | sed -n "/<p\ class=\"latest\">/,/<\/div>/p" | head -1)  # suppress only wget download messages, but keep wget output for variable
     local _sublime_build_line=$(echo "${_sublime_string}" | grep "Build ....")
-    set +x
     _err=$?
     echo -e "----------------err> ${_err} \n"
     echo -e "_sublime_build_line> ${_sublime_build_line} \n"
