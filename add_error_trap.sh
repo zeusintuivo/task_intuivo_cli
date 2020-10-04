@@ -49,7 +49,12 @@ function change_hightlight(){
 # exit 0
 
 function colorize(){
-  pygmentize -l bash | change_hightlight | xargs -I {} echo -e "{}${RESET}"
+  local _one=''
+  while read -r _one ; do
+  {
+    echo  -e "${_one}${RESET}"
+  }
+  done <<< "$(pygmentize -l bash | change_hightlight)"
 }
 
 function on_error() {
@@ -92,11 +97,11 @@ function on_error() {
   # echo -e " ☠ ERROR ON   ${*} ${RESET}"  | colorize  >&2
 
   echo -e " ☠ ${LIGHTPINK} SCRIPT » » » >${RESET}\n${__script}:${__line} ${5}()  ${RESET}"  >&2
-  # echo $(echo  "$(eval ${_code} )" 2>&1 | cut -d':' -f1)  >&2
+  echo $(echo  "$(eval ${_code} )" 2>&1 | cut -d':' -f1)  >&2
   # echo $(eval ${_code} )  >&2
   echo -e " ☠ ${LIGHTPINK} CALLED FROM  ${RESET}${9}:${8} ${5}()  ${RESET}"  >&2
   echo -e " ☠ ${LIGHTPINK} PWD ${RESET} $(pwd)  ${RESET}"  >&2
-  env | grep SUDO  >&2
+  # env | grep SUDO  >&2
   # code-insiders -g "${__script}:${__line}"&
   # echo -e " ☠ ${LIGHTPINK} ${_last_command}  ${RESET}"  >&2
   # echo -e " ☠ Variables  \n$(declare -p)  ${RESET}"  >&2  # Show  all variables declared

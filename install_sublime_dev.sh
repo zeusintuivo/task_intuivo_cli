@@ -5,76 +5,27 @@
 #
 # . ./add_error_trap.sh
 typeset -gr THISSCRIPTNAME="$(pwd)/$(basename "$0")"
-# load_execute_as_sudo(){
-#     local provider="$HOME/_/clis/task_intuivo_cli/execute_as_sudo.sh"
-#     [   -e "${provider}"  ] && source "${provider}"
-#     [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/task_intuivo_cli/master/execute_as_sudo.sh -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
-#     ( ( ! command -v execute_as_sudo >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
-# } # end execute_as_sudo
-# load_execute_as_sudo
-# typeset -gr CAN_I_RUN_SUDO=$(sudo -n uptime 2>&1|grep "load"|wc -l)
-#   if [ ${CAN_I_RUN_SUDO} -gt 0 ]; then
-#     echo -e "\033[01;7m * * * Executing as sudo * * * \033[0m"
-#   else
-#     echo "Needs to run as sudo ... ${0}"
-#     sudo $THISSCRIPTNAME
-# fi
-# THISSCRIPTNAME=`basename "$0"`
+load_execute_as_sudo(){
+    # Test home value part 1
+    # echo "${USER_HOME}  ? 1"
+    # echo "${HOME}  ? 1"
 
-execute_as_sudo(){
-  if [ -z $SUDO_USER ] ; then
-    if [ -z "${THISSCRIPTNAME+x}" ] ; then
-    {
-        echo "error You need to add THISSCRIPTNAME variable like this:"
-        echo "     THISSCRIPTNAME=\`basename \"\$0\"\`"
-        typeset  __SOURCE__="${BASH_SOURCE[0]}"
-        while [[ -h "${__SOURCE__}" ]]; do
-            __SOURCE__="$(find "${__SOURCE__}" -type l -ls | sed -n 's@^.* -> \(.*\)@\1@p')"
-        done
-        typeset __DIR__="$(cd -P "$(dirname "${__SOURCE__}")" && pwd)"
-        # echo __SOURCE__ $__SOURCE__
-        # echo __DIR__ $__DIR__
-        echo "before calling $__SOURCE__"
-        echo "or call direclty as sudo $__SOURCE__ then you dont need THISSCRIPTNAME to be defined"
-    }
+    if ( typeset -p "SUDO_USER"  &>/dev/null ) ; then
+      typeset -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
     else
-    {
-        if [ -e "./$THISSCRIPTNAME" ] ; then
-        {
-          sudo "./$THISSCRIPTNAME"
-        }
-        elif ( command -v "$THISSCRIPTNAME" >/dev/null 2>&1 );  then
-        {
-          echo "sudo sudo sudo "
-          sudo "$THISSCRIPTNAME"
-        }
-        else
-        {
-          echo -e "\033[05;7m*** Failed to find script to recall it as sudo ...\033[0m"
-          exit 1
-        }
-        fi
-    }
+      local USER_HOME=$HOME
     fi
-    wait
-    exit 0
-  fi
-  # REF: http://superuser.com/questions/93385/run-part-of-a-bash-script-as-a-different-user
-  # REF: http://superuser.com/questions/195781/sudo-is-there-a-command-to-check-if-i-have-sudo-and-or-how-much-time-is-left
-  local CAN_I_RUN_SUDO=$(sudo -n uptime 2>&1|grep "load"|wc -l)
-  if [ ${CAN_I_RUN_SUDO} -gt 0 ]; then
-    echo -e "\033[01;7m*** Installing as sudo...\033[0m"
-  else
-    echo "Needs to run as sudo ... ${0}"
-  fi
-}
-function ensure_is_defined_and_not_empty(){
-  # Sample use
-  #  ( declare -p "HOME"  &>/dev/null )    @ Is HOME declared and not empty?
-  #  [ -n "${HOME+x}" ] && echo "HOME 1"   @ Is HOME declared and not empty?
-  #  ensure_is_defined_and_not_empty HOME  && echo "HOME ensure_is_defined_and_not_empty 1"
-  ( declare -p "${1}"  &>/dev/null ) ||  ( echo ""${1}" ensure_is_defined_and_not_empty failed " ; exit 1 ; return 1);
-}
+    # Test home value part 2
+    # echo "${USER_HOME}  ? 2"
+    # echo "${HOME}  ? 2"
+    local provider="$USER_HOME/_/clis/task_intuivo_cli/execute_as_sudo.sh"
+    # Test provider
+    # echo "${provider}  ?"
+    [   -e "${provider}"  ] && source "${provider}"
+    [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/task_intuivo_cli/master/execute_as_sudo.sh -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
+    ( ( ! command -v execute_as_sudo >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading execute_as_sudo \n \n " && exit 69; )
+} # end execute_as_sudo
+load_execute_as_sudo
 
 execute_as_sudo
 
@@ -83,12 +34,12 @@ ensure_is_defined_and_not_empty HOME
 ensure_is_defined_and_not_empty SUDO_USER
 ensure_is_defined_and_not_empty SUDO_GID
 ensure_is_defined_and_not_empty SUDO_COMMAND
-declare -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
+# declare -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
 ensure_is_defined_and_not_empty USER_HOME
-echo $SUDO_USER
-env | grep SUDO
+(( DEBUG )) &&  echo $SUDO_USER
+(( DEBUG )) &&  env | grep SUDO
 
-exit 0
+# exit 0
 # . ./execute_as_sudo.sh
 # THISSCRIPTNAME="$(pwd)/$THISSCRIPTNAME"
 # export THISSCRIPTNAME=`basename "$0"`
@@ -113,8 +64,8 @@ boostrap_intuivo_bash_app(){
     local _msg
     local _url=""
     local _execoncli=""
-    (( DEBUG )) && echo "----------HOME:: $HOME"
-    local -r _filelocal="${HOME}/_/clis"
+    (( DEBUG )) && echo "----------HOME:: $USER_HOME"
+    local -r _filelocal="${USER_HOME}/_/clis"
     local _project=""
     local -r _fileremote="https://raw.githubusercontent.com/zeusintuivo"
     [[ -d "${_filelocal}" ]] &&  local -r _provider="${_filelocal}"
@@ -126,7 +77,7 @@ boostrap_intuivo_bash_app(){
     # Project  /  script / test function test if loaded should exist
     local -ra _scripts=$(grep -v "^#" <<<"
 # task_intuivo_cli/execute_as_sudo.sh:sudo_check
-# task_intuivo_cli/add_error_trap.sh:on_error
+task_intuivo_cli/add_error_trap.sh:on_error
 execute_command_intuivo_cli/execute_command:_execute_command_worker
 execute_command_intuivo_cli/struct_testing:passed
 " )
@@ -228,7 +179,7 @@ execute_command_intuivo_cli/struct_testing:passed
         [[ ! -e "$_url" ]]  && echo -e "\nERROR Local File does not exists  or cannot be accessed: \n ${_url}" && exit 1
         (( DEBUG )) && echo "----file exits:: $_url"
         . "${_url}"
-        # . /home/zeus/_/clis/task_intuivo_cli/add_error_trap.sh
+        # . /USER_HOME/zeus/_/clis/task_intuivo_cli/add_error_trap.sh
         err=$?
         # (( DEBUG )) && echo "---- source err: $_err"
         if [ $err -ne 0 ] ;  then
@@ -282,23 +233,23 @@ boostrap_intuivo_bash_app
 #     return 0
 #   fi
 # }
-DEBUG=1
+# DEBUG=1
   # set -xE -o functrace   # Strict and Report Errors
-function ensure_is_defined_and_not_empty(){
-    # Sample use
-    #  ( declare -p "HOME"  &>/dev/null )    @ Is HOME declared and not empty?
-    #  [ -n "${HOME+x}" ] && echo "HOME 1"   @ Is HOME declared and not empty?
-    #  ensure_is_defined_and_not_empty HOME  && echo "HOME ensure_is_defined_and_not_empty 1"
-    ( declare -p "${1}"  &>/dev/null ) ||  ( echo ""${1}" ensure_is_defined_and_not_empty failed " ; exit 1 ; return 1);
-  }
+# function ensure_is_defined_and_not_empty(){
+#     # Sample use
+#     #  ( declare -p "USER_HOME"  &>/dev/null )    @ Is USER_HOME declared and not empty?
+#     #  [ -n "${USER_HOME+x}" ] && echo "USER_HOME 1"   @ Is USER_HOME declared and not empty?
+#     #  ensure_is_defined_and_not_empty USER_HOME  && echo "USER_HOME ensure_is_defined_and_not_empty 1"
+#     ( declare -p "${1}"  &>/dev/null ) ||  ( echo ""${1}" ensure_is_defined_and_not_empty failed " ; exit 1 ; return 1);
+#   }
 # sudo_check
 # declare -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
 # ensure_is_defined_and_not_empty HOME
 
 # ensure_is_defined_and_not_empty SUDO_USER
-echo $SUDO_USER
-env | grep SUDO
-declare -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
+(( DEBUG )) && echo $SUDO_USER
+(( DEBUG )) && env | grep SUDO
+# declare -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
 # ensure_is_defined_and_not_empty USER_HOME
 
 
@@ -306,9 +257,9 @@ declare -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
 # ensure_is_defined_and_not_empty USER_HOME  || echo "USER_HOME ensure_is_defined_and_not_empty 1"  && exit 1
 # ensure_is_defined_and_not_empty SUDO_USER  || echo "SUDO_USER ensure_is_defined_and_not_empty 1"  && exit 1
 
-exit 0
+# exit 0
 
-exit 0
+# exit 0
 
 
 
@@ -323,24 +274,26 @@ exit 0
 # trap kill EXIT
 # #trap kill INT
 
-
-load_struct_testing_wget(){
-    local _provider="$USER_HOME/_/clis/execute_command_intuivo_cli/struct_testing"
-    [   -e "${_provider}"  ] && source "${_provider}"
-    [ ! -e "${_provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
-    ( ( ! command -v passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
-} # end load_struct_testing_wget
-load_struct_testing_wget
-
-passed Home identified:$USER_HOME
-passed Caller user identified:$SUDO_USER
-file_exists_with_spaces "$USER_HOME"
-
+# passed Home identified:$USER_HOME
+# passed Caller user identified:$SUDO_USER
+# file_exists_with_spaces $USER_HOME
 
 
 _version() {
-    local _sublime_string=$(curl -L https://www.sublimetext.com/3dev  2>/dev/null | sed -n "/<p\ class=\"latest\">/,/<\/div>/p" | head -1)  # suppress only wget download messages, but keep wget output for variable
-    local _sublime_build_line=$(echo "${_sublime_string}" | grep 'Build ....')
+    local -i _err
+    local _sublime_version_page=$(curl -L https://www.sublimetext.com/3dev  2>/dev/null )  # suppress only wget download messages, but keep wget output for variable
+    _err=$?
+    echo -e "----------------err> ${_err} \n"
+    local _sublime_string=$(echo "${_sublime_version_page}" | sed -n "/<p\ class=\"latest\">/,/<\/div>/p" | head -1)  # suppress only wget download messages, but keep wget output for variable
+    _err=$?
+    echo -e "----------------err> ${_err} \n "
+    set -x
+    local _sublime_build_line=$(echo "${_sublime_string}" | grep "Build ....")
+    set +x
+    _err=$?
+    echo -e "----------------err> ${_err} \n"
+    echo -e "_sublime_build_line> ${_sublime_build_line} \n"
+    exit 0
     if [ -z "${_sublime_build_line}" ] ; then
     {
         echo "error when doing check of line string from website. Got nothing"
@@ -507,7 +460,7 @@ _darwin__64() {
     wait
 } # end _darwin__64
 
-add_to_repo() {
+add_rpm_gpg_key_and_add_install_repository() {
     if  is_not_included "sublime-text" "$(dnf repolist)" ; then
     {
       sudo rpm -v --import https://download.sublimetext.com/sublimehq-rpm-pub.gpg
@@ -518,23 +471,51 @@ add_to_repo() {
     }
     fi
 }
-add_to_repo
+# add_rpm_gpg_key_and_add_install_repository
 
 _fedora__64() {
-    execute_as_sudo
-    add_to_repo
-exit 0
     local SUBLIMEDEVLASTESTBUILD=$(_version)
+    echo $SUBLIMEDEVLASTESTBUILD
+
     local SUBLIMEDEVLASTESTBUILD=3211
     echo $SUBLIMEDEVLASTESTBUILD
+exit 0
     local SUBLIMENAME="sublime-text-${SUBLIMEDEVLASTESTBUILD}-1.x86_64.rpm"
     echo $SUBLIMENAME
+
+  local CODENAME=$(_version "linux" "PhpStorm*.*.*.tar.gz")
+
+  CODENAME=$(echo "PhpStorm-2020.2")
+  local TARGET_URL="https://download-cf.jetbrains.com/webide/${CODENAME}.tar.gz"
+  if  it_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}.tar.gz" ; then
+  {
+    file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}.tar.gz"
+  }
+  else
+  {
+    file_exists_with_spaces $USER_HOME/Downloads
+    cd $USER_HOME/Downloads
+    _download "${TARGET_URL}" $USER_HOME/Downloads  ${CODENAME}.tar.gz
+    file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}.tar.gz"
+  }
+  fi
+  if  it_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}" ; then
+  {
+    rm -rf "$USER_HOME/Downloads/${CODENAME}"
+    directory_does_not_exist_with_spaces "$USER_HOME/Downloads/${CODENAME}"
+  }
+  fi
+
+
+
     wait
     cd $USER_HOME/Downloads/
     # if ! it_exists "${SUBLIMENAME}"; then
       # download_sublime "${SUBLIMENAME}"
     # fi
     wait
+exit 0
+    add_rpm_gpg_key_and_add_install_repository
     sudo dnf -y install "$USER_HOME/Downloads/${SUBLIMENAME}"
 
     download_install_package_control
