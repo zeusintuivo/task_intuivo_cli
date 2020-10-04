@@ -286,17 +286,29 @@ _version() {
     local _sublime_version_page=""
     _sublime_version_page=$(curl -L https://www.sublimetext.com/3dev  2>&1 )  # stout and stderr both get
     _err=$?
-    echo -e "----------------err> ${_err} \n "
-    exit 0
+    if [ $_err -eq 6 ] ;  then # curl: (6) Could not resolve host:
+    {
+      >&2 echo -e "ERROR Failed to Connect to Internet. Check your connection or Site not found. "
+      exit $_err
+    }
+    elif [ $_err -ne 0 ] ;  then
+    {
+      >&2 echo -e "ERROR There was an error doing command Curl to download  Err:$_err "
+      exit $_err
+    }
+    fi
     local _sublime_string=$(echo "${_sublime_version_page}" | sed -n "/<p\ class=\"latest\">/,/<\/div>/p" | head -1)  # suppress only wget download messages, but keep wget output for variable
+    _err=$?
+    # echo -e "_sublime_string> ${_sublime_string} \n"
+    # exit 0
     local _sublime_build_line=$(echo "${_sublime_string}" | grep "Build ....")
     _err=$?
-    echo -e "----------------err> ${_err} \n"
-    echo -e "_sublime_build_line> ${_sublime_build_line} \n"
-    exit 0
+    # echo -e "----------------err> ${_err} \n"
+    # echo -e "_sublime_build_line> ${_sublime_build_line} \n"
+    # exit 0
     if [ -z "${_sublime_build_line}" ] ; then
     {
-        echo "error when doing check of line string from website. Got nothing"
+        echo "ERROR when doing check of line string from website. Got nothing"
         echo "    _sublime_string: <${_sublime_string}>"
         echo "                      0123456789 123456789 123456789 123456789 123456789 123456789 1234567889 123456789 123456789 123456789 123456789 "
         echo "                                1         2         3         4         5         6          7         8         9        10        11"
@@ -306,12 +318,14 @@ _version() {
     }
     else
     {
-        local SUBLIMEDEVLASTESTBUILD=$(echo "${_sublime_build_line}" | cut -c42-45)
+        local __online_version_from_page=$(echo "${_sublime_build_line}" | cut -c42-45)
         wait
-        [[ -z "${SUBLIMEDEVLASTESTBUILD}" ]] && failed "Sublime Version not found!"
-        echo "${SUBLIMEDEVLASTESTBUILD}"
+        [[ -z "${__online_version_from_page}" ]] && failed "Sublime Version not found!"
+        echo "${__online_version_from_page}"
     }
     fi
+    # exit 0
+    return 0
 }
 
 download_sublime(){
@@ -354,8 +368,8 @@ download_install_package_control(){
   local __pc_download_filename__=Package\ Control.sublime-package
   local __pc_download_filepath__=$USER_HOME/$__pc_download_filename__
   local target_url="https://packagecontrol.io/Package%20Control.sublime-package"
-  it_does_not_exist "${__pc_dir_opt_s_p__}" && mkdir  -p "${__pc_dir_opt_s_p__}"
-  it_does_not_exist "${__pc_dir_opt_s_p__}" && mkdir -p "${__pc_dir_config_s_ip__}"
+  it_does_not_exist_with_spaces "${__pc_dir_opt_s_p__}" && mkdir  -p "${__pc_dir_opt_s_p__}"
+  it_does_not_exist_with_spaces "${__pc_dir_opt_s_p__}" && mkdir -p "${__pc_dir_config_s_ip__}"
   directory_exists_with_spaces "${__pc_dir_opt_s_p__}"
   directory_exists_with_spaces "${__pc_dir_config_s_ip__}"
 
@@ -375,6 +389,7 @@ download_install_package_control(){
   fi
   file_exists_with_spaces "${__pc_download_filepath__}"
 
+exit 0
   if it_exists_with_spaces "${__pc_dir_config_s_ip__}/${__pc_download_filename__}" ; then
     rm -rf "${__pc_dir_config_s_ip__}/${__pc_download_filename__}"
   fi
@@ -442,9 +457,9 @@ EOF
 }
 
 _darwin__64() {
-    local SUBLIMEDEVLASTESTBUILD=$(_version)
-    local SUBLIMENAME="Sublime%20Text%20Build%20${SUBLIMEDEVLASTESTBUILD}.dmg"
-    local SUBLIMENAME_4_HDUTIL="Sublime Text Build ${SUBLIMEDEVLASTESTBUILD}.dmg"
+    local __online_version_from_page=$(_version)
+    local SUBLIMENAME="Sublime%20Text%20Build%20${__online_version_from_page}.dmg"
+    local SUBLIMENAME_4_HDUTIL="Sublime Text Build ${__online_version_from_page}.dmg"
     wait
     cd ~/Downloads/
     [ ! -e "${SUBLIMENAME_4_HDUTIL}" ] || download_sublime "${SUBLIMENAME}"
@@ -474,52 +489,50 @@ add_rpm_gpg_key_and_add_install_repository() {
 # add_rpm_gpg_key_and_add_install_repository
 
 _fedora__64() {
-    local SUBLIMEDEVLASTESTBUILD=$(_version)
-    echo $SUBLIMEDEVLASTESTBUILD
-
-    local SUBLIMEDEVLASTESTBUILD=3211
-    echo $SUBLIMEDEVLASTESTBUILD
-exit 0
-    local SUBLIMENAME="sublime-text-${SUBLIMEDEVLASTESTBUILD}-1.x86_64.rpm"
-    echo $SUBLIMENAME
-
-  local CODENAME=$(_version "linux" "PhpStorm*.*.*.tar.gz")
-
-  CODENAME=$(echo "PhpStorm-2020.2")
-  local TARGET_URL="https://download-cf.jetbrains.com/webide/${CODENAME}.tar.gz"
-  if  it_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}.tar.gz" ; then
+  local -i __online_version_from_page=$(_version)
+  passed $__online_version_from_page
+  if command -v "subl" >/dev/null 2>&1 ; then
   {
-    file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}.tar.gz"
+    local -i __current_version=$(subl --version | cüt "Sublime Text Build")
+    passed $__current_version
+    if [ $__current_version -gt $__online_version_from_page ] ; then
+    {
+      failed installed version is higher than online version
+      exit 69
+    }
+    fi
+  }
+  fi
+  local SUBLIMENAME="sublime-text-${__online_version_from_page}-1.x86_64.rpm"
+  passed $SUBLIMENAME
+  local CODENAME=$SUBLIMENAME
+  # Sample https://download.sublimetext.com/sublime-text-3210-1.x86_64.rpm
+  local TARGET_URL="https://download.sublimetext.com/${CODENAME}"
+  passed $TARGET_URL
+  if  it_exists_with_spaces "$USER_HOME/${CODENAME}" ; then
+  {
+    file_exists_with_spaces "$USER_HOME/${CODENAME}"
   }
   else
   {
     file_exists_with_spaces $USER_HOME/Downloads
-    cd $USER_HOME/Downloads
-    _download "${TARGET_URL}" $USER_HOME/Downloads  ${CODENAME}.tar.gz
-    file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}.tar.gz"
+    cd $USER_HOME
+    _download "${TARGET_URL}" "$USER_HOME/"  "${CODENAME}"
+    file_exists_with_spaces "$USER_HOME/${CODENAME}"
   }
   fi
-  if  it_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}" ; then
+
+
+  add_rpm_gpg_key_and_add_install_repository
+  sudo dnf -y install "$USER_HOME/${CODENAME}"
+  if  it_exists_with_spaces "$USER_HOME/${CODENAME}" ; then
   {
-    rm -rf "$USER_HOME/Downloads/${CODENAME}"
-    directory_does_not_exist_with_spaces "$USER_HOME/Downloads/${CODENAME}"
+    rm -rf "$USER_HOME/${CODENAME}"
+    directory_does_not_exist_with_spaces "$USER_HOME/${CODENAME}"
   }
   fi
-
-
-
-    wait
-    cd $USER_HOME/Downloads/
-    # if ! it_exists "${SUBLIMENAME}"; then
-      # download_sublime "${SUBLIMENAME}"
-    # fi
-    wait
-exit 0
-    add_rpm_gpg_key_and_add_install_repository
-    sudo dnf -y install "$USER_HOME/Downloads/${SUBLIMENAME}"
-
-    download_install_package_control
-    add_to_applications_list
+  download_install_package_control
+  add_to_applications_list
 exit 0
     file_exists "
     /opt/sublime_text/sublime_text
@@ -541,8 +554,8 @@ exit 0
 
 _fedora__32() {
     execute_as_sudo
-    local SUBLIMEDEVLASTESTBUILD=$(_version)
-    local SUBLIMENAME="sublime_text_3_build_${SUBLIMEDEVLASTESTBUILD}_x32.tar.bz2"
+    local __online_version_from_page=$(_version)
+    local SUBLIMENAME="sublime_text_3_build_${__online_version_from_page}_x32.tar.bz2"
     wait
     cd $USER_HOME/Downloads/
     download_sublime "${SUBLIMENAME}"
@@ -573,9 +586,9 @@ _fedora__32() {
 
 _ubuntu__64() {
     execute_as_sudo
-    local SUBLIMEDEVLASTESTBUILD=$(_version)
-    echo " version ${SUBLIMEDEVLASTESTBUILD}"
-    local SUBLIMENAME="sublime-text_build-${SUBLIMEDEVLASTESTBUILD}_amd64.deb"
+    local __online_version_from_page=$(_version)
+    echo " version ${__online_version_from_page}"
+    local SUBLIMENAME="sublime-text_build-${__online_version_from_page}_amd64.deb"
     echo " looking for file ${SUBLIMENAME} online"
     wait
     echo "changing to Downloads folder  ~/Downloads/"
@@ -590,8 +603,8 @@ _ubuntu__64() {
 
 _linux__32() {
     execute_as_sudo
-    local SUBLIMEDEVLASTESTBUILD=$(_version)
-    local SUBLIMENAME="sublime-text_build-${SUBLIMEDEVLASTESTBUILD}_i386.deb"
+    local __online_version_from_page=$(_version)
+    local SUBLIMENAME="sublime-text_build-${__online_version_from_page}_i386.deb"
     wait
     cd ~/Downloads/
     download_sublime "${SUBLIMENAME}"
@@ -601,9 +614,9 @@ _linux__32() {
 } # end _linux__32
 
 _windows__64() {
-    local SUBLIMEDEVLASTESTBUILD=$(curl -L https://www.sublimetext.com/3dev | sed -n "/<p\ class=\"latest\">/,/<\/div>/p" | head -1 | grep 'Build ....' | cut -c42-45)
+    local __online_version_from_page=$(curl -L https://www.sublimetext.com/3dev | sed -n "/<p\ class=\"latest\">/,/<\/div>/p" | head -1 | grep 'Build ....' | cut -c42-45)
     wait
-    local SUBLIMENAME="Sublime%20Text%20Build%20${SUBLIMEDEVLASTESTBUILD}%20x64%20Setup.exe"
+    local SUBLIMENAME="Sublime%20Text%20Build%20${__online_version_from_page}%20x64%20Setup.exe"
     wait
     cd $USER_HOMEDIR
     cd Downloads
@@ -613,9 +626,9 @@ _windows__64() {
 } # end _windows__64
 
 _windows__32() {
-    local SUBLIMEDEVLASTESTBUILD=$(curl -L https://www.sublimetext.com/3dev | sed -n "/<p\ class=\"latest\">/,/<\/div>/p" | head -1 | grep 'Build ....' | cut -c42-45)
+    local __online_version_from_page=$(curl -L https://www.sublimetext.com/3dev | sed -n "/<p\ class=\"latest\">/,/<\/div>/p" | head -1 | grep 'Build ....' | cut -c42-45)
     wait
-    local SUBLIMENAME="Sublime%20Text%20Build%20${SUBLIMEDEVLASTESTBUILD}%20Setup.exe"
+    local SUBLIMENAME="Sublime%20Text%20Build%20${__online_version_from_page}%20Setup.exe"
     wait
     cd $USER_HOMEDIR
     cd Downloads
