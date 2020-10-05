@@ -5,17 +5,31 @@
 #
 typeset -gr THISSCRIPTNAME="$(pwd)/$(basename "$0")"
 load_execute_boot_basic_with_sudo(){
-    if ( typeset -p "SUDO_USER"  &>/dev/null ) ; then
-      typeset -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
-    else
-      local USER_HOME=$HOME
+    # if ( typeset -p "SUDO_USER"  &>/dev/null ) ; then
+    #   typeset -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
+    # else
+    #   local USER_HOME=$HOME
+    # fi
+    if ( ! typeset -p "SUDO_USER"  &>/dev/null ) ; then
+      typeset -rg USER_HOME=$HOME
     fi
     local provider="$USER_HOME/_/clis/execute_command_intuivo_cli/execute_boot_basic.sh"
     [   -e "${provider}"  ] && source "${provider}"
     [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/execute_boot_basic.sh -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
-    ( ( ! command -v execute_as_sudo >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading execute_boot_basic.sh \n \n " && exit 69; )
+    ( ( ! command -v failed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading execute_boot_basic.sh \n \n " && exit 69; )
 } # end load_execute_boot_basic_with_sudo
 load_execute_boot_basic_with_sudo
+
+function _trap_on_exit(){
+  echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME EXITS ...\033[0m"
+  ls -lad /opt/sublime_text/Packages/Package\ Control.sublime-package
+  tree /opt/sublime_text/Packages/Package\ Control.sublime-package
+  ls -lad /home/zeus/.config/sublime-text-3/Installed\ Packages/Package\ Control.sublime-package
+  tree /home/zeus/.config/sublime-text-3/Installed\ Packages/Package\ Control.sublime-package
+}
+#trap kill ERR
+trap _trap_on_exit EXIT
+#trap kill INT
 
 _version() {
     local -i _err

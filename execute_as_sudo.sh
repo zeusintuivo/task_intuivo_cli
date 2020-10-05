@@ -45,53 +45,7 @@ fi
 # # echo "hi"
 # # echo "${SUDO_USER}"
 # # echo ho
-# # [ -n "${HOME+x}" ] && echo "HOME 1"
-# # [ -n "${HOME+x}" ] && echo "HOME 12"
-# # [ -n "${CAN_I_RUN_SUDO2+x}" ] && echo "CAN_I_RUN_SUDO2 null"
-# # [ -n "${CAN_I_RUN_SUDO+x}" ] && echo "CAN_I_RUN_SUDO 12"
-# # [ -n "${SUDO_USER+x}" ] && echo "SUDO_USER 111"
-# # ( declare -p "HOME" ) && echo "HOME 2"
 
- if ( command -v declare >/dev/null 2>&1; ) ; then
- {
-  function ensure_is_defined_and_not_empty(){
-    # Sample use
-    #  ( declare -p "HOME"  &>/dev/null )    @ Is HOME declared and not empty?
-    #  [ -n "${HOME+x}" ] && echo "HOME 1"   @ Is HOME declared and not empty?
-    #  ensure_is_defined_and_not_empty HOME  && echo "HOME ensure_is_defined_and_not_empty 1"
-    ( declare -p "${1}"  &>/dev/null ) ||  ( echo ""${1}" ensure_is_defined_and_not_empty failed " ; exit 1 ; return 1);
-  }
- }
- elif ( command -v typeset >/dev/null 2>&1; ) ; then   # shell korn has no declare
- {
-  function ensure_is_defined_and_not_empty(){
-    # Sample use
-    #  ( typeset -p "HOME"  &>/dev/null )    @ Is HOME declared and not empty?
-    #  [ -n "${HOME+x}" ] && echo "HOME 1"   @ Is HOME declared and not empty?
-    #  ensure_is_defined_and_not_empty HOME  && echo "HOME ensure_is_defined_and_not_empty 1"
-    ( typeset -p "${1}"  &>/dev/null ) || ( echo ""${1}" ensure_is_defined_and_not_empty failed" ; exit 1 ; return 1) ;
-  }
- } else {                                         # sometimes declare or typeset are not available
-  # Function not completed yet how to pass a name and read it as variable?
-  function ensure_is_defined_and_not_empty(){
-  #   # Sample use
-  #   #  ( declare -p "HOME"  &>/dev/null )    @ Is HOME declared and not empty?
-  #   #  [ -n "${HOME+x}" ] && echo "HOME 1"   @ Is HOME declared and not empty?
-  #   #  ensure_is_defined_and_not_empty HOME  && echo "HOME ensure_is_defined_and_not_empty 1"
-  #   local -n _lineno="${1:-WAWA}"  this read something called WAWA but WAWA is hardcoded
-  #   [ -z "${${1}+x}" ]  &&  echo ""${1}" ensure_is_defined_and_not_empty failed"  && exit 1
-    return 0
-  }
- }
- fi
- # Tess for the function
-
-# # execute_as_sudo
-
-# # ensure_is_defined_and_not_empty HOME
-# # ensure_is_defined_and_not_empty USER_HOME
-# # ensure_is_defined_and_not_empty SUDO_USER
-# # declare -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
 # # echo $SUDO_USER
 
 #   function sudo_check(){
@@ -122,7 +76,7 @@ fi
 # # }
 # # fi
 
-execute_as_sudo(){
+function execute_as_sudo(){
   if [ -z $SUDO_USER ] ; then
     if [ -z "${THISSCRIPTNAME+x}" ] ; then
     {
@@ -169,3 +123,49 @@ execute_as_sudo(){
     echo "Needs to run as sudo ... ${0}"
   fi
 }
+
+function enforce_variable_with_value(){
+  # Sample use
+  # enforce_variable_with_value HOME $HOME
+  # enforce_variable_with_value USER_HOME $USER_HOME
+  # enforce_variable_with_value SUDO_USER $SUDO_USER
+  # enforce_variable_with_value HOME $HOME && echo "HOME ensure_is_defined_and_not_empty 1"
+  # Tests for the function
+  # declare -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
+  #  ( typeset -p "HOME"  &>/dev/null )    @ Is HOME declared listed in declarations ?
+  #  ( declare -p "HOME"  &>/dev/null )    @ Is HOME declared listed in declarations ?
+  #  [ -n "${HOME+x}" ] && echo "HOME 1"   @ Is HOME declared and not empty?
+  #  [ -z "${HOME+x}" ] && echo "HOME 1"   @ Is HOME declared and empty?
+  # [ -n "${HOME+x}" ] && echo "HOME 1"
+  # [ -n "${HOME+x}" ] && echo "HOME 12"
+  # [ -n "${CAN_I_RUN_SUDO2+x}" ] && echo "CAN_I_RUN_SUDO2 null"
+  # [ -n "${CAN_I_RUN_SUDO+x}" ] && echo "CAN_I_RUN_SUDO 12"
+  # [ -n "${SUDO_USER+x}" ] && echo "SUDO_USER 111"
+  # ( declare -p "HOME" ) && echo "HOME 2"
+  typeset -r TESTING="that variable is listed and: ${CYAN}${1}${LIGHTYELLOW} and has value: ${RESET}<${YELLOW_OVER_DARKBLUE}${2}${RESET}>"
+  (( DEBUG )) && echo -e "${FUNCNAME[0]}"
+  (( DEBUG )) && echo ${@} -assume existing variable for this part
+  (( DEBUG )) && ( typeset -p "${1}"  &>/dev/null  ) && echo "1 defined 1"
+  (( DEBUG )) && [ -n "${2+x}" ]  && echo "1 defined 2"
+  (( DEBUG )) && ( typeset -p "${1}"  &>/dev/null ) &&  [ -n "${2+x}" ]  && echo "1 declared,defined and with value not empty 3"
+  (( DEBUG )) && (( typeset -p "${1}"  &>/dev/null  ) || echo "1 not defined 1")
+  (( DEBUG )) && ( ! typeset -p "${1}"  &>/dev/null  ) && echo "1 not defined 2"
+  # echo QWER - assume non existant variable for this part
+  # ( typeset -p "QWER"  &>/dev/null  ) && echo "QWER defined 1"
+  # [ -n "${QWER+x}" ]  && echo "QWER defined 2"
+  # ( typeset -p "QWER"  &>/dev/null ) &&  [ -n "${QWER+x}" ]  && echo "QWER defined 3"
+  # ( typeset -p "QWER"  &>/dev/null  ) || echo "QWER not defined 1"
+  # ( ! typeset -p "QWER"  &>/dev/null  ) && echo "QWER not defined 2"
+  # echo bye
+  # exit 0
+  if ( typeset -p "${1}"  &>/dev/null ) &&  [ -n "${2+x}" ] ; then
+  {
+      echo -e "${LIGHTGREEN} ✔ ${LIGHTYELLOW} ${TESTING} has passed "
+      return 0
+  } else {
+      echo -e "${RED} 𝞦 ${LIGHTYELLOW} ${TESTING} has failed "
+      exit 1
+  }
+  fi
+  exit 1
+} # end enforce_variable_with_value
