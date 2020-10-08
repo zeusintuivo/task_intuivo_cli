@@ -52,7 +52,7 @@ function colorize(){
   local _one=''
   while read -r _one ; do
   {
-    echo  -e "${_one}${RESET}"
+    echo  -e ":${_one}${RESET}"
   }
   done <<< "$(pygmentize -l bash | change_hightlight)"
 }

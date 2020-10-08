@@ -4,21 +4,38 @@
 #
 #
 typeset -gr THISSCRIPTNAME="$(pwd)/$(basename "$0")"
+typeset -i _err=0
 load_execute_boot_basic_with_sudo(){
-    # if ( typeset -p "SUDO_USER"  &>/dev/null ) ; then
-    #   typeset -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
-    # else
-    #   local USER_HOME=$HOME
-    # fi
-    if ( ! typeset -p "SUDO_USER"  &>/dev/null ) ; then
-      typeset -rg USER_HOME=$HOME
+    if ( typeset -p "SUDO_USER"  &>/dev/null ) ; then
+      typeset -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
+    else
+      local USER_HOME=$HOME
     fi
-    local provider="$USER_HOME/_/clis/execute_command_intuivo_cli/execute_boot_basic.sh"
+    local -r provider="$USER_HOME/_/clis/execute_command_intuivo_cli/execute_boot_basic.sh"
+    echo source "${provider}"
     [   -e "${provider}"  ] && source "${provider}"
     [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/execute_boot_basic.sh -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
-    ( ( ! command -v failed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading execute_boot_basic.sh \n \n " && exit 69; )
+    if ( command -v failed >/dev/null 2>&1; ) ; then
+    {
+      return 0
+    }
+    else
+    {
+      echo -e "\n \n  ERROR! Loading execute_boot_basic.sh \n \n "
+      exit 1;
+    }
+    fi
+    return 0
 } # end load_execute_boot_basic_with_sudo
+
 load_execute_boot_basic_with_sudo
+_err=$?
+if [ $_err -ne 0 ] ;  then
+{
+  >&2 echo -e "ERROR There was an error loading load_execute_boot_basic_with_sudo Err:$_err "
+  exit $_err
+}
+fi
 
 function _trap_on_exit(){
   echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME EXITS ...\033[0m"
@@ -390,3 +407,5 @@ _windows__32() {
 } # end _windows__32
 
 determine_os_and_fire_action
+
+

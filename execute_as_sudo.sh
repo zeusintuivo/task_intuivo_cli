@@ -148,7 +148,7 @@ function enforce_variable_with_value(){
   (( DEBUG )) && ( typeset -p "${1}"  &>/dev/null  ) && echo "1 defined 1"
   (( DEBUG )) && [ -n "${2+x}" ]  && echo "1 defined 2"
   (( DEBUG )) && ( typeset -p "${1}"  &>/dev/null ) &&  [ -n "${2+x}" ]  && echo "1 declared,defined and with value not empty 3"
-  (( DEBUG )) && (( typeset -p "${1}"  &>/dev/null  ) || echo "1 not defined 1")
+  (( DEBUG )) && ( ( typeset -p "${1}"  &>/dev/null  ) || echo "1 not defined 1")
   (( DEBUG )) && ( ! typeset -p "${1}"  &>/dev/null  ) && echo "1 not defined 2"
   # echo QWER - assume non existant variable for this part
   # ( typeset -p "QWER"  &>/dev/null  ) && echo "QWER defined 1"
@@ -160,7 +160,7 @@ function enforce_variable_with_value(){
   # exit 0
   if ( typeset -p "${1}"  &>/dev/null ) &&  [ -n "${2+x}" ] ; then
   {
-      echo -e "${LIGHTGREEN} ✔ ${LIGHTYELLOW} ${TESTING} has passed "
+      (( DEBUG )) && echo -e "${LIGHTGREEN} ✔ ${LIGHTYELLOW} ${TESTING} has passed "
       return 0
   } else {
       echo -e "${RED} 𝞦 ${LIGHTYELLOW} ${TESTING} has failed "
