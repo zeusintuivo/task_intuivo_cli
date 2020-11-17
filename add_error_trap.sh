@@ -4,6 +4,7 @@
 DEBUG_VERB_READING_LOGIC=$DEBUG || 0
 LIGHTPINK="\033[1;204m"
 TO_LIGHTPINK="\o033[1;204m\o033[48;5;0m"    # Notice the only the \o changes NOT \[]
+LIGHTPINK_OVER_DARKBLUE="\033[38;5;204m\033[48;5;21m"
 YELLOW_OVER_DARKBLUE="\033[38;5;220m\033[48;5;20m"
 TO_YELLOW_OVER_DARKBLUE="\o033[38;5;220m\o033[48;5;20m"   # Notice the only the \o changes NOT \[]
 # Change RED_NOT_VISIBLE to LIGHTPINK
@@ -12,7 +13,7 @@ FROM_RED_NOT_VISIBLE="\o33\[39;00m\o033\[38;5;124m" # NOtice the \o \[ changes
 #          \o033\[39m \o033\[38;5;124m
 # Change BLUE_NOT_VISIBLE to YELLOW_OVER_DARKBLUE
 BLUE_NOT_VISIBLE="\033[39;00m\033[38;5;18m"
-FROM_BLUE_NOT_VISIBLE="\o33\[39;00m\o033\[38;5;18m"  # NOtice the \o \[ changes
+FROM_BLUE_NOT_VISIBLE="\o33\[39;00m\o033\[38;5;18m"  # Notice the \o \[ changes
 FROM_BLUE_NOT_VISIBLE2="\o033\[38;5;18m"  # NOtice the \o \[ changes
 # Change BLURRY_PINK to YELLOW_OVER_DARKBLUE
 FROM_BLURRY_PINK="\o33\[39m\o33\[38;5;132;01m"
@@ -59,7 +60,7 @@ function colorize(){
 
 function _trap_on_error() {
   local __trapped_script_name="${1:-0}"
-  local -i __trapped_error_exit_num="${2:-0}"
+  local -ir __trapped_error_exit_num="${2:-0}"
   local -ni _this_lineno="${3:-LINENO}"
   local -ni _this_last_error_bash_lineno="${4:-BASH_LINENO}"
   local -n _this_last_error_funcname="${5:-FUNCNAME}"
@@ -67,10 +68,10 @@ function _trap_on_error() {
   local __trapped_function="${7:-0}"
   local -i __trapped_bash_line_before="${8:-0}"
   local -i __trapped_line="${9:-0}"
-  local __trapped_bash_command="${@:10}"
-  local __caller=$(caller)
-  local -i __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
-  local __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+  local -r __trapped_bash_command="${*:10}"
+  local -r __caller=$(caller)
+  local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+  local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
   echo -e " ☠ ${LIGHTPINK} KILL EXECUTION SIGNAL SEND ${RESET}"
   # echo -e " ☠ ${YELLOW_OVER_DARKBLUE}  ${*} ${RESET}"
   #  DEBUG=1
@@ -92,7 +93,7 @@ function _trap_on_error() {
   (( DEBUG )) && echo "8.0 ${BASH_LINENO[0]} ==  ${9} \$BASH_LINENO[0] of scripterror function that triggered this trap  " >&2
   (( DEBUG )) && echo "8.1 ${BASH_LINENO[1]} ==  ${8} \$BASH_LINENO[1] of scripterror function that triggered this trap  " >&2
   (( DEBUG )) && echo "9 ${__trapped_line} == ${9} \$LINENO of scripterror function that triggered this trap" >&2
-  (( DEBUG )) && echo "10 ${__trapped_bash_command} == ${@:10} \$BASH_COMMAND of scripterror function that triggered this trap" >&2
+  (( DEBUG )) && echo "10 ${__trapped_bash_command} == ${*:10} \$BASH_COMMAND of scripterror function that triggered this trap" >&2
   # Tests of global ENV vars and declared envinroment vars
   # env | grep SUDO  >&2
   # typeset -p | grep TRACE  >&2
@@ -121,17 +122,17 @@ function _trap_on_error() {
   # echo " "  >&2 # Spacer
   echo -e " ☠ ${LIGHTPINK} OFFENDING COMMAND: ${RESET}${__trapped_bash_command}  ${RESET}"  >&2
   echo -e " ☠ ${LIGHTPINK} OFFENDING e x i t: ${RESET}${__trapped_error_exit_num}  ${RESET} "  >&2
-  # local __bash_error<<< "$(eval ${__trapped_bash_command} >&2 )"
+  local __bash_error<<< "$(eval "${__trapped_bash_command}" >&2 )"
   echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
   eval "${__trapped_bash_command}"  >&2
-  local __bash_source=""
+  # local __bash_source=""
   local -i _error_count=${#BASH_LINENO[@]}
   (( _error_count-- ))
   local -i _counter=0
   local -i _counter_offset=0
-  echo -e " ☠ ${LIGHTPINK} ERROR STACK TRACE: ${len}  ${RESET}"  >&2
+  echo -e " ☠ ${LIGHTPINK} ERROR STACK TRACE: ${_error_count}  ${RESET}"  >&2
   echo -e "${BRIGHT_BLUE87} ${__caller_script_name}:${__caller_line} \t\t ${__trapped_function}() ${RESET}"  >&2
-  for (( _counter=1; _counter<${_error_count}; _counter++ )); do
+  for (( _counter=1; _counter<_error_count; _counter++ )); do
       (( _counter_offset=_counter + 1 ))
       echo -e "${BRIGHT_BLUE87} ${BASH_SOURCE[$_counter_offset]}:${BASH_LINENO[$_counter]} \t\t ${FUNCNAME[$_counter_offset]}() ${RESET}"  >&2
   done
@@ -141,10 +142,10 @@ function _trap_on_error() {
   ( typeset -p "SUDO_USER"  &>/dev/null ) ||  code -g "${__caller_script_name}:${__caller_line}"&
   # if defined and not empty
   # ( typeset -p "SUDO_USER"  &>/dev/null ) && echo "sudo user " >&2
-  ( typeset -p "SUDO_USER"  &>/dev/null ) &&  su - $SUDO_USER -c 'code -g '"${__caller_script_name}':'${__caller_line}"''&
+  ( typeset -p "SUDO_USER"  &>/dev/null ) &&  su - "$SUDO_USER" -c 'code -g '"${__caller_script_name}':'${__caller_line}"''&
   # echo -e " ☠ Variables  \n$(declare -p)  ${RESET}"  >&2  # Show  all variables declared
   # exit ${__trapped_error_exit_num};  # If I call exit it kills the entire executing stripts
-  return ${__trapped_error_exit_num};  # Returning instead allows other scripts to continue
+  return "${__trapped_error_exit_num}";  # Returning instead allows other scripts to continue
 } # end  _trap_on_error
 
 set -E -o functrace
