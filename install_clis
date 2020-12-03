@@ -78,12 +78,18 @@ _checka_tools_commander(){
     is_not_installed ag &&    $COMANDDER -y install silversearcher-ag  # Ubuntu only
     is_not_installed ack &&   $COMANDDER -y install ack
     is_not_installed ack &&   $COMANDDER -y install ack-grep           # Ubuntu only
+    is_not_installed vim &&    $COMANDDER -y install vim
+    is_not_installed nano &&    $COMANDDER -y install nano
     is_not_installed pv &&    $COMANDDER -y install pv
+    is_not_installed pygmentize &&    $COMANDDER -y install pygmentize
     verify_is_installed xclip
     verify_is_installed tree
     verify_is_installed ag
     verify_is_installed ack
     verify_is_installed pv
+    verify_is_installed nano
+    verify_is_installed vim
+    verify_is_installed pygmentize
 }
 
 _ubuntu__64() {
@@ -94,7 +100,7 @@ _ubuntu__64() {
 
     COMANDDER="apt-get"
     _checka_node_commander $COMANDDER
-    if  it_does_not_exist_with_spaces /etc/apt/sources.list.d/cloudfoundry-cli.list ; then
+    if it_does_not_exist_with_spaces /etc/apt/sources.list.d/cloudfoundry-cli.list ; then
     {
         Installing cloudfoundry cf 7
         wget -q -O - https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | apt-key add -
@@ -585,6 +591,12 @@ while read -r ONE ; do
             git remote add origin git@github.com:zeusintuivo/${ONE}.git
             directory_exists_with_spaces $USER_HOME/_/clis/${ONE}
             link_folder_scripts
+	    if [[ "$ONE" == "git_intuivo_cli" ]] ; then  # is not empty
+    	    {
+      	      cd $USER_HOME/_/clis/${ONE}/en
+              link_folder_scripts
+	    }
+            fi
         } else {
             Installing else $ONE
             passed clis: ${ONE} folder exists
@@ -592,6 +604,12 @@ while read -r ONE ; do
 	    chown -R $SUDO_USER:$SUDO_USER $USER_HOME/_/clis/${ONE}
             pwd
             link_folder_scripts
+	    if [[ "$ONE" == "git_intuivo_cli" ]] ; then  # is not empty
+    	    {
+      	      cd $USER_HOME/_/clis/${ONE}/en
+              link_folder_scripts
+	    }
+            fi
             # msg=$(link_folder_scripts)
             ret=$?
             Configuring existed with $ret
@@ -604,6 +622,8 @@ while read -r ONE ; do
     fi
 }
 done <<< "${clis}"
+unlink /usr/local/bin/ag # Bug path we need to do something abot this 
+
 if  softlink_exists_with_spaces "/usr/local/bin/added>$USER_HOME/_/clis/git_intuivo_cli/en/added" ; then
 {
     passed clis: git_intuivo_cli/en folder exists and is linked
