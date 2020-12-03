@@ -3,10 +3,13 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 #
+export  THISSCRIPTNAME
 typeset -gr THISSCRIPTNAME="$(pwd)/$(basename "$0")"
+export _err
 typeset -i _err=0
 load_execute_boot_basic_with_sudo(){
     if ( typeset -p "SUDO_USER"  &>/dev/null ) ; then
+      export USER_HOME
       typeset -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
     else
       local USER_HOME=$HOME
