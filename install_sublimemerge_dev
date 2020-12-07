@@ -13,16 +13,16 @@ execute_as_sudo(){
   if [ -z $SUDO_USER ] ; then
     if [[ -z "$THISSCRIPTNAME" ]] ; then
     {
-        echo "error You need to add THISSCRIPTNAME vairable like this:" 
+        echo "error You need to add THISSCRIPTNAME variable like this:"
         echo "     THISSCRIPTNAME=\`basename \"\$0\"\`"
     }
-    else 
+    else
     {
         if [ -e "./$THISSCRIPTNAME" ] ; then
-        {       
+        {
           sudo "./$THISSCRIPTNAME"
         }
-        elif ( command -v type "$THISSCRIPTNAME" >/dev/null 2>&1 );  then
+        elif ( command -v "$THISSCRIPTNAME" >/dev/null 2>&1 );  then
         {
           echo "sudo sudo sudo "
           sudo "$THISSCRIPTNAME"
@@ -55,7 +55,7 @@ load_struct_testing_wget(){
     local provider="$USER_HOME/_/clis/execute_command_intuivo_cli/struct_testing"
     [   -e "${provider}"  ] && source "${provider}"
     [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
-    ( ( ! command -v type passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
+    ( ( ! command -v passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
 } # end load_struct_testing_wget
 load_struct_testing_wget
 passed Caller user identified:$USER_HOME
@@ -75,7 +75,7 @@ _version() {
     local VERSION=$(echo "$CODEFILE" | sed -n "/<p\ class=\"latest\">/,/<\/div>/p" | head -1)   # suppress only wget download messages, but keep wget output for variable
    #    + expected string:      <p class="latest"><i>Version:</i> Build 1118</p>
     local _sublime_build_line=$(echo "${VERSION}" | grep 'Build ....')
-    
+
     if [ -z "${_sublime_build_line}" ] ; then
     {
         echo "error when doing check of line string from website. Got nothing"
@@ -92,15 +92,15 @@ _version() {
     [[ -z "${SUBLIMEDEVLASTESTBUILD}" ]] && failed "Sublime Merge Version not found!"
     # THOUGHT local TARGETURL=$(echo $CODEFILE | sed s/\</\\n\</g | grep "x86_64.rpm" | sed s/\"/\\n/g | head -2 | tail -1 | sed s@\/@\\n@g | tail -1)
     # echo SUBLIMEDEVLASTESTBUILD:"${SUBLIMEDEVLASTESTBUILD}"
-    # echo PATTERN:"${PATTERN}" 
-    # echo $CODEFILE | sed s/\</\\n\</g | grep "${PATTERN}" 
+    # echo PATTERN:"${PATTERN}"
+    # echo $CODEFILE | sed s/\</\\n\</g | grep "${PATTERN}"
     local CODENAME=$(echo "$CODEFILE" | sed s/\</\\n\</g | grep "${PATTERN}" | sed s/\"/\\n/g | head -2 | tail -1 | sed s@\/@\\n@g | tail -1)
     wait
-    # echo CODENAME:"${CODENAME}" 
+    # echo CODENAME:"${CODENAME}"
     [[ -z "${CODENAME}" ]] && failed "Sublime Merge Download Url not found!"
-    echo "${CODENAME}" 
+    echo "${CODENAME}"
     # exit 1
-    
+
 }
 # https://download.sublimetext.com/${1}
 
@@ -160,19 +160,19 @@ _fedora__32() {
   _download "${TARGET_URL}"
   file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}"
   ensure rpm or "Canceling Install. Could not find rpm command to execute install"
-  
+
   _try "rpm -v --import https://download.sublimetext.com/sublimehq-rpm-pub.gpg"
 
   # provide error handling , once learned goes here. LEarn under if, once learned here.
-  # Start loop while ERROR flag in case needs to try again, based on error 
- 
+  # Start loop while ERROR flag in case needs to try again, based on error
+
   local msg=$(_try "rpm -ivh \"$USER_HOME/Downloads/${CODENAME}\"" )
   local ret=$?
-  if [ $ret -gt 0 ] ; then 
+  if [ $ret -gt 0 ] ; then
   {
     failed "${ret}:${msg}"
     # add error handling knowledge while learning.
-  } 
+  }
   else
   {
     passed Install with RPM success!
@@ -194,23 +194,23 @@ _fedora__64() {
   echo TARGET_URL: $TARGET_URL
   file_exists_with_spaces $USER_HOME/Downloads
   cd $USER_HOME/Downloads
-  _download "${TARGET_URL}"
+  _download "${TARGET_URL}" $USER_HOME/Downloads "${CODENAME}"
   file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}"
   ensure rpm or "Canceling Install. Could not find rpm command to execute install"
-  
+
   _try "rpm -v --import https://download.sublimetext.com/sublimehq-rpm-pub.gpg"
 
   # provide error handling , once learned goes here. LEarn under if, once learned here.
-  # Start loop while ERROR flag in case needs to try again, based on error 
+  # Start loop while ERROR flag in case needs to try again, based on error
 
 
   local msg=$(_try "rpm -ivh \"$USER_HOME/Downloads/${CODENAME}\"" )
   local ret=$?
-  if [ $ret -gt 0 ] ; then 
+  if [ $ret -gt 0 ] ; then
   {
     failed "${ret}:${msg}"
     # add error handling knowledge while learning.
-  } 
+  }
   else
   {
     passed Install with RPM success!
@@ -239,7 +239,7 @@ _mingw__32() {
     cd Downloads
 	    curl -O https://download.sublimetext.com/${CODENAME}
 	    ${CODENAME}
-} # end 
+} # end
 
 
 _main() {

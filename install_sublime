@@ -7,7 +7,7 @@ load_struct_testing_wget(){
     local provider="$HOME/_/clis/execute_command_intuivo_cli/struct_testing"
     [   -e "${provider}"  ] && source "${provider}"
     [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
-    ( ( ! command -v type passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
+    ( ( ! command -v passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
 } # end load_struct_testing_wget
 load_struct_testing_wget
 
@@ -19,9 +19,9 @@ get_lastest_sublime_version() {
 }
 download_sublime(){
   # sample https://download.sublimetext.com/sublime-text_build-3133_amd64.deb
-  if ( command -v type wget >/dev/null 2>&1; ) ; then
+  if ( command -v wget >/dev/null 2>&1; ) ; then
    wget --quiet --no-check-certificate "https://download.sublimetext.com/${1}" 2>/dev/null   # suppress only wget download messages, but keep wget output for variable
-  elif ( command -v type curl >/dev/null 2>&1; ); then
+  elif ( command -v curl >/dev/null 2>&1; ); then
     curl -O "https://download.sublimetext.com/${1}" 2>/dev/null   # suppress only wget download messages, but keep wget output for variable
   else
     failed "I cannot find wget or curl to download! https://download.sublimetext.com/${1}"

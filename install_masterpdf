@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #!/bin/bash
 #
 # @author Zeus Intuivo <zeus@intuivo.com>
@@ -10,19 +11,28 @@ THISSCRIPTNAME=`basename "$0"`
 
 execute_as_sudo(){
   if [ -z $SUDO_USER ] ; then
-    if [ -e "./$THISSCRIPTNAME" ] ; then
-    {       
-      sudo "./$THISSCRIPTNAME"
-    }
-    elif ( command -v type "$THISSCRIPTNAME" >/dev/null 2>&1 );  then
+    if [[ -z "$THISSCRIPTNAME" ]] ; then
     {
-      echo "sudo sudo sudo "
-      sudo "$THISSCRIPTNAME"
+        echo "error You need to add THISSCRIPTNAME variable like this:"
+        echo "     THISSCRIPTNAME=\`basename \"\$0\"\`"
     }
     else
     {
-      echo -e "\033[05;7m*** Failed to find script to recall it as sudo ...\033[0m"
-      exit 1
+        if [ -e "./$THISSCRIPTNAME" ] ; then
+        {
+          sudo "./$THISSCRIPTNAME"
+        }
+        elif ( command -v "$THISSCRIPTNAME" >/dev/null 2>&1 );  then
+        {
+          echo "sudo sudo sudo "
+          sudo "$THISSCRIPTNAME"
+        }
+        else
+        {
+          echo -e "\033[05;7m*** Failed to find script to recall it as sudo ...\033[0m"
+          exit 1
+        }
+        fi
     }
     fi
     wait
@@ -45,22 +55,24 @@ load_struct_testing_wget(){
     local provider="$USER_HOME/_/clis/execute_command_intuivo_cli/struct_testing"
     [   -e "${provider}"  ] && source "${provider}"
     [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
-    ( ( ! command -v type passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
+    ( ( ! command -v passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
 } # end load_struct_testing_wget
 load_struct_testing_wget
-passed Caller user identified:$USER_HOME
 
+passed Caller user identified:$SUDO_USER
+passed Home identified:$USER_HOME
+file_exists_with_spaces "$USER_HOME"
 
 
 # https://code.visualstudio.com/docs/?dv=linux64_rpm
 get_lastest_studio_code_version() {
-    local CODEFILE=$(curl -sSLo -  https://code.visualstudio.com/docs/?dv=linux32_deb&build=insiders  2>&1;) # suppress only wget download messages, but keep wget output for variable
-    echo "${CODEFILE}" | grep 'facebook'  | head -3
-    local CODELASTESTBUILD=$(echo "${CODELASTESTBUILD}" | grep 'direct download link ....' )
+    local WEBPAGE_TO_READ_VERSION_NUMBER=$(curl -sSLo -  https://code.visualstudio.com/docs/?dv=linux32_deb&build=insiders  2>&1;) # suppress only wget download messages, but keep wget output for variable
+    echo "${WEBPAGE_TO_READ_VERSION_NUMBER}" | grep 'facebook'  | head -3
+    local VERSION_NUMBER=$(echo "${VERSION_NUMBER}" | grep 'direct download link ....' )
     wait
-	    [[ -z "${CODELASTESTBUILD}" ]] && failed "Master PDF Editor Version not found! :${CODELASTESTBUILD}:"
-    echo "${CODELASTESTBUILD}"
-    if [ -z "${CODELASTESTBUILD}" ] ; then  # if empty
+	    [[ -z "${VERSION_NUMBER}" ]] && failed "Master PDF Editor Version not found! :${VERSION_NUMBER}:"
+    echo "${VERSION_NUMBER}"
+    if [ -z "${VERSION_NUMBER}" ] ; then  # if empty
     {
       failed Could not find Code version
     }
@@ -68,7 +80,7 @@ get_lastest_studio_code_version() {
 
 } # end get_lastest_studio_code_version
 
-_download() {
+_download_just_download() {
   #  url  https://code-industry.net/public/master-pdf-editor-3133_amd64.deb
   _trap_try_start
   local target_url="${1}"
@@ -80,7 +92,7 @@ _download() {
   _trap_catch_check
   # wget --directory-prefix="${USER_HOME}/Downloads/" --quiet --no-check-certificate "${target_url}" 2>/dev/null
   echo -e "\033[01;7m*** Downloading file to temp location...\033[0m"
-  if ( command -v type wget >/dev/null 2>&1; ) ; then
+  if ( command -v wget >/dev/null 2>&1; ) ; then
     # # REF: about :> http://unix.stackexchange.com/questions/37507/what-does-do-here
     _trap_try_start
     :> wgetrc   # here :> equals to Equivalent to the following: cat /dev/null > wgetrc which Nulls out the file called "wgetrc" in the current directory. As in creates an empty file "wgetrc" if one doesn't exist or overwrites one with nothing if it does.
@@ -102,7 +114,7 @@ _download() {
     echo -e "\033[7m*** Download Wget executed completed.\033[0m"
     rm -f wgetrc
     file_does_not_exist_with_spaces wgetrc
-  elif ( command -v type curl >/dev/null 2>&1; ); then
+  elif ( command -v curl >/dev/null 2>&1; ); then
     curl -O "${target_url}" 2>/dev/null   # suppress only wget download messages, but keep wget output for variable
     _assure_success
   else
@@ -110,7 +122,7 @@ _download() {
   fi
 }
 
-_darwin__64() { 
+_darwin__64() {
     local CODENAME="MasterPDFEditor.dmg"
     local URL="https://code-industry.net/public/"
     cd $USER_HOME/Downloads/
@@ -121,7 +133,7 @@ _darwin__64() {
 } # end _darwin__64
 
 _ubuntu__64() {
-    local CODENAME="master-pdf-editor-${CODELASTESTBUILD}-qt5.amd64.deb"
+    local CODENAME="master-pdf-editor-${VERSION_NUMBER}-qt5.amd64.deb"
     local URL="https://code-industry.net/public/"
     cd $USER_HOME/Downloads/
     _download "${URL}"
@@ -129,37 +141,41 @@ _ubuntu__64() {
 } # end _ubuntu__64
 
 _ubuntu__32() {
-    local CODENAME="master-pdf-editor-${CODELASTESTBUILD}.i386.deb"
+    local CODENAME="master-pdf-editor-${VERSION_NUMBER}.i386.deb"
     local URL="https://code-industry.net/public/"
     cd $USER_HOME/Downloads/
     _download "${URL}"
     sudo dpkg -i ${CODENAME}
-} # end _ubuntu__32 
+} # end _ubuntu__32
 
 _fedora__64() {
    # https://code-industry.net/public/master-pdf-editor-5.4.38-qt5.x86_64.rpm
-  # get download link 
+  # get download link
   # https://code.visualstudio.com/docs/?dv=linux64_rpm
-    local CODEFILE=$(curl -sSLo -  https://code-industry.net/get-masterpdfeditor/  2>&1;) # suppress only wget download messages, but keep wget output for variable
-    local CODELASTESTBUILD=$(echo $CODEFILE | sed s/\</\\n\</g | grep "now available for Linux" | sed s/\>/\>\\n/g | sed s/\ /\\n/g | head -3 | tail -1)
+    local WEBPAGE_TO_READ_VERSION_NUMBER=$(curl -sSLo -  https://code-industry.net/get-masterpdfeditor/  2>&1;) # suppress only wget download messages, but keep wget output for variable
+    local VERSION_NUMBER=$(echo $WEBPAGE_TO_READ_VERSION_NUMBER | sed s/\</\\n\</g | grep "now available for Linux" | sed s/\>/\>\\n/g | sed s/\ /\\n/g | head -3 | tail -1)
     local ARCHITECTURE=$(uname -m)
+    assert not empty "${ARCHITECTURE}"
     wait
-    [[ -z "${CODELASTESTBUILD}" ]] && failed "Master PDF Version not found! :${CODELASTESTBUILD}:"
-    echo "${CODELASTESTBUILD}"
-    if [ -z "${CODELASTESTBUILD}" ] ; then  # if empty
-    {
-      failed Could not find Code version
-    }
-    fi
+    [[ -z "${VERSION_NUMBER}" ]] && failed "Master PDF Version not found! :${VERSION_NUMBER}:"
 
+    local WEBPAGE_TO_GET_DOWNLOAD_FILE=$(curl -sSLo -  https://code-industry.net/free-pdf-editor/\#get  2>&1;)
+    local LASTEST_DOWNLOAD_FILE=$(echo $WEBPAGE_TO_GET_DOWNLOAD_FILE | sed s/\</\\n\</g | grep --color=none -E "${CODELASTESTBUILD}.*${ARCHITECTURE}.*.rpm" | cut -d'>' -f2 | tail -1)
 
-  # get download link 
+    passed "Master PDF Version :${VERSION_NUMBER}:"
+    [[ -z "${LASTEST_DOWNLOAD_FILE}" ]] && failed "Master PDF Version Dowload File NOT found! :${LASTEST_DOWNLOAD_FILE}:"
+    passed "Master PDF Version Download File :${LASTEST_DOWNLOAD_FILE}:"
+    local TARGET_URL=$(echo $WEBPAGE_TO_GET_DOWNLOAD_FILE | sed s/\</\\n\</g | grep --color=none -E "${CODELASTESTBUILD}.*${ARCHITECTURE}.*.rpm" | sed s/\ /\\n\</g | grep http | cut -d'"' -f2 | tail -1)
+    [[ -z "${TARGET_URL}" ]] && failed "Master PDF Version Target URL NOT found! :${Target URL}:"
+    passed "Master PDF Version Target URL :${TARGET_URL}:"
+
+  # get download link
   local ID
   local VERSION
   local VERSION_ID
   file_exists_with_spaces "/etc/os-release"
   _assure_success
-  
+
   source /etc/os-release
   # $ echo $ID
   # fedora
@@ -170,32 +186,61 @@ _fedora__64() {
   assert not empty "${ID}"
   assert not empty "${VERSION_ID}"
   assert not empty "${USER_HOME}"
-  assert not empty "${CODELASTESTBUILD}"
-  assert not empty "${ARCHITECTURE}"
-  local CODENAME="master-pdf-editor-${CODELASTESTBUILD}-qt5.${ARCHITECTURE}.rpm"
-  #  local CODENAME="master-pdf-editor-5.4.38-qt5.x86_64.rpm"
-  #  local CODENAME="rpmfusion-free-release-${VERSION_ID}.noarch.rpm"
-  #  local TARGET_URL="https://download1.rpmfusion.org/free/${ID}/${CODENAME}"
-  local TARGET_URL="https://code-industry.net/public/${CODENAME}"
-  file_exists_with_spaces $USER_HOME/Downloads
-  cd $USER_HOME/Downloads
-  _download "${TARGET_URL}"
-  # when error Can't be verbose and quiet at the same time.
-  #            Usage: wget [OPTION]... [URL]...
-  # then correct wget options 
-  file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}"
-  ensure rpm or "Canceling Install. Could not find rpm command to execute install"
-  _trap_try_start # _trap_catch_check
-  local msg=$(rpm -ivh "$USER_HOME/Downloads/${CODENAME}")
-  _trap_catch_check
-  echo "${msg}"
-  # when error error: Failed dependencies:
-  #	     libQt5Svg.so.5()(64bit) is needed by master-pdf-editor-5.4.38-1.x86_64
-  # then correct with 
-  # fix with 
-  # then fix with
-  # sudo dnf -y install qt5-devel qt-creator qt5-qtbase qt5-qtbase-devel
-  # rpm again
+  assert not empty "${VERSION_NUMBER}"
+  local TARGET_DOWNLOAD_PATH="$USER_HOME/Downloads/${LASTEST_DOWNLOAD_FILE}"
+  function download_part() {
+    if  it_exists_with_spaces "${TARGET_DOWNLOAD_PATH}" ; then
+    {
+      file_exists_with_spaces "${TARGET_DOWNLOAD_PATH}"
+    }
+    else
+    {
+      file_exists_with_spaces $USER_HOME/Downloads
+      cd $USER_HOME/Downloads
+      _download "${TARGET_URL}" $USER_HOME/Downloads  ${LASTEST_DOWNLOAD_FILE}
+      file_exists_with_spaces "${TARGET_DOWNLOAD_PATH}"
+    }
+    fi
+    } # end download_part
+  download_part
+
+  function install_rpm_part() {
+    if  it_exists_with_spaces "${TARGET_DOWNLOAD_PATH}" ; then
+    {
+      echo Attempting to install "${TARGET_DOWNLOAD_PATH}"
+    } else {
+      return
+    }
+    fi
+    ensure rpm or "Canceling Install. Could not find rpm command to execute install"
+    _trap_try_start # _trap_catch_check
+    local msg=$(rpm -ivh "${TARGET_DOWNLOAD_PATH}")
+    _trap_catch_check
+    echo "${msg}"
+    if [[ "${msg}" == *"not an rpm package"* ]] ; then
+    {
+      download_part
+      install_rpm_part
+    } elif [[ "${msg}" == *"Failed dependencies"* ]] && [[ "${msg}" == *"is needed"* ]] ; then  {
+
+      echo "Suggested Fix "
+      echo "# when error error: Failed dependencies:
+            #	     libQt5Svg.so.5()(64bit) is needed by master-pdf-editor-5.4.38-1.x86_64
+            # then correct with
+            # fix with
+            # then fix with
+            # sudo dnf -y install qt5-devel qt-creator qt5-qtbase qt5-qtbase-devel
+            # rpm again"
+      failed "ERROR MSG:\n ${msg}"
+    } else {
+      passed "Seems there were no errors"
+    }
+    fi
+
+    rm -f "${TARGET_DOWNLOAD_PATH}"
+  } # end install_rpm_part
+  install_rpm_part
+
 }
 
 _mingw__64() {
@@ -212,7 +257,7 @@ _mingw__32() {
     cd Downloads
 	    curl -O https://code-industry.net/public/${CODENAME}
 	    ${CODENAME}
-} # end 
+} # end
 
 _main() {
   determine_os_and_fire_action

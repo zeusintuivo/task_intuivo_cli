@@ -1,0 +1,500 @@
+#!/bin/bash
+#
+# @author Zeus Intuivo <zeus@intuivo.com>
+#
+#
+# SUDO_USER only exists during execution of sudo
+# REF: https://stackoverflow.com/questions/7358611/get-users-home-directory-when-they-run-a-script-as-root
+# Global:
+THISSCRIPTNAME=`basename "$0"`
+
+execute_as_sudo(){
+  if [ -z $SUDO_USER ] ; then
+    if [[ -z "$THISSCRIPTNAME" ]] ; then
+    {
+        echo "error You need to add THISSCRIPTNAME variable like this:"
+        echo "     THISSCRIPTNAME=\`basename \"\$0\"\`"
+    }
+    else
+    {
+        if [ -e "./$THISSCRIPTNAME" ] ; then
+        {
+        sudo "./$THISSCRIPTNAME"
+        }
+        elif ( command -v "$THISSCRIPTNAME" >/dev/null 2>&1 );  then
+        {
+        echo "sudo sudo sudo "
+        sudo "$THISSCRIPTNAME"
+        }
+        else
+        {
+        echo -e "\033[05;7m*** Failed to find script to recall it as sudo ...\033[0m"
+        exit 1
+        }
+        fi
+    }
+    fi
+    wait
+    exit 0
+  fi
+  # REF: http://superuser.com/questions/93385/run-part-of-a-bash-script-as-a-different-user
+  # REF: http://superuser.com/questions/195781/sudo-is-there-a-command-to-check-if-i-have-sudo-and-or-how-much-time-is-left
+  local CAN_I_RUN_SUDO=$(sudo -n uptime 2>&1|grep "load"|wc -l)
+  if [ ${CAN_I_RUN_SUDO} -gt 0 ]; then
+    echo -e "\033[01;7m*** Installing as sudo...\033[0m"
+  else
+    echo "Needs to run as sudo ... ${0}"
+  fi
+}
+execute_as_sudo
+
+USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
+
+load_struct_testing_wget(){
+    local provider="$USER_HOME/_/clis/execute_command_intuivo_cli/struct_testing"
+    [   -e "${provider}"  ] && source "${provider}"
+    [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
+    ( ( ! command -v passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
+} # end load_struct_testing_wget
+load_struct_testing_wget
+
+passed Caller user identified:$SUDO_USER
+passed Home identified:$USER_HOME
+file_exists_with_spaces "$USER_HOME"
+
+
+_version() {
+  local PLATFORM="${1}"
+  local PATTERN="${2}"
+  # THOUGHT: local CODEFILE=$(curl -d "zz=dl4&platform=linux" -H "Content-Type: application/x-www-form-urlencoded" -X POST  -sSLo -  https://download-cf.jetbrains.com/ruby/download.php  2>&1;) # suppress only wget download messages, but keep wget output for variable
+  local CODEFILE=$(curl -d "zz=dl4&platform=${PLATFORM}" -H "Content-Type: application/x-www-form-urlencoded" -X POST  -sSLo -  https://download-cf.jetbrains.com/ruby/download.phphttps://www.jetbrains.com/rubymine/download/\#section=linux  2>&1;) # suppress only wget download messages, but keep wget output for variable
+  # THOUGHT: local CODELASTESTBUILD=$(echo $CODEFILE | sed s/\</\\n\</g | grep "RubyMine*.*.*.*.x86_64.rpm" | sed s/\"/\\n/g | grep "/" | cuet "/")
+  local CODELASTESTBUILD=$(echo $CODEFILE | sed s/\</\\n\</g | grep "${PATTERN}" | sed s/\"/\\n/g | grep "/" | cuet "/")
+  # fedora 32 local CODELASTESTBUILD=$(echo $CODEFILE | sed s/\</\\n\</g | grep "RubyMine*.*.*.*.i386.rpm" | sed s/\"/\\n/g | grep "/" | cuet "/")
+  wait
+  [[ -z "${CODELASTESTBUILD}" ]] && failed "RubyMine Version not found! :${CODELASTESTBUILD}:"
+
+
+  assert not empty "${USER_HOME}"
+  assert not empty "${CODELASTESTBUILD}"
+
+  local CODENAME="${CODELASTESTBUILD}"
+  echo "${CODELASTESTBUILD}"
+  unset PATTERN
+  unset PLATFORM
+  unset CODEFILE
+  unset CODELASTESTBUILD
+} # end _version
+
+_darwin__64() {
+    local CODENAME=$(_version "mac" "RubyMineOSX*.*.*.*.zip")
+    # THOUGHT        local CODENAME="RubyMineOSX-4.3.3.24545.zip"
+    local URL="https://download-cf.jetbrains.com/ruby/${CODENAME}"
+    cd $USER_HOME/Downloads/
+    _download "${URL}"
+    unzip ${CODENAME}
+    sudo hdiutil attach ${CODENAME}
+    sudo cp -R /Volumes/Beyond\ Compare/Beyond\ Compare.app /Applications/
+    sudo hdiutil detach /Volumes/Beyond \ Compare
+} # end _darwin__64
+
+_ubuntu__64() {
+    local CODENAME=$(_version "linux" "RubyMine-*.*.*.*amd64.deb")
+    # THOUGHT          local CODENAME="RubyMine-4.3.3.24545_amd64.deb"
+    local URL="https://download-cf.jetbrains.com/ruby/${CODENAME}"
+    cd $USER_HOME/Downloads/
+    _download "${URL}"
+    sudo dpkg -i ${CODENAME}
+} # end _ubuntu__64
+
+_ubuntu__32() {
+    local CODENAME=$(_version "linux" "RubyMine-*.*.*.*i386.deb")
+    # THOUGHT local CODENAME="RubyMine-4.3.3.24545_i386.deb"
+    local URL="https://download-cf.jetbrains.com/ruby/${CODENAME}"
+    cd $USER_HOME/Downloads/
+    _download "${URL}"
+    sudo dpkg -i ${CODENAME}
+} # end _ubuntu__32
+
+_fedora__32() {
+  local CODENAME=$(_version "linux" "RubyMine*.*.*.*.i386.rpm")
+  # THOUGHT                          RubyMine-4.3.3.24545.i386.rpm
+  local TARGET_URL="https://download-cf.jetbrains.com/ruby/${CODENAME}"
+  file_exists_with_spaces $USER_HOME/Downloads
+  cd $USER_HOME/Downloads
+  _download "${TARGET_URL}"
+  file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}"
+  ensure tar or "Canceling Install. Could not find tar command to execute unzip"
+
+  # provide error handling , once learned goes here. LEarn under if, once learned here.
+  # Start loop while ERROR flag in case needs to try again, based on error
+  _try "rpm --import https://download-cf.jetbrains.com/ruby/RPM-GPG-KEY-scootersoftware"
+  local msg=$(_try "rpm -ivh \"$USER_HOME/Downloads/${CODENAME}\"" )
+  local ret=$?
+  if [ $ret -gt 0 ] ; then
+  {
+    failed "${ret}:${msg}"
+    # add error handling knowledge while learning.
+  }
+  else
+  {
+    passed Install with RPM success!
+  }
+  fi
+  ensure RubyMine or "Failed to install Beyond Compare"
+  rm -f "$USER_HOME/Downloads/${CODENAME}"
+  file_does_not_exist_with_spaces "$USER_HOME/Downloads/${CODENAME}"
+} # end _fedora__32
+
+
+_fedora__64() {
+  # THOUGHT  https://download-cf.jetbrains.com/ruby/RubyMine-2019.3.1.tar.gz
+  local CODENAME=$(_version "linux" "RubyMine*.*.*.tar.gz")
+  CODENAME=$(echo "RubyMine-2020.2")
+  local TARGET_URL="https://download-cf.jetbrains.com/ruby/${CODENAME}.tar.gz"
+  if  it_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}.tar.gz" ; then
+  {
+    file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}.tar.gz"
+  }
+  else
+  {
+    file_exists_with_spaces $USER_HOME/Downloads
+    cd $USER_HOME/Downloads
+    _download "${TARGET_URL}" $USER_HOME/Downloads  ${CODENAME}.tar.gz
+    file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}.tar.gz"
+  }
+  fi
+  if  it_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}" ; then
+  {
+    rm -rf "$USER_HOME/Downloads/${CODENAME}"
+    directory_does_not_exist_with_spaces "$USER_HOME/Downloads/${CODENAME}"
+  }
+  fi
+
+  ensure tar or "Canceling Install. Could not find tar command to execute unzip"
+  ensure awk or "Canceling Install. Could not find awk command to execute unzip"
+  ensure pv or "Canceling Install. Could not find pv command to execute unzip"
+  ensure du or "Canceling Install. Could not find du command to execute unzip"
+  ensure gzip or "Canceling Install. Could not find gzip command to execute unzip"
+  ensure gio or "Canceling Install. Could not find gio command to execute unzip"
+  ensure update-mime-database or "Canceling Install. Could not find update-mime-database command to execute unzip"
+  ensure update-desktop-database or "Canceling Install. Could not find update-desktop-database command to execute unzip"
+  ensure touch or "Canceling Install. Could not find touch command to execute unzip"
+
+  # provide error handling , once learned goes here. LEarn under if, once learned here.
+  # Start loop while ERROR flag in case needs to try again, based on error
+  cd $USER_HOME/Downloads
+  #_try "tar xvzf  \"$USER_HOME/Downloads/${CODENAME}.tar.gz\"--directory=$USER_HOME/Downloads"
+  # GROw bar with tar Progress bar tar REF: https://superuser.com/questions/168749/is-there-a-way-to-see-any-tar-progress-per-file
+  # Compress tar cvfj big-files.tar.bz2 folder-with-big-files
+  # Compress tar cf - $USER_HOME/Downloads/${CODENAME}.tar.gz --directory=$USER_HOME/Downloads -P | pv -s $(du -sb $USER_HOME/Downloads/${CODENAME}.tar.gz | awk '{print $1}') | gzip > big-files.tar.gz
+  # Extract tar Progress bar REF: https://coderwall.com/p/l_m2yg/tar-untar-on-osx-linux-with-progress-bars
+  # Extract tar sample pv file.tgz | tar xzf - -C target_directory
+  # Working simplme tar:  tar xvzf $USER_HOME/Downloads/${CODENAME}.tar.gz --directory=$USER_HOME/Downloads
+  pv $USER_HOME/Downloads/${CODENAME}.tar.gz  | tar xzf - -C $USER_HOME/Downloads
+  #local msg=$(_try "tar xvzf  \"$USER_HOME/Downloads/${CODENAME}.tar.gz\" --directory=$USER_HOME/Downloads " )
+  #  tar xvzf file.tar.gz
+  # Where,
+  # x: This option tells tar to extract the files.
+  # v: The “v” stands for “verbose.” This option will list all of the files one by one in the archive.
+  # z: The z option is very important and tells the tar command to uncompress the file (gzip).
+  # f: This options tells tar that you are going to give it a file name to work with.
+  local msg
+  local folder_date
+  local ret=$?
+  if [ $ret -gt 0 ] ; then
+  {
+    failed "${ret}:${msg}"
+    # add error handling knowledge while learning.
+  }
+  else
+  {
+    passed Install with Untar Unzip success!
+  }
+  fi
+
+  local NEWDIRCODENAME=$(ls -1tr /home/zeus/Downloads/  | tail  -1)
+  local FROMUZIPPED="$USER_HOME/Downloads/${NEWDIRCODENAME}"
+  directory_exists_with_spaces  "${FROMUZIPPED}"
+  # directory_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}"
+
+
+  if  it_exists_with_spaces "$USER_HOME/_/software/rubymine" ; then
+  {
+     folder_date=$(date +"%Y%m%d")
+     if  it_exists_with_spaces "$USER_HOME/_/software/rubymine_${folder_date}" ; then
+     {
+       warning A backup already exists for today "${ret}:${msg} \n ... adding time"
+       folder_date=$(date +"%Y%m%d%H%M")
+     }
+     fi
+     msg=$(mv "$USER_HOME/_/software/rubymine" "$USER_HOME/_/software/rubymine_${folder_date}")
+     ret=$?
+     if [ $ret -gt 0 ] ; then
+     {
+       warning failed to move backup "${ret}:${msg} \n"
+     }
+     fi
+     directory_exists_with_spaces "$USER_HOME/_/software/rubymine_${folder_date}"
+     file_does_not_exist_with_spaces "$USER_HOME/_/software/rubymine"
+  }
+  fi
+  mkdir -p "$USER_HOME/_/software"
+  directory_exists_with_spaces "$USER_HOME/_/software"
+  mv "$USER_HOME/Downloads/${CODENAME}" "$USER_HOME/_/software/rubymine"
+  directory_does_not_exist_with_spaces "$USER_HOME/Downloads/${CODENAME}"
+  directory_exists_with_spaces "$USER_HOME/_/software/rubymine"
+  directory_exists_with_spaces "$USER_HOME/_/software/rubymine/bin"
+  mkdir -p "$USER_HOME/.local/share/applications"
+  directory_exists_with_spaces "$USER_HOME/.local/share/applications"
+  mkdir -p "$USER_HOME/.local/share/mime/packages"
+  directory_exists_with_spaces "$USER_HOME/.local/share/mime/packages"
+  file_exists_with_spaces "$USER_HOME/_/software/rubymine/bin/rubymine.sh"
+  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/_/software/rubymine"
+  # Now Proceed to register REF:  https://gist.github.com/c80609a/752e566093b1489bd3aef0e56ee0426c
+  ensure cat or "Failed to use cat command does not exists"
+  ensure xdg-mime or "Failed to install run xdg-mime"
+
+   cat << EOF > $USER_HOME/_/software/rubymine/bin/mine-open.rb
+#!/usr/bin/env ruby
+
+# $USER_HOME/_/software/rubymine/bin/mine-open.rb
+# script opens URL in format rubymine://open?file=%{file}:%{line} in RubyMine
+
+require 'uri'
+
+begin
+    url = ARGV.first
+    u = URI.parse(url)
+    # puts u
+    q = URI.decode_www_form(u.query)
+    # puts q
+    h = q.to_h
+    # puts h
+    file = h['file']
+    line = h['line']
+    # puts file
+    # puts line
+    if line
+        arg = "#{file}:#{line}"
+    else
+        arg = "#{file}"
+    end
+rescue
+    arg = ""
+end
+puts arg
+EOF
+  file_exists_with_spaces "$USER_HOME/_/software/rubymine/bin/mine-open.rb"
+  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/_/software/rubymine/bin/mine-open.rb"
+  chmod +x $USER_HOME/_/software/rubymine/bin/mine-open.rb
+
+    cat << EOF > $USER_HOME/_/software/rubymine/bin/mine-open.sh
+#!/usr/bin/env bash
+#encoding: UTF-8
+# $USER_HOME/_/software/rubymine/bin/mine-open.sh
+# script opens URL in format rubymine://open?file=%{file}:%{line} in RubyMine
+
+echo "\${@}"
+echo "\${@}" >>  $USER_HOME/_/work/requested.log
+$USER_HOME/_/software/rubymine/bin/mine-open.rb \${@}
+filetoopen=\$($USER_HOME/_/software/rubymine/bin/mine-open.rb "\${@}")
+echo filetoopen "\${filetoopen}"
+echo "\${filetoopen}" >>  $USER_HOME/_/work/requested.log
+mine "\${filetoopen}"
+
+EOF
+  mkdir -p $USER_HOME/_/work/
+  directory_exists_with_spaces $USER_HOME/_/work/
+  chown $SUDO_USER:$SUDO_USER $USER_HOME/_/work/
+  touch $USER_HOME/_/work/requestedfiletoopen.log
+  file_exists_with_spaces $USER_HOME/_/work/requestedfiletoopen.log
+  chown $SUDO_USER:$SUDO_USER -R $USER_HOME/_/work/requestedfiletoopen.log
+  file_exists_with_spaces "$USER_HOME/_/software/rubymine/bin/mine-open.sh"
+  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/_/software/rubymine/bin/mine-open.sh"
+  chmod +x $USER_HOME/_/software/rubymine/bin/mine-open.sh
+
+ cat << EOF > $USER_HOME/.local/share/mime/packages/application-x-mine.xml
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="application/x-mine">
+    <comment>new mime type</comment>
+    <glob pattern="*.x-mine;*.rb;*.html;*.html.erb;*.js.erb;*.html.haml;*.js.haml;*.erb;*.haml;*.js"/>
+  </mime-type>
+</mime-info>
+EOF
+  file_exists_with_spaces "$USER_HOME/.local/share/mime/packages/application-x-mine.xml"
+  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/.local/share/mime/packages/application-x-mine.xml"
+
+
+
+
+  cat << EOF > $USER_HOME/.local/share/applications/jetbrains-rubymine.desktop
+# $USER_HOME/.local/share/applications/jetbrains-rubymine.desktop
+[Desktop Entry]
+Encoding=UTF-8
+Version=2019.3.2
+Type=Application
+Name=RubyMine
+Icon=$USER_HOME/_/software/rubymine/bin/rubymine.svg
+Exec="$USER_HOME/_/software/rubymine/bin/rubymine.sh" %f
+MimeType=application/x-mine;text/x-mine;text/plain;text/x-chdr;text/x-csrc;text/x-c++hdr;text/x-c++src;text/x-java;text/x-dsrc;text/x-pascal;text/x-perl;text/x-python;application/x-php;application/x-httpd-php3;application/x-httpd-php4;application/x-httpd-php5;application/xml;text/html;text/css;text/x-sql;text/x-diff;x-directory/normal;inode/directory;
+Comment=The Most Intelligent Ruby and Rails IDE
+Categories=Development;IDE;
+Terminal=true
+StartupWMClass=jetbrains-rubymine
+EOF
+  file_exists_with_spaces "$USER_HOME/.local/share/applications/jetbrains-rubymine.desktop"
+  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/.local/share/applications/jetbrains-rubymine.desktop"
+
+
+  cat << EOF > $USER_HOME/.local/share/applications/mimeinfo.cache
+# $USER_HOME/.local/share/applications/mimeinfo.cache
+
+[MIME Cache]
+x-scheme-handler/rubymine=mine-open.desktop;
+EOF
+  file_exists_with_spaces "$USER_HOME/.local/share/applications/mimeinfo.cache"
+  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/.local/share/applications/mimeinfo.cache"
+
+  cat << EOF > $USER_HOME/.local/share/applications/mine-open.desktop
+# $USER_HOME/.local/share/applications/mine-open.desktop
+[Desktop Entry]
+Encoding=UTF-8
+Version=1.0
+Type=Application
+Terminal=true
+Exec="$USER_HOME/_/software/rubymine/bin/mine-open.sh" %f
+MimeType=application/rubymine;x-scheme-handler/rubymine;
+Name=MineOpen
+Comment=BetterErrors
+EOF
+  file_exists_with_spaces "$USER_HOME/.local/share/applications/mine-open.desktop"
+  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/.local/share/applications/mine-open.desktop"
+
+  # xdg-mime default jetbrains-rubymine.desktop text/plain;text/x-chdr;text/x-csrc;text/x-c++hdr;text/x-c++src;text/x-java;text/x-dsrc;text/x-pascal;text/x-perl;text/x-python;application/x-php;application/x-httpd-php3;application/x-httpd-php4;application/x-httpd-php5;application/xml;text/html;text/css;text/x-sql;text/x-diff;x-directory/normal;inode/directory;
+  # xdg-mime default mine-open.desktop x-scheme-handler/rubymine
+  # msg=$(_try "xdg-mime default mine-open.desktop x-scheme-handler/rubymine" )
+  su - "${SUDO_USER}" -c "xdg-mime default mine-open.desktop x-scheme-handler/rubymine"
+  su - "${SUDO_USER}" -c "xdg-mime default mine-open.desktop text/rubymine"
+  su - "${SUDO_USER}" -c "xdg-mime default mine-open.desktop application/rubymine"
+  su - "${SUDO_USER}" -c "xdg-mime default jetbrains-rubymine.desktop x-scheme-handler/x-mine"
+  su - "${SUDO_USER}" -c "xdg-mime default jetbrains-rubymine.desktop text/x-mine"
+  su - "${SUDO_USER}" -c "xdg-mime default jetbrains-rubymine.desktop application/x-mine"
+
+#   cat << EOF > $USER_HOME/.config/mimeapps.list
+#   cat << EOF > $USER_HOME/.local/share/applications/mimeapps.list
+# [Default Applications]
+# x-scheme-handler/rubymine=mine-open.desktop
+# text/rubymine=mine-open.desktop
+# application/rubymine=mine-open.desktop
+# x-scheme-handler/x-mine=jetbrains-rubymine.desktop
+# text/x-mine=jetbrains-rubymine.desktop
+# application/x-mine=jetbrains-rubymine.desktop
+
+# [Added Associations]
+# x-scheme-handler/rubymine=mine-open.desktop;
+# text/rubymine=mine-open.desktop;
+# application/rubymine=mine-open.desktop;
+# x-scheme-handler/x-mine=jetbrains-rubymine.desktop;
+# text/x-mine=jetbrains-rubymine.desktop;
+# application/x-mine=jetbrains-rubymine.desktop;
+# EOF
+#   file_exists_with_spaces "$USER_HOME/.local/share/applications/mimeapps.list"
+#   file_exists_with_spaces "$USER_HOME/.config/mimeapps.list"
+ln -fs "$USER_HOME/.config/mimeapps.list" "$USER_HOME/.local/share/applications/mimeapps.list"
+softlink_exists_with_spaces "$USER_HOME/.local/share/applications/mimeapps.list>$USER_HOME/.config/mimeapps.list"
+chown $SUDO_USER:$SUDO_USER -R  "$USER_HOME/.local/share/applications/mimeapps.list"
+
+file_exists_with_spaces "$USER_HOME/_/software/rubymine/bin/mine-open.sh"
+
+  su - "${SUDO_USER}" -c "xdg-mime query default x-scheme-handler/rubymine"
+  su - "${SUDO_USER}" -c "xdg-mime query default x-scheme-handler/x-mine"
+  su - "${SUDO_USER}" -c "xdg-mime query default text/x-mine"
+  su - "${SUDO_USER}" -c "xdg-mime query default application/x-mine"
+  su - "${SUDO_USER}" -c "xdg-mime query default text/rubymine"
+  su - "${SUDO_USER}" -c "xdg-mime query default application/rubymine"
+  msg=$(_try "su - \"${SUDO_USER}\" -c \"xdg-mime query default x-scheme-handler/rubymine\"")
+  ret=$?
+  if [ $ret -gt 0 ] ; then
+  {
+
+    failed "${ret}:${msg} Install with xdg-mime scheme failed!"
+  }
+  else
+  {
+    passed Install with xdg-mime scheme success!
+  }
+  fi
+  su - "${SUDO_USER}" -c "update-mime-database \"$USER_HOME/.local/share/mime\""
+  su - "${SUDO_USER}" -c "update-desktop-database \"$USER_HOME/.local/share/applications\""
+  su - "${SUDO_USER}" -c "touch test12345.rb "
+  su - "${SUDO_USER}" -c "gio info test12345.rb  | grep \"standard::content-type\""
+  su - "${SUDO_USER}" -c "touch test12345.erb "
+  su - "${SUDO_USER}" -c "gio info test12345.erb  | grep \"standard::content-type\""
+  su - "${SUDO_USER}" -c "touch test12345.js.erb "
+  su - "${SUDO_USER}" -c "gio info test12345.js.erb  | grep \"standard::content-type\""
+  su - "${SUDO_USER}" -c "touch test12345.html.erb "
+  su - "${SUDO_USER}" -c "gio info test12345.html.erb  | grep \"standard::content-type\""
+  su - "${SUDO_USER}" -c "touch test12345.haml "
+  su - "${SUDO_USER}" -c "gio info test12345.haml  | grep \"standard::content-type\""
+  su - "${SUDO_USER}" -c "touch test12345.html.haml "
+  su - "${SUDO_USER}" -c "gio info test12345.html.haml  | grep \"standard::content-type\""
+  su - "${SUDO_USER}" -c "touch test12345.js.haml "
+  su - "${SUDO_USER}" -c "gio info test12345.js.haml  | grep \"standard::content-type\""
+
+  su - "${SUDO_USER}" -c "gio mime x-scheme-handler/rubymine"
+  su - "${SUDO_USER}" -c "gio mime x-scheme-handler/x-mine"
+  su - "${SUDO_USER}" -c "gio mime text/x-mine"
+  su - "${SUDO_USER}" -c "gio mime application/x-mine"
+  su - "${SUDO_USER}" -c "gio mime text/rubymine"
+  su - "${SUDO_USER}" -c "gio mime application/rubymine"
+  su - "${SUDO_USER}" -c "rm test12345.rb"
+  su - "${SUDO_USER}" -c "rm test12345.erb"
+  su - "${SUDO_USER}" -c "rm test12345.js.erb"
+  su - "${SUDO_USER}" -c "rm test12345.html.erb"
+  su - "${SUDO_USER}" -c "rm test12345.haml"
+  su - "${SUDO_USER}" -c "rm test12345.js.haml"
+  su - "${SUDO_USER}" -c "rm test12345.html.haml"
+  echo " "
+  echo "HINT: Add this to your config/initializers/better_errors.rb file "
+  echo "better_errors.rb
+  # ... /path_to_ruby_project/ ... /config/initializers/better_errors.rb
+
+  if defined?(BetterErrors)
+    BetterErrors.editor = \"rubymine://open?file=%{file}:%{line}\"
+    BetterErrors.editor = \"x-mine://open?file=%{file}:%{line}\"
+  end
+  "
+} # end _fedora__64
+
+_mingw__64() {
+    local CODENAME=$(_version "win" "RubyMine*.*.*.*.exe")
+    # THOUGHT        local CODENAME="RubyMine-4.3.3.24545.exe"
+    local URL="https://download-cf.jetbrains.com/ruby/${CODENAME}"
+    cd $HOMEDIR
+	  cd Downloads
+    curl -O $URL
+    ${CODENAME}
+} # end _mingw__64
+
+_mingw__32() {
+    local CODENAME=$(_version "win" "RubyMine*.*.*.*.exe")
+    # THOUGHT        local CODENAME="RubyMine-4.3.3.24545.exe"
+    local URL="https://download-cf.jetbrains.com/ruby/${CODENAME}"
+    cd $HOMEDIR
+    cd Downloads
+	  curl -O $URL
+	  ${CODENAME}
+} # end
+
+
+_main() {
+  determine_os_and_fire_action
+} # end _main
+
+_main
+
+echo ":)"
+
+
