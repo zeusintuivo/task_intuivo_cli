@@ -3,53 +3,63 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 #
-export  THISSCRIPTNAME
-typeset -gr THISSCRIPTNAME="$(pwd)/$(basename "$0")"
-export _err
-typeset -i _err=0
-load_execute_boot_basic_with_sudo(){
-    if ( typeset -p "SUDO_USER"  &>/dev/null ) ; then
-      export USER_HOME
-      typeset -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
-    else
-      local USER_HOME=$HOME
-    fi
-    local -r provider="$USER_HOME/_/clis/execute_command_intuivo_cli/execute_boot_basic.sh"
-    echo source "${provider}"
+load_struct_testing_wget(){
+    local provider="$HOME/_/clis/execute_command_intuivo_cli/struct_testing"
     [   -e "${provider}"  ] && source "${provider}"
-    [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/execute_boot_basic.sh -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
-    if ( command -v failed >/dev/null 2>&1; ) ; then
-    {
+    [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
+    ( ( ! command -v passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
+} # end load_struct_testing_wget
+load_struct_testing_wget
+
+function _linux_prepare(){
+  export  THISSCRIPTNAME
+  typeset -gr THISSCRIPTNAME="$(pwd)/$(basename "$0")"
+  export _err
+  typeset -i _err=0
+  load_execute_boot_basic_with_sudo(){
+      if ( typeset -p "SUDO_USER"  &>/dev/null ) ; then
+        export USER_HOME
+        typeset -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
+      else
+        local USER_HOME=$HOME
+      fi
+      local -r provider="$USER_HOME/_/clis/execute_command_intuivo_cli/execute_boot_basic.sh"
+      echo source "${provider}"
+      [   -e "${provider}"  ] && source "${provider}"
+      [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/execute_boot_basic.sh -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
+      if ( command -v failed >/dev/null 2>&1; ) ; then
+      {
+        return 0
+      }
+      else
+      {
+        echo -e "\n \n  ERROR! Loading execute_boot_basic.sh \n \n "
+        exit 1;
+      }
+      fi
       return 0
-    }
-    else
-    {
-      echo -e "\n \n  ERROR! Loading execute_boot_basic.sh \n \n "
-      exit 1;
-    }
-    fi
-    return 0
-} # end load_execute_boot_basic_with_sudo
+  } # end load_execute_boot_basic_with_sudo
 
-load_execute_boot_basic_with_sudo
-_err=$?
-if [ $_err -ne 0 ] ;  then
-{
-  >&2 echo -e "ERROR There was an error loading load_execute_boot_basic_with_sudo Err:$_err "
-  exit $_err
-}
-fi
+  load_execute_boot_basic_with_sudo
+  _err=$?
+  if [ $_err -ne 0 ] ;  then
+  {
+    >&2 echo -e "ERROR There was an error loading load_execute_boot_basic_with_sudo Err:$_err "
+    exit $_err
+  }
+  fi
 
-function _trap_on_exit(){
-  echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME EXITS ...\033[0m"
-  ls -lad /opt/sublime_text/Packages/Package\ Control.sublime-package
-  tree /opt/sublime_text/Packages/Package\ Control.sublime-package
-  ls -lad /home/zeus/.config/sublime-text-3/Installed\ Packages/Package\ Control.sublime-package
-  tree /home/zeus/.config/sublime-text-3/Installed\ Packages/Package\ Control.sublime-package
-}
-#trap kill ERR
-trap _trap_on_exit EXIT
-#trap kill INT
+  function _trap_on_exit(){
+    echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME EXITS ...\033[0m"
+    ls -lad /opt/sublime_text/Packages/Package\ Control.sublime-package
+    tree /opt/sublime_text/Packages/Package\ Control.sublime-package
+    ls -lad /home/zeus/.config/sublime-text-3/Installed\ Packages/Package\ Control.sublime-package
+    tree /home/zeus/.config/sublime-text-3/Installed\ Packages/Package\ Control.sublime-package
+  }
+  #trap kill ERR
+  trap _trap_on_exit EXIT
+  #trap kill INT
+} # end function _linux_prepare
 
 _version() {
     local -i _err
@@ -260,7 +270,8 @@ add_rpm_gpg_key_and_add_install_repository() {
 }
 # add_rpm_gpg_key_and_add_install_repository
 
-_fedora__64() {
+_fedora__64() { 
+  _linux_prepare
   local -i __online_version_from_page=$(_version)
   passed $__online_version_from_page
   if command -v "subl" >/dev/null 2>&1 ; then
