@@ -3,154 +3,185 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 #
-# SUDO_USER only exists during execution of sudo
-# REF: https://stackoverflow.com/questions/7358611/get-users-home-directory-when-they-run-a-script-as-root
-# Global:
-THISSCRIPTNAME=`basename "$0"`
-
-execute_as_sudo(){
-  if [ -z $SUDO_USER ] ; then
-    if [[ -z "$THISSCRIPTNAME" ]] ; then
-    {
-        echo "error You need to add THISSCRIPTNAME variable like this:"
-        echo "     THISSCRIPTNAME=\`basename \"\$0\"\`"
-    }
-    else
-    {
-        if [ -e "./$THISSCRIPTNAME" ] ; then
-        {
-          sudo "./$THISSCRIPTNAME"
-        }
-        elif ( command -v "$THISSCRIPTNAME" >/dev/null 2>&1 );  then
-        {
-          echo "sudo sudo sudo "
-          sudo "$THISSCRIPTNAME"
-        }
-        else
-        {
-          echo -e "\033[05;7m*** Failed to find script to recall it as sudo ...\033[0m"
-          exit 1
-        }
-        fi
-    }
-    fi
-    wait
-    exit 0
-  fi
-  # REF: http://superuser.com/questions/93385/run-part-of-a-bash-script-as-a-different-user
-  # REF: http://superuser.com/questions/195781/sudo-is-there-a-command-to-check-if-i-have-sudo-and-or-how-much-time-is-left
-  local CAN_I_RUN_SUDO=$(sudo -n uptime 2>&1|grep "load"|wc -l)
-  if [ ${CAN_I_RUN_SUDO} -gt 0 ]; then
-    echo -e "\033[01;7m*** Installing as sudo...\033[0m"
-  else
-    echo "Needs to run as sudo ... ${0}"
-  fi
-}
-
-_get_user_home() {
-  # check operation systems
-  if [[ "$(uname)" == "Darwin" ]] ; then
-    # Do something under Mac OS X platform
-    CAN_I_RUN_SUDO=$(sudo -n uptime 2>&1|grep "load"|wc -l)
-    if [ ${CAN_I_RUN_SUDO} -gt 0 ]; then
-      echo -e "\033[01;7m*** Installing as sudo...\033[0m"
-    else
-      echo "Needs to run as sudo ... ${0}"
-      exit 1
-    fi
-    USER_HOME=$(echo "/Users/$SUDO_USER")
-  elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]] ; then
-    # Do something under GNU/Linux platform
-    execute_as_sudo
-    USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
-  elif [[ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]] ; then
-    # Do something under Windows NT platform
-    USER_HOME=$(echo "/Users/$SUDO_USER")
-    # nothing here
-  fi
-
-} # end _get_user_home
-_get_user_home
-
-
-
 load_struct_testing_wget(){
-    local provider="$USER_HOME/_/clis/execute_command_intuivo_cli/struct_testing"
-    [   -e "${provider}"  ] && source "${provider}"
+    local provider="$HOME/_/clis/execute_command_intuivo_cli/struct_testing"
+    [   -e "${provider}"  ] && source "${provider}" && echo "Loaded localy"
     [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
     ( ( ! command -v passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
 } # end load_struct_testing_wget
 load_struct_testing_wget
 
-passed Caller user identified:$SUDO_USER
-passed Home identified:$USER_HOME
-file_exists_with_spaces "$USER_HOME"
+function _linux_prepare(){
+  export  THISSCRIPTNAME
+  typeset -gr THISSCRIPTNAME="$(pwd)/$(basename "$0")"
+  export _err
+  typeset -i _err=0
+  load_execute_boot_basic_with_sudo(){
+      if ( typeset -p "SUDO_USER"  &>/dev/null ) ; then
+        export USER_HOME
+        typeset -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
+      else
+        local USER_HOME=$HOME
+      fi
+      local -r provider="$USER_HOME/_/clis/execute_command_intuivo_cli/execute_boot_basic.sh"
+      echo source "${provider}"
+      [   -e "${provider}"  ] && source "${provider}"
+      [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/execute_boot_basic.sh -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
+      if ( command -v failed >/dev/null 2>&1; ) ; then
+      {
+        return 0
+      }
+      else
+      {
+        echo -e "\n \n  ERROR! Loading execute_boot_basic.sh \n \n "
+        exit 1;
+      }
+      fi
+      return 0
+  } # end load_execute_boot_basic_with_sudo
 
+  load_execute_boot_basic_with_sudo
+  _err=$?
+  if [ $_err -ne 0 ] ;  then
+  {
+    >&2 echo -e "ERROR There was an error loading load_execute_boot_basic_with_sudo Err:$_err "
+    exit $_err
+  }
+  fi
 
+  function _trap_on_exit(){
+    echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME EXITS ...\033[0m"
+    ls -lad /opt/sublime_text/Packages/Package\ Control.sublime-package
+    tree /opt/sublime_text/Packages/Package\ Control.sublime-package
+    ls -lad /home/zeus/.config/sublime-text-3/Installed\ Packages/Package\ Control.sublime-package
+    tree /home/zeus/.config/sublime-text-3/Installed\ Packages/Package\ Control.sublime-package
+  }
+  #trap kill ERR
+  trap _trap_on_exit EXIT
+  #trap kill INT
+} # end _linux_prepare
 
 _version() {
-
-
-  local PLATFORM="${1}"
+  local PLATFORM="${1}" # mac windows linux 
   local PATTERN="${2}"
-
-  # THOUGHT: local CODEFILE=$(curl -d "zz=dl4&platform=linux" -H "Content-Type: application/x-www-form-urlencoded" -X POST  -sSLo -  https://www.jetbrains.com/webstorm/download/#section=linux  2>&1;) # suppress only wget download messages, but keep wget output for variable
-  local CODEFILE=$(curl -d "zz=dl4&platform=${PLATFORM}" -H "Content-Type: application/x-www-form-urlencoded" -X POST  -sSLo -  https://www.jetbrains.com/webstorm/download/#section=linux  2>&1;) # suppress only wget download messages, but keep wget output for variable
-  # THOUGHT: local CODELASTESTBUILD=$(echo $CODEFILE | sed s/\</\\n\</g | grep "Webstorm*.*.*.*.x86_64.rpm" | sed s/\"/\\n/g | grep "/" | cüt "/")
-  local CODELASTESTBUILD=$(echo $CODEFILE | sed s/\</\\n\</g | grep "${PATTERN}" | sed s/\"/\\n/g | grep "/" | cüt "/")
-  # fedora 32 local CODELASTESTBUILD=$(echo $CODEFILE | sed s/\</\\n\</g | grep "Webstorm*.*.*.*.i386.rpm" | sed s/\"/\\n/g | grep "/" | cüt "/")
+  # THOUGHT:   https://download-cf.jetbrains.com/webstorm/WebStorm-2020.3.dmg
+  local CODEFILE="""$(wget --quiet --no-check-certificate  https://www.jetbrains.com/webstorm/ -O -  2>/dev/null )""" # suppress only wget download messages, but keep wget output for variable
+  # assert not empty "${CODEFILE}"
   wait
-  [[ -z "${CODELASTESTBUILD}" ]] && failed "Beyond Compare Version not found! :${CODELASTESTBUILD}:"
-
-
-  assert not empty "${USER_HOME}"
+  local CODELASTESTBUILD=$(echo "${CODEFILE}" | sed s/\</\\n\</g | sed s/\>/\>\\n/g | sed "s/&apos;/\'/g" | sed 's/&nbsp;/ /g' | grep  "New in WebStorm ${PATTERN}" | sed s/\ /\\n/g | tail -1 ) # | grep "What&apos;s New in&nbsp;WebStorm&nbsp;" | sed 's/\;/\;'\\n'/g' | sed s/\</\\n\</g  )
   assert not empty "${CODELASTESTBUILD}"
 
-  local CODENAME="${CODELASTESTBUILD}"
-  echo "${CODELASTESTBUILD}"
+  local CODENAME=""
+  case ${PLATFORM} in
+  mac)
+    CODENAME="https://download-cf.jetbrains.com/webstorm/WebStorm-${CODELASTESTBUILD}.dmg"
+    ;;
+
+  windows)
+    CODENAME="https://download-cf.jetbrains.com/webstorm/WebStorm-${CODELASTESTBUILD}.exe"
+    CODENAME="https://download-cf.jetbrains.com/webstorm/WebStorm-${CODELASTESTBUILD}.win.zip"
+    ;;
+
+  linux)
+    CODENAME="https://download-cf.jetbrains.com/webstorm/WebStorm-${CODELASTESTBUILD}.tar.gz"
+    ;;
+
+  *)
+    CODENAME=""
+    ;;
+  esac
+  assert not empty "${CODENAME}"
   unset PATTERN
   unset PLATFORM
   unset CODEFILE
   unset CODELASTESTBUILD
+  echo "${CODENAME}"
+  return 0
 } # end _version
 
 _darwin__64() {
-    local CODENAME=$(_version "mac" "WebStormOSX*.*.*.*.zip")
-    # THOUGHT        local CODENAME="WebStormOSX-4.3.3.24545.zip"
-    local URL="https://download-cf.jetbrains.com/webstorm/${CODENAME}"
-    cd $USER_HOME/Downloads/
-    _download "${URL}"
-    unzip ${CODENAME}
-    sudo hdiutil attach ${CODENAME}
-    sudo cp -R /Volumes/Beyond\ Compare/Beyond\ Compare.app /Applications/
-    sudo hdiutil detach /Volumes/Beyond \ Compare
+  local CODENAME=$(_version "mac" "*.*")
+  echo "${CODENAME}";
+  local TARGET_URL="$(echo -en "${CODENAME}" | tail -1)"
+  CODENAME="$(basename "${TARGET_URL}" )"
+  local VERSION="$(echo -en "${CODENAME}" | sed 's/WebStorm-//g' | sed 's/.dmg//g' )"
+  assert not empty "${VERSION}"
+  local UNZIPDIR="$(echo -en "${CODENAME}" | sed 's/'"${VERSION}"'//g' | sed 's/.dmg//g'| sed 's/-//g')"
+  local APPDIR="$(echo -en "${CODENAME}" | sed 's/'"${VERSION}"'//g' | sed 's/.dmg//g'| sed 's/-//g').app"
+  # echo "${CODENAME}";
+  # echo "${URL}";
+  echo "CODENAME: ${CODENAME}"
+  assert not empty "${CODENAME}"
+  assert not empty "${TARGET_URL}"
+  assert not empty "${HOME}"
+  echo "UNZIPDIR: ${UNZIPDIR}"
+  assert not empty "${UNZIPDIR}"
+  echo "APPDIR: ${APPDIR}"
+  assert not empty "${APPDIR}"
+  local DOWNLOADFOLDER="${HOME}/Downloads"
+  assert not empty "${DOWNLOADFOLDER}"
+  directory_exists_with_spaces "${DOWNLOADFOLDER}"
+
+  if it_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}" ; then
+  {
+    file_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
+  }
+  else
+  {
+    cd "${DOWNLOADFOLDER}"
+    _download "${TARGET_URL}" "${DOWNLOADFOLDER}"  ${CODENAME}
+    file_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
+  }
+  fi
+  if  it_exists_with_spaces "/Applications/${APPDIR}" ; then
+  {
+      echo Remove  unzipped "/Applications/${APPDIR}"
+      sudo rm -rf  "/Applications/${APPDIR}"
+      directory_does_not_exist_with_spaces  "/Applications/${APPDIR}"
+  }
+  fi
+  echo Attaching dmg downloaded
+  sudo hdiutil attach "${DOWNLOADFOLDER}/${CODENAME}"
+  ls "/Volumes"
+  directory_exists_with_spaces "/Volumes/${UNZIPDIR}"
+  directory_exists_with_spaces "/Volumes/${UNZIPDIR}/${APPDIR}"
+  echo "sudo  cp -R /Volumes/${UNZIPDIR}/${APPDIR} /Applications/"
+  sudo  cp -R /Volumes/${UNZIPDIR}/${APPDIR} /Applications/
+  ls -d "/Applications/${APPDIR}"
+  directory_exists_with_spaces "/Applications/${APPDIR}"
+  sudo hdiutil detach "/Volumes/${UNZIPDIR}"
 } # end _darwin__64
 
 _ubuntu__64() {
-    local CODENAME=$(_version "linux" "WebStorm-*.*.*.*amd64.deb")
-    # THOUGHT          local CODENAME="WebStorm-4.3.3.24545_amd64.deb"
-    local URL="https://download-cf.jetbrains.com/webstorm/${CODENAME}"
-    cd $USER_HOME/Downloads/
-    _download "${URL}"
-    sudo dpkg -i ${CODENAME}
+  _linux_prepare
+  local CODENAME=$(_version "linux" "WebStorm-*.*.*.*amd64.deb")
+  # THOUGHT          local CODENAME="WebStorm-4.3.3.24545_amd64.deb"
+  local URL="https://download-cf.jetbrains.com/webstorm/${CODENAME}"
+  cd $USER_HOME/Downloads/
+  _download "${URL}"
+  sudo dpkg -i ${CODENAME}
 } # end _ubuntu__64
 
 _ubuntu__32() {
-    local CODENAME=$(_version "linux" "WebStorm-*.*.*.*i386.deb")
-    # THOUGHT local CODENAME="WebStorm-4.3.3.24545_i386.deb"
-    local URL="https://download-cf.jetbrains.com/webstorm/${CODENAME}"
-    cd $USER_HOME/Downloads/
-    _download "${URL}"
-    sudo dpkg -i ${CODENAME}
+  local CODENAME=$(_version "linux" "WebStorm-*.*.*.*i386.deb")
+  # THOUGHT local CODENAME="WebStorm-4.3.3.24545_i386.deb"
+  local URL="https://download-cf.jetbrains.com/webstorm/${CODENAME}"
+  cd $USER_HOME/Downloads/
+  _download "${URL}"
+  sudo dpkg -i ${CODENAME}
 } # end _ubuntu__32
 
 _fedora__32() {
+  _linux_prepare
   local CODENAME=$(_version "linux" "WebStorm*.*.*.*.i386.rpm")
   # THOUGHT                          WebStorm-4.3.3.24545.i386.rpm
   local TARGET_URL="https://download-cf.jetbrains.com/webstorm/${CODENAME}"
   file_exists_with_spaces $USER_HOME/Downloads
+  assert not empty "${CODENAME}"
+  assert not empty "${TARGET_URL}"
+  assert not empty "${USER_HOME}"
   cd $USER_HOME/Downloads
-  _download "${TARGET_URL}"
+  _download "${TARGET_URL}" $USER_HOME/Downloads  ${CODENAME}
   file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}"
   ensure tar or "Canceling Install. Could not find tar command to execute unzip"
 
@@ -169,35 +200,40 @@ _fedora__32() {
     passed Install with RPM success!
   }
   fi
-  ensure Webstorm or "Failed to install Beyond Compare"
+  ensure WebStorm or "Failed to install WebStorm"
   rm -f "$USER_HOME/Downloads/${CODENAME}"
   file_does_not_exist_with_spaces "$USER_HOME/Downloads/${CODENAME}"
 } # end _fedora__32
 
 
 _fedora__64() {
-  # Lives Samples
-  # https://download-cf.jetbrains.com/webstorm/WebStorm-2019.3.4.tar.gz
-  local CODENAME=$(_version "linux" "WebStorm*.*.*.tar.gz")
+ local CODENAME=$(_version "linux" "*.*")
+  echo "${CODENAME}";
+  local TARGET_URL="$(echo "${CODENAME}" | tail -1)"
+  CODENAME="$(basename "${TARGET_URL}" )"
+  local UNZIPDIR="$(echo "${CODENAME}" | sed 's/.tar.gz//g' )"
+  assert not empty "${CODENAME}"
+  assert not empty "${TARGET_URL}"
+  assert not empty "${HOME}"
+  assert not empty "${USER_HOME}"
+  assert not empty "${UNZIPDIR}"
 
-  CODENAME=$(echo "WebStorm-2020.2")
-  local TARGET_URL="https://download-cf.jetbrains.com/webstorm/${CODENAME}.tar.gz"
-  if  it_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}.tar.gz" ; then
+  if  it_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}" ; then
   {
-    file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}.tar.gz"
+    file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}"
   }
   else
   {
     file_exists_with_spaces $USER_HOME/Downloads
     cd $USER_HOME/Downloads
-    _download "${TARGET_URL}" $USER_HOME/Downloads  ${CODENAME}.tar.gz
-    file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}.tar.gz"
+    _download "${TARGET_URL}" $USER_HOME/Downloads  ${CODENAME}
+    file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}"
   }
   fi
-  if  it_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}" ; then
+  if  it_exists_with_spaces "$USER_HOME/Downloads/${UNZIPDIR}" ; then
   {
-    rm -rf "$USER_HOME/Downloads/${CODENAME}"
-    directory_does_not_exist_with_spaces "$USER_HOME/Downloads/${CODENAME}"
+    rm -rf "$USER_HOME/Downloads/${UNZIPDIR}"
+    directory_does_not_exist_with_spaces "$USER_HOME/Downloads/${UNZIPDIR}"
   }
   fi
 
@@ -206,10 +242,10 @@ _fedora__64() {
   ensure pv or "Canceling Install. Could not find pv command to execute unzip"
   ensure du or "Canceling Install. Could not find du command to execute unzip"
   ensure gzip or "Canceling Install. Could not find gzip command to execute unzip"
-  ensure gio or "Canceling Install. Could not find gio command to execute gio"
-  ensure update-mime-database or "Canceling Install. Could not find update-mime-database command to execute update-mime-database"
-  ensure update-desktop-database or "Canceling Install. Could not find update-desktop-database command to execute update"
-  ensure touch or "Canceling Install. Could not find touch command to execute touch"
+  ensure gio or "Canceling Install. Could not find gio command to execute unzip"
+  ensure update-mime-database or "Canceling Install. Could not find update-mime-database command to execute unzip"
+  ensure update-desktop-database or "Canceling Install. Could not find update-desktop-database command to execute unzip"
+  ensure touch or "Canceling Install. Could not find touch command to execute unzip"
 
   # provide error handling , once learned goes here. LEarn under if, once learned here.
   # Start loop while ERROR flag in case needs to try again, based on error
@@ -221,7 +257,7 @@ _fedora__64() {
   # Extract tar Progress bar REF: https://coderwall.com/p/l_m2yg/tar-untar-on-osx-linux-with-progress-bars
   # Extract tar sample pv file.tgz | tar xzf - -C target_directory
   # Working simplme tar:  tar xvzf $USER_HOME/Downloads/${CODENAME}.tar.gz --directory=$USER_HOME/Downloads
-  pv $USER_HOME/Downloads/${CODENAME}.tar.gz  | tar xzf - -C $USER_HOME/Downloads
+  pv $USER_HOME/Downloads/${CODENAME}  | tar xzf - -C $USER_HOME/Downloads
   #local msg=$(_try "tar xvzf  \"$USER_HOME/Downloads/${CODENAME}.tar.gz\" --directory=$USER_HOME/Downloads " )
   #  tar xvzf file.tar.gz
   # Where,
@@ -243,9 +279,10 @@ _fedora__64() {
   }
   fi
 
-  local NEWDIRCODENAME=$(ls -1tr /home/zeus/Downloads/  | tail  -1)
+  local NEWDIRCODENAME=$(ls -1tr "$USER_HOME/Downloads/"  | tail  -1)
   local FROMUZIPPED="$USER_HOME/Downloads/${NEWDIRCODENAME}"
   directory_exists_with_spaces  "${FROMUZIPPED}"
+  # directory_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}"
 
 
   if  it_exists_with_spaces "$USER_HOME/_/software/webstorm" ; then

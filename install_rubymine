@@ -51,10 +51,7 @@ function _linux_prepare(){
 
   function _trap_on_exit(){
     echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME EXITS ...\033[0m"
-    ls -lad /opt/sublime_text/Packages/Package\ Control.sublime-package
-    tree /opt/sublime_text/Packages/Package\ Control.sublime-package
-    ls -lad /home/zeus/.config/sublime-text-3/Installed\ Packages/Package\ Control.sublime-package
-    tree /home/zeus/.config/sublime-text-3/Installed\ Packages/Package\ Control.sublime-package
+  
   }
   #trap kill ERR
   trap _trap_on_exit EXIT
@@ -200,7 +197,7 @@ _fedora__32() {
     passed Install with RPM success!
   }
   fi
-  ensure RubyMine or "Failed to install Beyond Compare"
+  ensure RubyMine or "Failed to install RubyMine"
   rm -f "$USER_HOME/Downloads/${CODENAME}"
   file_does_not_exist_with_spaces "$USER_HOME/Downloads/${CODENAME}"
 } # end _fedora__32
@@ -355,6 +352,7 @@ EOF
   chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/_/software/rubymine/bin/mine-open.rb"
   chmod +x $USER_HOME/_/software/rubymine/bin/mine-open.rb
 
+
     cat << EOF > $USER_HOME/_/software/rubymine/bin/mine-open.sh
 #!/usr/bin/env bash
 #encoding: UTF-8
@@ -366,7 +364,7 @@ echo "\${@}" >>  $USER_HOME/_/work/requested.log
 $USER_HOME/_/software/rubymine/bin/mine-open.rb \${@}
 filetoopen=\$($USER_HOME/_/software/rubymine/bin/mine-open.rb "\${@}")
 echo filetoopen "\${filetoopen}"
-echo "\${filetoopen}" >>  $USER_HOME/_/work/requested.log
+echo "\${filetoopen}" >>  $USER_HOME/_/work/requestedfiletoopen.log
 mine "\${filetoopen}"
 
 EOF
