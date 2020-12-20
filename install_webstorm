@@ -51,10 +51,7 @@ function _linux_prepare(){
 
   function _trap_on_exit(){
     echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME EXITS ...\033[0m"
-    ls -lad /opt/sublime_text/Packages/Package\ Control.sublime-package
-    tree /opt/sublime_text/Packages/Package\ Control.sublime-package
-    ls -lad /home/zeus/.config/sublime-text-3/Installed\ Packages/Package\ Control.sublime-package
-    tree /home/zeus/.config/sublime-text-3/Installed\ Packages/Package\ Control.sublime-package
+  
   }
   #trap kill ERR
   trap _trap_on_exit EXIT
