@@ -3,6 +3,29 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 #
+# em script Emacs on mac experience  REF: https://medium.com/@holzman.simon/emacs-on-macos-catalina-10-15-in-2019-79ff713c1ccc
+# Compile emacs mac REF: https://emacs.stackexchange.com/questions/58526/how-do-i-build-emacs-from-sources-on-macos-catalina-version-10-15-4
+
+ensure git 
+checkversion $(makeinfo --version)>=4.13
+Install it 
+# REF: https://stackoverflow.com/questions/44379909/how-to-upgrade-update-makeinfo-texinfo-from-version-4-8-to-4-13-on-macosx-termin
+brew info textinfo
+echo 'export PATH="/usr/local/opt/texinfo/bin:$PATH"' >> ~/.zshrc
+checkversion $(makeinfo --version)>=4.13
+makeinfo --version
+
+echo mac: 
+git clone -b master git://git.sv.gnu.org/emacs.git
+cd emacs 
+./autogen.sh
+./configure
+make -j3 -B --debug
+make check -j3 -B --debug
+make install -j3 -B --debug
+
+
+
 load_struct_testing_wget(){
     local provider="$HOME/_/clis/execute_command_intuivo_cli/struct_testing"
     [   -e "${provider}"  ] && source "${provider}" && echo "Loaded locally"
@@ -96,7 +119,6 @@ _version() {
   return 0
 } # end _version
 
-# REF: https://medium.com/@holzman.simon/emacs-on-macos-catalina-10-15-in-2019-79ff713c1ccc
 _darwin__64() {
   local CODENAME=$(_version "mac" "*.*")
   echo "${CODENAME}";
