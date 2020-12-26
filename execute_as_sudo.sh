@@ -6,13 +6,13 @@
 # SUDO_USER only exists during execution of sudo
 # REF: https://stackoverflow.com/questions/7358611/get-users-home-directory-when-they-run-a-script-as-root
 # Global:
-if [ -n ${1-x} ] ; then
+if [[ -n "${1-x}" ]] ; then
 {
   if [[ "$1" == "--test" ]]; then
   {
     DEBUG=1
     set -xE -o functrace   # Strict and Report Errors
-    THISSCRIPTNAME=`basename "$0"`
+    THISSCRIPTCOMPLETEPATH=`basename "$0"`
   }
   fi
 }
@@ -24,10 +24,10 @@ fi
 #   echo -e "\033[01;7m * * * Executing as sudo * * * \033[0m"
 # else
 #   echo "Needs to run as sudo ... ${0}"
-#   if [ -z "${THISSCRIPTNAME+x}" ] ; then
+#   if [ -z "${THISSCRIPTCOMPLETEPATH+x}" ] ; then
 #   {
-#       echo "error You need to add THISSCRIPTNAME variable like this:"
-#       echo "     THISSCRIPTNAME=\`basename \"\$0\"\`"
+#       echo "error You need to add THISSCRIPTCOMPLETEPATH variable like this:"
+#       echo "     THISSCRIPTCOMPLETEPATH=\`basename \"\$0\"\`"
 #       typeset  __SOURCE__="${BASH_SOURCE[0]}"
 #       while [[ -h "${__SOURCE__}" ]]; do
 #           __SOURCE__="$(find "${__SOURCE__}" -type l -ls | sed -n 's@^.* -> \(.*\)@\1@p')"
@@ -38,7 +38,7 @@ fi
 #       echo "before calling $__SOURCE__"
 #   }
 #   fi
-#   sudo $THISSCRIPTNAME
+#   sudo $THISSCRIPTCOMPLETEPATH
 # fi
 # # TESTs
 # # env | grep SUDO
@@ -78,10 +78,10 @@ fi
 
 function execute_as_sudo(){
   if [ -z $SUDO_USER ] ; then
-    if [ -z "${THISSCRIPTNAME+x}" ] ; then
+    if [ -z "${THISSCRIPTCOMPLETEPATH+x}" ] ; then
     {
-        echo "error You need to add THISSCRIPTNAME variable like this:"
-        echo "     THISSCRIPTNAME=\`basename \"\$0\"\`"
+        echo "error You need to add THISSCRIPTCOMPLETEPATH variable like this:"
+        echo "     THISSCRIPTCOMPLETEPATH=\`basename \"\$0\"\`"
         typeset  __SOURCE__="${BASH_SOURCE[0]}"
         while [[ -h "${__SOURCE__}" ]]; do
             __SOURCE__="$(find "${__SOURCE__}" -type l -ls | sed -n 's@^.* -> \(.*\)@\1@p')"
@@ -90,22 +90,22 @@ function execute_as_sudo(){
         # echo __SOURCE__ $__SOURCE__
         # echo __DIR__ $__DIR__
         echo "before calling $__SOURCE__"
-        echo "or call direclty as sudo $__SOURCE__ then you dont need THISSCRIPTNAME to be defined"
+        echo "or call direclty as sudo $__SOURCE__ then you dont need THISSCRIPTCOMPLETEPATH to be defined"
     }
     else
     {
-        if [ -e "./$THISSCRIPTNAME" ] ; then
+        if [ -e "./$THISSCRIPTCOMPLETEPATH" ] ; then
         {
-          sudo "./$THISSCRIPTNAME"
+          sudo "./$THISSCRIPTCOMPLETEPATH"
         }
-        elif ( command -v "$THISSCRIPTNAME" >/dev/null 2>&1 );  then
+        elif ( command -v "$THISSCRIPTCOMPLETEPATH" >/dev/null 2>&1 );  then
         {
           # echo "sudo sudo sudo "
-          sudo "$THISSCRIPTNAME"
+          sudo "$THISSCRIPTCOMPLETEPATH"
         }
         else
         {
-          echo -e "\033[05;7m*** Failed to find script to recall it as sudo ...\033[0m"
+          echo -e "\033[05;7m*** Failed to find script to recall it as sudo ...\033[0m $THISSCRIPTCOMPLETEPATH"
           exit 1
         }
         fi
@@ -116,12 +116,13 @@ function execute_as_sudo(){
   fi
   # REF: http://superuser.com/questions/93385/run-part-of-a-bash-script-as-a-different-user
   # REF: http://superuser.com/questions/195781/sudo-is-there-a-command-to-check-if-i-have-sudo-and-or-how-much-time-is-left
-  local CAN_I_RUN_SUDO=$(sudo -n uptime 2>&1|grep "load"|wc -l)
+  local -i CAN_I_RUN_SUDO=$(sudo -n uptime 2>&1|grep "load"|wc -l)
   if [ ${CAN_I_RUN_SUDO} -gt 0 ]; then
     echo -e "\033[01;7m*** Running as sudo ...\033[0m"
   else
     echo "Needs to run as sudo ... ${0}"
   fi
+  return 0
 }
 
 function enforce_variable_with_value(){
@@ -167,5 +168,5 @@ function enforce_variable_with_value(){
       exit 1
   }
   fi
-  exit 1
+  exit 1  # Stop the scripts execution
 } # end enforce_variable_with_value
