@@ -126,6 +126,7 @@ function execute_as_sudo(){
 }
 
 function enforce_variable_with_value(){
+  # repeated in struct_testing
   # Sample use
   # enforce_variable_with_value HOME $HOME
   # enforce_variable_with_value USER_HOME $USER_HOME
