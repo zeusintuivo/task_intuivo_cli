@@ -11,7 +11,8 @@ load_struct_testing_wget(){
 } # end load_struct_testing_wget
 load_struct_testing_wget
 
-function _linux_prepare(){
+_linux_prepare(){
+  # Loads as sudo . And loads error manager
   export  THISSCRIPTNAME
   typeset -gr THISSCRIPTNAME="$(pwd)/$(basename "$0")"
   export _err
@@ -58,46 +59,8 @@ function _linux_prepare(){
   #trap kill INT
 } # end _linux_prepare
 
-_version() {
-  # Usage:
-  local PLATFORM="${1}"
-  local PATTERN="${2}"
-  # https://nano-project.org/download.php?platform=linux64
-  # https://nano-project.org/download.php?platform=linux32
-  # https://nano-project.org/download.php?platform=win64
-  # https://nano-project.org/download.php?platform=win32
-  # https://nano-project.org/download.php?platform=osx Requires OS X 10.13.2 or newer
-  local url="https://nano-project.org/download.php"
-  local CODEFILE=$(curl -d "zz=dl4&platform=${PLATFORM}" -H "Content-Type: application/x-www-form-urlencoded" -X POST  -sSLo - "${url}"  2>&1;) # suppress only wget download messages, but keep wget output for variable
-  # https://dl2.cdn.nano-project.org/client/nano_3.50.0_macosx-x86.app.tar.bz2?h=rjBi_Z2lil6O76EGwA9Xqw&x=1598793414
-  # https://dl3.cdn.nano-project.org/client/nano_3.50.0_x86_64-linux-gnu.tar.bz2?h=GHvx3uPV-PuIXkUKf1Oc9Q&x=1598795875
-  # https://dl2.cdn.nano-project.org/client/nano_3.50.0_i686-linux-gnu.tar.bz2?h=e5YY0z4yBZyp7b8hp-COQQ&x=1598795941
-  # https://download.nano-project.org/client/nano_3.50.0_win64_sponsored-setup.exe
-  # https://download.nano-project.org/client/nano_3.50.0_win32_sponsored-setup.exe
-
-  local LASTESTBUILD=$(echo $CODEFILE | sed s/\</\\n\</g | grep "${PATTERN}" | sed s/\"/\\n/g | grep "/" | cüt "/")
-  # fedora 32 local LASTESTBUILD=$(echo $CODEFILE | sed s/\</\\n\</g | grep "nano*.*.*.*.i386.rpm" | sed s/\"/\\n/g | grep "/" | cüt "/")
-  wait
-  [[ -z "${LASTESTBUILD}" ]] && failed "nano Version not found! :${LASTESTBUILD}:"
-
-
-  # assert not empty "${USER_HOME}"
-  # assert not empty "${LASTESTBUILD}"
-
-  local CODENAME="${LASTESTBUILD}"
-  echo "${LASTESTBUILD}"
-  unset PATTERN
-  unset PLATFORM
-  unset CODEFILE
-  unset LASTESTBUILD
-} # end _version
-
-_version_test(){
-  local CODENAME=$(_version "mac" "nanoOSX*.*.*.*.zip")
-}
-_version_test
-exit 1
 _darwin__64() {
+  # Using homebrew seemed like the best choice so far 
   # /usr/bin/curl --disable --globoff --show-error --user-agent Homebrew/2.6.2-222-g880eb2d\ \(Macintosh\;\ Intel\ Mac\ OS\ X\ 10.15.7\)\ curl/7.64.1 --header Accept-Language:\ en --retry 3 --location --silent --head --request GET https://homebrew.bintray.com/bottles/nano-5.4.catalina.bottle.tar.gz
   # tar xof /Users/benutzer/Library/Caches/Homebrew/downloads/91845ed41d14ccff1a66f16db7c7ec93f7d7958bb08be637dae24d2aa70a214d--nano-5.4.catalina.bottle.tar.gz -C /var/folders/8x/9phrghz97g38v9m8m6r59_0w0000gn/T/d20201221-96141-1fi6gd9
   # cp -pR /var/folders/8x/9phrghz97g38v9m8m6r59_0w0000gn/T/d20201221-96141-1fi6gd9/nano/. /usr/local/Cellar/nano
@@ -118,12 +81,13 @@ _darwin__64() {
   # syntax "JavaScript" "\.js$"  
   # syntax "Typescript" "\.ts$"   
   # in   ~/.nano/typescript.nanorc
-ersetzeindatei ~/.nanorc 'include "~/.nano/tex.nanorc"' 'include "~/.nano/tex.nanorc"
-include "~/.nano/typescript.nanorc"'
+  ersetzeindatei ~/.nanorc 'include "~/.nano/tex.nanorc"' 'include "~/.nano/tex.nanorc"\ninclude "~/.nano/typescript.nanorc"'
+} # end _darwin__64
 
-}
-_darwin__64_manual() {
-
+_darwin__64_compile_failed_left_as_reference() {
+  # Status
+  #  I tried to compile with MAC with no success the pkg config kept failing and I could not find how to fix it 
+  #
   git clone -b https://git.savannah.gnu.org/git/nano.git
   cd nano
   git pull 
@@ -132,18 +96,18 @@ _darwin__64_manual() {
   # PKG_CONFIG_PATH path to where the .pc files are located 
   # PKG_CONFIG_LIBDIR overrides PKG_CONFIG_PATH 
   PKG_CONFIG="/usr/local/bin/pkg-config" \
-PKG_CONFIG_PATH="/usr/local/lib/pkgconfig" \
-PKG_CONFIG_LIBDIR="/usr/local/lib/pkgconfig" \
-  ./autogen.sh
-  cat -n INSTALL | grep configure
-   brew install automake 
-   brew install libtool
-   brew install pkg-config
-  ./configure
+  PKG_CONFIG_PATH="/usr/local/lib/pkgconfig" \
+  PKG_CONFIG_LIBDIR="/usr/local/lib/pkgconfig" \
+    ./autogen.sh
+    cat -n INSTALL | grep configure
+     brew install automake 
+     brew install libtool
+     brew install pkg-config
+    ./configure
 
-PKG_CONFIG="/usr/local/bin/pkg-config" \
-PKG_CONFIG_PATH="/usr/local/lib/pkgconfig" \
-PKG_CONFIG_LIBDIR="/usr/local/lib/pkgconfig" \
+  PKG_CONFIG="/usr/local/bin/pkg-config" \
+  PKG_CONFIG_PATH="/usr/local/lib/pkgconfig" \
+  PKG_CONFIG_LIBDIR="/usr/local/lib/pkgconfig" \
   ./configure --enable-debug \
               --disable-dependency-tracking \
               --prefix=/usr/local/opt \
@@ -156,76 +120,75 @@ PKG_CONFIG_LIBDIR="/usr/local/lib/pkgconfig" \
   make -j3 -B --debug
   make check -j3 -B --debug
   make install  -j3 -B --debug
-
-} # end _darwin__64
+} # end _darwin__64_compile_failed_left_as_reference
 
 _ubuntu__64() {
   _linux_prepare
     local CODENAME=$(_version "linux" "nano-*.*.*.*amd64.deb")
     # THOUGHT          local CODENAME="nano-4.3.3.24545_amd64.deb"
     local URL="https://www.nano-editor.org/dist/v5/${CODENAME}"
-https://www.nano-editor.org/dist/v5/
-    cd $USER_HOME/Downloads/
-    _download "${URL}"
-    sudo dpkg -i ${CODENAME}
-# install lastest nano 
-sudo add-apt-repository ppa:n-muench/programs-ppa
-sudo apt install nano
-sudo apt update nano
+    https://www.nano-editor.org/dist/v5/
+        cd $USER_HOME/Downloads/
+        _download "${URL}"
+        sudo dpkg -i ${CODENAME}
+    # install lastest nano 
+    sudo add-apt-repository ppa:n-muench/programs-ppa
+    sudo apt install nano
+    sudo apt update nano
 
-# task_compile_lastest_nano 
-# _get_version()
-# _download
-cd $USER_HOME
-cd $HOME 
+    # task_compile_lastest_nano 
+    # _get_version()
+    # _download
+    cd $USER_HOME
+    cd $HOME 
 
-curl -O https://www.nano-editor.org/dist/v5/nano-5.2.tar.gz
-tar -xvf nano-5.2.tar.gz
-cd nano-5.2
+    curl -O https://www.nano-editor.org/dist/v5/nano-5.2.tar.gz
+    tar -xvf nano-5.2.tar.gz
+    cd nano-5.2
 
-cat -n INSTALL | grep configure
-sudo apt install libncursesw5-dev -y
-sudo apt install groff -y
-./install-sh
-./autogen.sh
-./configure
-make -j3 -B --debug
-make -j3
-sudo make install | grep 
+    cat -n INSTALL | grep configure
+    sudo apt install libncursesw5-dev -y
+    sudo apt install groff -y
+    ./install-sh
+    ./autogen.sh
+    ./configure
+    make -j3 -B --debug
+    make -j3
+    sudo make install | grep 
 
-# Make sure we are using nano we compiled and not the boring system nano
-nano --version  should match 5.2 
-which nano
-/usr/local/share/nano --version
-sudo /usr/local/share/nano --version
-sudo /usr/local/bin/nano --version
-sudo mv /bin/nano /bin/nano_old
-nano --version
+    # Make sure we are using nano we compiled and not the boring system nano
+    nano --version  should match 5.2 
+    which nano
+    /usr/local/share/nano --version
+    sudo /usr/local/share/nano --version
+    sudo /usr/local/bin/nano --version
+    sudo mv /bin/nano /bin/nano_old
+    nano --version
 
-# REF: https://github.com/scopatz/nanorc
-curl https://raw.githubusercontent.com/scopatz/nanorc/master/install.sh | sh
-wget https://raw.githubusercontent.com/scopatz/nanorc/master/install.sh -O- | sh
+    # REF: https://github.com/scopatz/nanorc
+    curl https://raw.githubusercontent.com/scopatz/nanorc/master/install.sh | sh
+    wget https://raw.githubusercontent.com/scopatz/nanorc/master/install.sh -O- | sh
 
-# 
-.nanorc
-~/.nano/
-cp ~/.nano/javascript.nanorc ~/.nano/typescript.nanorc
-ersetseindatei 
-syntax "JavaScript" "\.js$"  
-> 
-syntax "Typescript" "\.ts$"   
-in   ~/.nano/typescript.nanorc
+    # 
+    .nanorc
+    ~/.nano/
+    cp ~/.nano/javascript.nanorc ~/.nano/typescript.nanorc
+    # ersetseindatei 
+    # syntax "JavaScript" "\.js$"  
+    # > 
+    # syntax "Typescript" "\.ts$"   
+    # in   ~/.nano/typescript.nanorc
 
-ersetseindatei 
-include "~/.nano/tex.nanorc"                                          
->
-include "~/.nano/tex.nanorc"
-include "~/.nano/typescript.nanorc"
-in .nanorc
+    # ersetseindatei 
+    # include "~/.nano/tex.nanorc"                                          
+    # >
+    # include "~/.nano/tex.nanorc"
+    # include "~/.nano/typescript.nanorc"
+    # in .nanorc
 
-PORT=3000
-curl -X POST http://$HOST:$PORT -H "accept: application/json" -H "Content-Type: application/json" -d "{}"
-curl -X POST http://$HOST:$PORT -H "accept: application/json" -H "Content-Type: application/json" -d "{"":"" }"
+    PORT=3000
+    curl -X POST http://$HOST:$PORT -H "accept: application/json" -H "Content-Type: application/json" -d "{}"
+    curl -X POST http://$HOST:$PORT -H "accept: application/json" -H "Content-Type: application/json" -d "{"":"" }"
 } # end _ubuntu__64
 
 _ubuntu__32() {
@@ -274,8 +237,12 @@ _fedora__64() {
   _linux_prepare
   # Lives Samples
   # https://www.nano-editor.org/dist/v5/nano-2019.3.4.tar.gz
-  local CODENAME=$(_version "linux" "nano*.*.*.tar.gz")
+  cd "$USER_HOME/_/software"
+  # git clone -b https://git.savannah.gnu.org/git/nano.git
 
+  local CODENAME=$(_version "linux" "nano*.*.*.tar.gz")
+  echo $CODENAME
+  exit 0
   CODENAME=$(echo "nano-2020.2")
   local TARGET_URL="https://www.nano-editor.org/dist/v5/${CODENAME}.tar.gz"
   if  it_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}.tar.gz" ; then
