@@ -53,8 +53,8 @@ function _linux_prepare(){
     echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME EXITS ...\033[0m"
     ls -lad /opt/sublime_text/Packages/Package\ Control.sublime-package
     tree /opt/sublime_text/Packages/Package\ Control.sublime-package
-    ls -lad /home/zeus/.config/sublime-text-3/Installed\ Packages/Package\ Control.sublime-package
-    tree /home/zeus/.config/sublime-text-3/Installed\ Packages/Package\ Control.sublime-package
+    ls -lad $HOME/.config/sublime-text-3/Installed\ Packages/Package\ Control.sublime-package
+    tree $HOME/.config/sublime-text-3/Installed\ Packages/Package\ Control.sublime-package
   }
   #trap kill ERR
   trap _trap_on_exit EXIT
@@ -269,7 +269,9 @@ add_rpm_gpg_key_and_add_install_repository() {
     fi
 }
 # add_rpm_gpg_key_and_add_install_repository
-
+_centos__64(){
+  _fedora__64
+}
 _fedora__64() { 
   _linux_prepare
   local -i __online_version_from_page=$(_version)
