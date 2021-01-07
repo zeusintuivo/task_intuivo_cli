@@ -6,18 +6,18 @@
 # em script Emacs on mac experience  REF: https://medium.com/@holzman.simon/emacs-on-macos-catalina-10-15-in-2019-79ff713c1ccc
 # Compile emacs mac REF: https://emacs.stackexchange.com/questions/58526/how-do-i-build-emacs-from-sources-on-macos-catalina-version-10-15-4
 
-ensure git 
+ensure git
 checkversion $(makeinfo --version)>=4.13
-Install it 
+Install it
 # REF: https://stackoverflow.com/questions/44379909/how-to-upgrade-update-makeinfo-texinfo-from-version-4-8-to-4-13-on-macosx-termin
 brew info textinfo
 echo 'export PATH="/usr/local/opt/texinfo/bin:$PATH"' >> ~/.zshrc
 checkversion $(makeinfo --version)>=4.13
 makeinfo --version
 
-echo mac: 
+echo mac:
 git clone -b master git://git.sv.gnu.org/emacs.git
-cd emacs 
+cd emacs
 ./autogen.sh
 ./configure
 make -j3 -B --debug
@@ -40,27 +40,36 @@ function _linux_prepare(){
   export _err
   typeset -i _err=0
   load_execute_boot_basic_with_sudo(){
-      if ( typeset -p "SUDO_USER"  &>/dev/null ) ; then
-        export USER_HOME
-        typeset -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
-      else
-        local USER_HOME=$HOME
-      fi
-      local -r provider="$USER_HOME/_/clis/execute_command_intuivo_cli/execute_boot_basic.sh"
-      echo source "${provider}"
-      [   -e "${provider}"  ] && source "${provider}"
-      [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/execute_boot_basic.sh -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
-      if ( command -v failed >/dev/null 2>&1; ) ; then
-      {
-        return 0
-      }
-      else
-      {
-        echo -e "\n \n  ERROR! Loading execute_boot_basic.sh \n \n "
-        exit 1;
-      }
-      fi
+    # shellcheck disable=SC2030
+    if ( typeset -p "SUDO_USER"  &>/dev/null ) ; then
+    {
+      export USER_HOME
+      # typeset -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)  # Get the caller's of sudo home dir Just Linux
+      # shellcheck disable=SC2046
+      # shellcheck disable=SC2031
+      typeset -rg USER_HOME="$(echo -n $(bash -c "cd ~${SUDO_USER} && pwd"))"  # Get the caller's of sudo home dir LINUX and MAC
+    }
+    else
+    {
+      local USER_HOME=$HOME
+    }
+    fi
+    local -r provider="$USER_HOME/_/clis/execute_command_intuivo_cli/execute_boot_basic.sh"
+    echo source "${provider}"
+    # shellcheck disable=SC1090
+    [   -e "${provider}"  ] && source "${provider}"
+    [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/execute_boot_basic.sh -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
+    if ( command -v failed >/dev/null 2>&1; ) ; then
+    {
       return 0
+    }
+    else
+    {
+      echo -e "\n \n  ERROR! Loading execute_boot_basic.sh \n \n "
+      exit 1;
+    }
+    fi
+    return 0
   } # end load_execute_boot_basic_with_sudo
 
   load_execute_boot_basic_with_sudo
@@ -74,7 +83,7 @@ function _linux_prepare(){
 
   function _trap_on_exit(){
     echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME EXITS ...\033[0m"
-  
+
   }
   #trap kill ERR
   trap _trap_on_exit EXIT
@@ -82,7 +91,7 @@ function _linux_prepare(){
 } # end _linux_prepare
 
 _version() {
-  local PLATFORM="${1}" # mac windows linux 
+  local PLATFORM="${1}" # mac windows linux
   local PATTERN="${2}"
   # THOUGHT:   https://download-cf.jetbrains.com/webstorm/WebStorm-2020.3.dmg
   local CODEFILE="""$(wget --quiet --no-check-certificate  https://www.jetbrains.com/webstorm/ -O -  2>/dev/null )""" # suppress only wget download messages, but keep wget output for variable

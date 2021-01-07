@@ -17,27 +17,36 @@ function _linux_prepare(){
   export _err
   typeset -i _err=0
   load_execute_boot_basic_with_sudo(){
-      if ( typeset -p "SUDO_USER"  &>/dev/null ) ; then
-        export USER_HOME
-        typeset -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
-      else
-        local USER_HOME=$HOME
-      fi
-      local -r provider="$USER_HOME/_/clis/execute_command_intuivo_cli/execute_boot_basic.sh"
-      echo source "${provider}"
-      [   -e "${provider}"  ] && source "${provider}"
-      [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/execute_boot_basic.sh -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
-      if ( command -v failed >/dev/null 2>&1; ) ; then
-      {
-        return 0
-      }
-      else
-      {
-        echo -e "\n \n  ERROR! Loading execute_boot_basic.sh \n \n "
-        exit 1;
-      }
-      fi
+    # shellcheck disable=SC2030
+    if ( typeset -p "SUDO_USER"  &>/dev/null ) ; then
+    {
+      export USER_HOME
+      # typeset -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)  # Get the caller's of sudo home dir Just Linux
+      # shellcheck disable=SC2046
+      # shellcheck disable=SC2031
+      typeset -rg USER_HOME="$(echo -n $(bash -c "cd ~${SUDO_USER} && pwd"))"  # Get the caller's of sudo home dir LINUX and MAC
+    }
+    else
+    {
+      local USER_HOME=$HOME
+    }
+    fi
+    local -r provider="$USER_HOME/_/clis/execute_command_intuivo_cli/execute_boot_basic.sh"
+    echo source "${provider}"
+    # shellcheck disable=SC1090
+    [   -e "${provider}"  ] && source "${provider}"
+    [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/execute_boot_basic.sh -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
+    if ( command -v failed >/dev/null 2>&1; ) ; then
+    {
       return 0
+    }
+    else
+    {
+      echo -e "\n \n  ERROR! Loading execute_boot_basic.sh \n \n "
+      exit 1;
+    }
+    fi
+    return 0
   } # end load_execute_boot_basic_with_sudo
 
   load_execute_boot_basic_with_sudo
@@ -51,7 +60,7 @@ function _linux_prepare(){
 
   function _trap_on_exit(){
     echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME EXITS ...\033[0m"
-  
+
   }
   #trap kill ERR
   trap _trap_on_exit EXIT
@@ -74,11 +83,11 @@ _darwin__64() {
   cd ~/.nano/
   cp ~/.nano/javascript.nanorc ~/.nano/typescript.nanorc
   ersetzeindatei ~/.nano/typescript.nanorc "JavaScript" "Typescript"
-  ersetzeindatei ~/.nano/typescript.nanorc "\.js$"  "\.ts$"   
+  ersetzeindatei ~/.nano/typescript.nanorc "\.js$"  "\.ts$"
   sed -i'' 's/\.js$/\.ts$/g' ~/.nano/typescript.nanorc
-  # from 
-  # syntax "JavaScript" "\.js$"  
-  # syntax "Typescript" "\.ts$"   
+  # from
+  # syntax "JavaScript" "\.js$"
+  # syntax "Typescript" "\.ts$"
   # in   ~/.nano/typescript.nanorc
   ersetzeindatei ~/.nanorc 'include "~/.nano/tex.nanorc"' 'include "~/.nano/tex.nanorc"\ninclude "~/.nano/typescript.nanorc"'
 } # end _darwin__64

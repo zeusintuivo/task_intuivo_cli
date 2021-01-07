@@ -49,7 +49,11 @@ execute_as_sudo(){
 }
 execute_as_sudo
 
-USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
+export USER_HOME
+# typeset -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)  # Get the caller's of sudo home dir Just Linux
+# shellcheck disable=SC2046
+# shellcheck disable=SC2031
+typeset -rg USER_HOME="$(echo -n $(bash -c "cd ~${SUDO_USER} && pwd"))"  # Get the caller's of sudo home dir LINUX and MAC
 
 load_struct_testing_wget(){
     local provider="$USER_HOME/_/clis/execute_command_intuivo_cli/struct_testing"

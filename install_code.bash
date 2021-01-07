@@ -59,11 +59,20 @@ _get_user_home() {
       echo "Needs to run as sudo ... ${0}"
       exit 1
     fi
-    USER_HOME=$(echo "/Users/$SUDO_USER")
+    # USER_HOME=$(echo "/Users/$SUDO_USER")
+    export USER_HOME
+    # typeset -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)  # Get the caller's of sudo home dir Just Linux
+    # shellcheck disable=SC2046
+    # shellcheck disable=SC2031
+    typeset -rg USER_HOME="$(echo -n $(bash -c "cd ~${SUDO_USER} && pwd"))"  # Get the caller's of sudo home dir LINUX and MAC
   elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]] ; then
     # Do something under GNU/Linux platform
     execute_as_sudo
-    USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
+    export USER_HOME
+    # typeset -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)  # Get the caller's of sudo home dir Just Linux
+    # shellcheck disable=SC2046
+    # shellcheck disable=SC2031
+    typeset -rg USER_HOME="$(echo -n $(bash -c "cd ~${SUDO_USER} && pwd"))"  # Get the caller's of sudo home dir LINUX and MAC
   elif [[ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]] ; then
     # Do something under Windows NT platform
     USER_HOME=$(echo "/Users/$SUDO_USER")
