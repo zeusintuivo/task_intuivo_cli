@@ -110,6 +110,10 @@ _ubuntu__64() {
     _checka_tools_commander $COMANDDER
 }
 
+_centos__64() {
+  _fedora__64
+} # end _centos__64
+
 _fedora__64() {
     COMANDDER="dnf"
     _checka_node_commander $COMANDDER

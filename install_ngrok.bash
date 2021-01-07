@@ -69,6 +69,9 @@ _darwin__64() {} # end _darwin__64
 _ubuntu__64() {} # end _ubuntu__64
 _ubuntu__32() {} # end _ubuntu__32
 _fedora__32() {} # end _fedora__32
+_centos__64() {
+  _fedora__64
+} # end _centos__64
 _fedora__64() {
   curl -o - https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip
   unzip ngrok-stable-linux-amd64.zip

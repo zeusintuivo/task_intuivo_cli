@@ -175,6 +175,10 @@ _fedora__32() {
 } # end _fedora__32
 
 
+_centos__64() {
+  _fedora__64
+} # end _centos__64
+
 _fedora__64() {
   echo "Need to implement"
 

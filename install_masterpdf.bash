@@ -148,6 +148,10 @@ _ubuntu__32() {
     sudo dpkg -i ${CODENAME}
 } # end _ubuntu__32
 
+_centos__64() {
+  _fedora__64
+} # end _centos__64
+
 _fedora__64() {
    # https://code-industry.net/public/master-pdf-editor-5.4.38-qt5.x86_64.rpm
   # get download link

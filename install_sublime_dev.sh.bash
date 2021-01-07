@@ -267,12 +267,13 @@ add_rpm_gpg_key_and_add_install_repository() {
       sudo dnf config-manager --add-repo https://download.sublimetext.com/rpm/dev/x86_64/sublime-text.repo
     }
     fi
-}
-# add_rpm_gpg_key_and_add_install_repository
-_centos__64(){
+} # add_rpm_gpg_key_and_add_install_repository
+
+_centos__64() {
   _fedora__64
-}
-_fedora__64() { 
+} # end _centos__64
+
+_fedora__64() {
   _linux_prepare
   local -i __online_version_from_page=$(_version)
   passed $__online_version_from_page

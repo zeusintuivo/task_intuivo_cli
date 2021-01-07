@@ -152,7 +152,8 @@ _fedora__32() {
 
 _centos__64() {
   _fedora__64 
-}
+} # end _centos__64
+
 _fedora__64() {
   local CODENAME=$(_version "linux" "bcompare*.*.*.*.x86_64.rpm")
   # THOUGHT  https://www.scootersoftware.com/bcompare-4.3.3.24545.x86_64.rpm

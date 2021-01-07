@@ -206,6 +206,10 @@ _ubuntu__32() {
     sudo dpkg -i ${CODENAME}
 } # end _ubuntu__32
 
+_centos__64() {
+  _fedora__64
+} # end _centos__64
+
 _fedora__64() {
   # sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
   # sudo sh -c 'echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" > /etc/yum.repos.d/vscode.repo'
@@ -358,21 +362,6 @@ _mingw__32() {
     curl -O https://download.studio_codetext.com/${CODENAME}
     ${CODENAME}
 } # end
-
-
-# function_exists _fedora__64
-
-# ensure ls or "Cancel Export" ensure tests for command line executables, not "functions" in especific, but true if the funtion is available in command line
-
-            if ! command -v _fedora__64 >/dev/null 2>&1;  then # Command Does not-exist
-                echo "Command Does not-exist "
-            else
-                echo "Command exists"
-            fi
-# function_exists ls
-
-# build_table_from_installed_components $USER
-# build_table_from_installed_components $SUDO_USER
 
 _main() {
   determine_os_and_fire_action

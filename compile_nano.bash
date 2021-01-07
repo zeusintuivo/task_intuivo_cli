@@ -83,7 +83,7 @@ _darwin__64() {
   ersetzeindatei ~/.nanorc 'include "~/.nano/tex.nanorc"' 'include "~/.nano/tex.nanorc"\ninclude "~/.nano/typescript.nanorc"'
 } # end _darwin__64
 
-}
+
 _darwin__64_manual() {
 
   git clone -b https://git.savannah.gnu.org/git/nano.git
@@ -215,14 +215,14 @@ I got several answers:
 
    ln -s  /usr/local/opt/bin/nano /usr/local/bin/nano
 
-  if nano from Brew exsits then move it :
+#  if nano from Brew exsits then move it :
 
      mv /usr/local/bin/gnano /usr/local/bin/brewnano
 
-  ❯ ls -la  /usr/local/bin/brewnano
+  #   ls -la  /usr/local/bin/brewnano
   lrwxr-xr-x  1 benutzer  admin  27 Dec 21 09:56 /usr/local/bin/brewnano -> ../Cellar/nano/5.4/bin/nano
 
-  if your /usr/local/bin/ is in your path then /usr/local/bin/nano
+  #  if your /usr/local/bin/ is in your path then /usr/local/bin/nano
     should be seen
   which nano === /usr/local/bin/nano  correct
   which nano === /usr/bin/nano   wrong
@@ -231,8 +231,8 @@ I got several answers:
   and not to brew nano
 
   ls -la  /usr/local/bin/nano
-  lrwxr-xr-x  1 benutzer  admin  27 Dec 21 09:56 /usr/local/bin/nano -> ../Cellar/nano/5.4/bin/nano  wrong
-  lrwxr-xr-x  1 benutzer  admin  23 Dec 26 15:20 /usr/local/bin/nano -> /usr/local/opt/bin/nano  correct
+#  lrwxr-xr-x  1 benutzer  admin  27 Dec 21 09:56 /usr/local/bin/nano -> ../Cellar/nano/5.4/bin/nano  wrong
+#  lrwxr-xr-x  1 benutzer  admin  23 Dec 26 15:20 /usr/local/bin/nano -> /usr/local/opt/bin/nano  correct
 
 } # end _darwin__64
 
@@ -346,6 +346,9 @@ _fedora__32() {
   file_does_not_exist_with_spaces "$USER_HOME/Downloads/${CODENAME}"
 } # end _fedora__32
 
+_centos__64() {
+  _fedora__64
+} # end _centos__64
 
 _fedora__64() {
   _linux_prepare

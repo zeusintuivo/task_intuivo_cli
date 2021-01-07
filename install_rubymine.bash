@@ -204,7 +204,8 @@ _fedora__32() {
 
 _centos__64() {
   _fedora__64 
-}
+} # end _centos__64
+
 _fedora__64() {
  local CODENAME=$(_version "linux" "*.*")
   echo "${CODENAME}";

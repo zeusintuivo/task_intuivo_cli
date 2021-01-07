@@ -116,6 +116,10 @@ _ubuntu__64() {
     _checka_tools_commander $COMANDDER
 }
 
+_centos__64() {
+  _fedora__64
+} # end _centos__64
+
 _fedora__64() {
     COMANDDER="dnf"
     _checka_node_commander $COMANDDER
@@ -131,20 +135,6 @@ _fedora__64() {
     _checka_tools_commander $COMANDDER
 }
 
-_centos__64() {
-    COMANDDER="dnf"
-    _checka_node_commander $COMANDDER
-    if  it_does_not_exist_with_spaces /etc/yum.repos.d/cloudfoundry-cli.repo ; then
-    {
-        Installing cloudfoundry cf 7
-        wget -O /etc/yum.repos.d/cloudfoundry-cli.repo https://packages.cloudfoundry.org/fedora/cloudfoundry-cli.repo
-        # sudo yum install cf6-cli
-        $COMANDDER -y install cf7-cli
-    }
-    fi
-    verify_is_installed cf
-    _checka_tools_commander $COMANDDER
-}
 _darwin__64() {
     COMANDDER="brew"
     echo mac?

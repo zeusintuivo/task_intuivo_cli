@@ -225,6 +225,9 @@ _fedora__32() {
   file_does_not_exist_with_spaces "$USER_HOME/Downloads/${CODENAME}"
 } # end _fedora__32
 
+_centos__64() {
+  _fedora__64
+} # end _centos__64
 
 _fedora__64() {
  local CODENAME=$(_version "linux" "*.*")
