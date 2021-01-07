@@ -20,5 +20,7 @@ How to automatically install webstorm using the command line in Ubuntu in Fedora
 
 
 
-    eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/task_intuivo_cli/master/install_clis -O -  2>/dev/null )"""
+    eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/task_intuivo_cli/master/install_clis.bash -O -  2>/dev/null )"""
 
+    curl -O https://raw.githubusercontent.com/zeusintuivo/task_intuivo_cli/master/install_clis.bash
+    chmod +x install_clis.bash

@@ -145,7 +145,9 @@ _fedora__32() {
   file_does_not_exist_with_spaces "$USER_HOME/Downloads/${CODENAME}"
 } # end _fedora__32
 
-
+_centos__64() {
+  _fedora__64 
+}
 _fedora__64() {
   # Lives Samples
   # https://download.jetbrains.com/webide/PhpStorm-2019.3.4.tar.gz
