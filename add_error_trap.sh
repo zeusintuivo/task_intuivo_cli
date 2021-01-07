@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-# THISSCRIPTNAME=`basename "$0"`
 DEBUG_VERB_READING_LOGIC=$DEBUG || 0
 LIGHTPINK="\033[1;204m"
 TO_LIGHTPINK="\o033[1;204m\o033[48;5;0m"    # Notice the only the \o changes NOT \[]
