@@ -26,6 +26,16 @@ DARK_BLUE_OVER_PEACH="\\033[38;5;20m\\033[48;5;208m"
 
 RESET="\\033[0m"
 TO_RESET="\\o033[0m"
+if ( ! command -v pygmentize >/dev/null 2>&1; ) ; then
+{
+  export pygmentize
+  function pygmentize(){
+    echo -n """${*}"""
+  }
+}
+fi
+
+
 #         function kill() {
 #             echo -e " ☠ ${LIGHTPINK} KILL EXECUTION SIGNAL SEND ${RESET}"
 #             echo -e " ☠ ${YELLOW_OVER_DARKBLUE}  ${*} ${RESET}"
