@@ -1,31 +1,31 @@
 #!/usr/bin/env bash
 
 DEBUG_VERB_READING_LOGIC=$DEBUG || 0
-LIGHTPINK="\033[1;204m"
-TO_LIGHTPINK="\o033[1;204m\o033[48;5;0m"    # Notice the only the \o changes NOT \[]
-LIGHTPINK_OVER_DARKBLUE="\033[38;5;204m\033[48;5;21m"
-YELLOW_OVER_DARKBLUE="\033[38;5;220m\033[48;5;20m"
-TO_YELLOW_OVER_DARKBLUE="\o033[38;5;220m\o033[48;5;20m"   # Notice the only the \o changes NOT \[]
+LIGHTPINK="\\033[1;204m"
+TO_LIGHTPINK="\\o033[1;204m\\o033[48;5;0m"    # Notice the only the \\o changes NOT \\[]
+LIGHTPINK_OVER_DARKBLUE="\\033[38;5;204m\\033[48;5;21m"
+YELLOW_OVER_DARKBLUE="\\033[38;5;220m\\033[48;5;20m"
+TO_YELLOW_OVER_DARKBLUE="\\o033[38;5;220m\\o033[48;5;20m"   # Notice the only the \\o changes NOT \\[]
 # Change RED_NOT_VISIBLE to LIGHTPINK
-    RED_NOT_VISIBLE="\033[39m \033[38;5;124m"
-FROM_RED_NOT_VISIBLE="\o33\[39;00m\o033\[38;5;124m" # NOtice the \o \[ changes
-#          \o033\[39m \o033\[38;5;124m
+    RED_NOT_VISIBLE="\\033[39m \\033[38;5;124m"
+FROM_RED_NOT_VISIBLE="\\o33\\[39;00m\\o033\\[38;5;124m" # NOtice the \\o \\[ changes
+#          \\o033\\[39m \\o033\\[38;5;124m
 # Change BLUE_NOT_VISIBLE to YELLOW_OVER_DARKBLUE
-BLUE_NOT_VISIBLE="\033[39;00m\033[38;5;18m"
-FROM_BLUE_NOT_VISIBLE="\o33\[39;00m\o033\[38;5;18m"  # Notice the \o \[ changes
-FROM_BLUE_NOT_VISIBLE2="\o033\[38;5;18m"  # NOtice the \o \[ changes
+BLUE_NOT_VISIBLE="\\033[39;00m\\033[38;5;18m"
+FROM_BLUE_NOT_VISIBLE="\\o33\\[39;00m\\o033\\[38;5;18m"  # Notice the \\o \\[ changes
+FROM_BLUE_NOT_VISIBLE2="\\o033\\[38;5;18m"  # NOtice the \\o \\[ changes
 # Change BLURRY_PINK to YELLOW_OVER_DARKBLUE
-FROM_BLURRY_PINK="\o33\[39m\o33\[38;5;132;01m"
-DARK_PEACH="\033[38;5;202m"
-TO_DARK_PEACH="\o033[38;5;202m\o033[48;5;0m"
+FROM_BLURRY_PINK="\\o33\\[39m\\o33\\[38;5;132;01m"
+DARK_PEACH="\\033[38;5;202m"
+TO_DARK_PEACH="\\o033[38;5;202m\\o033[48;5;0m"
 # Change MAGENTA_NOT_VISIBLE to TO_DARK_BLUE_OVER_PEACH
-FROM_MAGENTA_NOT_VISIBLE="\o033\[39m\o033\[38;5;124m"
-FROM_MAGENTA_NOT_VISIBLE2="\o033\[38;5;124m"
-TO_DARK_BLUE_OVER_PEACH="\o033[38;5;20m\o033[48;5;208m"
-DARK_BLUE_OVER_PEACH="\033[38;5;20m\033[48;5;208m"
+FROM_MAGENTA_NOT_VISIBLE="\\o033\\[39m\\o033\\[38;5;124m"
+FROM_MAGENTA_NOT_VISIBLE2="\\o033\\[38;5;124m"
+TO_DARK_BLUE_OVER_PEACH="\\o033[38;5;20m\\o033[48;5;208m"
+DARK_BLUE_OVER_PEACH="\\033[38;5;20m\\033[48;5;208m"
 
-RESET="\033[0m"
-TO_RESET="\o033[0m"
+RESET="\\033[0m"
+TO_RESET="\\o033[0m"
 #         function kill() {
 #             echo -e " ☠ ${LIGHTPINK} KILL EXECUTION SIGNAL SEND ${RESET}"
 #             echo -e " ☠ ${YELLOW_OVER_DARKBLUE}  ${*} ${RESET}"
@@ -33,15 +33,15 @@ TO_RESET="\o033[0m"
 #         }
 # trap kill INT
 function change_hightlight(){
-  # sed "s/${FROM_RED_NOT_VISIBLE}/${TO_LIGHTPINK}${TO_RESET}/g" | \
-  sed "s/${FROM_BLUE_NOT_VISIBLE}/${TO_YELLOW_OVER_DARKBLUE}/g" |  \
-  sed "s/${FROM_BLUE_NOT_VISIBLE2}/${TO_DARK_BLUE_OVER_PEACH}/g" |  \
-  sed "s/${FROM_BLURRY_PINK}/${TO_DARK_PEACH}/g" |  \
-  sed "s/${FROM_RED_NOT_VISIBLE}/${TO_LIGHTPINK}/g" | \
-  sed "s/${FROM_MAGENTA_NOT_VISIBLE}/${TO_DARK_BLUE_OVER_PEACH}${TO_RESET}/g" |  \
+  # sed "s/${FROM_RED_NOT_VISIBLE}/${TO_LIGHTPINK}${TO_RESET}/g" | \\
+  sed "s/${FROM_BLUE_NOT_VISIBLE}/${TO_YELLOW_OVER_DARKBLUE}/g" |  \\
+  sed "s/${FROM_BLUE_NOT_VISIBLE2}/${TO_DARK_BLUE_OVER_PEACH}/g" |  \\
+  sed "s/${FROM_BLURRY_PINK}/${TO_DARK_PEACH}/g" |  \\
+  sed "s/${FROM_RED_NOT_VISIBLE}/${TO_LIGHTPINK}/g" | \\
+  sed "s/${FROM_MAGENTA_NOT_VISIBLE}/${TO_DARK_BLUE_OVER_PEACH}${TO_RESET}/g" |  \\
   sed "s/${FROM_MAGENTA_NOT_VISIBLE2}/${TO_DARK_BLUE_OVER_PEACH}${TO_RESET}/g"
   # sed "s/${FROM_BLUE_NOT_VISIBLE}/${TO_YELLOW_OVER_DARKBLUE}${TO_RESET}/g"
-  # sed "s/\o033\[39m \o033\[38;5;124m/\o033[38;1;204m/g"  # Sample working version
+  # sed "s/\\o033\\[39m \\o033\\[38;5;124m/\\o033[38;1;204m/g"  # Sample working version
 }
 # echo Tests Color change
 # echo  -e  ${RED_NOT_VISIBLE} printf  ${BLUE_NOT_VISIBLE} 'something_functi' | change_hightlight |hexdump -C
@@ -142,7 +142,7 @@ function _trap_on_error() {
   # if defined and not empty
   # ( typeset -p "SUDO_USER"  &>/dev/null ) && echo "sudo user " >&2
   ( typeset -p "SUDO_USER"  &>/dev/null ) &&  su - "$SUDO_USER" -c 'code -g '"${__caller_script_name}':'${__caller_line}"''&
-  # echo -e " ☠ Variables  \n$(declare -p)  ${RESET}"  >&2  # Show  all variables declared
+  # echo -e " ☠ Variables  \\n$(declare -p)  ${RESET}"  >&2  # Show  all variables declared
   # exit ${__trapped_error_exit_num};  # If I call exit it kills the entire executing stripts
   return "${__trapped_error_exit_num}";  # Returning instead allows other scripts to continue
 } # end  _trap_on_error
