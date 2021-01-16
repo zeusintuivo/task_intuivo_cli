@@ -18,8 +18,8 @@ if [[ -n "${1-x}" ]] ; then
 }
 fi
 
-
-# typeset -gr CAN_I_RUN_SUDO=$(sudo -n uptime 2>&1|grep "load"|wc -l)
+# export CAN_I_RUN_SUDO
+# typeset -r CAN_I_RUN_SUDO=$(sudo -n uptime 2>&1|grep "load"|wc -l)
 # if [ ${CAN_I_RUN_SUDO} -gt 0 ]; then
 #   echo -e "\033[01;7m * * * Executing as sudo * * * \033[0m"
 # else
@@ -49,7 +49,8 @@ fi
 # # echo $SUDO_USER
 
 #   function sudo_check(){
-#     typeset -gri AMISUDO=$(sudo -n uptime 2>&1|grep "load"|wc -l)
+#     export  AMISUDO
+#     typeset -ri AMISUDO=$(sudo -n uptime 2>&1|grep "load"|wc -l)
 #     if [ ${AMISUDO} -gt 0 ]; then
 #       echo -e "\033[01;7m * * * Executing as sudo * * * \033[0m"
 #       # ( declare -p "SUDO_USER"  &>/dev/null ) || echo "SUDO_USER DEFINED FAILED"
@@ -58,7 +59,8 @@ fi
 #       # echo $HOME
 #       # ensure_is_defined_and_not_empty HOME
 #       # ensure_is_defined_and_not_empty SUDO_USER
-#       # declare -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
+#       # export USER_HOME
+#       # declare -r USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
 #       # ensure_is_defined_and_not_empty USER_HOME
 #       return 0
 #     else
@@ -84,7 +86,9 @@ function execute_as_sudo(){
         echo "     THISSCRIPTCOMPLETEPATH=\`basename \"\$0\"\`"
         typeset  __SOURCE__="${BASH_SOURCE[0]}"
         while [[ -h "${__SOURCE__}" ]]; do
+        {
             __SOURCE__="$(find "${__SOURCE__}" -type l -ls | sed -n 's@^.* -> \(.*\)@\1@p')"
+        }
         done
         typeset __DIR__="$(cd -P "$(dirname "${__SOURCE__}")" && pwd)"
         # echo __SOURCE__ $__SOURCE__
