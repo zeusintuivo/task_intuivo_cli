@@ -76,8 +76,11 @@ function _trap_on_error() {
   local  _this_last_command="${6:-BASH_COMMAND}"
   local __trapped_function="${7:-0}"
   local -i __trapped_bash_line_before="${8:-0}"
-  local -i __trapped_line="${9:-0}"
-  local -r __trapped_bash_command="${*:10}"
+  if local -i __trapped_line="${9:-0}" ; then
+    if local -r __trapped_bash_command="${*:10}" ; then
+      (( DEBUG )) && echo 'add error trap loading'
+    fi
+  fi
   local -r __caller=$(caller)
   local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
   local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
