@@ -85,14 +85,14 @@ function _trap_on_error() {
   (( DEBUG )) && echo "4 ${_this_last_error_bash_lineno} ${4} should be BASH_LINENO line form scriptname error" >&2
   (( DEBUG )) && echo "5 ${_this_last_error_funcname} ${5} should be FUNCNAME this function from this script" >&2
   (( DEBUG )) && echo "6 ${_this_last_command} ${6} should be BASH_COMMAND from scriptname error" >&2
-  (( DEBUG )) && echo "7 ${__trapped_function} == ${7} \$FUNCNAME of scripterror function that triggered this trap" >&2
+  (( DEBUG )) && echo "7 ${__trapped_function} == ${7} \\$FUNCNAME of scripterror function that triggered this trap" >&2
   # Arrays with ${#} or calle equal to stack trace
   #       BASH_SOURCE[@] : BASH_LINENO[@]   FUNCNAME[@]
-  (( DEBUG )) && echo "8 ${__trapped_bash_line_before} ==  ${8} \$BASH_LINENO of scripterror function that triggered this trap before FUNCNAME -1 " >&2
-  (( DEBUG )) && echo "8.0 ${BASH_LINENO[0]} ==  ${9} \$BASH_LINENO[0] of scripterror function that triggered this trap  " >&2
-  (( DEBUG )) && echo "8.1 ${BASH_LINENO[1]} ==  ${8} \$BASH_LINENO[1] of scripterror function that triggered this trap  " >&2
-  (( DEBUG )) && echo "9 ${__trapped_line} == ${9} \$LINENO of scripterror function that triggered this trap" >&2
-  (( DEBUG )) && echo "10 ${__trapped_bash_command} == ${*:10} \$BASH_COMMAND of scripterror function that triggered this trap" >&2
+  (( DEBUG )) && echo "8 ${__trapped_bash_line_before} ==  ${8} \\$BASH_LINENO of scripterror function that triggered this trap before FUNCNAME -1 " >&2
+  (( DEBUG )) && echo "8.0 ${BASH_LINENO[0]} ==  ${9} \\$BASH_LINENO[0] of scripterror function that triggered this trap  " >&2
+  (( DEBUG )) && echo "8.1 ${BASH_LINENO[1]} ==  ${8} \\$BASH_LINENO[1] of scripterror function that triggered this trap  " >&2
+  (( DEBUG )) && echo "9 ${__trapped_line} == ${9} \\$LINENO of scripterror function that triggered this trap" >&2
+  (( DEBUG )) && echo "10 ${__trapped_bash_command} == ${*:10} \\$BASH_COMMAND of scripterror function that triggered this trap" >&2
   # Tests of global ENV vars and declared envinroment vars
   # env | grep SUDO  >&2
   # typeset -p | grep TRACE  >&2
