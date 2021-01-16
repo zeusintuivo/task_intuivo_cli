@@ -105,10 +105,10 @@ function _trap_on_error() {
   # declare -p | grep CLI  >&2
   echo " "  >&2 # Spacer
   # Test coloring one line
-  # awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?">>>":""),$0 }' L="${__caller_line}" "${__caller_script_name}" | pygmentize -l bash |  grep "102" | hexdump -C  >&2
-  # awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?">>>":""),$0 }' L="${__caller_line}" "${__caller_script_name}" | pygmentize -l bash |  grep "140"  | change_hightlight | hexdump -C >&2
-  # awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?">>>":""),$0 }' L="${__caller_line}" "${__caller_script_name}" | pygmentize -l bash |  grep "140"  | change_hightlight  >&2
-  awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"| colorize >&2
+  # awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\\n",NR,(NR==L?">>>":""),$0 }' L="${__caller_line}" "${__caller_script_name}" | pygmentize -l bash |  grep "102" | hexdump -C  >&2
+  # awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\\n",NR,(NR==L?">>>":""),$0 }' L="${__caller_line}" "${__caller_script_name}" | pygmentize -l bash |  grep "140"  | change_hightlight | hexdump -C >&2
+  # awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\\n",NR,(NR==L?">>>":""),$0 }' L="${__caller_line}" "${__caller_script_name}" | pygmentize -l bash |  grep "140"  | change_hightlight  >&2
+  awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"| colorize >&2
   # echo -e " ☠ ${LIGHTPINK}ERROR DURING EXECUTION SIGNAL SEND ${RESET}" | colorize    >&2
   # echo -e " ☠ SCRIPT EXECUTING  ${0}  ${RESET}"  >&2
   echo " "  >&2 # Spacer
@@ -116,7 +116,7 @@ function _trap_on_error() {
   # echo -e "${YELLOW_OVER_DARKBLUE} ${__caller_script_name}:${__caller_line} ${RESET}"  | colorize    >&2
   # echo -e " ☠ ERROR ON   ${*} ${RESET}"  | colorize  >&2
   echo -e " ☠ ${LIGHTPINK} PWD: ${RESET} $(pwd)  ${RESET}"  >&2
-  echo -e " ☠ ${LIGHTPINK} SCRIPT » » » >${RESET}\n${__caller_script_name}:${__caller_line} \t ${__trapped_function}()  ${RESET}"  >&2
+  echo -e " ☠ ${LIGHTPINK} SCRIPT » » » >${RESET}\\n${__caller_script_name}:${__caller_line} \\t ${__trapped_function}()  ${RESET}"  >&2
   # echo $(echo  "$(eval ${__trapped_bash_command} )" 2>&1 | cut -d':' -f1)  >&2
   # echo " "  >&2 # Spacer
   echo -e " ☠ ${LIGHTPINK} OFFENDING COMMAND: ${RESET}${__trapped_bash_command}  ${RESET}"  >&2
@@ -130,10 +130,10 @@ function _trap_on_error() {
   local -i _counter=0
   local -i _counter_offset=0
   echo -e " ☠ ${LIGHTPINK} ERROR STACK TRACE: ${_error_count}  ${RESET}"  >&2
-  echo -e "${BRIGHT_BLUE87} ${__caller_script_name}:${__caller_line} \t\t ${__trapped_function}() ${RESET}"  >&2
+  echo -e "${BRIGHT_BLUE87} ${__caller_script_name}:${__caller_line} \\t\\t ${__trapped_function}() ${RESET}"  >&2
   for (( _counter=1; _counter<_error_count; _counter++ )); do
       (( _counter_offset=_counter + 1 ))
-      echo -e "${BRIGHT_BLUE87} ${BASH_SOURCE[$_counter_offset]}:${BASH_LINENO[$_counter]} \t\t ${FUNCNAME[$_counter_offset]}() ${RESET}"  >&2
+      echo -e "${BRIGHT_BLUE87} ${BASH_SOURCE[$_counter_offset]}:${BASH_LINENO[$_counter]} \\t\\t ${FUNCNAME[$_counter_offset]}() ${RESET}"  >&2
   done
 
   # env | grep SUDO  >&2
