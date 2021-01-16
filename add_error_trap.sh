@@ -43,12 +43,12 @@ fi
 #         }
 # trap kill INT
 function change_hightlight(){
-  # sed "s/${FROM_RED_NOT_VISIBLE}/${TO_LIGHTPINK}${TO_RESET}/g" | \\
-  sed "s/${FROM_BLUE_NOT_VISIBLE}/${TO_YELLOW_OVER_DARKBLUE}/g" |  \\
-  sed "s/${FROM_BLUE_NOT_VISIBLE2}/${TO_DARK_BLUE_OVER_PEACH}/g" |  \\
-  sed "s/${FROM_BLURRY_PINK}/${TO_DARK_PEACH}/g" |  \\
-  sed "s/${FROM_RED_NOT_VISIBLE}/${TO_LIGHTPINK}/g" | \\
-  sed "s/${FROM_MAGENTA_NOT_VISIBLE}/${TO_DARK_BLUE_OVER_PEACH}${TO_RESET}/g" |  \\
+  # sed "s/${FROM_RED_NOT_VISIBLE}/${TO_LIGHTPINK}${TO_RESET}/g" | \
+  sed "s/${FROM_BLUE_NOT_VISIBLE}/${TO_YELLOW_OVER_DARKBLUE}/g" |  \
+  sed "s/${FROM_BLUE_NOT_VISIBLE2}/${TO_DARK_BLUE_OVER_PEACH}/g" |  \
+  sed "s/${FROM_BLURRY_PINK}/${TO_DARK_PEACH}/g" |  \
+  sed "s/${FROM_RED_NOT_VISIBLE}/${TO_LIGHTPINK}/g" | \
+  sed "s/${FROM_MAGENTA_NOT_VISIBLE}/${TO_DARK_BLUE_OVER_PEACH}${TO_RESET}/g" |  \
   sed "s/${FROM_MAGENTA_NOT_VISIBLE2}/${TO_DARK_BLUE_OVER_PEACH}${TO_RESET}/g"
   # sed "s/${FROM_BLUE_NOT_VISIBLE}/${TO_YELLOW_OVER_DARKBLUE}${TO_RESET}/g"
   # sed "s/\\o033\\[39m \\o033\\[38;5;124m/\\o033[38;1;204m/g"  # Sample working version
