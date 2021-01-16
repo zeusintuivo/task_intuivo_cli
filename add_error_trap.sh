@@ -154,7 +154,7 @@ function _trap_on_error() {
   ( typeset -p "SUDO_USER"  &>/dev/null ) ||  code -g "${__caller_script_name}:${__caller_line}"&
   # if defined and not empty
   # ( typeset -p "SUDO_USER"  &>/dev/null ) && echo "sudo user " >&2
-  ( typeset -p "SUDO_USER"  &>/dev/null ) &&  su - "$SUDO_USER" -c 'code -g '"${__caller_script_name}':'${__caller_line}"''&
+  ( typeset -p "SUDO_USER"  &>/dev/null ) &&  su - "$SUDO_USER" -c ' '"${EDITOR}"' '"${__caller_script_name}':'${__caller_line}"''&
   # echo -e " ☠ Variables  \\n$(declare -p)  ${RESET}"  >&2  # Show  all variables declared
   # exit ${__trapped_error_exit_num};  # If I call exit it kills the entire executing stripts
   return "${__trapped_error_exit_num}";  # Returning instead allows other scripts to continue
