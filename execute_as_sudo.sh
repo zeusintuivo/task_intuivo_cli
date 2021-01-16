@@ -83,7 +83,10 @@ function execute_as_sudo(){
     if [ -z "${THISSCRIPTCOMPLETEPATH+x}" ] ; then
     {
         echo "error You need to add THISSCRIPTCOMPLETEPATH variable like this:"
-        echo "     THISSCRIPTCOMPLETEPATH=\`basename \"\$0\"\`"
+        echo "  export THISSCRIPTCOMPLETEPATH "
+        echo "  typeset -r THISSCRIPTCOMPLETEPATH=\"\$(pwd)/\$(basename \"\$0\")\"   # § This goes in the FATHER-MOTHER script "
+        echo "  export _err "
+        echo "  typeset -i _err=0 "
         typeset  __SOURCE__="${BASH_SOURCE[0]}"
         while [[ -h "${__SOURCE__}" ]]; do
         {
@@ -94,7 +97,7 @@ function execute_as_sudo(){
         # echo __SOURCE__ $__SOURCE__
         # echo __DIR__ $__DIR__
         echo "before calling $__SOURCE__"
-        echo "or call direclty as sudo $__SOURCE__ then you dont need THISSCRIPTCOMPLETEPATH to be defined"
+        echo "or call direclty as sudo $__SOURCE__ then you dont need THISSCRIPTCOMPLETEPATH to be defined from your script "
     }
     else
     {
