@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
 
-# Script to install all clis once downloaded
+# Script to install all intuivo_clis
 
 # SUDO_USER only exists during execution of sudo
 # REF: https://stackoverflow.com/questions/7358611/get-users-home-directory-when-they-run-a-script-as-root
 # Global:
-  export THISSCRIPTCOMPLETEPATH
-  typeset -r THISSCRIPTCOMPLETEPATH="$(pwd)/$(basename "$0")"   # § This goes in the FATHER-MOTHER script
+export THISSCRIPTCOMPLETEPATH
+typeset -r THISSCRIPTCOMPLETEPATH="$(pwd)/$(basename "$0")"   # § This goes in the FATHER-MOTHER script
 
-  export BASH_VERSION_NUMBER
-  typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
+export BASH_VERSION_NUMBER
+typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
 
-  export  THISSCRIPTNAME
-  typeset -r THISSCRIPTNAME="$(pwd)/$(basename "$0")"
+export  THISSCRIPTNAME
+typeset -r THISSCRIPTNAME="$(pwd)/$(basename "$0")"
 
-  export _err
-  typeset -i _err=0
+export _err
+typeset -i _err=0
 
 execute_as_sudo(){
   if [ -z $SUDO_USER ] ; then
@@ -54,14 +54,14 @@ execute_as_sudo(){
   else
     echo "Needs to run as sudo ... ${0}"
   fi
-}
+} # end execute_as_sudo
 execute_as_sudo
 
 export USER_HOME
-      # shellcheck disable=SC2046
-      # shellcheck disable=SC2031
-      typeset -r USER_HOME="$(echo -n $(bash -c "cd ~${SUDO_USER} && pwd"))"  # Get the caller's of sudo home dir LINUX and MAC
-# USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
+# shellcheck disable=SC2046
+# shellcheck disable=SC2031
+typeset -r USER_HOME="$(echo -n $(bash -c "cd ~${SUDO_USER} && pwd"))"  # Get the caller's of sudo home dir LINUX and MAC
+# USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)   # Get the caller's of sudo home dir LINUX
 
 load_struct_testing_wget(){
     local provider="$USER_HOME/_/clis/execute_command_intuivo_cli/struct_testing"
@@ -86,10 +86,9 @@ _checka_node_commander() {
     is_not_installed node && $COMANDDER install -y nodejs-legacy   # Ubuntu only
     verify_is_installed npm
     verify_is_installed node
-}
+} # end _checka_node_commander
 
 _checka_tools_commander(){
-
     install_requirements "linux" "
     xclip
     tree
@@ -104,143 +103,246 @@ _checka_tools_commander(){
     pv
     "
     verify_is_installed "
-    xclip
-    tree
-    ag
-    ack
-    pv
-    nano
-    vim
-    pip
+        xclip
+        tree
+        ag
+        ack
+        pv
+        nano
+        vim
+        pip
+        sed
     "
     is_not_installed pygmentize &&    pip install pygments
     verify_is_installed pygmentize
+    ensure pygmentize or "Canceling Install. Could not find pygmentize.  pip install pigments"
+    ensure npm or "Canceling Install. Could not find npm"
+    ensure node or "Canceling Install. Could not find node"
+    ensure cf or "Canceling Install. Could not find cf"
+    #MTASCHECK=$(su - $SUDO_USER -c 'cf mtas --help' >/dev/null 2>&1)
+    #if [[ -n "$MTASCHECK" ]] &&  [[ "$MTASCHECK" == *"FAILED"* ]]  ; then
+    #{
+    #    su - $SUDO_USER -c 'yes | cf install-plugin multiapps'
+    #}
+    #fi
+    #
+    #if [[ -n "$MTASCHECK" ]] &&  [[ "$MTASCHECK" != *"FAILED"* ]]  ; then
+    #{
+    #    passed Installed cf mtas plugin
+    #}
+    #fi
+} # end _checka_tools_commander
 
-}
+function _if_not_contains(){
+            local -i ret
+            local msg
+            ret=0
+            (( DEBUG )) && echo "1if"
+            [ ! -e "$1" ] && return 1
+            (( DEBUG )) && (cat -n "$1" )
+            msg=$(cat -n "$1" 2>&1)
+            ret=$?
+            (( DEBUG )) && echo "2if"
+            (( DEBUG )) && echo "${msg}"
+            [ $ret -gt 0 ] && return 1
+            (( DEBUG )) && echo "3if"
+            [[ "$msg" == *"No such"* ]] && return 1
+            (( DEBUG )) && echo "4if"
+            [[ "$msg" == *"nicht gefunden"* ]] && return 1
+            (( DEBUG )) && echo "5if"
+            [[ "$msg" == *"Permission denied"* ]] && return 1
+            (( DEBUG )) && echo "6if"
+            ret=0
+            (( DEBUG )) && echo 'echo "$msg" | grep "$2"'
+            (( DEBUG )) &&echo 'echo '"$msg"' | grep '"$2"
+            msg=$(echo "$msg" | grep "$2" 2>&1)
+            ret=$?
+            (( DEBUG )) && echo "7if $ret"
+            [ $ret -gt 0 ] && return 1
+            (( DEBUG )) && echo "8if"
+            [[ "$msg" == *"No such"* ]] && return 1
+            (( DEBUG )) && echo "9 if"
+            [[ "$msg" == *"nicht gefunden"* ]] && return 1
+            [[ "$msg" == *"Permission denied"* ]] && return 1
+            return 0
+} # end _if_not_contains
 
-_ubuntu__64() {
-    # debian sudo usermod -aG sudo $SUDO_USER
-    # chown $SUDO_USER:$SUDO_USER -R /home
-    # sudo groupadd docker
-    # sudo usermod -aG docker $SUDO_USER
+function _ensure_touch_dir_and_file() {
+  local launchdir_default="${1}"
+  local launchfile_default="${2}"
 
-    COMANDDER="apt install -y"
-    _checka_tools_commander
-    if it_does_not_exist_with_spaces /etc/apt/sources.list.d/cloudfoundry-cli.list ; then
+  enforce_variable_with_value launchdir_default "${launchdir_default}"
+  enforce_variable_with_value launchfile_default "${launchfile_default}"
+  enforce_variable_with_value SUDO_USER "${SUDO_USER}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+
+  if it_does_not_exist_with_spaces "${launchfile_default}" ; then
+  {
+    mkdir -p "${launchdir_default}"
+    directory_exists_with_spaces "${launchdir_default}"
+    touch "${launchfile_default}"
+    chown -R "${SUDO_USER}" "${launchdir_default}"
+  }
+  fi
+  file_exists_with_spaces "${launchfile_default}"
+} # end _ensure_touch_dir_and_file
+
+_add_self_cron_update(){
+  # Make a cron REF: https://www.golinuxcloud.com/create-schedule-cron-job-shell-script-linux/
+  local -i DEBUG=0
+  local -i _err=0
+  local cronallowdir
+  local cronallowfile
+  if is_not_installed crontab ; then
+  {
+    echo -e "\033[05;7m*** Failed there is no crontab installed ...\033[0m"
+    return 1
+  }
+  fi
+  if [[ -n "${1}" ]] && [[ -n "${2}" ]] ; then {
+    cronallowdir="${1}"
+    cronallowfile="${2}"
+  } else {
+    cronallowfile=$(man crontab | grep cron.allow | sed 's/^[[:space:]]*//g'  2>&1 )
+    cronallowdir=$(dirname "${cronallowfile}") # up to last slash
+  }
+  fi
+  _ensure_touch_dir_and_file "${cronallowdir}" "${cronallowfile}"
+  Installing cron  "${cronallowdir}" "${cronallowfile}"
+  (( DEBUG )) &&  cat  "${cronallowfile}"
+  su - "${SUDO_USER}" -c "touch ${cronallowfile}"
+  _err=$?
+  [ ${_err} -eq 0 ] || failed touching file ${cronallowfile}
+  (_if_not_contains  "${cronallowfile}" "root") || echo 'root' >> "${cronallowfile}"
+  (_if_not_contains  "${cronallowfile}" "${SUDO_USER}") ||  echo "${SUDO_USER}" >> "${cronallowfile}"
+  (( DEBUG )) &&  cat  "${cronallowfile}"
+  Installing crontab to pull clis automatically
+  (crontab -u  "${SUDO_USER}" -l   2>&1) >/tmp/crontab
+  _err=$?
+  [ ${_err} -eq 0 ] || failed installing to read crontab or write to file /tmp/crontab
+  # this line will email locally, check with mail or mailx commands  REF: https://www.cyberciti.biz/faq/disable-the-mail-alert-by-crontab-command/bash
+  # adding > /dev/null 2>&1 || true will block email sending
+  (_if_not_contains  "/tmp/crontab" "/_/clis && pull_all_subdirectories") || \
+    /bin/echo "* * * * * \$(cd $USER_HOME/_/clis && pull_all_subdirectories  && echo \"updated \$(date +%Y%m%d%H%M)\" \$? >> $USER_HOME/_/clis/uploaded.log) > /dev/null 2>&1 || true" >> /tmp/crontab
+  crontab -u "${SUDO_USER}" /tmp/crontab
+
+  # how to install crontab automatically REF: https://stackoverflow.com/questions/878600/how-to-create-a-cron-job-using-bash-automatically-without-the-interactive-editor/878647#878647
+  Checking it installed crontab
+  (crontab -u  "${SUDO_USER}" -l   2>&1) >/tmp/crontab
+  _err=$?
+  [ ${_err} -eq 0 ] || failed checking to read crontab or write to file /tmp/crontab
+  (_if_not_contains  "/tmp/crontab" "/_/clis && pull_all_subdirectories") || failed installing crontab
+} # end _add    _self_cron_update
+
+_add_launchd(){
+  # Make a launchd REF: https://alvinalexander.com/mac-os-x/mac-osx-startup-crontab-launchd-jobs/
+  local -i DEBUG=0
+  local -i _err=0
+  local launchdir
+  local launchfile
+  local lanuchname
+  if is_not_installed launchd ; then
+  {
+    echo -e "\033[05;7m*** Failed there is no launchd installed ...\033[0m"
+    return 1
+  }
+  fi
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  if [[ -n "${1}" ]] && [[ -n "${2}" ]] ; then {
+    launchdir="${1}"
+    launchfile="${2}"
+  } else {
+    launchfile="${USER_HOME}/Library/LaunchAgents/com.intuivo.clis_pull_all.plist"
+    launchdir=$(dirname "${launchfile}")
+  }
+  fi
+  _ensure_touch_dir_and_file "${launchdir}" "${launchfile}"
+  _ensure_touch_dir_and_file "${USER_HOME}/_/clis" "${USER_HOME}/_/clis/updateall.bash"
+  lanuchname="${launchfile##*/}"
+  enforce_variable_with_value lanuchname "${lanuchname}"
+  Installing launchd "${launchdir}" "${launchfile}"
+  Installing  /Library/LaunchDaemons - run when no users are logged in. run as 'administrator'
+  Installing  /Library/LaunchAgents - when users are logged in. run as 'administrator'
+  Installing  $USER_HOME/Library/LaunchAgents -  when as user when user is logged.
+  su - "${SUDO_USER}" -c "echo '#!/usr/bin/env bash
+  THISDIR=\"\$( cd \"\$( dirname \"\${BASH_SOURCE[0]}\" )\" && pwd )\" # Getting the source directory of a Bash script from within REF: https://stackoverflow.com/questions/59895/how-can-i-get-the-source-directory-of-a-bash-script-from-within-the-script-itsel/246128#246128
+  cd \"\${THISDIR}\"
+  su - \"${SUDO_USER}\" -c \"${USER_HOME}/_/clis/git_intuivo_cli/pull_all_subdirectories\"
+  _err=\$?
+  su - \"${SUDO_USER}\" -c \"touch ${USER_HOME}/_/clis/pulled.log\"
+  if [ \${_err} -eq 0 ] ; then
+  {
+    su - \"${SUDO_USER}\" -c \"echo \"\$(date +%Y%m%d%H%M) failed \" > ${USER_HOME}/_/clis/pulled.log\"
+  } else {
+    su - \"${SUDO_USER}\" -c \"echo \"\$(date +%Y%m%d%H%M) passed \" > ${USER_HOME}/_/clis/pulled.log\"
+  }
+  fi
+' > \"${USER_HOME}/_/clis/updateall.bash\" "
+  (_if_not_contains  "${USER_HOME}/_/clis/updateall.bash" "pull_all_subdirectories") || failed writting to ${USER_HOME}/_/clis/updateall.bash
+  (( DEBUG )) && cat "${USER_HOME}/_/clis/updateall.bash"
+  chmod +x "${USER_HOME}/_/clis/updateall.bash"
+
+
+  echo '<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>${lanuchname}</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>${USER_HOME}/_/clis/updateall.bash</string>
+  </array>
+
+  <key>Nice</key>
+  <integer>1</integer>
+
+  <key>StartInterval</key>
+  <integer>60</integer>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>StandardErrorPath</key>
+  <string>${USER_HOME}/_/clis/pulled_err.log</string>
+
+  <key>StandardOutPath</key>
+  <string>${USER_HOME}/_/clis/pulled_out.log</string>
+</dict>
+</plist>
+' > "${launchfile}"
+   #(( DEBUG )) && cat "${launchfile}"
+
+   Installing file "${launchfile}"
+   # Set correct permissions REF: https://stackoverflow.com/questions/28063598/error-while-executing-plist-file-path-had-bad-ownership-permissions
+   sudo chown root "${launchfile}"
+   sudo chgrp wheel "${launchfile}"
+   sudo chmod o-w  "${launchfile}"
+   launchctl unload "${launchfile}"
+   launchctl load "${launchfile}"
+} # end _add_launchd
+
+_configure_git(){
+    ensure git or "Canceling Install. Could not find git"
+    CURRENTGITUSER=$(su - $SUDO_USER -c 'git config --global --get user.name')
+    CURRENTGITEMAIL=$(su - $SUDO_USER -c 'git config --global --get user.email')
+    # exit 0
+
+    if [[ -z "$CURRENTGITEMAIL" ]] ; then
     {
-        Installing cloudfoundry cf 7
-        wget -q -O - https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | apt-key add -
-        echo "deb https://packages.cloudfoundry.org/debian stable main" | sudo tee /etc/apt/sources.list.d/cloudfoundry-cli.list
-        echo  ...then, update your local package index, then finally install the cf CLI
-        apt update -y
-        $COMANDDER cf-cli
-        snap install cf-cli
+        Configuring git user.email with  $SUDO_USER@$(hostname)
+        su - $SUDO_USER -c 'git config --global user.email '$SUDO_USER'@$(hostname)'
     }
     fi
-    chown $SUDO_USER -R $USER_HOME/.cf
-    verify_is_installed cf
-
-}
-
-_centos__64() {
-  _fedora__64
-} # end _centos__64
-
-_fedora__64() {
-    COMANDDER="dnf install -y"
-    _checka_tools_commander
-    if  it_does_not_exist_with_spaces /etc/yum.repos.d/cloudfoundry-cli.repo ; then
+    # exit 0
+    if [[ -z "$CURRENTGITUSER" ]] ; then
     {
-        Installing cloudfoundry cf 7
-        wget -O /etc/yum.repos.d/cloudfoundry-cli.repo https://packages.cloudfoundry.org/fedora/cloudfoundry-cli.repo
-        # sudo yum install cf6-cli
-        $COMANDDER cf7-cli
+        Configuring git user.name with  $SUDO_USER
+        su - $SUDO_USER -c 'git config --global user.name '$SUDO_USER
     }
     fi
-    verify_is_installed cf
-
-}
-export is_not_installed
-function is_not_installed (){
-	if ( command -v $1 >/dev/null 2>&1; ) ; then
-	  return 1
-	else
-	  return 0
-	fi
-}
-
-_darwin__64() {
-    COMANDDER="_run_command /usr/local/bin/brew install "
-    # $COMANDDER install nodejs
-    # version 6 brew install cloudfoundry/tap/cf-cli
-    install_requirements "darwin" "
-      tree
-      the_silver_searcher
-      # ag|the_silver_searcher
-      ack
-      vim
-      nano
-      pv
-      powerlevel10k@romkatv/powerlevel10k/powerlevel10k
-      powerline-go
-
-    "
-    verify_is_installed pip3
-    if ( ! command -v pygmentize >/dev/null 2>&1; ) ;  then
-    	pip3 install pigments
-    fi
-    if ( ! command -v cf >/dev/null 2>&1; ) ;  then
-    	npm i -g cloudfoundry/tap/cf-cli@7
-    fi
-	verify_is_installed "
-    tree
-    ag
-    ack
-    pv
-    nano
-    vim
-    cf
-    pygmentize
-    "
-}
-
-determine_os_and_fire_action
-# exit 0
-
-ensure pygmentize or "Canceling Install. Could not find pygmentize.  pip install pigments"
-ensure npm or "Canceling Install. Could not find npm"
-ensure node or "Canceling Install. Could not find node"
-ensure cf or "Canceling Install. Could not find cf"
-#MTASCHECK=$(su - $SUDO_USER -c 'cf mtas --help' >/dev/null 2>&1)
-#if [[ -n "$MTASCHECK" ]] &&  [[ "$MTASCHECK" == *"FAILED"* ]]  ; then
-#{
-#    su - $SUDO_USER -c 'yes | cf install-plugin multiapps'
-#}
-#fi
-#
-#if [[ -n "$MTASCHECK" ]] &&  [[ "$MTASCHECK" != *"FAILED"* ]]  ; then
-#{
-#    passed Installed cf mtas plugin
-#}
-#fi
-ensure git or "Canceling Install. Could not find git"
-CURRENTGITUSER=$(su - $SUDO_USER -c 'git config --global --get user.name')
-CURRENTGITEMAIL=$(su - $SUDO_USER -c 'git config --global --get user.email')
-# exit 0
-
-if [[ -z "$CURRENTGITEMAIL" ]] ; then
-{
-    Configuring git user.email with  $SUDO_USER@$(hostname)
-    su - $SUDO_USER -c 'git config --global user.email '$SUDO_USER'@$(hostname)'
-}
-fi
-# exit 0
-if [[ -z "$CURRENTGITUSER" ]] ; then
-{
-    Configuring git user.name with  $SUDO_USER
-    su - $SUDO_USER -c 'git config --global user.name '$SUDO_USER
-}
-fi
+} # end _configure_git
 
 _install_npm_utils() {
     chown $SUDO_USER -R $USER_HOME/.npm
@@ -293,40 +395,20 @@ _install_npm_utils() {
     #    passed that: cds is installed
     #}
     #fi
-}
-# exit 0
+} # end _install_npm_utils
+
 _if_not_is_installed(){
-	local -i ret
-	local msg
-	ret=0
-	msg=$($COMANDDER info $1  >/dev/null 2>&1)
-	ret=$?
-	[ $ret -gt 0 ] && return 1
-	[[ "$msg" == *"No such"* ]] && return 1
-	[[ "$msg" == *"nicht gefunden"* ]] && return 1
-	[[ "$msg" == *"Error"*   ]] && return 1
-	return 0
-}
-_if_not_contains(){
-	local -i ret
-	local msg
-	ret=0
-	[ ! -e "$1" ] && return 1
-	msg=$(cat -n "$1" >/dev/null 2>&1)
-	ret=$?
-	[ $ret -gt 0 ] && return 1
-	[[ "$msg" == *"No such"* ]] && return 1
-	[[ "$msg" == *"nicht gefunden"* ]] && return 1
-	[[ "$msg" == *"Permission denied"* ]] && return 1
-	ret=0
-	msg=$(echo "$msg" | grep "$2" >/dev/null 2>&1)
-	ret=$?
-	[ $ret -gt 0 ] && return 1
-	[[ "$msg" == *"No such"* ]] && return 1
-	[[ "$msg" == *"nicht gefunden"* ]] && return 1
-	[[ "$msg" == *"Permission denied"* ]] && return 1
-	return 0
-}
+    local -i ret
+    local msg
+    ret=0
+    msg=$($COMANDDER info $1  >/dev/null 2>&1)
+    ret=$?
+    [ $ret -gt 0 ] && return 1
+    [[ "$msg" == *"No such"* ]] && return 1
+    [[ "$msg" == *"nicht gefunden"* ]] && return 1
+    [[ "$msg" == *"Error"*   ]] && return 1
+    return 0
+} # end _if_not_is_installed
 
 _install_nvm() {
     local -i ret
@@ -388,8 +470,7 @@ file_exists_with_spaces "$USER_HOME/.zshrc"
         passed that: nvm is installed
     }
     fi
-}
-
+} # end _install_nvm
 
 _install_nvm_version(){
     local TARGETVERSION="${1}"
@@ -412,7 +493,7 @@ _install_nvm_version(){
         else
         {
             Installing node using nvm install  "${TARGETVERSION}"
-	    VERSION12=$(nvm ls | grep "v${TARGETVERSION}" |tail -1 >/dev/null 2>&1 )
+            VERSION12=$(nvm ls | grep "v${TARGETVERSION}" |tail -1 >/dev/null 2>&1 )
             if [[ -n "$VERSION12" ]] ; then
             {
                 if [[ "$VERSION12" == *"not found"* ]] || [[ "$VERSION12" == *"nvm help"* ]]  ; then
@@ -442,7 +523,7 @@ _install_nvm_version(){
     else
     {
         Installing node using nvm install  "${TARGETVERSION}"
-	VERSION12=$(nvm ls | grep "v${TARGETVERSION}" |tail -1 >/dev/null 2>&1 )
+            VERSION12=$(nvm ls | grep "v${TARGETVERSION}" |tail -1 >/dev/null 2>&1 )
             if [[ -n "$VERSION12" ]] ; then
             {
                 if [[ "$VERSION12" == *"not found"* ]] || [[ "$VERSION12" == *"nvm help"* ]]  ; then
@@ -472,20 +553,7 @@ _install_nvm_version(){
     # su - $SUDO_USER -c ''${USER_HOME}'/.nvm/nvm.sh && . '${USER_HOME}'/.nvm/nvm.sh && nvm use "${TARGETVERSION}"'
     # node --version
     #nvm use "${TARGETVERSION}"
-}
-
-# _install_npm_utils
-
-# _install_nvm
-#_install_nvm_version 10
-#_install_npm_utils
-
-#_install_nvm_version 12
-#_install_npm_utils
-
-#_install_nvm_version 14
-#_install_npm_utils
-
+} # end _install_nvm_version
 
 _install_nerd_fonts(){
 
@@ -495,13 +563,13 @@ _install_nerd_fonts(){
     su - $SUDO_USER -c  "git clone --depth=1 https://github.com/ryanoasis/nerd-fonts $USER_HOME/.nerd-fonts"
     directory_exists_with_spaces "$USER_HOME/.nerd-fonts"
     file_exists_with_spaces "$USER_HOME/.nerd-fonts/install.sh"
-	chown -R $SUDO_USER $USER_HOME/.nerd-fonts
+    chown -R $SUDO_USER $USER_HOME/.nerd-fonts
 
-	cd $USER_HOME/.nerd-fonts
-	su - $SUDO_USER -c  "bash -c $USER_HOME/.nerd-fonts/install.sh"
+    cd $USER_HOME/.nerd-fonts
+    su - $SUDO_USER -c  "bash -c $USER_HOME/.nerd-fonts/install.sh"
    }
    fi
-}
+} # end _install_nerd_fonts
 
 _setup_ohmy(){
     if  it_does_not_exist_with_spaces "$USER_HOME/.oh-my-zsh/" ; then
@@ -513,35 +581,35 @@ _setup_ohmy(){
         }
         elif [[ "$COMANDDER" == *"dnf"* ]]  ; then
         {
-	       $COMANDDER git wget curl ruby ruby-devel zsh util-linux-user redhat-rpm-config gcc gcc-c++ make
+           $COMANDDER git wget curl ruby ruby-devel zsh util-linux-user redhat-rpm-config gcc gcc-c++ make
         }
         fi
 
 
-		_install_nerd_fonts
-		if ( command -v brew >/dev/null 2>&1; ) ; then
-		{
-		  su - "${SUDO_USER}" -c "brew install --cask font-fontawesome"
-		  err_buff=$?
-		} else {
-		  _if_not_is_installed fontawesome-fonts && $COMANDDER fontawesome-fonts
-		  _if_not_is_installed powerline && $COMANDDER powerline vim-powerline tmux-powerline powerline-fonts
-		  echo REF: https://fedoramagazine.org/tuning-your-bash-or-zsh-shell-in-workstation-and-silverblue/
-		  if [ -f `which powerline-daemon` ]; then
-			{
-			  powerline-daemon -q
-			  POWERLINE_BASH_CONTINUATION=1
-			  POWERLINE_BASH_SELECT=1
-			  . /usr/share/powerline/bash/powerline.sh
-			}
-			fi
-		}
-		fi
+        _install_nerd_fonts
+        if ( command -v brew >/dev/null 2>&1; ) ; then
+        {
+          su - "${SUDO_USER}" -c "brew install --cask font-fontawesome"
+          err_buff=$?
+        } else {
+          _if_not_is_installed fontawesome-fonts && $COMANDDER fontawesome-fonts
+          _if_not_is_installed powerline && $COMANDDER powerline vim-powerline tmux-powerline powerline-fonts
+          echo REF: https://fedoramagazine.org/tuning-your-bash-or-zsh-shell-in-workstation-and-silverblue/
+          if [ -f `which powerline-daemon` ]; then
+            {
+              powerline-daemon -q
+              POWERLINE_BASH_CONTINUATION=1
+              POWERLINE_BASH_SELECT=1
+              . /usr/share/powerline/bash/powerline.sh
+            }
+            fi
+        }
+        fi
 
 
         # install ohmyzsh
         su - $SUDO_USER -c 'sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"'
-		chown -R $SUDO_USER $USER_HOME/.oh-my-zsh
+        chown -R $SUDO_USER $USER_HOME/.oh-my-zsh
         Testing ohmyzsh
         directory_exists_with_spaces "$USER_HOME/.oh-my-zsh"
     }
@@ -552,49 +620,58 @@ _setup_ohmy(){
     fi
 
 
-	if it_does_not_exist_with_spaces ${USER_HOME}/.oh-my-zsh/themes/powerlevel10k ; then
-	{
-	  su - $SUDO_USER -c "git clone https://github.com/romkatv/powerlevel10k.git ${USER_HOME}/.oh-my-zsh/themes/powerlevel10k"
-	  _if_not_contains "$USER_HOME/.zshrc" "powerlevel10k" && echo "ZSH_THEME=powerlevel10k/powerlevel10k" >> $USER_HOME/.zshrc
+    if it_does_not_exist_with_spaces ${USER_HOME}/.oh-my-zsh/themes/powerlevel10k ; then
+    {
+      su - $SUDO_USER -c "git clone https://github.com/romkatv/powerlevel10k.git ${USER_HOME}/.oh-my-zsh/themes/powerlevel10k"
+      _if_not_contains "$USER_HOME/.zshrc" "powerlevel10k" && echo "ZSH_THEME=powerlevel10k/powerlevel10k" >> $USER_HOME/.zshrc
+    } else {
+        passed powerlevel10k already there
     }
     fi
-	if it_does_not_exist_with_spaces ${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting ; then
-	{
-	  su - $SUDO_USER -c "git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
-	}
-	fi
-	if it_does_not_exist_with_spaces ${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions ; then
-	{
-	  su - $SUDO_USER -c "git clone https://github.com/zsh-users/zsh-autosuggestions ${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
-	  _if_not_contains "$USER_HOME/.zshrc" "zsh-syntax-highlighting" echo "plugins=(git zsh-syntax-highlighting zsh-autosuggestions)"   >> $USER_HOME/.zshrc
+    if it_does_not_exist_with_spaces ${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting ; then
+    {
+      su - $SUDO_USER -c "git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
+    } else {
+        passed zsh-syntax-highlighting already there
     }
     fi
-}
-# rm -rf ${USER_HOME}/.oh-my-zsh
-_setup_ohmy
-# exit 0
+    if it_does_not_exist_with_spaces ${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions ; then
+    {
+      su - $SUDO_USER -c "git clone https://github.com/zsh-users/zsh-autosuggestions ${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
+      _if_not_contains "$USER_HOME/.zshrc" "zsh-syntax-highlighting" echo "plugins=(git zsh-syntax-highlighting zsh-autosuggestions)"   >> $USER_HOME/.zshrc
+    } else {
+        passed zsh-autosuggestions  already there
+    }
+    fi
+} # end _setup_ohmy
 
 _install_colorls(){
-( gem list colorls | grep -q "^colorls" ) && return 0
-( gem list colorls | grep -q "^colorls" ) || (su - $SUDO_USER -c "yes | gem install colorls") && ( su - $SUDO_USER -c "yes | gem update colorls")
-
-_if_not_contains "$USER_HOME/.zshrc" "colorls" && echo "alias ll='colorls -lA --sd --gs --group-directories-first'" >> $USER_HOME/.zshrc
-_if_not_contains "$USER_HOME/.zshrc" "colorls" && echo "alias ls='colorls --group-directories-first'" >> $USER_HOME/.zshrc
-
-_if_not_contains "$USER_HOME/.bashrc" "colorls" && echo "alias ll='colorls -lA --sd --gs --group-directories-first'" >> $USER_HOME/.bashrc
-_if_not_contains "$USER_HOME/.bashrc" "colorls" && echo "alias ls='colorls --group-directories-first'" >> $USER_HOME/.bashrc
-return 0
+if ( gem list colorls | grep -q "^colorls" ) ; then
+{
+    passed colorls is already installed as gem
+    return 0
+} else {
+    Installing colorls
+    yes | gem install colorls
+    yes | gem update colorls
+    chown $SUDO_USER /Library/Ruby
+    _if_not_contains "$USER_HOME/.zshrc" "colorls" && echo "alias ll='colorls -lA --sd --gs --group-directories-first'" >> $USER_HOME/.zshrc
+    _if_not_contains "$USER_HOME/.zshrc" "colorls" && echo "alias ls='colorls --group-directories-first'" >> $USER_HOME/.zshrc
+    _if_not_contains "$USER_HOME/.bashrc" "colorls" && echo "alias ll='colorls -lA --sd --gs --group-directories-first'" >> $USER_HOME/.bashrc
+    _if_not_contains "$USER_HOME/.bashrc" "colorls" && echo "alias ls='colorls --group-directories-first'" >> $USER_HOME/.bashrc
 }
-_install_colorls
+fi
+return 0
+} # end _install_colorls
 
-# exit 0
 _setup_clis(){
   local -i ret
   local msg
   ret=0
   if  it_exists_with_spaces "$USER_HOME/_/clis" ; then
   {
-   directory_exists_with_spaces $USER_HOME/_/clis
+    directory_exists_with_spaces $USER_HOME/_/clis
+    passed clis folder already there
     return 0
   }
   fi
@@ -610,60 +687,60 @@ _setup_clis(){
   fi
   if  it_does_not_exist_with_spaces "$USER_HOME/_/clis/bash_intuivo_cli" ; then
   {
-	cd $USER_HOME/_/clis
-	Installing Clis pre work  bash_intuivo_cli  for link_folder_scripts
-	su - $SUDO_USER -c "yes | git clone git@github.com:zeusintuivo/bash_intuivo_cli.git $USER_HOME/_/clis/bash_intuivo_cli"
-	if it_does_not_exist_with_spaces ${USER_HOME}/_/clis/bash_intuivo_cli ; then
-	{
-	  su - $SUDO_USER -c "yes | git clone https://github.com/zeusintuivo/bash_intuivo_cli.git $USER_HOME/_/clis/bash_intuivo_cli"
-	}
-	fi
-	cd $USER_HOME/_/clis/bash_intuivo_cli
-	git remote remove origin
-	git remote add origin git@github.com:zeusintuivo/bash_intuivo_cli.git
-	bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts
+    cd $USER_HOME/_/clis
+    Installing Clis pre work  bash_intuivo_cli  for link_folder_scripts
+    su - $SUDO_USER -c "yes | git clone git@github.com:zeusintuivo/bash_intuivo_cli.git $USER_HOME/_/clis/bash_intuivo_cli"
+    if it_does_not_exist_with_spaces ${USER_HOME}/_/clis/bash_intuivo_cli ; then
+    {
+      su - $SUDO_USER -c "yes | git clone https://github.com/zeusintuivo/bash_intuivo_cli.git $USER_HOME/_/clis/bash_intuivo_cli"
+    }
+    fi
+    cd $USER_HOME/_/clis/bash_intuivo_cli
+    git remote remove origin
+    git remote add origin git@github.com:zeusintuivo/bash_intuivo_cli.git
+    bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts
   } else {
-	passed clis: bash_intuivo_cli folder exists
+    passed clis: bash_intuivo_cli folder exists
   }
   fi
   if  is_not_installed link_folder_scripts ; then
   {
-	cd $USER_HOME/_/clis
-	Installing No. 2 Clis pre work  bash_intuivo_cli  for link_folder_scripts
-	su - $SUDO_USER -c "yes | git clone git@github.com:zeusintuivo/bash_intuivo_cli.git  $USER_HOME/_/clis/bash_intuivo_cli"
-	if it_does_not_exist_with_spaces ${USER_HOME}/_/clis/bash_intuivo_cli ; then
-	{
-	  su - $SUDO_USER -c "yes | git clone https://github.com/zeusintuivo/bash_intuivo_cli.git $USER_HOME/_/clis/bash_intuivo_cli"
-	}
-	fi
-	chown -R $SUDO_USER:$SUDO_USER $USER_HOME/_/clis/bash_intuivo_cli
-	cd $USER_HOME/_/clis/bash_intuivo_cli
-	git remote remove origin
-	git remote add origin git@github.com:zeusintuivo/bash_intuivo_cli.git
-	bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts
+    cd $USER_HOME/_/clis
+    Installing No. 2 Clis pre work  bash_intuivo_cli  for link_folder_scripts
+    su - $SUDO_USER -c "yes | git clone git@github.com:zeusintuivo/bash_intuivo_cli.git  $USER_HOME/_/clis/bash_intuivo_cli"
+    if it_does_not_exist_with_spaces ${USER_HOME}/_/clis/bash_intuivo_cli ; then
+    {
+      su - $SUDO_USER -c "yes | git clone https://github.com/zeusintuivo/bash_intuivo_cli.git $USER_HOME/_/clis/bash_intuivo_cli"
+    }
+    fi
+    chown -R $SUDO_USER:$SUDO_USER $USER_HOME/_/clis/bash_intuivo_cli
+    cd $USER_HOME/_/clis/bash_intuivo_cli
+    git remote remove origin
+    git remote add origin git@github.com:zeusintuivo/bash_intuivo_cli.git
+    bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts
   } else {
-	passed clis: bash_intuivo_cli folder exists
+    passed clis: bash_intuivo_cli folder exists
   }
   fi
   if  it_does_not_exist_with_spaces ${USER_HOME}/_/clis/ssh_intuivo_cli ; then
   {
-	cd $USER_HOME/_/clis
-	Installing No. 3 Clis pre work ssh_intuivo_cli  for link_folder_scripts
-	yes | git clone git@github.com:zeusintuivo/ssh_intuivo_cli.git
-	if it_does_not_exist_with_spaces ${USER_HOME}/_/clis/ssh_intuivo_cli ; then
-	{
-	  su - $SUDO_USER -c "yes | git clone https://github.com/zeusintuivo/ssh_intuivo_cli.git  $USER_HOME/_/clis/ssh_intuivo_cli"
-	}
-	fi
-	cd $USER_HOME/_/clis/ssh_intuivo_cli
-	chown -R $SUDO_USER:$SUDO_USER $USER_HOME/_/clis/ssh_intuivo_cli
-	chown -R $SUDO_USER:$SUDO_USER $USER_HOME/.ssh
-	git remote remove origin
-	git remote add origin git@github.com:zeusintuivo/ssh_intuivo_cli.git
-	bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts
-	./sshswitchkey zeus
+    cd $USER_HOME/_/clis
+    Installing No. 3 Clis pre work ssh_intuivo_cli  for link_folder_scripts
+    yes | git clone git@github.com:zeusintuivo/ssh_intuivo_cli.git
+    if it_does_not_exist_with_spaces ${USER_HOME}/_/clis/ssh_intuivo_cli ; then
+    {
+      su - $SUDO_USER -c "yes | git clone https://github.com/zeusintuivo/ssh_intuivo_cli.git  $USER_HOME/_/clis/ssh_intuivo_cli"
+    }
+    fi
+    cd $USER_HOME/_/clis/ssh_intuivo_cli
+    chown -R $SUDO_USER:$SUDO_USER $USER_HOME/_/clis/ssh_intuivo_cli
+    chown -R $SUDO_USER:$SUDO_USER $USER_HOME/.ssh
+    git remote remove origin
+    git remote add origin git@github.com:zeusintuivo/ssh_intuivo_cli.git
+    bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts
+    ./sshswitchkey zeus
   } else {
-	passed clis: ssh_intuivo_cli folder exists
+    passed clis: ssh_intuivo_cli folder exists
   }
   fi
 # rm -rf $USER_HOME/_/clis/ssh_intuivo_cli
@@ -698,34 +775,34 @@ while read -r ONE ; do
             fi
             cd $USER_HOME/_/clis/${ONE}
             chown -R $SUDO_USER $USER_HOME/_/clis/${ONE}
-	        git remote remove origin
+            git remote remove origin
             git remote add origin git@github.com:zeusintuivo/${ONE}.git
             directory_exists_with_spaces $USER_HOME/_/clis/${ONE}
             bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts
-			if [[ "$ONE" == "git_intuivo_cli" ]] ; then  # is not empty
-			{
-      	      cd $USER_HOME/_/clis/${ONE}/en
+            if [[ "$ONE" == "git_intuivo_cli" ]] ; then  # is not empty
+            {
+              cd $USER_HOME/_/clis/${ONE}/en
               bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts
-			}
-			fi
+            }
+            fi
         } else {
             Installing else $ONE
             passed clis: ${ONE} folder exists
-			cd $USER_HOME/_/clis/${ONE}
-			chown -R $SUDO_USER $USER_HOME/_/clis/${ONE}
-			pwd
-			bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts
-			if [[ "$ONE" == "git_intuivo_cli" ]] ; then  # is not empty
-			{
-			  cd $USER_HOME/_/clis/${ONE}/en
-			  bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts
-			}
-			fi
-			# msg=$(link_folder_scripts)
-			ret=$?
-			Configuring existed with $ret
-			[ $ret -gt 0 ] && Configuring $ONE existed with $ret
-			# [ $ret -gt 0 ] && failed clis: execute link_folder_scripts && echo -E $msg && pwd
+            cd $USER_HOME/_/clis/${ONE}
+            chown -R $SUDO_USER $USER_HOME/_/clis/${ONE}
+            pwd
+            bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts
+            if [[ "$ONE" == "git_intuivo_cli" ]] ; then  # is not empty
+            {
+              cd $USER_HOME/_/clis/${ONE}/en
+              bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts
+            }
+            fi
+            # msg=$(link_folder_scripts)
+            ret=$?
+            Configuring existed with $ret
+            [ $ret -gt 0 ] && Configuring $ONE existed with $ret
+            # [ $ret -gt 0 ] && failed clis: execute link_folder_scripts && echo -E $msg && pwd
 
         }
         fi
@@ -748,9 +825,8 @@ fi
 
 chown -R $SUDO_USER $USER_HOME/_/clis
 return 0
-}
-_setup_clis
-# exit 0
+} # end _setup_clis
+
 _setup_mycd(){
     if it_does_not_exist_with_spaces $USER_HOME/.mycd  ; then
     {
@@ -767,7 +843,6 @@ _setup_mycd(){
         _if_not_contains "$USER_HOME/.bashrc" "mycd" && echo '. $HOME/.mycd/mycd.sh' >> $USER_HOME/.bashrc
 
         # Add to Zsh:
-
         _if_not_contains "$USER_HOME/.zshrc" "mycd" &&  echo '. $HOME/.mycd/mycd.sh' >> $USER_HOME/.zshrc
 
         # OR - Add .dir_bash_history to the GLOBAL env .gitignore, ignore:
@@ -780,37 +855,181 @@ _setup_mycd(){
     }
     fi
     return 0
-}
-_setup_mycd
+} # end _setup_mycd
 
-#echo "🥦"
-#exit 0
+_install_dmg__64() {
+  local CODENAME="${1}"
+  local extension="$(echo "${CODENAME}" | rev | cut -d'.' -f 1 | rev)"
+  local APPDIR="${2}"
+  local TARGET_URL="${3}"
+  # CODENAME="$(basename "${TARGET_URL}" )"
+  echo "${CODENAME}";
+  echo "Extension:${extension}"
+  # local VERSION="$(echo -en "${CODENAME}" | sed 's/RubyMine-//g' | sed 's/.dmg//g' )"
+  # assert not empty "${VERSION}"
+  # local UNZIPDIR="$(echo -en "${CODENAME}" | sed 's/.dmg//g'| sed 's/-//g')"
+  # local UNZIPDIR="$(echo -en "${APPDIR}" | sed 's/.app//g')"
+  # echo "$(pwd)"
+  local UNZIPDIR="$(dirname  "${APPDIR}")"
+  local APPDIR="${APPDIR##*/}"    # same as  $(basename "${APPDIR}")
+  # local APPDIR="$(echo -en "${CODENAME}" | sed 's/.dmg//g'| sed 's/-//g').app"
+  # echo "${CODENAME}";
+  # echo "${URL}";
+  echo "CODENAME: ${CODENAME}"
+  assert not empty "${CODENAME}"
+  assert not empty "${TARGET_URL}"
+  assert not empty "${HOME}"
+  echo "UNZIPDIR: ${UNZIPDIR}"
+  assert not empty "${UNZIPDIR}"
+  echo "APPDIR: ${APPDIR}"
+  assert not empty "${APPDIR}"
+  local DOWNLOADFOLDER="${HOME}/Downloads"
+  assert not empty "${DOWNLOADFOLDER}"
+  directory_exists_with_spaces "${DOWNLOADFOLDER}"
+
+  if it_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}" ; then
+  {
+    file_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
+  }
+  else
+  {
+    cd "${DOWNLOADFOLDER}"
+    _download "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+    file_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
+  }
+  fi
+  if  it_exists_with_spaces "/Applications/${APPDIR}" ; then
+  {
+      echo Remove installed "/Applications/${APPDIR}"
+      sudo rm -rf  "/Applications/${APPDIR}"
+      directory_does_not_exist_with_spaces  "/Applications/${APPDIR}"
+  }
+  fi
+  if [[ -n "${extension}" ]] && [[ "${extension}"  == "zip" ]] ; then
+  {
+      echo Unzipping downloaded
+      unzip "${DOWNLOADFOLDER}/${CODENAME}"
+      directory_exists_with_spaces "${DOWNLOADFOLDER}/${APPDIR}"
+      echo "sudo  cp -R \"${DOWNLOADFOLDER}/${APPDIR}\" \"/Applications/\""
+      cp -R "${DOWNLOADFOLDER}/${APPDIR}" "/Applications/"
+  }
+  else # elif [[ -n "${extension}" ]] && [[ "${extension}"  == "dmg" ]] ; then
+  {
+      echo Attaching dmg downloaded
+      hdiutil attach "${DOWNLOADFOLDER}/${CODENAME}"
+      ls "/Volumes"
+      directory_exists_with_spaces "/Volumes/${UNZIPDIR}"
+      directory_exists_with_spaces "/Volumes/${UNZIPDIR}/${APPDIR}"
+      echo "sudo  cp -R \"/Volumes/${UNZIPDIR}/${APPDIR}\" \"/Applications/\""
+      cp -R "/Volumes/${UNZIPDIR}/${APPDIR}" "/Applications/"
+      hdiutil detach "/Volumes/${UNZIPDIR}"
+  }
+  fi
+      directory_exists_with_spaces "/Applications/${APPDIR}"
+      ls -d "/Applications/${APPDIR}"
+      echo  Removing macOS gatekeeper quarantine attribute
+      chown  -R $SUDO_USER "/Applications/${APPDIR}"
+      chgrp  -R staff "/Applications/${APPDIR}"
+      xattr -d com.apple.quarantine  "/Applications/${APPDIR}"
+} # end _install_dmg__64
+
+_install_dmgs_list(){
+    # Iris.dmg|
+    # 1Password.pkg|https://c.1password.com/dist/1P/mac7/1Password-7.7.pkg
+    local installlist one  target_name target_url target_app app_name extension
+    installlist="
+    Caffeine.dmg|Caffeine/Caffeine.app|https://github.com/IntelliScape/caffeine/releases/download/1.1.3/Caffeine.dmg
+    Keybase.dmg|Keybase App/Keybase.app|https://prerelease.keybase.io/Keybase.dmg
+    Brave-Browser.dmg|Brave Browser/Brave Browser.app|https://referrals.brave.com/latest/Brave-Browser.dmg
+    Firefox 84.0.2.dmg|Firefox/Firefox.app|https://download-installer.cdn.mozilla.net/pub/firefox/releases/84.0.2/mac/de/Firefox%2084.0.2.dmg
+    MFF2_latest.dmg|MultiFirefox/MultiFirefox.app|http://mff.s3.amazonaws.com/MFF2_latest.dmg
+    vlc-3.0.11.dmg|VLC media player/VLC.app|https://download.vlc.de/vlc/macosx/vlc-3.0.11.dmg
+    mattermost-desktop-4.6.2-mac.dmg|Mattermost 4.6.2.app/Mattermost.app|https://releases.mattermost.com/desktop/4.6.2/mattermost-desktop-4.6.2-mac.dmg?src=dl
+    gimp-2.10.22-x86_64-2.dmg|GIMP 2.10 Install/GIMP-2.10.app|https://ftp.lysator.liu.se/pub/gimp/v2.10/osx/gimp-2.10.22-x86_64-2.dmg
+    sketch-70.3-109109.zip|Sketch.app|https://download.sketch.com/sketch-70.3-109109.zip
+    Iris-1.2.0-OSX.zip|Iris.app|https://raw.githubusercontent.com/danielng01/product-builds/master/iris/macos/Iris-1.2.0-OSX.zip
+    "
+   Checking dmgs apps
+   while read -r one ; do
+   {
+      if [[ -n "${one}" ]] ; then
+      {
+
+        target_name="$(echo "${one}" | cut -d'|' -f1)"
+        extension="$(echo "${target_name}" | rev | cut -d'.' -f 1 | rev)"
+        target_app="$(echo "${one}" | cut -d'|' -f2)"
+        app_name="$(echo "$(basename "${target_app}")")"
+        target_url="$(echo "${one}" | cut -d'|' -f3-)"
+        if [[ -n "${target_name}" ]] ; then
+        {
+          if [[ -n "${target_url}" ]] ; then
+          {
+            if [[ ! -d "/Applications/${app_name}" ]] ; then
+            {
+                Installing "${app_name}"
+                _install_dmg__64 "${target_name}" "${target_app}" "${target_url}"
+            } else {
+                passed  "/Applications/${app_name}"  --skipping already installed
+            }
+            fi
+          }
+          fi
+        }
+        fi
+      }
+      fi
+   }
+   done <<< "${installlist}"
+   return 0
+} # end _install_dmgs_list
 
 _password_simple(){
+  local Answer
+  read -p 'Change Passwords? [Y/n] (Enter Defaults - No/N/n )' Answer
+  case $Answer in
+    '' | [Nn]* )
+      passed you said no "Skip Password change"
+      return 0
+      break;
+      ;;
+    [Yy]* )
+      passed you said Yes
+      break;
+      ;;
+    * )
+      echo Please answer YES or NO.
+  esac
 
-local policies
-if is_installed pwpolicy ; then
-{
-	policies=$(pwpolicy getaccountpolicies  2>&1; )
-	ret=$?
-	if [ $ret -gt 0 ] ; then
-	{
-		echo reading policies failed  "ERR:${ret} \n MSG:${policies}"
-		return 1
-	}
-	else
-	{
-		passed Reading policies for passwords pwpolicy
-		echo :dd to delete --> "Getting global account policies"
-		echo press i  to edit  --> {4,} to {1,}.  press "esc" to exit edit mode
-		policies="$(echo "${policies}" |  grep -v "^Getting" | sed -E 's/\{4\,\}/\{1\,\}/')"
-		echo "${policies}" > temp.xml
-		pwpolicy setaccountpolicies temp.xml
-		rm temp.xml
-	}
-	fi
-}
-fi
+    local policies
+    if is_installed pwpolicy ; then
+    {
+        policies=$(pwpolicy getaccountpolicies  2>&1; )
+        ret=$?
+        if [ $ret -gt 0 ] ; then
+        {
+            echo reading policies failed  "ERR:${ret} \n MSG:${policies}"
+            return 1
+        }
+        else
+        {
+            echo "${policies}" > temp.xml
+            if _if_not_contains temp.xml "{1,}" ; then
+            {
+                passed Reading policies for passwords pwpolicy
+                echo ":dd to delete --> Getting global account policies"
+                echo "press i  to edit  --> {4,} to {1,}.  press esc to exit edit mode"
+                policies="$(echo "${policies}" |  grep -v "^Getting" | sed -E 's/\{4\,\}/\{1\,\}/')"
+                echo "${policies}" > temp.xml
+                pwpolicy setaccountpolicies temp.xml
+                rm temp.xml
+            } else {
+                passed "passwords policy already set to {1,}"
+            }
+            fi
+        }
+        fi
+    }
+    fi
 # Password simple
 (
 sudo passwd <<< "\\
@@ -833,11 +1052,10 @@ sudo passwd $SUDO_USER <<< "\\
 #\"
 )
 return 0
-}
+} # end _password_simple
 
 _password_simple2(){
-
-# Password simple
+# Password simple2
 (
 sudo passwd <<< "#
 #
@@ -859,9 +1077,181 @@ sudo passwd $SUDO_USER <<< "#
 #\"
 )
 return 0
-}
- _password_simple
-# _password_simple2
+} # end password_simple2
+
+export is_not_installed
+function is_not_installed (){
+    if ( command -v $1 >/dev/null 2>&1; ) ; then
+      return 1
+    else
+      return 0
+    fi
+} # end is_not_installed
+
+_ubuntu__64() {
+    # debian sudo usermod -aG sudo $SUDO_USER
+    # chown $SUDO_USER:$SUDO_USER -R /home
+    # sudo groupadd docker
+    # sudo usermod -aG docker $SUDO_USER
+
+    COMANDDER="apt install -y"
+    _checka_tools_commander
+    _configure_git
+    _install_npm_utils
+    _install_nvm
+    _install_nvm_version
+    # _install_npm_utils
+
+    # _install_nvm
+    #_install_nvm_version 10
+    #_install_npm_utils
+
+    #_install_nvm_version 12
+    #_install_npm_utils
+
+    #_install_nvm_version 14
+    #_install_npm_utils
+    _setup_ohmy
+    _install_colorls
+    _setup_clis
+    _setup_mycd
+
+
+    install_requirements "
+       zsh
+    "
+    # _password_simple
+    # _password_simple2
+
+    if it_does_not_exist_with_spaces /etc/apt/sources.list.d/cloudfoundry-cli.list ; then
+    {
+        Installing cloudfoundry cf 7
+        wget -q -O - https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | apt-key add -
+        echo "deb https://packages.cloudfoundry.org/debian stable main" | sudo tee /etc/apt/sources.list.d/cloudfoundry-cli.list
+        echo  ...then, update your local package index, then finally install the cf CLI
+        apt update -y
+        $COMANDDER cf-cli
+        snap install cf-cli
+    }
+    fi
+    chown $SUDO_USER -R $USER_HOME/.cf
+    verify_is_installed cf
+
+} # end _ubuntu__64
+
+_centos__64() {
+  _fedora__64
+} # end _centos__64
+
+_fedora__64() {
+    COMANDDER="dnf install -y"
+    _checka_tools_commander
+    _configure_git
+    _install_npm_utils
+    _install_nvm
+    _install_nvm_version
+    # _install_npm_utils
+
+    # _install_nvm
+    #_install_nvm_version 10
+    #_install_npm_utils
+
+    #_install_nvm_version 12
+    #_install_npm_utils
+
+    #_install_nvm_version 14
+    #_install_npm_utils
+    _setup_ohmy
+    _install_colorls
+    _setup_clis
+    _setup_mycd
+
+
+    install_requirements "
+       zsh
+    "
+    # _password_simple
+    # _password_simple2
+    if  it_does_not_exist_with_spaces /etc/yum.repos.d/cloudfoundry-cli.repo ; then
+    {
+        Installing cloudfoundry cf 7
+        wget -O /etc/yum.repos.d/cloudfoundry-cli.repo https://packages.cloudfoundry.org/fedora/cloudfoundry-cli.repo
+        # sudo yum install cf6-cli
+        $COMANDDER cf7-cli
+    }
+    fi
+    verify_is_installed cf
+
+} # end _fedora__64
+
+_darwin__64() {
+    _install_dmgs_list
+    COMANDDER="_run_command /usr/local/bin/brew install "
+    # $COMANDDER install nodejs
+    # version 6 brew install cloudfoundry/tap/cf-cli
+    install_requirements "darwin" "
+          tree
+          the_silver_searcher
+          # ag@the_silver_searcher
+          ack
+          vim
+          nano
+          pv
+          # gsed
+          powerlevel10k@romkatv/powerlevel10k/powerlevel10k
+          powerline-go
+          zsh
+    "
+    verify_is_installed pip3
+    if ( ! command -v pygmentize >/dev/null 2>&1; ) ;  then
+        pip3 install pigments
+    fi
+    if ( ! command -v cf >/dev/null 2>&1; ) ;  then
+        npm i -g cloudfoundry/tap/cf-cli@7
+    fi
+    verify_is_installed "
+        tree
+        ag
+        ack
+        pv
+        nano
+        vim
+        cf
+        pygmentize
+    "
+    _configure_git
+    #_install_npm_utils
+    #_install_nvm
+    #_install_nvm_version
+    # _install_npm_utils
+
+    # _install_nvm
+    #_install_nvm_version 10
+    #_install_npm_utils
+
+    #_install_nvm_version 12
+    #_install_npm_utils
+
+    #_install_nvm_version 14
+    #_install_npm_utils
+
+    _setup_ohmy
+    chown $SUDO_USER /Library/Ruby
+    _install_colorls
+    _setup_clis
+    _setup_mycd
+
+    _add_self_cron_update /usr/lib/cron/  /usr/lib/cron/cron.allow
+    _add_launchd $USER_HOME/Library/LaunchAgents $USER_HOME/Library/LaunchAgents/com.intuivo.clis_pull_all.plist
+
+
+    _password_simple
+    # _password_simple2
+} # end _darwin__64
+
+determine_os_and_fire_action
+# exit 0
+
 
 echo "🥦"
 exit 0
