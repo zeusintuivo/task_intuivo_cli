@@ -703,11 +703,8 @@ _setup_clis(){
   if  it_exists_with_spaces "$USER_HOME/_/clis" ; then
   {
     directory_exists_with_spaces $USER_HOME/_/clis
-    passed clis folder already there
-    return 0
   }
   fi
-  Installing Clis
   if  it_does_not_exist_with_spaces "$USER_HOME/_/clis" ; then
   {
     su - $SUDO_USER -c "mkdir -p $USER_HOME/_/clis"
@@ -842,7 +839,7 @@ while read -r ONE ; do
     fi
 }
 done <<< "${clis}"
-unlink /usr/local/bin/ag # Bug path we need to do something abot this
+# unlink /usr/local/bin/ag # Bug path we need to do something abot this
 
 if  softlink_exists_with_spaces "/usr/local/bin/added>$USER_HOME/_/clis/git_intuivo_cli/en/added" ; then
 {
@@ -891,21 +888,18 @@ _setup_mycd(){
         # DEBUG=1
         _if_not_contains $USER_HOME/.config/git/ignore  ".dir_bash_history" ||  echo -e "\n.dir_bash_history" >> $USER_HOME/.config/git/ignore
         # DEBUG=0
-        
+
         local otherignore=$(git config --global core.excludesfile)
-        if [[ -n "${otherignore}" ]] ; then 
+        if [[ -n "${otherignore}" ]] ; then
         {
-            local realdir=$(su - $SUDO_USER -c "realpath ")
-            local dirother=$(dirpath  "${otherignore}")
-            local fileother=$(basepath  "${otherignore}")
-            su - $SUDO_USER -c "mkdir -p   ${dirother}"
-            export directory_exists_with_spaces
-            su - $SUDO_USER -c "directory_exists_with_spaces  ${dirother}"
+            local realdir=$(su - $SUDO_USER -c "realpath  ${otherignore}")
+            local dirother=$(dirname  "${realdir}")
+            mkdir -p   "${dirother}"
+            directory_exists_with_spaces "${dirother}"
             chown -R $SUDO_USER "${dirother}"
-            touch  $USER_HOME/.config/git/ignore
-            file_exists_with_spaces  $USER_HOME/.config/git/ignore
-            export _if_not_contains
-            su - $SUDO_USER -c "_if_not_contains $USER_HOME/.config/git/ignore  ".dir_bash_history" ||  echo -e "\n.dir_bash_history" >> $USER_HOME/.config/git/ignore
+            touch "${realdir}"
+            file_exists_with_spaces "${realdir}"
+            _if_not_contains "${realdir}"  ".dir_bash_history" ||  echo -e "\n.dir_bash_history" >> "${realdir}"
         }
         fi
     }
@@ -1007,6 +1001,10 @@ _install_dmgs_list(){
     BetterTouchTool.zip|BetterTouchTool.app|https://folivora.ai/releases/BetterTouchTool.zip
     Options_8.36.76.zip|LogiMgr Installer 8.36.76.app|https://download01.logi.com/web/ftp/pub/techsupport/options/Options_8.36.76.zip
     tsetup.2.5.7.dmg|Telegram Desktop/Telegram.app|https://updates.tdesktop.com/tmac/tsetup.2.5.7.dmg
+    VSCode-darwin.zip|Visual Studio Code.app|https://az764295.vo.msecnd.net/stable/ea3859d4ba2f3e577a159bc91e3074c5d85c0523/VSCode-darwin.zip
+    VSCode-darwin.zip|Visual Studio Code.app|https://code.visualstudio.com/sha/download?build=stable&os=darwin
+    VSCode-darwin.zip|Visual Studio Code - Insiders.app|https://az764295.vo.msecnd.net/insider/5a52bc29d5e9bc419077552d336ea26d904299fa/VSCode-darwin.zip
+    VSCode-darwin.zip|Visual Studio Code - Insiders.app|https://code.visualstudio.com/sha/download?build=insider&os=darwin
     "
    Checking dmgs apps
    while read -r one ; do
