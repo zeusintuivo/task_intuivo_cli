@@ -134,13 +134,27 @@ _checka_tools_commander(){
 } # end _checka_tools_commander
 
 function _if_not_contains(){
+            # Sample use:
+            #       _if_not_contains  || run_this
+            #
+            # discouraged use ---confusing using && and
+            #    _if_not_contains  && run_this
+            #
+            # echo "${policies}" > temp.xml
+            # if ! _if_not_contains temp.xml "{1,}" ; then
+            # {
+            #   run this
+            # } else {
+            #   passed "passwords policy already set to {1,}"
+            # }
+            # fi
             local -i ret
             local msg
             ret=0
             (( DEBUG )) && echo "1if"
             [ ! -e "$1" ] && return 1
             (( DEBUG )) && (cat -n "$1" )
-            msg=$(cat -n "$1" 2>&1)
+            msg=$(cat "$1" 2>&1)
             ret=$?
             (( DEBUG )) && echo "2if"
             (( DEBUG )) && echo "${msg}"
@@ -154,18 +168,36 @@ function _if_not_contains(){
             (( DEBUG )) && echo "6if"
             ret=0
             (( DEBUG )) && echo 'echo "$msg" | grep "$2"'
-            (( DEBUG )) &&echo 'echo '"$msg"' | grep '"$2"
+            (( DEBUG )) && echo 'echo '"$msg"' | grep '"$2"
+            (( DEBUG )) && ([[ -n "$msg" ]] ||  echo "6.5if file is empty")
+            [[ -n "$msg" ]] || return 1    # Not found
             msg=$(echo "$msg" | grep "$2" 2>&1)
             ret=$?
             (( DEBUG )) && echo "7if $ret"
-            [ $ret -gt 0 ] && return 1
+            [ $ret -eq 0 ] && return 0     # Found
+            [ $ret -gt 0 ] && return 1    # Not Found
             (( DEBUG )) && echo "8if"
             [[ "$msg" == *"No such"* ]] && return 1
             (( DEBUG )) && echo "9 if"
             [[ "$msg" == *"nicht gefunden"* ]] && return 1
             [[ "$msg" == *"Permission denied"* ]] && return 1
-            return 0
+            return 0  # Found
 } # end _if_not_contains
+
+function _if_contains(){
+    # Sample use
+    # _if_contains && run_this
+    # echo "${policies}" > temp.xml
+    # if _if_contains temp.xml "{1,}" ; then
+    # {
+    #   passed "passwords policy already set to {1,}"
+    # } else {
+    #   run this
+    # }
+    # fi
+    return ! _if_not_contains  "$1" "$2"
+} # end _if_contains
+
 
 function _ensure_touch_dir_and_file() {
   local launchdir_default="${1}"
@@ -430,14 +462,14 @@ export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${USER_HOME}/.nvm" 
 
 Configuring  nvm setup
 
-_if_not_contains "$USER_HOME/.bash_profile" "NVM_DIR/nvm.sh" && echo '
+_if_not_contains "$USER_HOME/.bash_profile" "NVM_DIR/nvm.sh" || echo '
 export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
 '  >> $USER_HOME/.bash_profile
 
 file_exists_with_spaces "$USER_HOME/.bash_profile"
 
-_if_not_contains "$USER_HOME/.bashrc" "NVM_DIR/nvm.sh" &&  echo '
+_if_not_contains "$USER_HOME/.bashrc" "NVM_DIR/nvm.sh" ||  echo '
 export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
 '  >> $USER_HOME/.bashrc
@@ -445,7 +477,7 @@ export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || pr
 file_exists_with_spaces "$USER_HOME/.bashrc"
 
 
-_if_not_contains "$USER_HOME/.zshrc" "NVM_DIR/nvm.sh" &&  echo '
+_if_not_contains "$USER_HOME/.zshrc" "NVM_DIR/nvm.sh" ||  echo '
 export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
 '  >> $USER_HOME/.zshrc
@@ -623,7 +655,7 @@ _setup_ohmy(){
     if it_does_not_exist_with_spaces ${USER_HOME}/.oh-my-zsh/themes/powerlevel10k ; then
     {
       su - $SUDO_USER -c "git clone https://github.com/romkatv/powerlevel10k.git ${USER_HOME}/.oh-my-zsh/themes/powerlevel10k"
-      _if_not_contains "$USER_HOME/.zshrc" "powerlevel10k" && echo "ZSH_THEME=powerlevel10k/powerlevel10k" >> $USER_HOME/.zshrc
+      _if_not_contains "$USER_HOME/.zshrc" "powerlevel10k" || echo "ZSH_THEME=powerlevel10k/powerlevel10k" >> $USER_HOME/.zshrc
     } else {
         passed powerlevel10k already there
     }
@@ -638,7 +670,7 @@ _setup_ohmy(){
     if it_does_not_exist_with_spaces ${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions ; then
     {
       su - $SUDO_USER -c "git clone https://github.com/zsh-users/zsh-autosuggestions ${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
-      _if_not_contains "$USER_HOME/.zshrc" "zsh-syntax-highlighting" echo "plugins=(git zsh-syntax-highlighting zsh-autosuggestions)"   >> $USER_HOME/.zshrc
+      _if_not_contains "$USER_HOME/.zshrc" "zsh-syntax-highlighting" || echo "plugins=(git zsh-syntax-highlighting zsh-autosuggestions)"   >> $USER_HOME/.zshrc
     } else {
         passed zsh-autosuggestions  already there
     }
@@ -655,10 +687,10 @@ if ( gem list colorls | grep -q "^colorls" ) ; then
     yes | gem install colorls
     yes | gem update colorls
     chown $SUDO_USER /Library/Ruby
-    _if_not_contains "$USER_HOME/.zshrc" "colorls" && echo "alias ll='colorls -lA --sd --gs --group-directories-first'" >> $USER_HOME/.zshrc
-    _if_not_contains "$USER_HOME/.zshrc" "colorls" && echo "alias ls='colorls --group-directories-first'" >> $USER_HOME/.zshrc
-    _if_not_contains "$USER_HOME/.bashrc" "colorls" && echo "alias ll='colorls -lA --sd --gs --group-directories-first'" >> $USER_HOME/.bashrc
-    _if_not_contains "$USER_HOME/.bashrc" "colorls" && echo "alias ls='colorls --group-directories-first'" >> $USER_HOME/.bashrc
+    _if_not_contains "$USER_HOME/.zshrc" "colorls" || echo "alias ll='colorls -lA --sd --gs --group-directories-first'" >> $USER_HOME/.zshrc
+    _if_not_contains "$USER_HOME/.zshrc" "colorls" || echo "alias ls='colorls --group-directories-first'" >> $USER_HOME/.zshrc
+    _if_not_contains "$USER_HOME/.bashrc" "colorls" || echo "alias ll='colorls -lA --sd --gs --group-directories-first'" >> $USER_HOME/.bashrc
+    _if_not_contains "$USER_HOME/.bashrc" "colorls" || echo "alias ls='colorls --group-directories-first'" >> $USER_HOME/.bashrc
 }
 fi
 return 0
@@ -833,25 +865,49 @@ _setup_mycd(){
         # My CD
         cd $USER_HOME
         su - $SUDO_USER -c "yes | git clone https://gist.github.com/jesusalc/b14a57ec9024ff1a3889be6b2c968bb7 $USER_HOME/.mycd"
+    } else {
+        passed that: mycd is in home folder
+
         chown -R $SUDO_USER  $USER_HOME/.mycd
         chmod +x  $USER_HOME/.mycd/mycd.sh
 
         # Add to MAC Bash:
-        _if_not_contains "$USER_HOME/.bash_profile" "mycd" && echo '. $HOME/.mycd/mycd.sh' >> $USER_HOME/.bash_profile
+        # DEBUG=1
+        _if_not_contains "$USER_HOME/.bash_profile" ".mycd/mycd.sh" || echo -e "\n# MYCD\n[[ -d \"$USER_HOME/.mycd\" ]] && . $USER_HOME/.mycd/mycd.sh\n" >> $USER_HOME/.bash_profile
+        # DEBUG=0
         # Add to Linux Bash:
 
-        _if_not_contains "$USER_HOME/.bashrc" "mycd" && echo '. $HOME/.mycd/mycd.sh' >> $USER_HOME/.bashrc
+        # _if_not_contains "$USER_HOME/.bashrc" ".mycd/mycd.sh" || echo -e "\n# MYCD\n[[ -d \"$USER_HOME/.mycd\" ]] && . $USER_HOME/.mycd/mycd.sh\n" >> $USER_HOME/.bashrc
 
         # Add to Zsh:
-        _if_not_contains "$USER_HOME/.zshrc" "mycd" &&  echo '. $HOME/.mycd/mycd.sh' >> $USER_HOME/.zshrc
+        # _if_not_contains "$USER_HOME/.zshrc" ".mycd/mycd.sh" ||  echo -e "\n# MYCD\n[[ -d \"$USER_HOME/.mycd\" ]] && . $USER_HOME/.mycd/mycd.sh\n" >> $USER_HOME/.zshrc
 
         # OR - Add .dir_bash_history to the GLOBAL env .gitignore, ignore:
         mkdir -p   $USER_HOME/.config/git
+        directory_exists_with_spaces  $USER_HOME/.config/git
         chown -R $SUDO_USER $USER_HOME/.config/git
         touch  $USER_HOME/.config/git/ignore
-        _if_not_contains $USER_HOME/.config/git/ignore  ".dir_bash_history" &&  echo '.dir_bash_history' >> $USER_HOME/.config/git/ignore
-    } else {
-        passed that: mycd is installed
+        file_exists_with_spaces  $USER_HOME/.config/git/ignore
+        # DEBUG=1
+        _if_not_contains $USER_HOME/.config/git/ignore  ".dir_bash_history" ||  echo -e "\n.dir_bash_history" >> $USER_HOME/.config/git/ignore
+        # DEBUG=0
+        
+        local otherignore=$(git config --global core.excludesfile)
+        if [[ -n "${otherignore}" ]] ; then 
+        {
+            local realdir=$(su - $SUDO_USER -c "realpath ")
+            local dirother=$(dirpath  "${otherignore}")
+            local fileother=$(basepath  "${otherignore}")
+            su - $SUDO_USER -c "mkdir -p   ${dirother}"
+            export directory_exists_with_spaces
+            su - $SUDO_USER -c "directory_exists_with_spaces  ${dirother}"
+            chown -R $SUDO_USER "${dirother}"
+            touch  $USER_HOME/.config/git/ignore
+            file_exists_with_spaces  $USER_HOME/.config/git/ignore
+            export _if_not_contains
+            su - $SUDO_USER -c "_if_not_contains $USER_HOME/.config/git/ignore  ".dir_bash_history" ||  echo -e "\n.dir_bash_history" >> $USER_HOME/.config/git/ignore
+        }
+        fi
     }
     fi
     return 0
@@ -949,6 +1005,8 @@ _install_dmgs_list(){
     sketch-70.3-109109.zip|Sketch.app|https://download.sketch.com/sketch-70.3-109109.zip
     Iris-1.2.0-OSX.zip|Iris.app|https://raw.githubusercontent.com/danielng01/product-builds/master/iris/macos/Iris-1.2.0-OSX.zip
     BetterTouchTool.zip|BetterTouchTool.app|https://folivora.ai/releases/BetterTouchTool.zip
+    Options_8.36.76.zip|LogiMgr Installer 8.36.76.app|https://download01.logi.com/web/ftp/pub/techsupport/options/Options_8.36.76.zip
+    tsetup.2.5.7.dmg|Telegram Desktop/Telegram.app|https://updates.tdesktop.com/tmac/tsetup.2.5.7.dmg
     "
    Checking dmgs apps
    while read -r one ; do
@@ -1014,8 +1072,10 @@ _password_simple(){
         else
         {
             echo "${policies}" > temp.xml
-            if _if_not_contains temp.xml "{1,}" ; then
+            if _if_contains temp.xml "{1,}" ; then
             {
+                passed "passwords policy already set to {1,}"
+            } else {
                 passed Reading policies for passwords pwpolicy
                 echo ":dd to delete --> Getting global account policies"
                 echo "press i  to edit  --> {4,} to {1,}.  press esc to exit edit mode"
@@ -1023,14 +1083,13 @@ _password_simple(){
                 echo "${policies}" > temp.xml
                 pwpolicy setaccountpolicies temp.xml
                 rm temp.xml
-            } else {
-                passed "passwords policy already set to {1,}"
             }
             fi
         }
         fi
     }
     fi
+
 # Password simple
 (
 sudo passwd <<< "\\
