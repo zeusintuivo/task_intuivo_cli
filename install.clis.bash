@@ -916,7 +916,7 @@ _install_dmg__64() {
   echo "${CODENAME}";
   echo "Extension:${extension}"
   # local VERSION="$(echo -en "${CODENAME}" | sed 's/RubyMine-//g' | sed 's/.dmg//g' )"
-  # assert not empty "${VERSION}"
+  # enforce_variable_with_value VERSION "${VERSION}"
   # local UNZIPDIR="$(echo -en "${CODENAME}" | sed 's/.dmg//g'| sed 's/-//g')"
   # local UNZIPDIR="$(echo -en "${APPDIR}" | sed 's/.app//g')"
   # echo "$(pwd)"
@@ -926,15 +926,15 @@ _install_dmg__64() {
   # echo "${CODENAME}";
   # echo "${URL}";
   echo "CODENAME: ${CODENAME}"
-  assert not empty "${CODENAME}"
-  assert not empty "${TARGET_URL}"
-  assert not empty "${HOME}"
+  enforce_variable_with_value CODENAME "${CODENAME}"
+  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
+  enforce_variable_with_value HOME "${HOME}"
   echo "UNZIPDIR: ${UNZIPDIR}"
-  assert not empty "${UNZIPDIR}"
+  enforce_variable_with_value UNZIPDIR "${UNZIPDIR}"
   echo "APPDIR: ${APPDIR}"
-  assert not empty "${APPDIR}"
+  enforce_variable_with_value APPDIR "${APPDIR}"
   local DOWNLOADFOLDER="${HOME}/Downloads"
-  assert not empty "${DOWNLOADFOLDER}"
+  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
   directory_exists_with_spaces "${DOWNLOADFOLDER}"
 
   if it_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}" ; then

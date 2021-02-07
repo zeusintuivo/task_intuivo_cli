@@ -3,6 +3,10 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 #
+  export THISSCRIPTCOMPLETEPATH
+  typeset -r THISSCRIPTCOMPLETEPATH="$(realpath $(which $(basename "$0")))"   # § This goes in the FATHER-MOTHER script 
+  export _err
+  typeset -i _err=0
 load_struct_testing_wget(){
     local provider="$HOME/_/clis/execute_command_intuivo_cli/struct_testing"
     [   -e "${provider}"  ] && source "${provider}"
@@ -60,10 +64,12 @@ function _linux_prepare(){
 
   function _trap_on_exit(){
     echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME EXITS ...\033[0m"
-    ls -lad /opt/sublime_text/Packages/Package\ Control.sublime-package
-    tree /opt/sublime_text/Packages/Package\ Control.sublime-package
-    ls -lad $HOME/.config/sublime-text-3/Installed\ Packages/Package\ Control.sublime-package
-    tree $HOME/.config/sublime-text-3/Installed\ Packages/Package\ Control.sublime-package
+    ls -lad /opt/sublime_text/Packages
+    tree /opt/sublime_text/Packages
+    ls -lad $HOME/.config
+    # ls -lad $HOME/.config/sublime-text-3/Installed\ Packages/Package\ Control.sublime-package
+    tree $HOME/.config
+    # tree $HOME/.config/sublime-text-3/Installed\ Packages/Package\ Control.sublime-package
   }
   #trap kill ERR
   trap _trap_on_exit EXIT
@@ -329,14 +335,14 @@ _fedora__64() {
   download_install_package_control
   add_to_applications_list
 exit 0
-    file_exists "
+  file_exists "
     /opt/sublime_text/sublime_text
-    "
+  "
 
-    wait
-    if it_exists "${SUBLIMENAME}"; then
+  wait
+  if it_exists "${SUBLIMENAME}"; then
       rm -f "${SUBLIMENAME}"
-    fi
+  fi
 
     verify_is_installed "subl"
 

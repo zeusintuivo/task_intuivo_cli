@@ -95,10 +95,10 @@ _version() {
   local PATTERN="${2}"
   # THOUGHT:   https://download-cf.jetbrains.com/webstorm/WebStorm-2020.3.dmg
   local CODEFILE="""$(wget --quiet --no-check-certificate  https://www.jetbrains.com/webstorm/ -O -  2>/dev/null )""" # suppress only wget download messages, but keep wget output for variable
-  # assert not empty "${CODEFILE}"
+  # enforce_variable_with_value CODEFILE "${CODEFILE}"
   wait
   local CODELASTESTBUILD=$(echo "${CODEFILE}" | sed s/\</\\n\</g | sed s/\>/\>\\n/g | sed "s/&apos;/\'/g" | sed 's/&nbsp;/ /g' | grep  "New in WebStorm ${PATTERN}" | sed s/\ /\\n/g | tail -1 ) # | grep "What&apos;s New in&nbsp;WebStorm&nbsp;" | sed 's/\;/\;'\\n'/g' | sed s/\</\\n\</g  )
-  assert not empty "${CODELASTESTBUILD}"
+  enforce_variable_with_value CODELASTESTBUILD "${CODELASTESTBUILD}"
 
   local CODENAME=""
   case ${PLATFORM} in
@@ -119,7 +119,7 @@ _version() {
     CODENAME=""
     ;;
   esac
-  assert not empty "${CODENAME}"
+  enforce_variable_with_value CODENAME "${CODENAME}"
   unset PATTERN
   unset PLATFORM
   unset CODEFILE
@@ -134,21 +134,21 @@ _darwin__64() {
   local TARGET_URL="$(echo -en "${CODENAME}" | tail -1)"
   CODENAME="$(basename "${TARGET_URL}" )"
   local VERSION="$(echo -en "${CODENAME}" | sed 's/WebStorm-//g' | sed 's/.dmg//g' )"
-  assert not empty "${VERSION}"
+  enforce_variable_with_value VERSION "${VERSION}"
   local UNZIPDIR="$(echo -en "${CODENAME}" | sed 's/'"${VERSION}"'//g' | sed 's/.dmg//g'| sed 's/-//g')"
   local APPDIR="$(echo -en "${CODENAME}" | sed 's/'"${VERSION}"'//g' | sed 's/.dmg//g'| sed 's/-//g').app"
   # echo "${CODENAME}";
   # echo "${URL}";
   echo "CODENAME: ${CODENAME}"
-  assert not empty "${CODENAME}"
-  assert not empty "${TARGET_URL}"
-  assert not empty "${HOME}"
+  enforce_variable_with_value CODENAME "${CODENAME}"
+  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
+  enforce_variable_with_value HOME "${HOME}"
   echo "UNZIPDIR: ${UNZIPDIR}"
-  assert not empty "${UNZIPDIR}"
+  enforce_variable_with_value UNZIPDIR "${UNZIPDIR}"
   echo "APPDIR: ${APPDIR}"
-  assert not empty "${APPDIR}"
+  enforce_variable_with_value APPDIR "${APPDIR}"
   local DOWNLOADFOLDER="${HOME}/Downloads"
-  assert not empty "${DOWNLOADFOLDER}"
+  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
   directory_exists_with_spaces "${DOWNLOADFOLDER}"
 
   if it_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}" ; then
@@ -206,9 +206,9 @@ _fedora__32() {
   # THOUGHT                          WebStorm-4.3.3.24545.i386.rpm
   local TARGET_URL="https://download-cf.jetbrains.com/webstorm/${CODENAME}"
   file_exists_with_spaces $USER_HOME/Downloads
-  assert not empty "${CODENAME}"
-  assert not empty "${TARGET_URL}"
-  assert not empty "${USER_HOME}"
+  enforce_variable_with_value CODENAME "${CODENAME}"
+  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
   cd $USER_HOME/Downloads
   _download "${TARGET_URL}" $USER_HOME/Downloads  ${CODENAME}
   file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}"
@@ -244,11 +244,11 @@ _fedora__64() {
   local TARGET_URL="$(echo "${CODENAME}" | tail -1)"
   CODENAME="$(basename "${TARGET_URL}" )"
   local UNZIPDIR="$(echo "${CODENAME}" | sed 's/.tar.gz//g' )"
-  assert not empty "${CODENAME}"
-  assert not empty "${TARGET_URL}"
-  assert not empty "${HOME}"
-  assert not empty "${USER_HOME}"
-  assert not empty "${UNZIPDIR}"
+  enforce_variable_with_value CODENAME "${CODENAME}"
+  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
+  enforce_variable_with_value HOME "${HOME}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  enforce_variable_with_value UNZIPDIR "${UNZIPDIR}"
 
   if  it_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}" ; then
   {

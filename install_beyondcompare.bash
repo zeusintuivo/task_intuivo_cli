@@ -83,8 +83,8 @@ _version() {
   [[ -z "${CODELASTESTBUILD}" ]] && failed "Beyond Compare Version not found! :${CODELASTESTBUILD}:"
 
 
-  # assert not empty "${USER_HOME}"
-  # assert not empty "${CODELASTESTBUILD}"
+  # enforce_variable_with_value USER_HOME "${USER_HOME}"
+  # enforce_variable_with_value CODELASTESTBUILD "${CODELASTESTBUILD}"
 
   local CODENAME="${CODELASTESTBUILD}"
   echo "${CODELASTESTBUILD}"

@@ -163,7 +163,7 @@ _fedora__64() {
     local WEBPAGE_TO_READ_VERSION_NUMBER=$(curl -sSLo -  https://code-industry.net/get-masterpdfeditor/  2>&1;) # suppress only wget download messages, but keep wget output for variable
     local VERSION_NUMBER=$(echo $WEBPAGE_TO_READ_VERSION_NUMBER | sed s/\</\\n\</g | grep "now available for Linux" | sed s/\>/\>\\n/g | sed s/\ /\\n/g | head -3 | tail -1)
     local ARCHITECTURE=$(uname -m)
-    assert not empty "${ARCHITECTURE}"
+    enforce_variable_with_value ARCHITECTURE "${ARCHITECTURE}"
     wait
     [[ -z "${VERSION_NUMBER}" ]] && failed "Master PDF Version not found! :${VERSION_NUMBER}:"
 
@@ -191,10 +191,10 @@ _fedora__64() {
   # 17
   # $ echo $VERSION
   # 17 (Beefy Miracle)
-  assert not empty "${ID}"
-  assert not empty "${VERSION_ID}"
-  assert not empty "${USER_HOME}"
-  assert not empty "${VERSION_NUMBER}"
+  enforce_variable_with_value ID "${ID}"
+  enforce_variable_with_value VERSION_ID "${VERSION_ID}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  enforce_variable_with_value VERSION_NUMBER "${VERSION_NUMBER}"
   local TARGET_DOWNLOAD_PATH="$USER_HOME/Downloads/${LASTEST_DOWNLOAD_FILE}"
   function download_part() {
     if  it_exists_with_spaces "${TARGET_DOWNLOAD_PATH}" ; then

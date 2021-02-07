@@ -266,18 +266,18 @@ _fedora__64() {
   # 17
   # $ echo $VERSION
   # 17 (Beefy Miracle)
-  assert not empty "${ID}"
-  assert not empty "${VERSION_ID}"
-  assert not empty "${USER_HOME}"
-  assert not empty "${LASTEST_VERSION}"
-  assert not empty "${ARCHITECTURE}"
+  enforce_variable_with_value ID "${ID}"
+  enforce_variable_with_value VERSION_ID "${VERSION_ID}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  enforce_variable_with_value LASTEST_VERSION "${LASTEST_VERSION}"
+  enforce_variable_with_value ARCHITECTURE "${ARCHITECTURE}"
 
 
   file_exists_with_spaces "${USER_HOME}/Downloads"
 
   local folder_date=$(date +"%Y%m%d")
   _assure_success
-  assert not empty "${folder_date}"
+  enforce_variable_with_value folder_date "${folder_date}"
   local download_folder=$(echo  "${USER_HOME}/Downloads/${folder_date}")
 
   mkdir -p "${download_folder}"
@@ -315,7 +315,7 @@ _fedora__64() {
   _trap_try_start
   local CODENAME=$(ls -1 "${download_folder}" | tail -1)
   _trap_catch_check
-  assert not empty "${CODENAME}"
+  enforce_variable_with_value CODENAME "${CODENAME}"
 
   Message Downloaded filename: "${CODENAME}"
   Showing ls -1 "${download_folder}"
