@@ -103,12 +103,12 @@ function execute_as_sudo(){
     {
         if [ -e "./$THISSCRIPTCOMPLETEPATH" ] ; then
         {
-          sudo "./$THISSCRIPTCOMPLETEPATH"
+          sudo "./$THISSCRIPTCOMPLETEPATH" "${*}"
         }
         elif ( command -v "$THISSCRIPTCOMPLETEPATH" >/dev/null 2>&1 );  then
         {
           # echo "sudo sudo sudo "
-          sudo "$THISSCRIPTCOMPLETEPATH"
+          sudo "$THISSCRIPTCOMPLETEPATH" "${*}"
         }
         else
         {

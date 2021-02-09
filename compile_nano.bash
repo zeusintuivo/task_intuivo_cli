@@ -12,8 +12,8 @@ load_struct_testing_wget(){
 load_struct_testing_wget
 
 function _linux_prepare(){
-  export  THISSCRIPTNAME
-  typeset -gr THISSCRIPTNAME="$(pwd)/$(basename "$0")"
+  export  THISSCRIPTCOMPLETEPATH
+  typeset -gr THISSCRIPTCOMPLETEPATH="$(pwd)/$(basename "${BASH_SOURCE[0]}")"
   export _err
   typeset -i _err=0
   load_execute_boot_basic_with_sudo(){
@@ -59,7 +59,7 @@ function _linux_prepare(){
   fi
 
   function _trap_on_exit(){
-    echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME EXITS ...\033[0m"
+    echo -e "\033[01;7m*** TRAP $THISSCRIPTCOMPLETEPATH EXITS ...\033[0m"
 
   }
   #trap kill ERR
