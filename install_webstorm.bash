@@ -4,7 +4,7 @@
 #
 #
   export THISSCRIPTCOMPLETEPATH 
-  typeset -r THISSCRIPTCOMPLETEPATH="$(pwd)/$(basename "$0")"   # § This goes in the FATHER-MOTHER script 
+  typeset -r THISSCRIPTCOMPLETEPATH="$(basename "$0")"   # § This goes in the FATHER-MOTHER script 
   export _err 
   typeset -i _err=0 
 
@@ -132,7 +132,7 @@ _darwin__64() {
   local DOWNLOADFOLDER="${HOME}/Downloads"
   enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
   directory_exists_with_spaces "${DOWNLOADFOLDER}"
-
+  # _do_not_downloadtwice
   if it_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}" ; then
   {
     file_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
@@ -233,7 +233,7 @@ _fedora__64() {
   enforce_variable_with_value HOME "${HOME}"
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   enforce_variable_with_value UNZIPDIR "${UNZIPDIR}"
-
+  # _do_not_downloadtwice
   if  it_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}" ; then
   {
     file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}"

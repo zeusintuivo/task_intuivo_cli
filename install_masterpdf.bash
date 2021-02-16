@@ -63,7 +63,9 @@ load_struct_testing_wget(){
 } # end load_struct_testing_wget
 load_struct_testing_wget
 
+enforce_variable_with_value SUDO_USER "${SUDO_USER}"
 passed Caller user identified:$SUDO_USER
+enforce_variable_with_value USER_HOME "${USER_HOME}"
 passed Home identified:$USER_HOME
 file_exists_with_spaces "$USER_HOME"
 
