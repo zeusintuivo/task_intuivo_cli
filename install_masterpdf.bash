@@ -231,7 +231,9 @@ _fedora__64() {
     {
       download_part
       install_rpm_part
-    } elif [[ "${msg}" == *"Failed dependencies"* ]] && [[ "${msg}" == *"is needed"* ]] ; then  {
+    } 
+    elif [[ "${msg}" == *"Failed dependencies"* ]] && [[ "${msg}" == *"is needed"* ]] ; then  
+    {
 
       echo "Suggested Fix "
       echo "# when error error: Failed dependencies:
@@ -242,7 +244,9 @@ _fedora__64() {
             # sudo dnf -y install qt5-devel qt-creator qt5-qtbase qt5-qtbase-devel
             # rpm again"
       failed "ERROR MSG:\n ${msg}"
-    } else {
+    } 
+    else 
+    {
       passed "Seems there were no errors"
     }
     fi

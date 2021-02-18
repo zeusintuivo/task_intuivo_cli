@@ -160,49 +160,18 @@ _centos__64() {
 
 _fedora__64() {
   local CODENAME=$(_version "linux" "bcompare*.*.*.*.x86_64.rpm")
+  enforce_variable_with_value CODENAME "${CODENAME}"
   # THOUGHT  https://www.scootersoftware.com/bcompare-4.3.3.24545.x86_64.rpm
   local TARGET_URL="https://www.scootersoftware.com/${CODENAME}"
-  if  it_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}" ; then
-  {
-    file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}"
-  }
-  else
-  {
-    file_exists_with_spaces $USER_HOME/Downloads
-    cd $USER_HOME/Downloads
-    echo _download "${TARGET_URL}" "${USER_HOME}/Downloads" "${CODENAME}"
-    _download "${TARGET_URL}" "${USER_HOME}/Downloads" "${CODENAME}"
-    file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}"
-    echo  _download "${TARGET_URL}" "${USER_HOME}/Downloads" "${CODENAME}"
-  }
-  fi
+  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
+  
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  
+  local DOWNLOADFOLDER="${USER_HOME}/Downloads"
+  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+  _install_rpm "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
 
-  ensure tar or "Canceling Install. Could not find tar command to execute unzip"
-  ensure awk or "Canceling Install. Could not find awk command to execute unzip"
-  ensure pv or "Canceling Install. Could not find pv command to execute unzip"
-  ensure du or "Canceling Install. Could not find du command to execute unzip"
-  ensure gzip or "Canceling Install. Could not find gzip command to execute unzip"
-  ensure gio or "Canceling Install. Could not find gio command to execute gio"
-  ensure update-mime-database or "Canceling Install. Could not find update-mime-database command to execute update-mime-database"
-  ensure update-desktop-database or "Canceling Install. Could not find update-desktop-database command to execute update"
-  ensure touch or "Canceling Install. Could not find touch command to execute touch"
-
-  # provide error handling , once learned goes here. LEarn under if, once learned here.
-  # Start loop while ERROR flag in case needs to try again, based on error
-  cd $USER_HOME/Downloads
-  _try "rpm --import https://www.scootersoftware.com/RPM-GPG-KEY-scootersoftware"
-  local msg=$(_try "rpm -ivh \"$USER_HOME/Downloads/${CODENAME}\"" )
-  local ret=$?
-  if [ $ret -gt 0 ] ; then
-  {
-    failed "${ret}:${msg}"
-    # add error handling knowledge while learning.
-  }
-  else
-  {
-    passed Install with RPM success!
-  }
-  fi
   ensure bcompare or "Failed to install Beyond Compare"
   rm -f "$USER_HOME/Downloads/${CODENAME}"
   file_does_not_exist_with_spaces "$USER_HOME/Downloads/${CODENAME}"

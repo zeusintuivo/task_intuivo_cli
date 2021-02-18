@@ -121,28 +121,6 @@ _extract_version(){
 	# | grep "What&apos;s New in&nbsp;WebStorm&nbsp;" | sed 's/\;/\;'\\n'/g' | sed s/\</\\n\</g  )
 } # end _extract_version
 
-_do_not_downloadtwice(){
-	local TARGET_URL="${1}"
-	enforce_parameter_with_value 1 TARGET_URL "${TARGET_URL}" "https://download.teamviewer.com/download/linux/teamviewer.x86_64.rpm"
-	local DOWNLOADFOLDER="${2}"
-	enforce_parameter_with_value 2 DOWNLOADFOLDER "${DOWNLOADFOLDER}" "$USER_HOME/Downloads"
-	local CODENAME="${3}"
-	enforce_parameter_with_value 3 CODENAME "${CODENAME}" "teamviewer.x86_64.rpm"
-	
-	if it_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}" ; then
-  {
-    file_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
-  }
-  else
-  {
-    cd "${DOWNLOADFOLDER}"
-    _download "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
-    file_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
-  }
-  fi
-  return 0
-} # end _do_not_downloadtwice
-
 _fedora__64() {
 	raise_to_sudo_and_user_home
 	[ $? -gt 0 ] && failed to raise_to_sudo_and_user_home 
