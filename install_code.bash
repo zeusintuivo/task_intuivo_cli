@@ -351,7 +351,17 @@ EOF
   ensure rpm or "Canceling Install. Could not find rpm command to execute install"
   Message rpm -ivh "${download_folder}/${CODENAME}"
   _trap_try_start # _trap_catch_check
-  msg=$(rpm -ivh "${download_folder}/${CODENAME}")
+  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  local TARGET_URL=https://az764295.vo.msecnd.net/insider/192c817fd350bcbf3caecae22a45ec39bae78516/code-insiders-1.54.0-1613712429.el7.x86_64.rpm
+  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
+  local CODENAME=$(basename "${TARGET_URL}")
+  enforce_variable_with_value CODENAME "${CODENAME}"
+  local DOWNLOADFOLDER="${USER_HOME}/Downloads"
+  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+  msg=$(_install_rpm "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0)
+  # msg=$(rpm -ivh "${download_folder}/${CODENAME}")
   _trap_catch_check
   Message "${msg}"
 }
