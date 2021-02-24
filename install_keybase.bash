@@ -3,10 +3,10 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 #
-  export THISSCRIPTCOMPLETEPATH 
-  typeset -gr THISSCRIPTCOMPLETEPATH="$(basename "$0")"   # § This goes in the FATHER-MOTHER script 
-  export _err 
-  typeset -i _err=0 
+  export THISSCRIPTCOMPLETEPATH
+  typeset -gr THISSCRIPTCOMPLETEPATH="$(basename "$0")"   # § This goes in the FATHER-MOTHER script
+  export _err
+  typeset -i _err=0
 
 load_struct_testing_wget(){
     local provider="$HOME/_/clis/execute_command_intuivo_cli/struct_testing"

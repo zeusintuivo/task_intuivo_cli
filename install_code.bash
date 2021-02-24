@@ -360,7 +360,7 @@ EOF
   local DOWNLOADFOLDER="${USER_HOME}/Downloads"
   enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
   _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
-  msg=$(_install_rpm "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0)
+  msg=$(_install_rpm "${TARGET_URL}" "${DOWNLOADFOLDERgffffff}"  "${CODENAME}" 0)
   # msg=$(rpm -ivh "${download_folder}/${CODENAME}")
   _trap_catch_check
   Message "${msg}"
