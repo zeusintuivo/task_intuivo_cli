@@ -3,10 +3,10 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 #
-  export THISSCRIPTCOMPLETEPATH 
-  typeset -gr THISSCRIPTCOMPLETEPATH="$(basename "$0")"   # § This goes in the FATHER-MOTHER script 
-  export _err 
-  typeset -i _err=0 
+  export THISSCRIPTCOMPLETEPATH
+  typeset -gr THISSCRIPTCOMPLETEPATH="$(basename "$0")"   # § This goes in the FATHER-MOTHER script
+  export _err
+  typeset -i _err=0
 
 load_struct_testing_wget(){
     local provider="$HOME/_/clis/execute_command_intuivo_cli/struct_testing"
@@ -26,7 +26,7 @@ _fedora__64() {
 	sudo_it
 	[ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  local TARGET_URL=https://az764295.vo.msecnd.net/stable/622cb03f7e070a9670c94bae1a45d78d7181fbd4/code-1.53.2-1613044734.el7.x86_64.rpm
+  local TARGET_URL=https://az764295.vo.msecnd.net/insider/04770364fdc1bebeca9d1a257df2cacce06b35d6/code-insiders-1.55.0-1614959504.el7.x86_64.rpm
   enforce_variable_with_value TARGET_URL "${TARGET_URL}"
 	local CODENAME=$(basename "${TARGET_URL}")
 	enforce_variable_with_value CODENAME "${CODENAME}"
