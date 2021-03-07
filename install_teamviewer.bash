@@ -3,10 +3,10 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 #
-  export THISSCRIPTCOMPLETEPATH 
-  typeset -gr THISSCRIPTCOMPLETEPATH="$(basename "$0")"   # § This goes in the FATHER-MOTHER script 
-  export _err 
-  typeset -i _err=0 
+  export THISSCRIPTCOMPLETEPATH
+  typeset -gr THISSCRIPTCOMPLETEPATH="$(basename "$0")"   # § This goes in the FATHER-MOTHER script
+  export _err
+  typeset -i _err=0
 
 function raise_to_sudo_and_user_home() {
   # export  THISSCRIPTCOMPLETEPATH
@@ -93,7 +93,7 @@ _downloadfile_link(){
     CODENAME=""
     ;;
   esac
-  echo "${CODENAME}" 
+  echo "${CODENAME}"
   return 0
 } # end _downloadfile_link
 
@@ -117,14 +117,14 @@ _version() {
 } # end _version
 
 _extract_version(){
-	echo "${*}" | sed s/\</\\n\</g | sed s/\>/\>\\n/g | sed "s/&apos;/\'/g" | sed 's/&nbsp;/ /g' | grep  "New in WebStorm ${PATTERN}" | sed s/\ /\\n/g | tail -1  
+	echo "${*}" | sed s/\</\\n\</g | sed s/\>/\>\\n/g | sed "s/&apos;/\'/g" | sed 's/&nbsp;/ /g' | grep  "New in WebStorm ${PATTERN}" | sed s/\ /\\n/g | tail -1
 	# | grep "What&apos;s New in&nbsp;WebStorm&nbsp;" | sed 's/\;/\;'\\n'/g' | sed s/\</\\n\</g  )
 } # end _extract_version
 
 
 _fedora__64() {
 	raise_to_sudo_and_user_home
-	[ $? -gt 0 ] && failed to raise_to_sudo_and_user_home 
+	[ $? -gt 0 ] && failed to raise_to_sudo_and_user_home
 	# [ $? -gt 0 ] && exit 1
   enforce_variable_with_value USER_HOME "${USER_HOME}"
 	local CODENAME=teamviewer.x86_64.rpm
