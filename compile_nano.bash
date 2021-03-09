@@ -408,7 +408,7 @@ _fedora__64() {
   chmod 744 install.sh
   ./install.sh
   su - "${SUDO_USER}" -c "${USER_HOME}/install.sh"
-  directory_exists_with_spaces "/root/.nanorc"
+  # directory_exists_with_spaces "/root/.nanorc"
   directory_exists_with_spaces "${USER_HOME}/.nanorc"
   return 0
 } # end _fedora__64
