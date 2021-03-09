@@ -387,18 +387,18 @@ _fedora__64() {
   [ $? -gt 0 ] && failed to ./configure
   make -j3
   [ $? -gt 0 ] && failed to make
-  sudo make install
+  make install
   [ $? -gt 0 ] && failed to make install
 
   cd "${DOWNLOADFOLDER}"
   rm -rf nano-*
-  sudo mv  /usr/bin/nano /usr/bin/nano_old
-  sudo mv /usr/local/bin/nano /usr/local/bin/nano_old
-  sudo mv /usr/local/bin/nano_old /usr/local/bin/nano
+  mv  /usr/bin/nano /usr/bin/nano_old
+  mv /usr/local/bin/nano /usr/local/bin/nano_old
+  mv /usr/local/bin/nano_old /usr/local/bin/nano
   # Make sure we are using nano we compiled and not the boring system nano
-  nano --version
-  [[ "$(nano --version)" == "${VERSION}" ]] && passed version is new and correct ${VERSION}
-  [[ "$(nano --version)" != "${VERSION}" ]] && failed version is wrong one  "$(nano --version)"
+  /usr/local/bin/nano --version
+  [[ "$(nano --version | head -1)" == *"${VERSION}"* ]] && passed version is new and correct ${VERSION}
+  [[ "$(nano --version | head -1)" != *"${VERSION}"* ]] && failed version is wrong one  "$(nano --version | head -1)"
   # should match 5.2
   which nano
   # REF: https://github.com/scopatz/nanorc
