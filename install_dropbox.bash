@@ -23,16 +23,15 @@ function sudo_it() {
 } # end sudo_it
 
 _get_dowload_target(){
-  # trap "echo \"${CODELASTESTBUILD}\" ; exit 1;" ERR
   # Sample call:
   #
-  #  _get_dowload_target rpm 64
-  #  _get_dowload_target rpm 32
-  #  _get_dowload_target deb 32
+  #  _get_dowload_target "https://linux.dropbox.com/packages/fedora/" rpm 64
+  #  _get_dowload_target "https://linux.dropbox.com/packages/fedora/" rpm 32
+  #  _get_dowload_target "https://linux.dropbox.com/packages/debian/" deb 32
   #
   # DEBUG=1
   local URL="${1}"   #           param order    varname    varvalue     sample_value
-  enforce_parameter_with_value           1        URL      "${URL}"     "https://www.dropbox.com/install-linux"
+  enforce_parameter_with_value           1        URL      "${URL}"     "https://linux.dropbox.com/packages/fedora/"
   #
   #
   local PLATFORM="${2}"  #       param order    varname     varvalue        valid_options
@@ -50,19 +49,16 @@ _get_dowload_target(){
   enforce_variable_with_value CODEFILE "${CODEFILE}"
   #
   #
-  local CODELASTESTBUILD=$(_extract_version "${CODEFILE}") # | grep "${PLATFORM}" |  grep "${BITS}")
+  local CODELASTESTBUILD=$(_extract_version "${CODEFILE}")
   enforce_variable_with_value CODEFILE "${CODEFILE}"
   local TARGETNAME=$(echo -n "${CODELASTESTBUILD}" | grep "${PLATFORM}" | grep "${PLATFORM}" |  tail -1)
   enforce_variable_with_value TARGETNAME "${TARGETNAME}"
-  echo -n "https://linux.dropbox.com/packages/fedora/${TARGETNAME}"
+  echo -n "${URL}/${TARGETNAME}"
   return 0
 } # end _get_dowload_target
 
 _extract_version(){
-  # cat .tmp.html
   echo "${*}" | sed s/\>/\>\\n/g | sed "s/&apos;/\'/g" | sed 's/&nbsp;/ /g'  | grep -v "<a" | sort | sed s/\</\\n\</g | grep -v "</a"
-  # echo "${*}" | sed s/\</\\n\</g | sed s/\>/\>\\n/g | sed "s/&apos;/\'/g" | sed 's/&nbsp;/ /g' | grep  "New in WebStorm ${PATTERN}" | sed s/\ /\\n/g | tail -1
-  # | grep "What&apos;s New in&nbsp;WebStorm&nbsp;" | sed 's/\;/\;'\\n'/g' | sed s/\</\\n\</g  )
 } # end _extract_version
 
 _fedora__64() {
