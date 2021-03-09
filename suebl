@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+#
+#
+subl "$(realpath "$(which "${1}")")"
+

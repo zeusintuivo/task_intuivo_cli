@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+#
+#
+LIGHTGREEN="\033[38;5;83m"
+LIGHTPINK="\033[1;204m"
+LIGHTYELLOW="\033[38;5;227m"
+RESET="\033[0m"
+CERO="\033[01;0m"
+
+echo "${*}"
+echo -e "${LIGHTGREEN} ✔ ${LIGHTPINK} ${*}  ${RESET}"
+pwd
+
+if [ -d ./packages/core ] ; then
+{
+  [ ! -f ./dev.sh ] && cp /home/salba/_/work/pixum/projects/pixum-web/breakage/dev_lerna.sh ./dev.sh
+  cd ./packages/core
+  mkdir -p public
+  cd ./public
+  current_folder_number="$(echo "$(cut -d'-' -f1 <<<"$(basename $(pwd))")")"
+  valet link "${current_folder_number}"
+  valet secure "${current_folder_number}"
+  cd ..
+
+  cd ..
+  cd ..
+}
+else
+{
+  [ ! -f ./dev.sh ] && cp /home/salba/_/work/pixum/projects/pixum-web/0001-initial-commit-a8cfc75a/dev.sh ./dev.sh
+  mkdir -p public
+  cd ./public
+  current_folder_number="$(echo "$(cut -d'-' -f1 <<<"$(basename $(pwd))")")"
+  valet link "${current_folder_number}"
+  valet secure "${current_folder_number}"
+  cd ..
+}
+fi
+
+# [ -f ./dev.sh ] && BUILDONLY=1 REMOVECACHE=1 ./dev.sh
+
+pwd

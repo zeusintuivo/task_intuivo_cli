@@ -858,54 +858,56 @@ return 0
 } # end _setup_clis
 
 _setup_mycd(){
-    if it_does_not_exist_with_spaces $USER_HOME/.mycd  ; then
-    {
-        # My CD
-        cd $USER_HOME
-        su - $SUDO_USER -c "yes | git clone https://gist.github.com/jesusalc/b14a57ec9024ff1a3889be6b2c968bb7 $USER_HOME/.mycd"
-    } else {
-        passed that: mycd is in home folder
+  if it_does_not_exist_with_spaces "${USER_HOME}/.mycd"  ; then
+  {
+    # My CD
+    cd "${USER_HOME}"
+    su - "${SUDO_USER}" -c "yes | git clone https://gist.github.com/jesusalc/b14a57ec9024ff1a3889be6b2c968bb7 \"${USER_HOME}/.mycd\""
+  }
+  else
+  {
+    passed that: mycd is in home folder
 
-        chown -R $SUDO_USER  $USER_HOME/.mycd
-        chmod +x  $USER_HOME/.mycd/mycd.sh
+    chown -R "${SUDO_USER}"  "${USER_HOME}/.mycd"
+    chmod +x  "${USER_HOME}/.mycd/mycd.sh"
 
-        # Add to MAC Bash:
-        # DEBUG=1
-        _if_not_contains "$USER_HOME/.bash_profile" ".mycd/mycd.sh" || echo -e "\n# MYCD\n[[ -d \"$USER_HOME/.mycd\" ]] && . $USER_HOME/.mycd/mycd.sh\n" >> $USER_HOME/.bash_profile
-        # DEBUG=0
-        # Add to Linux Bash:
-
-        # _if_not_contains "$USER_HOME/.bashrc" ".mycd/mycd.sh" || echo -e "\n# MYCD\n[[ -d \"$USER_HOME/.mycd\" ]] && . $USER_HOME/.mycd/mycd.sh\n" >> $USER_HOME/.bashrc
-
-        # Add to Zsh:
-        # _if_not_contains "$USER_HOME/.zshrc" ".mycd/mycd.sh" ||  echo -e "\n# MYCD\n[[ -d \"$USER_HOME/.mycd\" ]] && . $USER_HOME/.mycd/mycd.sh\n" >> $USER_HOME/.zshrc
-
-        # OR - Add .dir_bash_history to the GLOBAL env .gitignore, ignore:
-        mkdir -p   $USER_HOME/.config/git
-        directory_exists_with_spaces  $USER_HOME/.config/git
-        chown -R $SUDO_USER $USER_HOME/.config/git
-        touch  $USER_HOME/.config/git/ignore
-        file_exists_with_spaces  $USER_HOME/.config/git/ignore
+    # Add to MAC Bash:
     # DEBUG=1
-        _if_not_contains $USER_HOME/.config/git/ignore  ".dir_bash_history" ||  echo -e "\n.dir_bash_history" >> $USER_HOME/.config/git/ignore
-        # DEBUG=0
+    _if_not_contains "${USER_HOME}/.bash_profile" ".mycd/mycd.sh" || echo -e "\n# MYCD\n[[ -d \"${USER_HOME}/.mycd\" ]] && . ${USER_HOME}/.mycd/mycd.sh\n" >> "${USER_HOME}/.bash_profile"
+    # DEBUG=0
+    # Add to Linux Bash:
 
-        local otherignore=$(git config --global core.excludesfile)
-        if [[ -n "${otherignore}" ]] ; then
-        {
-          local realdir=$(su - $SUDO_USER -c "realpath  ${otherignore}")
-            local dirother=$(dirname  "${realdir}")
+    # _if_not_contains "$USER_HOME/.bashrc" ".mycd/mycd.sh" || echo -e "\n# MYCD\n[[ -d \"$USER_HOME/.mycd\" ]] && . $USER_HOME/.mycd/mycd.sh\n" >> $USER_HOME/.bashrc
+
+    # Add to Zsh:
+    # _if_not_contains "$USER_HOME/.zshrc" ".mycd/mycd.sh" ||  echo -e "\n# MYCD\n[[ -d \"$USER_HOME/.mycd\" ]] && . $USER_HOME/.mycd/mycd.sh\n" >> $USER_HOME/.zshrc
+
+    # OR - Add .dir_bash_history to the GLOBAL env .gitignore, ignore:
+    mkdir -p   "${USER_HOME}/.config/git"
+    directory_exists_with_spaces  "${USER_HOME}/.config/git"
+    chown -R "${SUDO_USER}" "${USER_HOME}/.config/git"
+    touch  "${USER_HOME}/.config/git/ignore"
+    file_exists_with_spaces  "${USER_HOME}/.config/git/ignore"
+    # DEBUG=1
+    _if_not_contains "${USER_HOME}/.config/git/ignore"  ".dir_bash_history" ||  echo -e "\n.dir_bash_history" >> "${USER_HOME}/.config/git/ignore"
+    # DEBUG=0
+
+    local otherignore=$(git config --global core.excludesfile)
+    if [[ -n "${otherignore}" ]] ; then
+    {
+      local realdir=$(su - $SUDO_USER -c "realpath  ${otherignore}")
+      local dirother=$(dirname  "${realdir}")
       mkdir -p   "${dirother}"
       directory_exists_with_spaces "${dirother}"
-      chown -R $SUDO_USER "${dirother}"
+      chown -R "${SUDO_USER}" "${dirother}"
       touch "${realdir}"
       file_exists_with_spaces "${realdir}"
       _if_not_contains "${realdir}"  ".dir_bash_history" ||  echo -e "\n.dir_bash_history" >> "${realdir}"
-        }
-        fi
     }
     fi
-    return 0
+  }
+  fi
+  return 0
 } # end _setup_mycd
 
 _install_dmg__64() {
@@ -917,7 +919,7 @@ _install_dmg__64() {
   echo "${CODENAME}";
   echo "Extension:${extension}"
   # local VERSION="$(echo -en "${CODENAME}" | sed 's/RubyMine-//g' | sed 's/.dmg//g' )"
-  # assert not empty "${VERSION}"
+  # enforce_variable_with_value VERSION "${VERSION}"
   # local UNZIPDIR="$(echo -en "${CODENAME}" | sed 's/.dmg//g'| sed 's/-//g')"
   # local UNZIPDIR="$(echo -en "${APPDIR}" | sed 's/.app//g')"
   # echo "$(pwd)"
@@ -927,15 +929,15 @@ _install_dmg__64() {
   # echo "${CODENAME}";
   # echo "${URL}";
   echo "CODENAME: ${CODENAME}"
-  assert not empty "${CODENAME}"
-  assert not empty "${TARGET_URL}"
-  assert not empty "${HOME}"
+  enforce_variable_with_value CODENAME "${CODENAME}"
+  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
+  enforce_variable_with_value HOME "${HOME}"
   echo "UNZIPDIR: ${UNZIPDIR}"
-  assert not empty "${UNZIPDIR}"
+  enforce_variable_with_value UNZIPDIR "${UNZIPDIR}"
   echo "APPDIR: ${APPDIR}"
-  assert not empty "${APPDIR}"
+  enforce_variable_with_value APPDIR "${APPDIR}"
   local DOWNLOADFOLDER="${HOME}/Downloads"
-  assert not empty "${DOWNLOADFOLDER}"
+  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
   directory_exists_with_spaces "${DOWNLOADFOLDER}"
 
   if it_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}" ; then
@@ -951,9 +953,9 @@ _install_dmg__64() {
   fi
   if  it_exists_with_spaces "/Applications/${APPDIR}" ; then
   {
-      echo Remove installed "/Applications/${APPDIR}"
-      sudo rm -rf  "/Applications/${APPDIR}"
-      directory_does_not_exist_with_spaces  "/Applications/${APPDIR}"
+    echo Remove installed "/Applications/${APPDIR}"
+    sudo rm -rf  "/Applications/${APPDIR}"
+    directory_does_not_exist_with_spaces  "/Applications/${APPDIR}"
   }
   fi
   if [[ -n "${extension}" ]] && [[ "${extension}"  == "zip" ]] ; then
@@ -1011,38 +1013,40 @@ _install_dmgs_list(){
   Inkscape-1.0.2.dmg|Inkscape/Inkscape.app|https://media.inkscape.org/dl/resources/file/Inkscape-1.0.2.dmg
   LittleSnitch-4.6.dmg|Little Snitch 4.6/Little Installer.app|https://www.obdev.at/ftp/pub/Products/littlesnitch/LittleSnitch-4.6.dmg
   "
-   Checking dmgs apps
-   while read -r one ; do
-   {
+  Checking dmgs apps
+  while read -r one ; do
+  {
     if [[ -n "${one}" ]] ; then
     {
 
-    target_name="$(echo "${one}" | cut -d'|' -f1)"
-    extension="$(echo "${target_name}" | rev | cut -d'.' -f 1 | rev)"
-    target_app="$(echo "${one}" | cut -d'|' -f2)"
-    app_name="$(echo "$(basename "${target_app}")")"
-    target_url="$(echo "${one}" | cut -d'|' -f3-)"
-    if [[ -n "${target_name}" ]] ; then
-    {
-      if [[ -n "${target_url}" ]] ; then
+      target_name="$(echo "${one}" | cut -d'|' -f1)"
+      extension="$(echo "${target_name}" | rev | cut -d'.' -f 1 | rev)"
+      target_app="$(echo "${one}" | cut -d'|' -f2)"
+      app_name="$(echo "$(basename "${target_app}")")"
+      target_url="$(echo "${one}" | cut -d'|' -f3-)"
+      if [[ -n "${target_name}" ]] ; then
       {
-        if [[ ! -d "/Applications/${app_name}" ]] ; then
-      {
-          Installing "${app_name}"
-        _install_dmg__64 "${target_name}" "${target_app}" "${target_url}"
-      } else {
-          passed  "/Applications/${app_name}"  --skipping already installed
+        if [[ -n "${target_url}" ]] ; then
+        {
+          if [[ ! -d "/Applications/${app_name}" ]] ; then
+          {
+            Installing "${app_name}"
+            _install_dmg__64 "${target_name}" "${target_app}" "${target_url}"
+          }
+          else
+          {
+            passed  "/Applications/${app_name}"  --skipping already installed
+          }
+          fi
         }
         fi
       }
       fi
     }
     fi
-    }
-    fi
-   }
-   done <<< "${installlist}"
-   return 0
+  }
+  done <<< "${installlist}"
+  return 0
 } # end _install_dmgs_list
 
 _password_simple(){
@@ -1078,7 +1082,9 @@ _password_simple(){
       if _if_contains temp.xml "{1,}" ; then
       {
         passed "passwords policy already set to {1,}"
-      } else {
+      }
+      else
+      {
         passed Reading policies for passwords pwpolicy
         echo ":dd to delete --> Getting global account policies"
         echo "press i  to edit  --> {4,} to {1,}.  press esc to exit edit mode"
@@ -1152,14 +1158,14 @@ function is_not_installed (){
 } # end is_not_installed
 
 _ubuntu__64() {
-    # debian sudo usermod -aG sudo $SUDO_USER
-    # chown $SUDO_USER:$SUDO_USER -R /home
-    # sudo groupadd docker
-    # sudo usermod -aG docker $SUDO_USER
+  # debian sudo usermod -aG sudo $SUDO_USER
+  # chown $SUDO_USER:$SUDO_USER -R /home
+  # sudo groupadd docker
+  # sudo usermod -aG docker $SUDO_USER
 
-    COMANDDER="apt install -y"
-    _checka_tools_commander
-    _configure_git
+  COMANDDER="apt install -y"
+  _checka_tools_commander
+  _configure_git
   _install_npm_utils
   _install_nvm
   _install_nvm_version
@@ -1186,19 +1192,19 @@ _ubuntu__64() {
   # _password_simple
   # _password_simple2
 
-    if it_does_not_exist_with_spaces /etc/apt/sources.list.d/cloudfoundry-cli.list ; then
-    {
-        Installing cloudfoundry cf 7
-        wget -q -O - https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | apt-key add -
-        echo "deb https://packages.cloudfoundry.org/debian stable main" | sudo tee /etc/apt/sources.list.d/cloudfoundry-cli.list
-        echo  ...then, update your local package index, then finally install the cf CLI
-        apt update -y
-        $COMANDDER cf-cli
-        snap install cf-cli
-    }
-    fi
-    chown $SUDO_USER -R $USER_HOME/.cf
-    verify_is_installed cf
+  if it_does_not_exist_with_spaces /etc/apt/sources.list.d/cloudfoundry-cli.list ; then
+  {
+    Installing cloudfoundry cf 7
+    wget -q -O - https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | apt-key add -
+    echo "deb https://packages.cloudfoundry.org/debian stable main" | sudo tee /etc/apt/sources.list.d/cloudfoundry-cli.list
+    echo  ...then, update your local package index, then finally install the cf CLI
+    apt update -y
+    $COMANDDER cf-cli
+    snap install cf-cli
+  }
+  fi
+  chown $SUDO_USER -R $USER_HOME/.cf
+  verify_is_installed cf
 
 } # end _ubuntu__64
 
@@ -1207,9 +1213,9 @@ _centos__64() {
 } # end _centos__64
 
 _fedora__64() {
-    COMANDDER="dnf install -y"
-    _checka_tools_commander
-    _configure_git
+  COMANDDER="dnf install -y"
+  _checka_tools_commander
+  _configure_git
   _install_npm_utils
   _install_nvm
   _install_nvm_version
@@ -1235,45 +1241,45 @@ _fedora__64() {
   "
   # _password_simple
   # _password_simple2
-    if  it_does_not_exist_with_spaces /etc/yum.repos.d/cloudfoundry-cli.repo ; then
-    {
-        Installing cloudfoundry cf 7
-        wget -O /etc/yum.repos.d/cloudfoundry-cli.repo https://packages.cloudfoundry.org/fedora/cloudfoundry-cli.repo
-        # sudo yum install cf6-cli
-        $COMANDDER cf7-cli
-    }
-    fi
-    verify_is_installed cf
+  if  it_does_not_exist_with_spaces /etc/yum.repos.d/cloudfoundry-cli.repo ; then
+  {
+    Installing cloudfoundry cf 7
+    wget -O /etc/yum.repos.d/cloudfoundry-cli.repo https://packages.cloudfoundry.org/fedora/cloudfoundry-cli.repo
+    # sudo yum install cf6-cli
+    $COMANDDER cf7-cli
+  }
+  fi
+  verify_is_installed cf
 
 } # end _fedora__64
 
 _darwin__64() {
-    _add_launchd $USER_HOME/Library/LaunchAgents $USER_HOME/Library/LaunchAgents/com.intuivo.clis_pull_all.plist
+  _add_launchd $USER_HOME/Library/LaunchAgents $USER_HOME/Library/LaunchAgents/com.intuivo.clis_pull_all.plist
   _install_dmgs_list
-exit 0
-    COMANDDER="_run_command /usr/local/bin/brew install "
-    # $COMANDDER install nodejs
-    # version 6 brew install cloudfoundry/tap/cf-cli
-    install_requirements "darwin" "
-      tree
-      the_silver_searcher
-      # ag@the_silver_searcher
-      ack
-      vim
-      nano
-      pv
-      # gsed
-      powerlevel10k@romkatv/powerlevel10k/powerlevel10k
-      powerline-go
-      zsh
-    "
-    verify_is_installed pip3
-    if ( ! command -v pygmentize >/dev/null 2>&1; ) ;  then
-      pip3 install pigments
-    fi
-    if ( ! command -v cf >/dev/null 2>&1; ) ;  then
-      npm i -g cloudfoundry/tap/cf-cli@7
-    fi
+  # exit 0
+  COMANDDER="_run_command /usr/local/bin/brew install "
+  # $COMANDDER install nodejs
+  # version 6 brew install cloudfoundry/tap/cf-cli
+  install_requirements "darwin" "
+    tree
+    the_silver_searcher
+    # ag@the_silver_searcher
+    ack
+    vim
+    nano
+    pv
+    # gsed
+    powerlevel10k@romkatv/powerlevel10k/powerlevel10k
+    powerline-go
+    zsh
+  "
+  verify_is_installed pip3
+  if ( ! command -v pygmentize >/dev/null 2>&1; ) ;  then
+    pip3 install pigments
+  fi
+  if ( ! command -v cf >/dev/null 2>&1; ) ;  then
+    npm i -g cloudfoundry/tap/cf-cli@7
+  fi
   verify_is_installed "
     tree
     ag
@@ -1310,8 +1316,6 @@ exit 0
     _add_launchd $USER_HOME/Library/LaunchAgents $USER_HOME/Library/LaunchAgents/com.intuivo.clis_pull_all.plist
 
   composer global require laravel/valet
-
-
   _password_simple
   # _password_simple2
 } # end _darwin__64
@@ -1322,5 +1326,4 @@ determine_os_and_fire_action
 
 echo "🥦"
 exit 0
-
 

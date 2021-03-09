@@ -3,6 +3,11 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 #
+  export THISSCRIPTCOMPLETEPATH
+  typeset -gr THISSCRIPTCOMPLETEPATH="$(basename "$0")"   # § This goes in the FATHER-MOTHER script
+  export _err
+  typeset -i _err=0
+
 load_struct_testing_wget(){
     local provider="$HOME/_/clis/execute_command_intuivo_cli/struct_testing"
     [   -e "${provider}"  ] && source "${provider}" && echo "Loaded locally"
@@ -11,61 +16,11 @@ load_struct_testing_wget(){
 } # end load_struct_testing_wget
 load_struct_testing_wget
 
-function _linux_prepare(){
-  export  THISSCRIPTCOMPLETEPATH
-  typeset -gr THISSCRIPTCOMPLETEPATH="$(pwd)/$(basename "${BASH_SOURCE[0]}")"
-  export _err
-  typeset -i _err=0
-  load_execute_boot_basic_with_sudo(){
-    # shellcheck disable=SC2030
-    if ( typeset -p "SUDO_USER"  &>/dev/null ) ; then
-    {
-      export USER_HOME
-      # typeset -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)  # Get the caller's of sudo home dir Just Linux
-      # shellcheck disable=SC2046
-      # shellcheck disable=SC2031
-      typeset -rg USER_HOME="$(echo -n $(bash -c "cd ~${SUDO_USER} && pwd"))"  # Get the caller's of sudo home dir LINUX and MAC
-    }
-    else
-    {
-      local USER_HOME=$HOME
-    }
-    fi
-    local -r provider="$USER_HOME/_/clis/execute_command_intuivo_cli/execute_boot_basic.sh"
-    echo source "${provider}"
-    # shellcheck disable=SC1090
-    [   -e "${provider}"  ] && source "${provider}"
-    [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/execute_boot_basic.sh -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
-    if ( command -v failed >/dev/null 2>&1; ) ; then
-    {
-      return 0
-    }
-    else
-    {
-      echo -e "\n \n  ERROR! Loading execute_boot_basic.sh \n \n "
-      exit 1;
-    }
-    fi
-    return 0
-  } # end load_execute_boot_basic_with_sudo
 
-  load_execute_boot_basic_with_sudo
-  _err=$?
-  if [ $_err -ne 0 ] ;  then
-  {
-    >&2 echo -e "ERROR There was an error loading load_execute_boot_basic_with_sudo Err:$_err "
-    exit $_err
-  }
-  fi
-
-  function _trap_on_exit(){
-    echo -e "\033[01;7m*** TRAP $THISSCRIPTCOMPLETEPATH EXITS ...\033[0m"
-
-  }
-  #trap kill ERR
-  trap _trap_on_exit EXIT
-  #trap kill INT
-} # end _linux_prepare
+export sudo_it
+function sudo_it() {
+  raise_to_sudo_and_user_home
+} # end sudo_it
 
 _darwin__64() {
   # Using homebrew seemed like the best choice so far
@@ -161,13 +116,13 @@ _darwin__64_manual() {
   for me it was:  /usr/local/Cellar/automake/1.16.3/share/aclocal/pkg.m4
   now locate the pkg.m4: locate pkg.m4
 
-I got several answers:
-/Users/user/.cargo/registry/src/github.com-1ecc6299db9ec823/harfbuzz-sys-0.2.0/harfbuzz/m4/pkg.m4
-/Users/user/.cargo/registry/src/github.com-1ecc6299db9ec823/mozjs_sys-0.51.3/mozjs/build/autoconf/pkg.m4
-/Users/user/_/itch/emacs/m4/pkg.m4
-/usr/local/Cellar/php/8.0.0_1/lib/php/build/pkg.m4
-/usr/local/Cellar/php@7.4/7.4.13_1/lib/php/build/pkg.m4
-/usr/local/Cellar/pkg-config/0.29.2_3/share/aclocal/pkg.m4
+  I got several answers:
+  /Users/user/.cargo/registry/src/github.com-1ecc6299db9ec823/harfbuzz-sys-0.2.0/harfbuzz/m4/pkg.m4
+  /Users/user/.cargo/registry/src/github.com-1ecc6299db9ec823/mozjs_sys-0.51.3/mozjs/build/autoconf/pkg.m4
+  /Users/user/_/itch/emacs/m4/pkg.m4
+  /usr/local/Cellar/php/8.0.0_1/lib/php/build/pkg.m4
+  /usr/local/Cellar/php@7.4/7.4.13_1/lib/php/build/pkg.m4
+  /usr/local/Cellar/pkg-config/0.29.2_3/share/aclocal/pkg.m4
 
   now pick one.
 
@@ -224,7 +179,7 @@ I got several answers:
 
    ln -s  /usr/local/opt/bin/nano /usr/local/bin/nano
 
-#  if nano from Brew exsits then move it :
+ #  if nano from Brew exsits then move it :
 
      mv /usr/local/bin/gnano /usr/local/bin/brewnano
 
@@ -240,13 +195,15 @@ I got several answers:
   and not to brew nano
 
   ls -la  /usr/local/bin/nano
-#  lrwxr-xr-x  1 benutzer  admin  27 Dec 21 09:56 /usr/local/bin/nano -> ../Cellar/nano/5.4/bin/nano  wrong
-#  lrwxr-xr-x  1 benutzer  admin  23 Dec 26 15:20 /usr/local/bin/nano -> /usr/local/opt/bin/nano  correct
+  #  lrwxr-xr-x  1 benutzer  admin  27 Dec 21 09:56 /usr/local/bin/nano -> ../Cellar/nano/5.4/bin/nano  wrong
+  #  lrwxr-xr-x  1 benutzer  admin  23 Dec 26 15:20 /usr/local/bin/nano -> /usr/local/opt/bin/nano  correct
 
 } # end _darwin__64
 
 _ubuntu__64() {
-  _linux_prepare
+  sudo_it
+  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home
+
     local CODENAME=$(_version "linux" "nano-*.*.*.*amd64.deb")
     # THOUGHT          local CODENAME="nano-4.3.3.24545_amd64.deb"
     local URL="https://www.nano-editor.org/dist/v5/${CODENAME}"
@@ -315,7 +272,9 @@ _ubuntu__64() {
 } # end _ubuntu__64
 
 _ubuntu__32() {
-  _linux_prepare
+  sudo_it
+  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home
+
     local CODENAME=$(_version "linux" "nano-*.*.*.*i386.deb")
     # THOUGHT local CODENAME="nano-4.3.3.24545_i386.deb"
     local URL="https://www.nano-editor.org/dist/v5/${CODENAME}"
@@ -325,7 +284,8 @@ _ubuntu__32() {
 } # end _ubuntu__32
 
 _fedora__32() {
-  _linux_prepare
+  sudo_it
+  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home
   local CODENAME=$(_version "linux" "nano*.*.*.*.i386.rpm")
   # THOUGHT                          nano-4.3.3.24545.i386.rpm
   local TARGET_URL="https://www.nano-editor.org/dist/v5/${CODENAME}"
@@ -360,7 +320,8 @@ _centos__64() {
 } # end _centos__64
 
 _fedora__64() {
-  _linux_prepare
+  sudo_it
+  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home
   # Lives Samples
   # https://www.nano-editor.org/dist/v5/nano-2019.3.4.tar.gz
   cd "$USER_HOME/_/software"
