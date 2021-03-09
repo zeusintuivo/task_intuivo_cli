@@ -395,10 +395,11 @@ _fedora__64() {
   mv  /usr/bin/nano /usr/bin/nano_old
   mv /usr/local/bin/nano /usr/local/bin/nano_old
   mv /usr/local/bin/nano_old /usr/local/bin/nano
+  cp /usr/local/bin/nano /usr/bin/nano
   # Make sure we are using nano we compiled and not the boring system nano
-  /usr/local/bin/nano --version
-  [[ "$(nano --version | head -1)" == *"${VERSION}"* ]] && passed version is new and correct ${VERSION}
-  [[ "$(nano --version | head -1)" != *"${VERSION}"* ]] && failed version is wrong one  "$(nano --version | head -1)"
+
+  verify_installed_version "/usr/bin/nano --version"  "${VERSION}"
+  verify_installed_version "/usr/local/bin/nano --version"  "${VERSION}"
   # should match 5.2
   which nano
   # REF: https://github.com/scopatz/nanorc
