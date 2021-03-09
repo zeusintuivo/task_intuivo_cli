@@ -378,7 +378,7 @@ _fedora__64() {
   tar -xvf "${CODENAME}"
   [ $? -gt 0 ] && failed to untar: tar -xvf "${CODENAME}"
 
-  local FOLDER="$(echo "${CODENAME}" | cuet ".tar.xz")"
+  local FOLDER="$(echo "${CODENAME}" | sed 's/.tar.xz//g')"
   directory_exists_with_spaces "${FOLDER}"
   cd "${FOLDER}"
 
