@@ -379,6 +379,7 @@ _fedora__64() {
   [ $? -gt 0 ] && failed to untar: tar -xvf "${CODENAME}"
 
   local FOLDER="$(echo "${CODENAME}" | sed 's/.tar.xz//g')"
+  local VERSION="$(echo "${FOLDER}" | sed 's/nano-//g')"
   directory_exists_with_spaces "${FOLDER}"
   cd "${FOLDER}"
 
@@ -391,8 +392,13 @@ _fedora__64() {
 
   cd "${DOWNLOADFOLDER}"
   rm -rf nano-*
+  sudo mv  /usr/bin/nano /usr/bin/nano_old
+  sudo mv /usr/local/bin/nano /usr/local/bin/nano_old
+  sudo mv /usr/local/bin/nano_old /usr/local/bin/nano
   # Make sure we are using nano we compiled and not the boring system nano
   nano --version
+  [[ "$(nano --version)" == "${VERSION}" ]] && passed version is new and correct ${VERSION}
+  [[ "$(nano --version)" != "${VERSION}" ]] && failed version is wrong one  "$(nano --version)"
   # should match 5.2
   which nano
   # REF: https://github.com/scopatz/nanorc
