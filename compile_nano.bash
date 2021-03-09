@@ -403,8 +403,13 @@ _fedora__64() {
   # should match 5.2
   which nano
   # REF: https://github.com/scopatz/nanorc
-  wget https://raw.githubusercontent.com/scopatz/nanorc/master/install.sh -O- | sh
-  [ $? -gt 0 ] && failed to make wget scopatz script or running it
+  cd "${USER_HOME}"
+  curl -O https://raw.githubusercontent.com/scopatz/nanorc/master/install.sh
+  chmod 744 install.sh
+  ./install.sh
+  su - "${SUDO_USER}" -c "${USER_HOME}/install.sh"
+  directory_exists_with_spaces "/root/.nanorc"
+  directory_exists_with_spaces "${USER_HOME}/.nanorc"
   return 0
 } # end _fedora__64
 
