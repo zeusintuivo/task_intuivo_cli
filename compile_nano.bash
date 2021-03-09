@@ -4,7 +4,7 @@
 #
 #
   export THISSCRIPTCOMPLETEPATH
-  typeset -gr THISSCRIPTCOMPLETEPATH="$(basename "$0")"   # § This goes in the FATHER-MOTHER script
+  typeset -gr THISSCRIPTCOMPLETEPATH="$(realpath "$0")"   # § This goes in the FATHER-MOTHER script
   export _err
   typeset -i _err=0
 
