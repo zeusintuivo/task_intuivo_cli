@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+#
+#
+
+nano "$(realpath "$(which "${1}")")"
+
