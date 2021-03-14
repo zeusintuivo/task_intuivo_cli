@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # Run this to generate template
 TARGETSERVER=127.0.0.1
 TARGETPORT=3005
@@ -12,72 +14,73 @@ CERTIFICATEKEYPATH=${HOME}/.valet/Certificates/${SERVERNAME}.key;
 STATICFILES=""
 
 
-.dirs() {
+._dirs() {
     find * -maxdepth 0 -type d   # mac and linux tested
 }
-# DEBUG=1
-# REMOVECACHE=1
-.subdir() {
+._replace_all_hashes(){
+  local found
+  local one_item="${1}"
+  local one_action="${2}"
+  while :  # replace all {#} to $one_item value
+  do
+    one_action="${one_action/\{\#\}/$one_item}"  # replace value inside string substitution expresion bash
+    found=$(echo -n "${one_action}" | grep "{#}")
+    [ $? -eq 1 ] &&  break
+  done
+  echo "${one_action}"
+}
+.loopsubdirs() {
   # Perform all actions in
   #        LIST1
   #          for each element in
   #                           LIST2
-
   local _curdir="${1}"
-  local _subdir=""
-  local local_actions="${2}"
-  local local_items="$(.dirs)"
-  local one_item
-  local one_action
-  local action
-  # local _subdirs
-  local _actions
+  local ACTIONS="${2}"
   cd "${_curdir}"
-  local _cwd="$(pwd)"
-
+  local local_items="$(._dirs)"
+  local one_item  action _cwd
   while read -r one_item; do
   {
-    if [ ! -z "${one_item}" ] ; then  # if not empty
+    if [[ -n "${one_item}" ]] ; then  # if not empty
     {
-      action="${one_actions/\{\#\}/$one_item}"  # replace value inside string substitution expresion bash
-      echo ${action}
-        _subdir="${_cwd}/${one_item}"
-      cd "${_subdir}"
-      pwd
-      [[ -d .git/ ]] && pull
-      if [[ ! -d .git/ ]] ; then
-      {
-        _actions="echo -e \".\"
-        echo \" \"
-        echo \"Subdirectory:\"
-        echo \". \"
-        echo \". . . . . . .       {#} \"
-        cd \"${_subdir}/{#}\"
-        pwd
-        [[ -d .git/ ]] && pull
-        "
-        .subdir "${_subdir}" "${_actions}"
-      }
-      fi
+      _cwd="${_curdir}/${one_item}"
+      cd "${_cwd}"
+ls -p1 | grep -v / | xargs -I {} echo "    location = /{} {
+        access_log off; log_not_found off;
+        alias $(pwd)/{};
+    }"
+      
+      .loopsubdirs "${_cwd}"  "${ACTIONS}"
     }
     fi
   }
   done <<< "${local_items}"
+  return 0
 }
 
+CWD="${PWD}"
+CURDIR="${PWD}/public"
+cd  "${CURDIR}"
+STATICFILES="$(ls -p1 | grep -v / | xargs -I {} echo "    location = /{} {
+        access_log off; log_not_found off;
+        alias $(pwd)/{};
+    }")"
+ACTIONS="
+ls -p1 | grep -v / | xargs -I {} echo \"    location = /{} {
+        access_log off; log_not_found off;
+        alias \$(pwd)/{};
+    }\"
+  .loopsubdirs \"{#}\" \"${ACTIONS}\"
 
-CURDIR="${PWD}"
-ACTIONS="echo -e \".\"
-echo \" \"
-echo \"Directory:\"
-echo \". \"
-echo \". . . . . . .       {#} \"
-cd \"${CURDIR}/{#}\"
-pwd
-[[ -d .git/ ]] && pull
 "
 
-.subdir  "${CURDIR}" "${ACTIONS}" 
+STATICFILES="${STATICFILES}
+$(.loopsubdirs  "${CURDIR}" "${ACTIONS}")"
+
+cd "${CWD}"
+
+# echo -e ";;;;;;;\n${STATICFILES}\n;;;;;;"
+# exit 0 
 
 
 echo "upstream ${PROJECTNAME} {
@@ -103,9 +106,11 @@ server {
 #         alias \$(pwd)/{};
 #     }\"
     # Place generated invidual cases here
-    # --
-    # here
-    # ---
+    # -- between here 
+    # here starts
+${STATICFILES}
+    # here ends 
+    # --- and here 
     try_files \$uri/index.html \$uri @${PROJECTNAME};
 
     location @${PROJECTNAME} {
@@ -138,9 +143,11 @@ server {
     # Uncomment error pages one you place make them accesible
     # error_page 500 502 503 504 /500.html;
     # Place generated invidual cases here too
-    # --
-    # here
-    # ---
+    # -- between here 
+    # here starts
+${STATICFILES}
+    # here ends 
+    # --- and here 
     try_files \$uri/index.html \$uri @${PROJECTNAME};
 
     location @${PROJECTNAME} {
