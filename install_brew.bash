@@ -27,24 +27,32 @@ load_struct_testing_wget
 export sudo_it
 function sudo_it() {
   raise_to_sudo_and_user_home
-  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home
+  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-} # end sudo_it
+  function _trap_on_error(){
+    echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME $BASHLINENO ERR INT ...\033[0m"
 
+  }
+  trap _trap_on_error ERR INT
+} # end sudo_it
 _make_linuxbrewfolder(){
+  if it_exists /home/linuxbrew ; then 
+  {
+    rm -rf /home/linuxbrew
+  }
+  fi
+  directory_does_not_exist /home/linuxbrew
   mkdir /home/linuxbrew
   directory_exists_with_spaces /home/linuxbrew
   mkdir /home/linuxbrew/.linuxbrew/
   directory_exists_with_spaces /home/linuxbrew/.linuxbrew/
-  chmod -R "${SUDO_USER}" /home/linuxbrew
+  chown -R "${SUDO_USER}" /home/linuxbrew
   chgrp -R "${SUDO_USER}" /home/linuxbrew
 }
-
 _eval_linuxbrew(){
-  # test -d "${USER_HOME}/.linuxbrew" && eval $("${USER_HOME}/.linuxbrew/bin/brew shellenv")
-  test -d "/home/linuxbrew/.linuxbrew" && eval $("/home/linuxbrew/.linuxbrew/bin/brew shellenv")  
+  # test -d "${USER_HOME}/.linuxbrew" && eval $("${USER_HOME}/.linuxbrew/bin/brew" shellenv)
+  test -d "/home/linuxbrew/.linuxbrew" && eval $("/home/linuxbrew/.linuxbrew/bin/brew" shellenv)  
 }
-
 _add_to_file(){
   if test -r "${USER_HOME}/${1}" ; then
   {
@@ -56,15 +64,59 @@ _add_to_file(){
 }
 _clone_linuxbrew(){
   git clone https://github.com/Homebrew/brew "/home/linuxbrew/.linuxbrew/Homebrew"
-  cd "${USER_HOME}" 
-  ln -s /home/linuxbrew/.linuxbrew .linuxbrew 
-  softlink_exists "${USER_HOME}/.linuxbrew>/home/linuxbrew/.linuxbrew"  
-  mkdir "${USER_HOME}/.linuxbrew/bin"
-  directory_exists_with_spaces "${USER_HOME}/.linuxbrew/bin"
-  ln -s "${USER_HOME}/.linuxbrew/Homebrew/bin/brew" "${USER_HOME}/.linuxbrew/bin"
-  file_exists_with_spaces "${USER_HOME}/.linuxbrew/bin/brew"
-  eval $("${USER_HOME}/.linuxbrew/bin/brew" shellenv)
+  chown -R "${SUDO_USER}" /home/linuxbrew
+  chgrp -R "${SUDO_USER}" /home/linuxbrew
 }
+_softlink_it(){
+  file_does_not_exist_with_spaces "/home/linuxbrew/.linuxbrew/.linuxbrew" 
+  mkdir "/home/linuxbrew/.linuxbrew/bin"
+  ln -s "/home/linuxbrew/.linuxbrew/Homebrew/bin/brew" "/home/linuxbrew/.linuxbrew/bin"  
+  softlink_exists "/home/linuxbrew/.linuxbrew/bin/brew>/home/linuxbrew/.linuxbrew/Homebrew/bin/brew"
+  chown -R "${SUDO_USER}" "/home/linuxbrew/.linuxbrew"
+  chgrp -R "${SUDO_USER}" "/home/linuxbrew/.linuxbrew"
+}
+_softlink_user_it(){
+  cd "${USER_HOME}"
+  if it_exists "${USER_HOME}/.linuxbrew" ; then
+    if softlink_exists "${USER_HOME}/.linuxbrew>/home/linuxbrew/.linuxbrew" ; then 
+      unlink  "${USER_HOME}/.linuxbrew"
+    else 
+      rm -rf .linuxbrew
+    fi
+  fi
+  Message Make sure we did not delete the install
+  directory_exists_with_spaces "/home/linuxbrew/.linuxbrew"   
+  ln -s "/home/linuxbrew/.linuxbrew" "${USER_HOME}/.linuxbrew"  
+  Message Make sure we did overlap current folders
+  softlink_exists "${USER_HOME}/.linuxbrew>/home/linuxbrew/.linuxbrew" 
+  file_does_not_exist_with_spaces "/home/linuxbrew/.linuxbrew/.linuxbrew" 
+  directory_does_not_exist_with_spaces "/home/linuxbrew/.linuxbrew/.linuxbrew" 
+  file_does_not_exist_with_spaces "${USER_HOME}/.linuxbrew/.linuxbrew" 
+  directory_does_not_exist_with_spaces "${USER_HOME}/.linuxbrew/.linuxbrew" 
+  chown -R "${SUDO_USER}" "${USER_HOME}/.linuxbrew"
+  chgrp -R "${SUDO_USER}" "${USER_HOME}/.linuxbrew"
+}
+
+  # directory_exists_with_spaces "/home/linuxbrew/.linuxbrew"   
+  # file_does_not_exists_with_spaces "${USER_HOME}/.linuxbrew"   
+  # ln -s /home/linuxbrew/.linuxbrew .linuxbrew 
+  # softlink_exists "${USER_HOME}/.linuxbrew>/home/linuxbrew/.linuxbrew" 
+  # [ $? -gt 0 ] && failed install $BASHLINENO brew  && exit 1
+  # file_does_not_exist_with_spaces "/home/linuxbrew/.linuxbrew/.linuxbrew" 
+  # [ $? -gt 0 ] && failed install $BASHLINENO brew  && exit 1
+  
+  # mkdir "${USER_HOME}/.linuxbrew/bin"
+  # [ $? -gt 0 ] && failed install $BASHLINENO brew  && exit 1
+  # directory_exists_with_spaces "${USER_HOME}/.linuxbrew/bin"
+  # [ $? -gt 0 ] && failed install $BASHLINENO brew  && exit 1
+  # ln -s "${USER_HOME}/.linuxbrew/Homebrew/bin/brew" "${USER_HOME}/.linuxbrew/bin"
+  # [ $? -gt 0 ] && failed install $BASHLINENO brew  && exit 1
+  # file_exists_with_spaces "${USER_HOME}/.linuxbrew/bin/brew"
+  # [ $? -gt 0 ] && failed install $BASHLINENO brew  && exit 1
+  # eval $("${USER_HOME}/.linuxbrew/bin/brew" shellenv)
+  # [ $? -gt 0 ] && failed install $BASHLINENO brew  && exit 1
+
+
 _debian_flavor_install(){
   sudo_it
   install_requirements "linux" "
@@ -78,13 +130,15 @@ _debian_flavor_install(){
     curl 
     file 
     git
-  "
-  
+  "  
   _make_linuxbrewfolder
   _clone_linuxbrew
+  _softlink_it
+  _softlink_user_it
   _eval_linuxbrew
   _add_to_file .profile 
-
+  _add_to_file .zshrc
+  return 0
 }
 _debian__32() {
   echo "CURRENTLY NOT SUPPORTED BY LINUX BREW REF: https://docs.brew.sh/Homebrew-on-Linux#install"
@@ -115,19 +169,44 @@ _readhat_flavor_install(){
     # needed by Fedora 30 and up
     libxcrypt-compat 
   "
+  is_not_installed pygmentize &&   dnf  -y install pygmentize
+  if ( ! command -v pygmentize >/dev/null 2>&1; ) ;  then
+    pip3 install pygments
+  fi
+  local groupsinstalled=$(dnf group list --installed)
+  if [[ "${groupsinstalled}" = *"Development Tools"* ]] ; then 
+  {
+    passed installed 'Development Tools'
+  }
+  else 
+  {
+    dnf groupinstall 'Development Tools' -y
+  }
+  fi
+  # dnf install libxcrypt-compat -y # needed by Fedora 30 and up
   verify_is_installed "
     curl 
     file 
     git
+    pip3
+    pygmentize
+    xclip
+    tree
+    ag
+    ack
+    pv
+    nano
+    vim 
   "
-  dnf groupinstall 'Development Tools'
-  dnf install libxcrypt-compat # needed by Fedora 30 and up
 
   _make_linuxbrewfolder
   _clone_linuxbrew
+  _softlink_it
+  _softlink_user_it
   _eval_linuxbrew
-  _add_to_file .bash_profile 
-  
+  _add_to_file .bash_profile
+  _add_to_file .zshrc
+  return 0
 }
 _centos__32() {
   echo "CURRENTLY NOT SUPPORTED BY LINUX BREW REF: https://docs.brew.sh/Homebrew-on-Linux#install"
@@ -141,7 +220,6 @@ _fedora__32() {
 _fedora__64() {
   _readhat_flavor_install
 } # end _fedora__64
-
 _main() {
   determine_os_and_fire_action
 } # end _main

@@ -115,7 +115,7 @@ _checka_tools_commander(){
     "
     is_not_installed pygmentize &&    pip install pygments
     verify_is_installed pygmentize
-  ensure pygmentize or "Canceling Install. Could not find pygmentize.  pip install pigments"
+  ensure pygmentize or "Canceling Install. Could not find pygmentize.  pip install pygments"
   ensure npm or "Canceling Install. Could not find npm"
   ensure node or "Canceling Install. Could not find node"
   ensure cf or "Canceling Install. Could not find cf"
@@ -1275,7 +1275,7 @@ _darwin__64() {
   "
   verify_is_installed pip3
   if ( ! command -v pygmentize >/dev/null 2>&1; ) ;  then
-    pip3 install pigments
+    pip3 install pygments
   fi
   if ( ! command -v cf >/dev/null 2>&1; ) ;  then
     npm i -g cloudfoundry/tap/cf-cli@7
