@@ -57,7 +57,7 @@ _add_to_file(){
   if test -r "${USER_HOME}/${1}" ; then
   {
     #                   filename            value      || do this .............
-    (_if_not_contains  "${USER_HOME}/${1}" "# RBENV" ) || echo "# RBENV " >>"${USER_HOME}/${1}"
+    (_if_not_contains  "${USER_HOME}/${1}" "# BREW - HOMEBREW" ) || echo "# BREW - HOMEBREW " >>"${USER_HOME}/${1}"
     (_if_not_contains  "${USER_HOME}/${1}" "/bin/brew shellenv" ) || echo "eval \$($(brew --prefix)/bin/brew shellenv)" >>"${USER_HOME}/${1}"
   }
   fi
