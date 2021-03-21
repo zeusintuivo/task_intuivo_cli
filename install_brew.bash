@@ -29,12 +29,16 @@ function sudo_it() {
   raise_to_sudo_and_user_home
   [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
   enforce_variable_with_value USER_HOME "${USER_HOME}"
+  enforce_variable_with_value SUDO_USER "${SUDO_USER}"
+  enforce_variable_with_value SUDO_UID "${SUDO_UID}"
+  enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
   function _trap_on_error(){
     echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME $BASHLINENO ERR INT ...\033[0m"
 
   }
   trap _trap_on_error ERR INT
 } # end sudo_it
+
 _make_linuxbrewfolder(){
   if it_exists /home/linuxbrew ; then 
   {
