@@ -4,7 +4,7 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 #
-# Compatible start with low version bash 
+# Compatible start with low version bash
 export USER_HOME
 export THISSCRIPTCOMPLETEPATH
 typeset -r THISSCRIPTCOMPLETEPATH="$(realpath $(which $(basename "$0")))"   # § This goes in the FATHER-MOTHER script
@@ -33,8 +33,8 @@ function sudo_it() {
   enforce_variable_with_value SUDO_USER "${SUDO_USER}"
   enforce_variable_with_value SUDO_UID "${SUDO_UID}"
   enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
-  # Override bigger error trap  with local 
-  function _trap_on_error(){  
+  # Override bigger error trap  with local
+  function _trap_on_error(){
     echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}\(\) \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}\(\) \\n ERR INT ...\033[0m"
 
   }
@@ -89,13 +89,13 @@ _darwin__64() {
   _download_mac "${URL}" "${USER_HOME}/Downloads"
   local APPDIR="Beyond Compare.app"    # same as  $(basename "${APPDIR}")
   echo _remove_dmgs_app_if_exists
-  _remove_dmgs_app_if_exists "${APPDIR}" 
+  _remove_dmgs_app_if_exists "${APPDIR}"
   echo _process_dmgs_dmg_or_zip
   _process_dmgs_dmg_or_zip "zip" "${USER_HOME}/Downloads" "${CODENAME}" "${APPDIR}" "${CODENAME}"
   echo directory_exists_with_spaces
   directory_exists_with_spaces "/Applications/${APPDIR}"
   ls -d "/Applications/${APPDIR}"
-  
+
   _trust_dmgs_application "${APPDIR}"
 
     # sudo hdiutil attach ${CODENAME}
@@ -161,9 +161,9 @@ _fedora__64() {
   # THOUGHT  https://www.scootersoftware.com/bcompare-4.3.3.24545.x86_64.rpm
   local TARGET_URL="https://www.scootersoftware.com/${CODENAME}"
   enforce_variable_with_value TARGET_URL "${TARGET_URL}"
-  
+
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  
+
   local DOWNLOADFOLDER="${USER_HOME}/Downloads"
   enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
   _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
