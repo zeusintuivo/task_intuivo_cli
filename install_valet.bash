@@ -58,6 +58,7 @@ _debian_flavor_install(){
     PHPS=$(which php)
   COMPOSERS=$(which composer)
 
+  su - "$SUDO_USER" -c ''"$PHPS"''"$COMPOSERS"' global update'
   su - "$SUDO_USER" -c ''"$PHPS"''"$COMPOSERS"' global require cpriego/valet-linux'
   return 0
 }
@@ -104,6 +105,7 @@ _readhat_flavor_install(){
   PHPS=$(which php)
   COMPOSERS=$(which composer)
 
+  su - "$SUDO_USER" -c ''"$PHPS"''"$COMPOSERS"' global update'
   su - "$SUDO_USER" -c ''"$PHPS"''"$COMPOSERS"' global require cpriego/valet-linux'
   return 0
 }
