@@ -7,8 +7,21 @@ PROJECTFOLDER=$(pwd)
 PROJECTROOTFOLDER=$(pwd)/public
 PROJECTNAME=$(basename $(pwd))
 SERVERNAME=${PROJECTNAME}.test
-CERTIFICATECRTPATH=${HOME}/.valet/Certificates/${SERVERNAME}.crt;
+# check operation systems
+if [[ "$(uname)" == "Darwin" ]] ; then
+  # Do something under Mac OS X platform
+CERTIFICATECRTPATH=${HOME}/.config/valet/Certificates/${SERVERNAME}.crt;  
+CERTIFICATEKEYPATH=${HOME}/.config/valet/Certificates/${SERVERNAME}.key;
+elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]] ; then
+  # Do something under GNU/Linux platform
+CERTIFICATECRTPATH=${HOME}/.valet/Certificates/${SERVERNAME}.crt;  
 CERTIFICATEKEYPATH=${HOME}/.valet/Certificates/${SERVERNAME}.key;
+elif [[ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]] ; then
+  # Do something under Windows NT platform
+CERTIFICATECRTPATH=${HOME}/.valet/Certificates/${SERVERNAME}.crt;  
+CERTIFICATEKEYPATH=${HOME}/.valet/Certificates/${SERVERNAME}.key;
+  # nothing here
+fi
 
 
 STATICFILES=""

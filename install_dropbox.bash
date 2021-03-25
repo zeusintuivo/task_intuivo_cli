@@ -65,7 +65,6 @@ _fedora__64() {
   sudo_it
   [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  # local TARGET_URL=https://prerelease.keybase.io/keybase_amd64.rpm
   local TARGET_URL=$(_get_dowload_target "https://linux.dropbox.com/packages/fedora/" "rpm" "64")
   # DEBUG=1
   (( DEBUG )) && echo -n """${TARGET_URL}""" > .tmp.html
