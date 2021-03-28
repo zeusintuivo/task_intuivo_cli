@@ -94,6 +94,7 @@ _softlink_user_it(){
   ln -s "/home/linuxbrew/.linuxbrew" "${USER_HOME}/.linuxbrew"
   Message Make sure we did overlap current folders
   softlink_exists "${USER_HOME}/.linuxbrew>/home/linuxbrew/.linuxbrew"
+  unlink /home/linuxbrew/.linuxbrew/.linuxbrew
   file_does_not_exist_with_spaces "/home/linuxbrew/.linuxbrew/.linuxbrew"
   directory_does_not_exist_with_spaces "/home/linuxbrew/.linuxbrew/.linuxbrew"
   file_does_not_exist_with_spaces "${USER_HOME}/.linuxbrew/.linuxbrew"
