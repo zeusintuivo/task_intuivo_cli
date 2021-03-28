@@ -3,66 +3,20 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 #
-  export THISSCRIPTCOMPLETEPATH
-  typeset -gr THISSCRIPTCOMPLETEPATH="$(basename "$0")"   # § This goes in the FATHER-MOTHER script
-  export _err
-  typeset -i _err=0
+# Compatible start with low version bash, like mac before zsh change and after
+export USER_HOME
+export THISSCRIPTCOMPLETEPATH
+typeset -r THISSCRIPTCOMPLETEPATH="$(realpath $(which $(basename "$0")))"   # § This goes in the FATHER-MOTHER script
 
-function raise_to_sudo_and_user_home() {
-  # export  THISSCRIPTCOMPLETEPATH
-  # typeset -gr THISSCRIPTCOMPLETEPATH="$(basename "$0")"
-  # export _err
-  # typeset -i _err=0
-  load_execute_boot_basic_with_sudo(){
-    # shellcheck disable=SC2030
-    if ( typeset -p "SUDO_USER"  &>/dev/null ) ; then
-    {
-      export USER_HOME
-      # typeset -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)  # Get the caller's of sudo home dir Just Linux
-      # shellcheck disable=SC2046
-      # shellcheck disable=SC2031
-      typeset -rg USER_HOME="$(echo -n $(bash -c "cd ~${SUDO_USER} && pwd"))"  # Get the caller's of sudo home dir LINUX and MAC
-    }
-    else
-    {
-      local USER_HOME=$HOME
-    }
-    fi
-    local -r provider="$USER_HOME/_/clis/execute_command_intuivo_cli/execute_boot_basic.sh"
-    echo source "${provider}"
-    # shellcheck disable=SC1090
-    [   -e "${provider}"  ] && source "${provider}"
-    [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/execute_boot_basic.sh -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
-    if ( command -v failed >/dev/null 2>&1; ) ; then
-    {
-      return 0
-    }
-    else
-    {
-      echo -e "\n \n  ERROR! Loading execute_boot_basic.sh \n \n "
-      exit 1;
-    }
-    fi
-    return 0
-  } # end load_execute_boot_basic_with_sudo
+export BASH_VERSION_NUMBER
+typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
 
-  load_execute_boot_basic_with_sudo
-  _err=$?
-  if [ $_err -ne 0 ] ;  then
-  {
-    >&2 echo -e "ERROR There was an error loading load_execute_boot_basic_with_sudo Err:$_err "
-    exit $_err
-  }
-  fi
+export  THISSCRIPTNAME
+typeset -r THISSCRIPTNAME="$(realpath $(which $(basename "$0")))"
 
-  # Overwrite trap
-  # function _trap_on_exit(){
-    # echo -e "\033[01;7m*** TRAP $THISSCRIPTCOMPLETEPATH EXITS ...\033[0m"
-  # }
-  #trap kill ERR
-  # trap _trap_on_exit EXIT
-  #trap kill INT
-} # end raise_to_sudo_and_user_home
+export _err
+typeset -i _err=0
+
 load_struct_testing_wget(){
     local provider="$HOME/_/clis/execute_command_intuivo_cli/struct_testing"
     [   -e "${provider}"  ] && source "${provider}" && echo "Loaded locally"
@@ -70,6 +24,21 @@ load_struct_testing_wget(){
     ( ( ! command -v passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
 } # end load_struct_testing_wget
 load_struct_testing_wget
+
+export sudo_it
+function sudo_it() {
+  raise_to_sudo_and_user_home
+  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
+  enforce_variable_with_value SUDO_USER "${SUDO_USER}"
+  enforce_variable_with_value SUDO_UID "${SUDO_UID}"
+  enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
+  # Override bigger error trap  with local
+  function _trap_on_error(){
+    echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}\(\) \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}\(\) \\n ERR INT ...\033[0m"
+
+  }
+  trap _trap_on_error ERR INT
+} # end sudo_it
 
 
 _downloadfile_link(){
@@ -122,9 +91,8 @@ _extract_version(){
 } # end _extract_version
 
 _fedora__64() {
-	raise_to_sudo_and_user_home
-	[ $? -gt 0 ] && failed to raise_to_sudo_and_user_home
-	# [ $? -gt 0 ] && exit 1
+  sudo_it
+  export USER_HOME="/home/${SUDO_USER}"
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   local TARGET_URL=https://zoom.us/client/latest/zoom_x86_64.rpm
   enforce_variable_with_value TARGET_URL "${TARGET_URL}"

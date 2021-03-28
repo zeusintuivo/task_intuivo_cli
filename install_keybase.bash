@@ -66,9 +66,9 @@ _fedora__32() {
   enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
   _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
   _install_rpm "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
-} # end _fedora__64
+} # end _fedora__32
 
-_fedora__32() {
+_fedora__64() {
   sudo_it
   [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home
   enforce_variable_with_value USER_HOME "${USER_HOME}"

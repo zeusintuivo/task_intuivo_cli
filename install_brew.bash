@@ -3,7 +3,7 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 #
-# Compatible start with low version bash
+# Compatible start with low version bash, like mac before zsh change and after
 export USER_HOME
 export THISSCRIPTCOMPLETEPATH
 typeset -r THISSCRIPTCOMPLETEPATH="$(realpath $(which $(basename "$0")))"   # § This goes in the FATHER-MOTHER script
