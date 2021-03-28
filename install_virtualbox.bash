@@ -94,14 +94,61 @@ _fedora__64() {
   [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
   export USER_HOME="/home/${SUDO_USER}"
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  local TARGET_URL=https://prerelease.keybase.io/keybase_amd64.rpm
-  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
-	local CODENAME=$(basename "${TARGET_URL}")
-	enforce_variable_with_value CODENAME "${CODENAME}"
-	local DOWNLOADFOLDER="${USER_HOME}/Downloads"
-	enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
- 	_do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
-  _install_rpm "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
+	
+  cd /etc/yum.repos.d/
+  wget http://download.virtualbox.org/virtualbox/rpm/fedora/virtualbox.repo
+   install_requirements "linux" "
+    # ReadHat Flavor only
+    binutils
+    gcc
+    make
+    patch
+    libgomp
+    dkms
+    qt5-qtx11extras
+    libxkbcommon
+    glibc-headers
+    glibc-devel
+    kernel-headers
+    kernel-devel
+    compat-libvpx5
+ "
+  is_not_installed pygmentize &&   dnf  -y install pygmentize
+  if ( ! command -v pygmentize >/dev/null 2>&1; ) ;  then
+    pip3 install pygments
+  fi
+  local groupsinstalled=$(dnf group list --installed)
+  if [[ "${groupsinstalled}" = *"Development Tools"* ]] ; then
+  {
+    passed installed 'Development Tools'
+  }
+  else
+  {
+    dnf groupinstall 'Development Tools' -y
+  }
+  fi
+  # dnf install libxcrypt-compat -y # needed by Fedora 30 and up
+  verify_is_installed "
+    curl
+    file
+    git
+    pip3
+    pygmentize
+    xclip
+    tree
+    ag
+    ack
+    pv
+    nano
+    vim
+     gcc
+    make
+  "
+  [ ! -f  .virtualboxinstallreboot ] && touch .virtualboxinstallreboot && reboot
+  export KERN_DIR=/usr/src/kernels/`uname -r`
+  echo $KERN_DIR
+  sudo dnf install VirtualBox-6.1 -y 
+  sudo /usr/lib/virtualbox/vboxdrv.sh setup
 } # end _fedora__64
 
 _main() {
