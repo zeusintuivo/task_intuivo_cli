@@ -44,17 +44,10 @@ function sudo_it() {
 
 _linux_prepare(){
   sudo_it
-  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home
+  [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
+  export USER_HOME="/home/${SUDO_USER}"
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  local TARGET_URL="${1}"
-  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
-  local CODENAME=$(basename "${TARGET_URL}")
-  enforce_variable_with_value CODENAME "${CODENAME}"
-  local DOWNLOADFOLDER="${USER_HOME}/Downloads"
-  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
-
-}
+}  # end _linux_prepare
 
 _debian__64(){
   _linux_prepare https://prerelease.keybase.io/keybase_amd64.deb
@@ -62,9 +55,7 @@ _debian__64(){
 } # end __debian__64
 
 _debian__32(){
-  sudo_it
-  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  _linux_prepare
   local TARGET_URL=https://prerelease.keybase.io/keybase_i386.deb
   enforce_variable_with_value TARGET_URL "${TARGET_URL}"
   local CODENAME=$(basename "${TARGET_URL}")
@@ -76,9 +67,7 @@ _debian__32(){
 } # end __debian__64
 
 _fedora__32() {
-  sudo_it
-  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  _linux_prepare
   local TARGET_URL=https://prerelease.keybase.io/keybase_i386.rpm
   enforce_variable_with_value TARGET_URL "${TARGET_URL}"
   local CODENAME=$(basename "${TARGET_URL}")
@@ -93,11 +82,8 @@ _fedora__64() {
   echo Fedora 29 REF: https://computingforgeeks.com/how-to-install-virtualbox-on-fedora-linux/
   echo Fedora 32 REF: https://tecadmin.net/install-oracle-virtualbox-on-fedora/
   echo Fedora 33 https://www.if-not-true-then-false.com/2010/install-virtualbox-with-yum-on-fedora-centos-red-hat-rhel/
-
-  sudo_it
-  [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
-  export USER_HOME="/home/${SUDO_USER}"
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  _linux_prepare
+  
 	
   cd /etc/yum.repos.d/
   wget http://download.virtualbox.org/virtualbox/rpm/fedora/virtualbox.repo
