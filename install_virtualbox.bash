@@ -215,6 +215,163 @@ echo REF: https://superuser.com/questions/1539756/virtualbox-6-fedora-30-efi-sec
   "
   sudo dnf install VirtualBox-6.1 -y
   /usr/lib/virtualbox/vboxdrv.sh setup
+
+
+
+sudo dnf -y install @development-tools\
+sudo dnf -y install kernel-headers kernel-devel dkms elfutils-libelf-devel qt5-qtx11extras
+cat <<EOF | sudo tee /etc/yum.repos.d/virtualbox.repo \
+[virtualbox]\
+name=Fedora $releasever - $basearch - VirtualBox\
+baseurl=http://download.virtualbox.org/virtualbox/rpm/fedora/29/\$basearch\
+enabled=1\
+gpgcheck=1\
+repo_gpgcheck=1\
+gpgkey=https://www.virtualbox.org/download/oracle_vbox.asc\
+
+EOF
+
+sudo dnf search virtualbox
+yes | sudo dnf search virtualbox
+yes | sudo dnf -y install VirtualBox
+yes | sudo dnf -y install VirtualBox-6.0
+sudo usermod -a -G vboxusers $USER
+id $USER
+echo REF: https://computingforgeeks.com/how-to-install-virtualbox-on-fedora-linux/
+echo Start Virtual Box
+/sbin/vboxconfig
+sudo /sbin/vboxconfig
+dmesg
+sudo dnf -y update
+sudo dnf -y purge virtualbox
+sudo dnf -y remove VirtualBox
+sudo dnf -y uninstall VirtualBox
+sudo dnf -y remove VirtualBox
+sudo dnf -y remove VirtualBox-6.0-6.0.14_133895_fedora29-1.x86_64 
+sudo dnf -y clean
+su - root /sbin/vboxconfig
+sudo /etc/init.d/vboxdrv setup
+sudo dnf -y install filezilla
+su
+
+/sbin/vboxconfig
+
+locate vbox{drv,netadp,netflt,pci}.ko
+
+modprobe vboxdrv
+
+dmesg
+
+zeus has exited /home/zeus/_/work/virtualbox for /etc/yum.repos.d/
+virtualbox
+su
+
+KERN_DIR=/usr/src/kernels/`uname -r`
+
+export KERN_DIR
+
+virtualbox
+
+openssl req -config ./openssl.cnf         -new -x509 -newkey rsa:2048         -nodes -days 36500 -outform DER         -keyout "MOK.priv"         -out "MOK.der"
+
+ls
+
+ls -la
+
+pwd
+
+vim openssl.cnf
+
+openssl req -config ./openssl.cnf         -new -x509 -newkey rsa:2048         -nodes -days 36500 -outform DER         -keyout "MOK.priv"         -out "MOK.der"
+
+ls
+
+sudo mokutil --import MOK.der
+
+sudo cat /proc/keys
+
+kmodsign sha512 MOK.priv MOK.der module.ko
+
+module.ko 
+
+hexdump -Cv module.ko | tail -n 5
+
+kmodsign
+
+openssl x509 -in MOK.der -inform DER -outform PEM -out MOK.pem
+
+sbsign --key MOK.priv --cert MOK.pem my_binary.efi --output my_binary.efi.signed
+
+kmodsign
+
+sudo dnf -y install kmodsign
+
+#!/bin/bash
+
+echo -n "Enter a Common Name to embed in the keys: "
+
+read NAME
+
+mokutil sha512 MOK.priv MOK.der module.ko
+
+keyctl list %:.system_keyring
+
+cat << EOF > configuration_file.config
+[ req ]
+default_bits = 4096
+distinguished_name = req_distinguished_name
+prompt = no
+string_mask = utf8only
+x509_extensions = myexts
+
+[ req_distinguished_name ]
+O = Organization
+CN = Organization signing key
+emailAddress = E-mail address
+
+[ myexts ]
+basicConstraints=critical,CA:FALSE
+keyUsage=digitalSignature
+subjectKeyIdentifier=hash
+authorityKeyIdentifier=keyid
+EOF
+
+
+openssl req -x509 -new -nodes -utf8 -sha256 -days 36500 -batch -config configuration_file.config -outform DER -out public_key.der \  
+
+-keyout private_key.priv
+
+openssl req -x509 -new -nodes -utf8 -sha256 -days 36500 -batch -config configuration_file.config -outform DER -out public_key.der -keyout private_key.priv
+
+mokutil -#-import 
+
+ls
+
+mokutil --import public_key.der 
+
+make -C /usr/src/kernels/$(uname -r) M=$PWD modules
+
+perl /usr/src/kernels/$(uname -r)/scripts/sign-file sha256 my_signing_key.privmy_signing_key_pub.dermy_module.ko
+
+perl /usr/src/kernels/$(uname -r)/scripts/sign-file sha256 my_signing_key.priv my_signing_key_pub.der my_module.ko
+
+perl /usr/src/kernels/$(uname -r)/scripts/sign-file sha256 my_signing_key.priv my_signing_key_pub.der my_module.ko 
+
+mokutil
+
+mokutil --import
+
+modprobe -v vbox
+
+modprobe -v vboxsrv
+
+modprobe -v vboxsrv.sh
+
+lsmod | grep vbox
+
+
+
+
 } # end _fedora__64
 _pause(){
   echo "Press any key to continue"
