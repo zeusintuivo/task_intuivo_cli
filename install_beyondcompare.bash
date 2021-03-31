@@ -76,13 +76,6 @@ _version() {
   unset CODELASTESTBUILD
 } # end _version
 
-function _find_downloads_folder(){
-  local DOWNLOADFOLDER="$(su - "${SUDO_USER}" -c 'xdg-user-dir DOWNLOAD')"
-  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-  cd "${DOWNLOADFOLDER}"
-	echo -n "${DOWNLOADFOLDER}"
-  return 0
-} # end _find_downloads_folder
 
 _darwin__64() {
   sudo_it

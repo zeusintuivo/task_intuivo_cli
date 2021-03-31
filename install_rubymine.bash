@@ -2,7 +2,20 @@
 #
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
-#
+# Compatible start with low version bash, like mac before zsh change and after
+export USER_HOME
+export THISSCRIPTCOMPLETEPATH
+typeset -r THISSCRIPTCOMPLETEPATH="$(realpath $(which $(basename "$0")))"   # § This goes in the FATHER-MOTHER script
+
+export BASH_VERSION_NUMBER
+typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
+
+export  THISSCRIPTNAME
+typeset -r THISSCRIPTNAME="$(realpath $(which $(basename "$0")))"
+
+export _err
+typeset -i _err=0
+
 load_struct_testing_wget(){
     local provider="$HOME/_/clis/execute_command_intuivo_cli/struct_testing"
     [   -e "${provider}"  ] && source "${provider}" && echo "Loaded locally"
@@ -11,61 +24,49 @@ load_struct_testing_wget(){
 } # end load_struct_testing_wget
 load_struct_testing_wget
 
+export sudo_it
+function sudo_it() {
+  raise_to_sudo_and_user_home
+  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
+  enforce_variable_with_value SUDO_USER "${SUDO_USER}"
+  enforce_variable_with_value SUDO_UID "${SUDO_UID}"
+  enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
+  # Override bigger error trap  with local
+  function _trap_on_error(){
+    _err=$?
+    echo -e "\033[01;7m*** ERROR TRAP $THISSCRIPTNAME err<$_err>  \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}\(\) \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}\(\) \\n ERR ...\033[0m"
+    pkill curl 
+    pkill wget 
+    
+    if [ $_err -eq 2 ] && [[ "${FUNCNAME[1]}" == "_unzip" ]]  ; then 
+    {
+      touch /tmp/corrupted.tar.gzeraseit
+      determine_os_and_fire_action
+    } 
+    else 
+    {
+      exit 1
+    }
+    fi
+  }
+  function _trap_on_int(){
+    _err=$?
+    echo -e "\033[01;7m*** INT TRAP $THISSCRIPTNAME err<$_err> \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}\(\) \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}\(\) \\n INT ...\033[0m"
+    pkill curl 
+    pkill wget 
+    exit 1
+  }
+  trap _trap_on_error ERR 
+  trap _trap_on_int INT
+} # end sudo_it
+
+
 function _linux_prepare(){
-  export  THISSCRIPTNAME
-  typeset -gr THISSCRIPTNAME="$(pwd)/$(basename "$0")"
-  export _err
-  typeset -i _err=0
-  load_execute_boot_basic_with_sudo(){
-    # shellcheck disable=SC2030
-    if ( typeset -p "SUDO_USER"  &>/dev/null ) ; then
-    {
-      export USER_HOME
-      # typeset -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)  # Get the caller's of sudo home dir Just Linux
-      # shellcheck disable=SC2046
-      # shellcheck disable=SC2031
-      typeset -rg USER_HOME="$(echo -n $(bash -c "cd ~${SUDO_USER} && pwd"))"  # Get the caller's of sudo home dir LINUX and MAC
-    }
-    else
-    {
-      local USER_HOME=$HOME
-    }
-    fi
-    local -r provider="$USER_HOME/_/clis/execute_command_intuivo_cli/execute_boot_basic.sh"
-    echo source "${provider}"
-    # shellcheck disable=SC1090
-    [   -e "${provider}"  ] && source "${provider}"
-    [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/execute_boot_basic.sh -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
-    if ( command -v failed >/dev/null 2>&1; ) ; then
-    {
-      return 0
-    }
-    else
-    {
-      echo -e "\n \n  ERROR! Loading execute_boot_basic.sh \n \n "
-      exit 1;
-    }
-    fi
-    return 0
-  } # end load_execute_boot_basic_with_sudo
-
-  load_execute_boot_basic_with_sudo
-  _err=$?
-  if [ $_err -ne 0 ] ;  then
-  {
-    >&2 echo -e "ERROR There was an error loading load_execute_boot_basic_with_sudo Err:$_err "
-    exit $_err
-  }
-  fi
-
-  function _trap_on_exit(){
-    echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME EXITS ...\033[0m"
-
-  }
-  #trap kill ERR
-  trap _trap_on_exit EXIT
-  #trap kill INT
-} # end _linux_prepare
+  sudo_it
+  [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
+  export USER_HOME="/home/${SUDO_USER}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+}  # end _linux_prepare
 
 _version() {
   local PLATFORM="${1}" # mac windows linux
@@ -214,35 +215,25 @@ _fedora__32() {
 _centos__64() {
   _fedora__64
 } # end _centos__64
+_unzip(){
+  # Sample use
+  #    
+  #     _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
+  #
+  local DOWNLOADFOLDER="${1}"
+  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
 
-_fedora__64() {
- local CODENAME=$(_version "linux" "*.*")
-  echo "${CODENAME}";
-  local TARGET_URL="$(echo "${CODENAME}" | tail -1)"
-  CODENAME="$(basename "${TARGET_URL}" )"
-  local UNZIPDIR="$(echo "${CODENAME}" | sed 's/.tar.gz//g' )"
-  enforce_variable_with_value CODENAME "${CODENAME}"
-  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
-  enforce_variable_with_value HOME "${HOME}"
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  local UNZIPDIR="${2}"
   enforce_variable_with_value UNZIPDIR "${UNZIPDIR}"
 
-  if  it_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}" ; then
+  local CODENAME="${3}"
+  enforce_variable_with_value CODENAME "${CODENAME}"
+
+  file_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}" 
+  if  it_exists_with_spaces "${DOWNLOADFOLDER}/${UNZIPDIR}" ; then
   {
-    file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}"
-  }
-  else
-  {
-    file_exists_with_spaces $USER_HOME/Downloads
-    cd $USER_HOME/Downloads
-    _download "${TARGET_URL}" $USER_HOME/Downloads  ${CODENAME}
-    file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}"
-  }
-  fi
-  if  it_exists_with_spaces "$USER_HOME/Downloads/${UNZIPDIR}" ; then
-  {
-    rm -rf "$USER_HOME/Downloads/${UNZIPDIR}"
-    directory_does_not_exist_with_spaces "$USER_HOME/Downloads/${UNZIPDIR}"
+    rm -rf "${DOWNLOADFOLDER}/${UNZIPDIR}"
+    directory_does_not_exist_with_spaces "${DOWNLOADFOLDER}/${UNZIPDIR}"
   }
   fi
 
@@ -258,16 +249,16 @@ _fedora__64() {
 
   # provide error handling , once learned goes here. LEarn under if, once learned here.
   # Start loop while ERROR flag in case needs to try again, based on error
-  cd $USER_HOME/Downloads
-  #_try "tar xvzf  \"$USER_HOME/Downloads/${CODENAME}.tar.gz\"--directory=$USER_HOME/Downloads"
+  cd "${DOWNLOADFOLDER}"
+  #_try "tar xvzf  \"${DOWNLOADFOLDER}/${CODENAME}.tar.gz\"--directory=${DOWNLOADFOLDER}"
   # GROw bar with tar Progress bar tar REF: https://superuser.com/questions/168749/is-there-a-way-to-see-any-tar-progress-per-file
   # Compress tar cvfj big-files.tar.bz2 folder-with-big-files
-  # Compress tar cf - $USER_HOME/Downloads/${CODENAME}.tar.gz --directory=$USER_HOME/Downloads -P | pv -s $(du -sb $USER_HOME/Downloads/${CODENAME}.tar.gz | awk '{print $1}') | gzip > big-files.tar.gz
+  # Compress tar cf - ${DOWNLOADFOLDER}/${CODENAME}.tar.gz --directory=${DOWNLOADFOLDER} -P | pv -s $(du -sb ${DOWNLOADFOLDER}/${CODENAME}.tar.gz | awk '{print $1}') | gzip > big-files.tar.gz
   # Extract tar Progress bar REF: https://coderwall.com/p/l_m2yg/tar-untar-on-osx-linux-with-progress-bars
   # Extract tar sample pv file.tgz | tar xzf - -C target_directory
-  # Working simplme tar:  tar xvzf $USER_HOME/Downloads/${CODENAME}.tar.gz --directory=$USER_HOME/Downloads
-  pv $USER_HOME/Downloads/${CODENAME}  | tar xzf - -C $USER_HOME/Downloads
-  #local msg=$(_try "tar xvzf  \"$USER_HOME/Downloads/${CODENAME}.tar.gz\" --directory=$USER_HOME/Downloads " )
+  # Working simplme tar:  tar xvzf ${DOWNLOADFOLDER}/${CODENAME}.tar.gz --directory=${DOWNLOADFOLDER}
+  pv "${DOWNLOADFOLDER}/${CODENAME}"  | tar xzf - -C "${DOWNLOADFOLDER}"
+  #local msg=$(_try "tar xvzf  \"${DOWNLOADFOLDER}/${CODENAME}.tar.gz\" --directory=${DOWNLOADFOLDER} " )
   #  tar xvzf file.tar.gz
   # Where,
   # x: This option tells tar to extract the files.
@@ -288,52 +279,94 @@ _fedora__64() {
   }
   fi
 
-  local NEWDIRCODENAME=$(ls -1tr "$USER_HOME/Downloads/"  | tail  -1)
-  local FROMUZIPPED="$USER_HOME/Downloads/${NEWDIRCODENAME}"
+  local NEWDIRCODENAME=$(ls -1tr "${DOWNLOADFOLDER}/"  | tail  -1)
+  local FROMUZIPPED="${DOWNLOADFOLDER}/${NEWDIRCODENAME}"
   directory_exists_with_spaces  "${FROMUZIPPED}"
-  # directory_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}"
+  # directory_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
 
+} # end _unzip
+_backup_current_target_and_remove_if_exists(){
+  # Sample use
+  #    
+  #     _backup_current_target_and_remove_if_exists "${TARGETFOLDER}" 
+  #     _backup_current_target_and_remove_if_exists "${TARGETFOLDER}"
+  #
+  local TARGETFOLDER="${1}"
+  enforce_variable_with_value TARGETFOLDER "${TARGETFOLDER}"
 
-  if  it_exists_with_spaces "$USER_HOME/_/software/rubymine" ; then
+  if  it_exists_with_spaces "${TARGETFOLDER}/rubymine" ; then
   {
-     folder_date=$(date +"%Y%m%d")
-     if  it_exists_with_spaces "$USER_HOME/_/software/rubymine_${folder_date}" ; then
+     local folder_date=$(date +"%Y%m%d")
+     if  it_exists_with_spaces "${TARGETFOLDER}/rubymine_${folder_date}" ; then
      {
        warning A backup already exists for today "${ret}:${msg} \n ... adding time"
        folder_date=$(date +"%Y%m%d%H%M")
      }
      fi
-     msg=$(mv "$USER_HOME/_/software/rubymine" "$USER_HOME/_/software/rubymine_${folder_date}")
-     ret=$?
+     local msg=$(mv "${TARGETFOLDER}/rubymine" "${TARGETFOLDER}/rubymine_${folder_date}")
+     local ret=$?
      if [ $ret -gt 0 ] ; then
      {
        warning failed to move backup "${ret}:${msg} \n"
      }
      fi
-     directory_exists_with_spaces "$USER_HOME/_/software/rubymine_${folder_date}"
-     file_does_not_exist_with_spaces "$USER_HOME/_/software/rubymine"
+     directory_exists_with_spaces "${TARGETFOLDER}/rubymine_${folder_date}"
+     file_does_not_exist_with_spaces "${TARGETFOLDER}/rubymine"
   }
   fi
-  mkdir -p "$USER_HOME/_/software"
-  directory_exists_with_spaces "$USER_HOME/_/software"
-  mv "$USER_HOME/Downloads/${CODENAME}" "$USER_HOME/_/software/rubymine"
-  directory_does_not_exist_with_spaces "$USER_HOME/Downloads/${UNZIPDIR}"
-  directory_exists_with_spaces "$USER_HOME/_/software/rubymine"
-  directory_exists_with_spaces "$USER_HOME/_/software/rubymine/bin"
-  mkdir -p "$USER_HOME/.local/share/applications"
-  directory_exists_with_spaces "$USER_HOME/.local/share/applications"
-  mkdir -p "$USER_HOME/.local/share/mime/packages"
-  directory_exists_with_spaces "$USER_HOME/.local/share/mime/packages"
-  file_exists_with_spaces "$USER_HOME/_/software/rubymine/bin/rubymine.sh"
-  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/_/software/rubymine"
+} # end _backup_current_target_and_remove_if_exists
+_install_to_target(){
+  # Sample use
+  #    
+  #     _install_to_target "${TARGETFOLDER}" "${FROM_DOWNLOADEDFOLDER_UNZIPPED}"
+  #
+  local TARGETFOLDER="${1}"
+  enforce_variable_with_value TARGETFOLDER "${TARGETFOLDER}"
+
+  local FROM_DOWNLOADEDFOLDER_UNZIPPED="${2}"
+  enforce_variable_with_value FROM_DOWNLOADEDFOLDER_UNZIPPED "${FROM_DOWNLOADEDFOLDER_UNZIPPED}"
+  
+  mkdir -p "${TARGETFOLDER}"
+  directory_exists_with_spaces "${TARGETFOLDER}"
+  directory_exists_with_spaces "${FROM_DOWNLOADEDFOLDER_UNZIPPED}"
+
+  mv "${FROM_DOWNLOADEDFOLDER_UNZIPPED}" "${TARGETFOLDER}/rubymine"
+  _err=$?
+  if [ $ret -gt 0 ] ; then
+   {
+     failed to move "${FROM_DOWNLOADEDFOLDER_UNZIPPED}" to "${TARGETFOLDER}/rubymine"  "${ret}:${msg} \n"
+   }
+   fi
+  directory_exists_with_spaces "${TARGETFOLDER}/rubymine"
+  directory_exists_with_spaces "${TARGETFOLDER}/rubymine/bin"
+} # end _install_to_target
+_add_mine_associacions_and_browser_click_to_open (){
+  # Sample use
+  #    
+  #     _add_mine_associacions_and_browser_click_to_open "${TARGETFOLDER}" "${LOCALSHAREFOLDER}"  "${LOGGERFOLDER}"
+  #     _add_mine_associacions_and_browser_click_to_open "${TARGETFOLDER}" "${USER_HOME}/.local/share" $USER_HOME/_/work" 
+  #
+  local TARGETFOLDER="${1}"
+  enforce_variable_with_value TARGETFOLDER "${TARGETFOLDER}"
+  local LOCALSHAREFOLDER="${2}"
+  enforce_variable_with_value LOCALSHAREFOLDER "${LOCALSHAREFOLDER}"
+  local LOGGERFOLDER="${3}"
+  enforce_variable_with_value LOGGERFOLDER "${LOGGERFOLDER}"
+
+  mkdir -p "${LOCALSHAREFOLDER}/applications"
+  directory_exists_with_spaces "${LOCALSHAREFOLDER}/applications"
+  mkdir -p "${LOCALSHAREFOLDER}/mime/packages"
+  directory_exists_with_spaces "${LOCALSHAREFOLDER}/mime/packages"
+  file_exists_with_spaces "${TARGETFOLDER}/rubymine/bin/rubymine.sh"
+  chown $SUDO_USER:$SUDO_USER -R "${TARGETFOLDER}/rubymine"
   # Now Proceed to register REF:  https://gist.github.com/c80609a/752e566093b1489bd3aef0e56ee0426c
   ensure cat or "Failed to use cat command does not exists"
   ensure xdg-mime or "Failed to install run xdg-mime"
 
-   cat << EOF > $USER_HOME/_/software/rubymine/bin/mine-open.rb
+   cat << EOF > ${TARGETFOLDER}/rubymine/bin/mine-open.rb
 #!/usr/bin/env ruby
 
-# $USER_HOME/_/software/rubymine/bin/mine-open.rb
+# ${TARGETFOLDER}/rubymine/bin/mine-open.rb
 # script opens URL in format rubymine://open?file=%{file}:%{line} in RubyMine
 
 require 'uri'
@@ -360,37 +393,37 @@ rescue
 end
 puts arg
 EOF
-  file_exists_with_spaces "$USER_HOME/_/software/rubymine/bin/mine-open.rb"
-  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/_/software/rubymine/bin/mine-open.rb"
-  chmod +x $USER_HOME/_/software/rubymine/bin/mine-open.rb
+  file_exists_with_spaces "${TARGETFOLDER}/rubymine/bin/mine-open.rb"
+  chown $SUDO_USER:$SUDO_USER -R "${TARGETFOLDER}/rubymine/bin/mine-open.rb"
+  chmod +x ${TARGETFOLDER}/rubymine/bin/mine-open.rb
 
 
-    cat << EOF > $USER_HOME/_/software/rubymine/bin/mine-open.sh
+    cat << EOF > ${TARGETFOLDER}/rubymine/bin/mine-open.sh
 #!/usr/bin/env bash
 #encoding: UTF-8
-# $USER_HOME/_/software/rubymine/bin/mine-open.sh
+# ${TARGETFOLDER}/rubymine/bin/mine-open.sh
 # script opens URL in format rubymine://open?file=%{file}:%{line} in RubyMine
 
 echo "\${@}"
-echo "\${@}" >>  $USER_HOME/_/work/requested.log
-$USER_HOME/_/software/rubymine/bin/mine-open.rb \${@}
-filetoopen=\$($USER_HOME/_/software/rubymine/bin/mine-open.rb "\${@}")
+echo "\${@}" >>  ${LOGGERFOLDER}/requested.log
+${TARGETFOLDER}/rubymine/bin/mine-open.rb \${@}
+filetoopen=\$(${TARGETFOLDER}/rubymine/bin/mine-open.rb "\${@}")
 echo filetoopen "\${filetoopen}"
-echo "\${filetoopen}" >>  $USER_HOME/_/work/requestedfiletoopen.log
+echo "\${filetoopen}" >>  ${LOGGERFOLDER}/requestedfiletoopen.log
 mine "\${filetoopen}"
 
 EOF
-  mkdir -p $USER_HOME/_/work/
-  directory_exists_with_spaces $USER_HOME/_/work/
-  chown $SUDO_USER:$SUDO_USER $USER_HOME/_/work/
-  touch $USER_HOME/_/work/requestedfiletoopen.log
-  file_exists_with_spaces $USER_HOME/_/work/requestedfiletoopen.log
-  chown $SUDO_USER:$SUDO_USER -R $USER_HOME/_/work/requestedfiletoopen.log
-  file_exists_with_spaces "$USER_HOME/_/software/rubymine/bin/mine-open.sh"
-  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/_/software/rubymine/bin/mine-open.sh"
-  chmod +x $USER_HOME/_/software/rubymine/bin/mine-open.sh
+  mkdir -p ${LOGGERFOLDER}/
+  directory_exists_with_spaces ${LOGGERFOLDER}/
+  chown $SUDO_USER:$SUDO_USER ${LOGGERFOLDER}/
+  touch ${LOGGERFOLDER}/requestedfiletoopen.log
+  file_exists_with_spaces ${LOGGERFOLDER}/requestedfiletoopen.log
+  chown $SUDO_USER:$SUDO_USER -R ${LOGGERFOLDER}/requestedfiletoopen.log
+  file_exists_with_spaces "${TARGETFOLDER}/rubymine/bin/mine-open.sh"
+  chown $SUDO_USER:$SUDO_USER -R "${TARGETFOLDER}/rubymine/bin/mine-open.sh"
+  chmod +x ${TARGETFOLDER}/rubymine/bin/mine-open.sh
 
- cat << EOF > $USER_HOME/.local/share/mime/packages/application-x-mine.xml
+ cat << EOF > ${LOCALSHAREFOLDER}/mime/packages/application-x-mine.xml
 <?xml version="1.0" encoding="UTF-8"?>
 <mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
   <mime-type type="application/x-mine">
@@ -399,54 +432,54 @@ EOF
   </mime-type>
 </mime-info>
 EOF
-  file_exists_with_spaces "$USER_HOME/.local/share/mime/packages/application-x-mine.xml"
-  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/.local/share/mime/packages/application-x-mine.xml"
+  file_exists_with_spaces "${LOCALSHAREFOLDER}/mime/packages/application-x-mine.xml"
+  chown $SUDO_USER:$SUDO_USER -R "${LOCALSHAREFOLDER}/mime/packages/application-x-mine.xml"
 
 
 
 
-  cat << EOF > $USER_HOME/.local/share/applications/jetbrains-rubymine.desktop
-# $USER_HOME/.local/share/applications/jetbrains-rubymine.desktop
+  cat << EOF > ${LOCALSHAREFOLDER}/applications/jetbrains-rubymine.desktop
+# ${LOCALSHAREFOLDER}/applications/jetbrains-rubymine.desktop
 [Desktop Entry]
 Encoding=UTF-8
 Version=2019.3.2
 Type=Application
 Name=RubyMine
-Icon=$USER_HOME/_/software/rubymine/bin/rubymine.svg
-Exec="$USER_HOME/_/software/rubymine/bin/rubymine.sh" %f
+Icon=${TARGETFOLDER}/rubymine/bin/rubymine.svg
+Exec="${TARGETFOLDER}/rubymine/bin/rubymine.sh" %f
 MimeType=application/x-mine;text/x-mine;text/plain;text/x-chdr;text/x-csrc;text/x-c++hdr;text/x-c++src;text/x-java;text/x-dsrc;text/x-pascal;text/x-perl;text/x-python;application/x-php;application/x-httpd-php3;application/x-httpd-php4;application/x-httpd-php5;application/xml;text/html;text/css;text/x-sql;text/x-diff;x-directory/normal;inode/directory;
 Comment=The Most Intelligent Ruby and Rails IDE
 Categories=Development;IDE;
 Terminal=true
 StartupWMClass=jetbrains-rubymine
 EOF
-  file_exists_with_spaces "$USER_HOME/.local/share/applications/jetbrains-rubymine.desktop"
-  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/.local/share/applications/jetbrains-rubymine.desktop"
+  file_exists_with_spaces "${LOCALSHAREFOLDER}/applications/jetbrains-rubymine.desktop"
+  chown $SUDO_USER:$SUDO_USER -R "${LOCALSHAREFOLDER}/applications/jetbrains-rubymine.desktop"
 
 
-  cat << EOF > $USER_HOME/.local/share/applications/mimeinfo.cache
-# $USER_HOME/.local/share/applications/mimeinfo.cache
+  cat << EOF > ${LOCALSHAREFOLDER}/applications/mimeinfo.cache
+# ${LOCALSHAREFOLDER}/applications/mimeinfo.cache
 
 [MIME Cache]
 x-scheme-handler/rubymine=mine-open.desktop;
 EOF
-  file_exists_with_spaces "$USER_HOME/.local/share/applications/mimeinfo.cache"
-  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/.local/share/applications/mimeinfo.cache"
+  file_exists_with_spaces "${LOCALSHAREFOLDER}/applications/mimeinfo.cache"
+  chown $SUDO_USER:$SUDO_USER -R "${LOCALSHAREFOLDER}/applications/mimeinfo.cache"
 
-  cat << EOF > $USER_HOME/.local/share/applications/mine-open.desktop
-# $USER_HOME/.local/share/applications/mine-open.desktop
+  cat << EOF > ${LOCALSHAREFOLDER}/applications/mine-open.desktop
+# ${LOCALSHAREFOLDER}/applications/mine-open.desktop
 [Desktop Entry]
 Encoding=UTF-8
 Version=1.0
 Type=Application
 Terminal=true
-Exec="$USER_HOME/_/software/rubymine/bin/mine-open.sh" %f
+Exec="${TARGETFOLDER}/rubymine/bin/mine-open.sh" %f
 MimeType=application/rubymine;x-scheme-handler/rubymine;
 Name=MineOpen
 Comment=BetterErrors
 EOF
-  file_exists_with_spaces "$USER_HOME/.local/share/applications/mine-open.desktop"
-  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/.local/share/applications/mine-open.desktop"
+  file_exists_with_spaces "${LOCALSHAREFOLDER}/applications/mine-open.desktop"
+  chown $SUDO_USER:$SUDO_USER -R "${LOCALSHAREFOLDER}/applications/mine-open.desktop"
 
   # xdg-mime default jetbrains-rubymine.desktop text/plain;text/x-chdr;text/x-csrc;text/x-c++hdr;text/x-c++src;text/x-java;text/x-dsrc;text/x-pascal;text/x-perl;text/x-python;application/x-php;application/x-httpd-php3;application/x-httpd-php4;application/x-httpd-php5;application/xml;text/html;text/css;text/x-sql;text/x-diff;x-directory/normal;inode/directory;
   # xdg-mime default mine-open.desktop x-scheme-handler/rubymine
@@ -458,31 +491,31 @@ EOF
   su - "${SUDO_USER}" -c "xdg-mime default jetbrains-rubymine.desktop text/x-mine"
   su - "${SUDO_USER}" -c "xdg-mime default jetbrains-rubymine.desktop application/x-mine"
 
-#   cat << EOF > $USER_HOME/.config/mimeapps.list
-#   cat << EOF > $USER_HOME/.local/share/applications/mimeapps.list
-# [Default Applications]
-# x-scheme-handler/rubymine=mine-open.desktop
-# text/rubymine=mine-open.desktop
-# application/rubymine=mine-open.desktop
-# x-scheme-handler/x-mine=jetbrains-rubymine.desktop
-# text/x-mine=jetbrains-rubymine.desktop
-# application/x-mine=jetbrains-rubymine.desktop
+  #   cat << EOF > $USER_HOME/.config/mimeapps.list
+  #   cat << EOF > ${LOCALSHAREFOLDER}/applications/mimeapps.list
+  # [Default Applications]
+  # x-scheme-handler/rubymine=mine-open.desktop
+  # text/rubymine=mine-open.desktop
+  # application/rubymine=mine-open.desktop
+  # x-scheme-handler/x-mine=jetbrains-rubymine.desktop
+  # text/x-mine=jetbrains-rubymine.desktop
+  # application/x-mine=jetbrains-rubymine.desktop
 
-# [Added Associations]
-# x-scheme-handler/rubymine=mine-open.desktop;
-# text/rubymine=mine-open.desktop;
-# application/rubymine=mine-open.desktop;
-# x-scheme-handler/x-mine=jetbrains-rubymine.desktop;
-# text/x-mine=jetbrains-rubymine.desktop;
-# application/x-mine=jetbrains-rubymine.desktop;
-# EOF
-#   file_exists_with_spaces "$USER_HOME/.local/share/applications/mimeapps.list"
-#   file_exists_with_spaces "$USER_HOME/.config/mimeapps.list"
-ln -fs "$USER_HOME/.config/mimeapps.list" "$USER_HOME/.local/share/applications/mimeapps.list"
-softlink_exists_with_spaces "$USER_HOME/.local/share/applications/mimeapps.list>$USER_HOME/.config/mimeapps.list"
-chown $SUDO_USER:$SUDO_USER -R  "$USER_HOME/.local/share/applications/mimeapps.list"
+  # [Added Associations]
+  # x-scheme-handler/rubymine=mine-open.desktop;
+  # text/rubymine=mine-open.desktop;
+  # application/rubymine=mine-open.desktop;
+  # x-scheme-handler/x-mine=jetbrains-rubymine.desktop;
+  # text/x-mine=jetbrains-rubymine.desktop;
+  # application/x-mine=jetbrains-rubymine.desktop;
+  # EOF
+  #   file_exists_with_spaces "${LOCALSHAREFOLDER}/applications/mimeapps.list"
+  #   file_exists_with_spaces "$USER_HOME/.config/mimeapps.list"
+  ln -fs "$USER_HOME/.config/mimeapps.list" "${LOCALSHAREFOLDER}/applications/mimeapps.list"
+  softlink_exists_with_spaces "${LOCALSHAREFOLDER}/applications/mimeapps.list>$USER_HOME/.config/mimeapps.list"
+  chown $SUDO_USER:$SUDO_USER -R  "${LOCALSHAREFOLDER}/applications/mimeapps.list"
 
-file_exists_with_spaces "$USER_HOME/_/software/rubymine/bin/mine-open.sh"
+  file_exists_with_spaces "${TARGETFOLDER}/rubymine/bin/mine-open.sh"
 
   su - "${SUDO_USER}" -c "xdg-mime query default x-scheme-handler/rubymine"
   su - "${SUDO_USER}" -c "xdg-mime query default x-scheme-handler/x-mine"
@@ -502,8 +535,8 @@ file_exists_with_spaces "$USER_HOME/_/software/rubymine/bin/mine-open.sh"
     passed Install with xdg-mime scheme success!
   }
   fi
-  su - "${SUDO_USER}" -c "update-mime-database \"$USER_HOME/.local/share/mime\""
-  su - "${SUDO_USER}" -c "update-desktop-database \"$USER_HOME/.local/share/applications\""
+  su - "${SUDO_USER}" -c "update-mime-database \"${LOCALSHAREFOLDER}/mime\""
+  su - "${SUDO_USER}" -c "update-desktop-database \"${LOCALSHAREFOLDER}/applications\""
   su - "${SUDO_USER}" -c "touch test12345.rb "
   su - "${SUDO_USER}" -c "gio info test12345.rb  | grep \"standard::content-type\""
   su - "${SUDO_USER}" -c "touch test12345.erb "
@@ -542,6 +575,54 @@ file_exists_with_spaces "$USER_HOME/_/software/rubymine/bin/mine-open.sh"
     BetterErrors.editor = \"x-mine://open?file=%{file}:%{line}\"
   end
   "
+} # end _add_mine_associacions_and_browser_click_to_open
+
+_fedora__64() {
+  _linux_prepare
+ local CODENAME=$(_version "linux" "*.*")
+  echo "${CODENAME}";
+  local TARGET_URL="$(echo "${CODENAME}" | tail -1)"
+  CODENAME="$(basename "${TARGET_URL}" )"
+  local UNZIPDIR="$(echo "${CODENAME}" | sed 's/.tar.gz//g' )"
+  enforce_variable_with_value CODENAME "${CODENAME}"
+  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
+  enforce_variable_with_value HOME "${HOME}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  enforce_variable_with_value UNZIPDIR "${UNZIPDIR}"
+  local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  local TARGETFOLDER="${USER_HOME}/_/software"
+  enforce_variable_with_value TARGETFOLDER "${TARGETFOLDER}"
+
+  # _remove_if_corrypted_zipfile_folder?
+  if it_exists_with_spaces /tmp/corrupted.tar.gzeraseit ; then 
+  {
+    if it_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"; then 
+    {
+      passed Removing Corrupted zip file 
+      rm "${DOWNLOADFOLDER}/${CODENAME}"
+      file_does_not_exist_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
+      rm  /tmp/corrupted.tar.gzeraseit 
+    }
+    fi
+  }
+  fi
+  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 
+  _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
+  _backup_current_target_and_remove_if_exists "${TARGETFOLDER}"
+  _install_to_target "${TARGETFOLDER}" "${DOWNLOADFOLDER}/${UNZIPDIR}"
+
+  # _remove_unzipped_folder?
+  rm "${DOWNLOADFOLDER}/${UNZIPDIR}"
+  directory_does_not_exist_with_spaces "${DOWNLOADFOLDER}/${UNZIPDIR}"
+
+  # _remove_downloaded_file?
+  rm "${DOWNLOADFOLDER}/${CODENAME}"
+  file_does_not_exist_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
+ 
+   _add_mine_associacions_and_browser_click_to_open "${TARGETFOLDER}" "${USER_HOME}/.local/share" "${USER_HOME}/_/work" 
+
+  
 } # end _fedora__64
 
 _mingw__64() {
