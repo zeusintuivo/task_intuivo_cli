@@ -84,9 +84,17 @@ _fedora__64() {
   echo Fedora 33 https://www.if-not-true-then-false.com/2010/install-virtualbox-with-yum-on-fedora-centos-red-hat-rhel/
   _linux_prepare
   
-	
-  cd /etc/yum.repos.d/
-  wget http://download.virtualbox.org/virtualbox/rpm/fedora/virtualbox.repo
+	if it_exists_with_spaces "/etc/yum.repos.d/virtualbox.repo" ; then
+  {
+    file_exists_with_spaces "/etc/yum.repos.d/virtualbox.repo"
+  }
+  else
+  {
+    cd "/etc/yum.repos.d/"
+    wget http://download.virtualbox.org/virtualbox/rpm/fedora/virtualbox.repo
+    file_exists_with_spaces "/etc/yum.repos.d/virtualbox.repo"
+  }
+  fi
    install_requirements "linux" "
     # ReadHat Flavor only
     binutils
@@ -137,6 +145,15 @@ _fedora__64() {
     make
     modinfo
   "
+  echo sudo dnf install VirtualBox-6.1 -y
+  install_requirements "linux" "
+    # ReadHat Flavor only
+    VirtualBox-6.1
+  "
+  verify_is_installed "
+  VirtualBox
+  "
+
   cd  "${USER_HOME}"
   [ ! -f  "${USER_HOME}/.virtualboxinstallreboot" ] && echo System wiil reboot now, after you press any key
   [ ! -f  "${USER_HOME}/.virtualboxinstallreboot" ] &&  touch "${USER_HOME}/.virtualboxinstallreboot" && _pause && reboot
@@ -203,171 +220,163 @@ for modfile in $(dirname $(modinfo -n vboxnetadp))/*.ko; do
 done
 EOF
 echo REF: https://superuser.com/questions/1539756/virtualbox-6-fedora-30-efi-secure-boot-you-may-need-to-sign-the-kernel-modules
-  chmod 700 /root/signed-modules/sign-virtual-box 
-  /root/signed-modules/sign-virtual-box
-  modprobe vboxdrv
-  install_requirements "linux" "
-    # ReadHat Flavor only
-    VirtualBox-6.1
-  "
-  verify_is_installed "
-    VirtualBox-6.1
-  "
-  sudo dnf install VirtualBox-6.1 -y
+chmod 700 /root/signed-modules/sign-virtual-box 
+/root/signed-modules/sign-virtual-box
+modprobe vboxdrv
+rm /home/zeus/.virtualboxinstallrebootsigned
+
   /usr/lib/virtualbox/vboxdrv.sh setup
 
 
 
-sudo dnf -y install @development-tools\
-sudo dnf -y install kernel-headers kernel-devel dkms elfutils-libelf-devel qt5-qtx11extras
-cat <<EOF | sudo tee /etc/yum.repos.d/virtualbox.repo \
-[virtualbox]\
-name=Fedora $releasever - $basearch - VirtualBox\
-baseurl=http://download.virtualbox.org/virtualbox/rpm/fedora/29/\$basearch\
-enabled=1\
-gpgcheck=1\
-repo_gpgcheck=1\
-gpgkey=https://www.virtualbox.org/download/oracle_vbox.asc\
+# sudo dnf -y install @development-tools\
+# sudo dnf -y install kernel-headers kernel-devel dkms elfutils-libelf-devel qt5-qtx11extras
+# cat <<EOF | sudo tee /etc/yum.repos.d/virtualbox.repo \
+# [virtualbox]\
+# name=Fedora $releasever - $basearch - VirtualBox\
+# baseurl=http://download.virtualbox.org/virtualbox/rpm/fedora/29/\$basearch\
+# enabled=1\
+# gpgcheck=1\
+# repo_gpgcheck=1\
+# gpgkey=https://www.virtualbox.org/download/oracle_vbox.asc\
 
-EOF
+# EOF
 
-sudo dnf search virtualbox
-yes | sudo dnf search virtualbox
-yes | sudo dnf -y install VirtualBox
-yes | sudo dnf -y install VirtualBox-6.0
-sudo usermod -a -G vboxusers $USER
-id $USER
-echo REF: https://computingforgeeks.com/how-to-install-virtualbox-on-fedora-linux/
-echo Start Virtual Box
-/sbin/vboxconfig
-sudo /sbin/vboxconfig
-dmesg
-sudo dnf -y update
-sudo dnf -y purge virtualbox
-sudo dnf -y remove VirtualBox
-sudo dnf -y uninstall VirtualBox
-sudo dnf -y remove VirtualBox
-sudo dnf -y remove VirtualBox-6.0-6.0.14_133895_fedora29-1.x86_64 
-sudo dnf -y clean
-su - root /sbin/vboxconfig
-sudo /etc/init.d/vboxdrv setup
-sudo dnf -y install filezilla
-su
+# sudo dnf search virtualbox
+# yes | sudo dnf search virtualbox
+# yes | sudo dnf -y install VirtualBox
+# yes | sudo dnf -y install VirtualBox-6.0
+# sudo usermod -a -G vboxusers $USER
+# id $USER
+# echo REF: https://computingforgeeks.com/how-to-install-virtualbox-on-fedora-linux/
+# echo Start Virtual Box
+# /sbin/vboxconfig
+# sudo /sbin/vboxconfig
+# dmesg
+# sudo dnf -y update
+# sudo dnf -y purge virtualbox
+# sudo dnf -y remove VirtualBox
+# sudo dnf -y uninstall VirtualBox
+# sudo dnf -y remove VirtualBox
+# sudo dnf -y remove VirtualBox-6.0-6.0.14_133895_fedora29-1.x86_64 
+# sudo dnf -y clean
+# su - root /sbin/vboxconfig
+# sudo /etc/init.d/vboxdrv setup
+# sudo dnf -y install filezilla
+# su
 
-/sbin/vboxconfig
+# /sbin/vboxconfig
 
-locate vbox{drv,netadp,netflt,pci}.ko
+# locate vbox{drv,netadp,netflt,pci}.ko
 
-modprobe vboxdrv
+# modprobe vboxdrv
 
-dmesg
+# dmesg
 
-zeus has exited /home/zeus/_/work/virtualbox for /etc/yum.repos.d/
-virtualbox
-su
+# zeus has exited /home/zeus/_/work/virtualbox for /etc/yum.repos.d/
+# virtualbox
+# su
 
-KERN_DIR=/usr/src/kernels/`uname -r`
+# KERN_DIR=/usr/src/kernels/`uname -r`
 
-export KERN_DIR
+# export KERN_DIR
 
-virtualbox
+# virtualbox
 
-openssl req -config ./openssl.cnf         -new -x509 -newkey rsa:2048         -nodes -days 36500 -outform DER         -keyout "MOK.priv"         -out "MOK.der"
+# openssl req -config ./openssl.cnf         -new -x509 -newkey rsa:2048         -nodes -days 36500 -outform DER         -keyout "MOK.priv"         -out "MOK.der"
 
-ls
+# ls
 
-ls -la
+# ls -la
 
-pwd
+# pwd
 
-vim openssl.cnf
+# vim openssl.cnf
 
-openssl req -config ./openssl.cnf         -new -x509 -newkey rsa:2048         -nodes -days 36500 -outform DER         -keyout "MOK.priv"         -out "MOK.der"
+# openssl req -config ./openssl.cnf         -new -x509 -newkey rsa:2048         -nodes -days 36500 -outform DER         -keyout "MOK.priv"         -out "MOK.der"
 
-ls
+# ls
 
-sudo mokutil --import MOK.der
+# sudo mokutil --import MOK.der
 
-sudo cat /proc/keys
+# sudo cat /proc/keys
 
-kmodsign sha512 MOK.priv MOK.der module.ko
+# kmodsign sha512 MOK.priv MOK.der module.ko
 
-module.ko 
+# module.ko 
 
-hexdump -Cv module.ko | tail -n 5
+# hexdump -Cv module.ko | tail -n 5
 
-kmodsign
+# kmodsign
 
-openssl x509 -in MOK.der -inform DER -outform PEM -out MOK.pem
+# openssl x509 -in MOK.der -inform DER -outform PEM -out MOK.pem
 
-sbsign --key MOK.priv --cert MOK.pem my_binary.efi --output my_binary.efi.signed
+# sbsign --key MOK.priv --cert MOK.pem my_binary.efi --output my_binary.efi.signed
 
-kmodsign
+# kmodsign
 
-sudo dnf -y install kmodsign
+# sudo dnf -y install kmodsign
 
-#!/bin/bash
+# #!/bin/bash
 
-echo -n "Enter a Common Name to embed in the keys: "
+# echo -n "Enter a Common Name to embed in the keys: "
 
-read NAME
+# read NAME
 
-mokutil sha512 MOK.priv MOK.der module.ko
+# mokutil sha512 MOK.priv MOK.der module.ko
 
-keyctl list %:.system_keyring
+# keyctl list %:.system_keyring
 
-cat << EOF > configuration_file.config
-[ req ]
-default_bits = 4096
-distinguished_name = req_distinguished_name
-prompt = no
-string_mask = utf8only
-x509_extensions = myexts
+# cat << EOF > configuration_file.config
+# [ req ]
+# default_bits = 4096
+# distinguished_name = req_distinguished_name
+# prompt = no
+# string_mask = utf8only
+# x509_extensions = myexts
 
-[ req_distinguished_name ]
-O = Organization
-CN = Organization signing key
-emailAddress = E-mail address
+# [ req_distinguished_name ]
+# O = Organization
+# CN = Organization signing key
+# emailAddress = E-mail address
 
-[ myexts ]
-basicConstraints=critical,CA:FALSE
-keyUsage=digitalSignature
-subjectKeyIdentifier=hash
-authorityKeyIdentifier=keyid
-EOF
+# [ myexts ]
+# basicConstraints=critical,CA:FALSE
+# keyUsage=digitalSignature
+# subjectKeyIdentifier=hash
+# authorityKeyIdentifier=keyid
+# EOF
 
 
-openssl req -x509 -new -nodes -utf8 -sha256 -days 36500 -batch -config configuration_file.config -outform DER -out public_key.der \  
+# openssl req -x509 -new -nodes -utf8 -sha256 -days 36500 -batch -config configuration_file.config -outform DER -out public_key.der -keyout private_key.priv
 
--keyout private_key.priv
+# openssl req -x509 -new -nodes -utf8 -sha256 -days 36500 -batch -config configuration_file.config -outform DER -out public_key.der -keyout private_key.priv
 
-openssl req -x509 -new -nodes -utf8 -sha256 -days 36500 -batch -config configuration_file.config -outform DER -out public_key.der -keyout private_key.priv
+# mokutil -#-import 
 
-mokutil -#-import 
+# ls
 
-ls
+# mokutil --import public_key.der 
 
-mokutil --import public_key.der 
+# make -C /usr/src/kernels/$(uname -r) M=$PWD modules
 
-make -C /usr/src/kernels/$(uname -r) M=$PWD modules
+# perl /usr/src/kernels/$(uname -r)/scripts/sign-file sha256 my_signing_key.priv my_signing_key_pub.dermy_module.ko
 
-perl /usr/src/kernels/$(uname -r)/scripts/sign-file sha256 my_signing_key.privmy_signing_key_pub.dermy_module.ko
+# perl /usr/src/kernels/$(uname -r)/scripts/sign-file sha256 my_signing_key.priv my_signing_key_pub.der my_module.ko
 
-perl /usr/src/kernels/$(uname -r)/scripts/sign-file sha256 my_signing_key.priv my_signing_key_pub.der my_module.ko
+# perl /usr/src/kernels/$(uname -r)/scripts/sign-file sha256 my_signing_key.priv my_signing_key_pub.der my_module.ko 
 
-perl /usr/src/kernels/$(uname -r)/scripts/sign-file sha256 my_signing_key.priv my_signing_key_pub.der my_module.ko 
+# mokutil
 
-mokutil
+# mokutil --import
 
-mokutil --import
+# modprobe -v vbox
 
-modprobe -v vbox
+# modprobe -v vboxsrv
 
-modprobe -v vboxsrv
+# modprobe -v vboxsrv.sh
 
-modprobe -v vboxsrv.sh
-
-lsmod | grep vbox
+# lsmod | grep vbox
 
 
 
