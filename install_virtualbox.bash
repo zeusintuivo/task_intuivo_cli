@@ -195,7 +195,9 @@ _fedora__64() {
   }
   fi
   cd /root/signed-modules
-  # vboxdrv vboxnetflt vboxnetadp
+  # need to sign the kernel modules (vboxdrv, vboxnetflt, vboxnetadp, vboxpci)
+    binutils
+    gcc
 cat <<EOF | tee /root/signed-modules/sign-virtual-box 
 #!/bin/bash
 
@@ -217,12 +219,18 @@ for modfile in $(dirname $(modinfo -n vboxnetadp))/*.ko; do
                                 /root/signed-modules/MOK.priv \
                                 /root/signed-modules/MOK.der "$modfile"
 done
+for modfile in $(dirname $(modinfo -n vboxpci))/*.ko; do
+  echo "Signing $modfile"
+  /usr/src/kernels/$(uname -r)/scripts/sign-file sha256 \
+                                /root/signed-modules/MOK.priv \
+                                /root/signed-modules/MOK.der "$modfile"
+done
 EOF
 echo REF: https://superuser.com/questions/1539756/virtualbox-6-fedora-30-efi-secure-boot-you-may-need-to-sign-the-kernel-modules
 chmod 700 /root/signed-modules/sign-virtual-box 
 /root/signed-modules/sign-virtual-box
-modprobe vboxdrv
-rm /home/zeus/.virtualboxinstallrebootsigned
+rm "${USER_HOME}/.virtualboxinstallrebootsigned"
+rm "${USER_HOME}/.virtualboxinstallreboot" 
 
   /usr/lib/virtualbox/vboxdrv.sh setup
 
@@ -272,7 +280,6 @@ rm /home/zeus/.virtualboxinstallrebootsigned
 
 # dmesg
 
-# zeus has exited /home/zeus/_/work/virtualbox for /etc/yum.repos.d/
 # virtualbox
 # su
 
@@ -326,36 +333,36 @@ rm /home/zeus/.virtualboxinstallrebootsigned
 
 # keyctl list %:.system_keyring
 
-# cat << EOF > configuration_file.config
-# [ req ]
-# default_bits = 4096
-# distinguished_name = req_distinguished_name
-# prompt = no
-# string_mask = utf8only
-# x509_extensions = myexts
+cat << EOF > configuration_file.config
+[ req ]
+default_bits = 4096
+distinguished_name = req_distinguished_name
+prompt = no
+string_mask = utf8only
+x509_extensions = myexts
 
-# [ req_distinguished_name ]
-# O = Organization
-# CN = Organization signing key
-# emailAddress = E-mail address
+[ req_distinguished_name ]
+O = Organization
+CN = Organization signing key
+emailAddress = E-mail address
 
-# [ myexts ]
-# basicConstraints=critical,CA:FALSE
-# keyUsage=digitalSignature
-# subjectKeyIdentifier=hash
-# authorityKeyIdentifier=keyid
-# EOF
+[ myexts ]
+basicConstraints=critical,CA:FALSE
+keyUsage=digitalSignature
+subjectKeyIdentifier=hash
+authorityKeyIdentifier=keyid
+EOF
 
-
-# openssl req -x509 -new -nodes -utf8 -sha256 -days 36500 -batch -config configuration_file.config -outform DER -out public_key.der -keyout private_key.priv
 
 # openssl req -x509 -new -nodes -utf8 -sha256 -days 36500 -batch -config configuration_file.config -outform DER -out public_key.der -keyout private_key.priv
+
+openssl req -x509 -new -nodes -utf8 -sha256 -days 36500 -batch -config configuration_file.config -outform DER -out public_key.der -keyout private_key.priv
 
 # mokutil -#-import 
 
 # ls
 
-# mokutil --import public_key.der 
+mokutil --import public_key.der 
 
 # make -C /usr/src/kernels/$(uname -r) M=$PWD modules
 
@@ -378,7 +385,15 @@ rm /home/zeus/.virtualboxinstallrebootsigned
 # lsmod | grep vbox
 
 
+echo now login as root su 
+echo and run 
+echo "
+KERN_DIR=/usr/src/kernels/`uname -r` 
+export KERN_DIR
+/sbin/vboxconfig 
 
+"
+_pause " Presiona tecla para terminar aqui "
 
 } # end _fedora__64
 _pause() {
