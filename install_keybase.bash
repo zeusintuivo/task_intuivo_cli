@@ -3,7 +3,6 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 #
-
 # Compatible start with low version bash, like mac before zsh change and after
 export USER_HOME
 export THISSCRIPTCOMPLETEPATH
@@ -41,30 +40,31 @@ function sudo_it() {
   trap _trap_on_error ERR INT
 } # end sudo_it
 
-
 _linux_prepare(){
   sudo_it
-  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home
+  [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
+  export USER_HOME="/home/${SUDO_USER}"
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  local TARGET_URL="${1}"
+}  # end _linux_prepare
+
+_debian__64(){
+  _linux_prepare 
+  local TARGET_URL=https://prerelease.keybase.io/keybase_amd64.deb
   enforce_variable_with_value TARGET_URL "${TARGET_URL}"
   local CODENAME=$(basename "${TARGET_URL}")
   enforce_variable_with_value CODENAME "${CODENAME}"
-  local DOWNLOADFOLDER="${USER_HOME}/Downloads"
+   local DOWNLOADFOLDER="$(_find_downloads_folder)"
   enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
   _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
-
-}
-
-_debian__64(){
-  _linux_prepare https://prerelease.keybase.io/keybase_amd64.deb
-  _install_rpm "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
+  _install_apt "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
+  _err=$?
+  _remove_downloaded_codename_or_err  $_err "${DOWNLOADFOLDER}/${CODENAME}" 
+  _err=$?
+  return  $_err  
 } # end __debian__64
 
 _debian__32(){
-  sudo_it
-  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  _linux_prepare
   local TARGET_URL=https://prerelease.keybase.io/keybase_i386.deb
   enforce_variable_with_value TARGET_URL "${TARGET_URL}"
   local CODENAME=$(basename "${TARGET_URL}")
@@ -72,36 +72,43 @@ _debian__32(){
   local DOWNLOADFOLDER="${USER_HOME}/Downloads"
   enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
   _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
-  _install_rpm "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
+  _install_apt "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
+  _err=$?
+  _remove_downloaded_codename_or_err  $_err "${DOWNLOADFOLDER}/${CODENAME}" 
+  _err=$?
+  return  $_err  
 } # end __debian__64
 
 _fedora__32() {
-  sudo_it
-  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  _linux_prepare
   local TARGET_URL=https://prerelease.keybase.io/keybase_i386.rpm
   enforce_variable_with_value TARGET_URL "${TARGET_URL}"
   local CODENAME=$(basename "${TARGET_URL}")
   enforce_variable_with_value CODENAME "${CODENAME}"
-  local DOWNLOADFOLDER="${USER_HOME}/Downloads"
+   local DOWNLOADFOLDER="$(_find_downloads_folder)"
   enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
   _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
   _install_rpm "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
+  _err=$?
+  _remove_downloaded_codename_or_err  $_err "${DOWNLOADFOLDER}/${CODENAME}" 
+  _err=$?
+  return  $_err
 } # end _fedora__32
 
 _fedora__64() {
-  sudo_it
-  [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
-  export USER_HOME="/home/${SUDO_USER}"
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  _linux_prepare 
   local TARGET_URL=https://prerelease.keybase.io/keybase_amd64.rpm
   enforce_variable_with_value TARGET_URL "${TARGET_URL}"
-	local CODENAME=$(basename "${TARGET_URL}")
-	enforce_variable_with_value CODENAME "${CODENAME}"
-	local DOWNLOADFOLDER="${USER_HOME}/Downloads"
-	enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
- 	_do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+  local CODENAME=$(basename "${TARGET_URL}")
+  enforce_variable_with_value CODENAME "${CODENAME}"
+   local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
   _install_rpm "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
+  _err=$?
+  _remove_downloaded_codename_or_err  $_err "${DOWNLOADFOLDER}/${CODENAME}" 
+  _err=$?
+  return  $_err
 } # end _fedora__64
 
 _main() {

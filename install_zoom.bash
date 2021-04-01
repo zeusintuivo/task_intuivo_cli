@@ -96,16 +96,68 @@ _extract_version(){
 	# | grep "What&apos;s New in&nbsp;WebStorm&nbsp;" | sed 's/\;/\;'\\n'/g' | sed s/\</\\n\</g  )
 } # end _extract_version
 
+_debian__64(){
+  _linux_prepare 
+  local TARGET_URL=https://zoom.us/client/latest/zoom_amd64.deb
+  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
+  local CODENAME=$(basename "${TARGET_URL}")
+  enforce_variable_with_value CODENAME "${CODENAME}"
+   local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+  _install_apt "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
+  _err=$?
+  _remove_downloaded_codename_or_err  $_err "${DOWNLOADFOLDER}/${CODENAME}" 
+  _err=$?
+  return  $_err
+} # end __debian__64
+
+_debian__32(){
+  _linux_prepare 
+  local TARGET_URL=https://zoom.us/client/latest/zoom_i386.deb
+  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
+  local CODENAME=$(basename "${TARGET_URL}")
+  enforce_variable_with_value CODENAME "${CODENAME}"
+   local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+  _install_apt "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
+  _err=$?
+  _remove_downloaded_codename_or_err  $_err "${DOWNLOADFOLDER}/${CODENAME}" 
+  _err=$?
+  return  $_err
+} # end _debian__32
+
+_fedora__32() {
+  _linux_prepare
+  local TARGET_URL=https://zoom.us/client/latest/zoom_i386.rpm
+  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
+  local CODENAME=$(basename "${TARGET_URL}")
+  enforce_variable_with_value CODENAME "${CODENAME}"
+  local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+  _install_rpm "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
+  _err=$?
+  _remove_downloaded_codename_or_err  $_err "${DOWNLOADFOLDER}/${CODENAME}" 
+  _err=$?
+  return  $_err
+} # end _fedora__32
+
 _fedora__64() {
   _linux_prepare
   local TARGET_URL=https://zoom.us/client/latest/zoom_x86_64.rpm
   enforce_variable_with_value TARGET_URL "${TARGET_URL}"
 	local CODENAME=$(basename "${TARGET_URL}")
 	enforce_variable_with_value CODENAME "${CODENAME}"
-	local DOWNLOADFOLDER="${USER_HOME}/Downloads"
-	enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
- 	_do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+  local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+	_do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
   _install_rpm "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
+  _err=$?
+  _remove_downloaded_codename_or_err  $_err "${DOWNLOADFOLDER}/${CODENAME}" 
+  _err=$?
+  return  $_err
 } # end _fedora__64
 
 _main() {
