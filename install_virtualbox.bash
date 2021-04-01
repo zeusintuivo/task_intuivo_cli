@@ -140,7 +140,8 @@ _fedora__64() {
     pv
     nano
     vim
-     gcc
+    
+    gcc
     make
     modinfo
   "
@@ -191,14 +192,15 @@ _fedora__64() {
 
     echo 4- Reboot your system and a blue screen appear, select Enroll MOK --> Continue --> put the previous password and your system will start.
     echo System will reboot now, after you press any key
-    [ ! -f  "${USER_HOME}/.virtualboxinstallrebootsigned" ] && touch "${USER_HOME}/.virtualboxinstallrebootsigned"  && _pause "sign reboot 2" && reboot
+    [ ! -f  "${USER_HOME}/.virtualboxinstallrebootsigned" ] && touch "${USER_HOME}/.virtualboxinstallrebootsigned"  && _pause "sign reboot 4" && reboot
   }
   fi
-  cd /root/signed-modules
-  # need to sign the kernel modules (vboxdrv, vboxnetflt, vboxnetadp, vboxpci)
-    binutils
-    gcc
-cat <<EOF | tee /root/signed-modules/sign-virtual-box 
+  if [ ! -f  "${USER_HOME}/.virtualboxinstallrebootsigned2" ] ; then 
+  {
+      cd /root/signed-modules
+      # need to sign the kernel modules (vboxdrv, vboxnetflt, vboxnetadp, vboxpci)
+        
+    cat <<EOF | tee /root/signed-modules/sign-virtual-box 
 #!/bin/bash
 
 for modfile in $(dirname $(modinfo -n vboxdrv))/*.ko; do
@@ -226,10 +228,21 @@ for modfile in $(dirname $(modinfo -n vboxpci))/*.ko; do
                                 /root/signed-modules/MOK.der "$modfile"
 done
 EOF
-echo REF: https://superuser.com/questions/1539756/virtualbox-6-fedora-30-efi-secure-boot-you-may-need-to-sign-the-kernel-modules
-chmod 700 /root/signed-modules/sign-virtual-box 
-/root/signed-modules/sign-virtual-box
+    echo REF: https://superuser.com/questions/1539756/virtualbox-6-fedora-30-efi-secure-boot-you-may-need-to-sign-the-kernel-modules
+    chmod 700 /root/signed-modules/sign-virtual-box 
+    /root/signed-modules/sign-virtual-box
+
+    echo "
+    5- Reboot your system and a blue screen appear, select Enroll MOK --> Continue --> put the previous password and your system will start.
+    "
+    echo System will reboot now, after you press any key
+    [ ! -f  "${USER_HOME}/.virtualboxinstallrebootsigned2" ] && touch "${USER_HOME}/.virtualboxinstallrebootsigned2"  && _pause "sign reboot 5" && reboot
+  }
+  fi
+
+
 rm "${USER_HOME}/.virtualboxinstallrebootsigned"
+rm "${USER_HOME}/.virtualboxinstallrebootsigned2"
 rm "${USER_HOME}/.virtualboxinstallreboot" 
 
   /usr/lib/virtualbox/vboxdrv.sh setup
@@ -388,6 +401,7 @@ mokutil --import public_key.der
 echo now login as root su 
 echo and run 
 echo "
+su
 KERN_DIR=/usr/src/kernels/`uname -r` 
 export KERN_DIR
 /sbin/vboxconfig 
