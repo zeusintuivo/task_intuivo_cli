@@ -40,6 +40,12 @@ function sudo_it() {
   trap _trap_on_error ERR INT
 } # end sudo_it
 
+_linux_prepare(){
+  sudo_it
+  [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
+  export USER_HOME="/home/${SUDO_USER}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+}  # end _linux_prepare
 
 _downloadfile_link(){
 	_downloadfile_link "${PLATFORM}"  "${CODELASTESTBUILD}" "${URL}"
@@ -91,11 +97,7 @@ _extract_version(){
 } # end _extract_version
 
 _fedora__64() {
-  sudo_it
-  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home || exit 1)
-
-  export USER_HOME="/home/${SUDO_USER}"
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  _linux_prepare
   local TARGET_URL=https://zoom.us/client/latest/zoom_x86_64.rpm
   enforce_variable_with_value TARGET_URL "${TARGET_URL}"
 	local CODENAME=$(basename "${TARGET_URL}")

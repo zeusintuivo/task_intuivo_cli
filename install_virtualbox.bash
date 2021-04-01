@@ -41,7 +41,6 @@ function sudo_it() {
   trap _trap_on_error ERR INT
 } # end sudo_it
 
-
 _linux_prepare(){
   sudo_it
   [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
