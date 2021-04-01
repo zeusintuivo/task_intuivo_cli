@@ -155,7 +155,7 @@ _fedora__64() {
   "
 
   cd  "${USER_HOME}"
-  [ ! -f  "${USER_HOME}/.virtualboxinstallreboot" ] && echo System wiil reboot now, after you press any key
+  [ ! -f  "${USER_HOME}/.virtualboxinstallreboot" ] && echo System will reboot now, after you press any key
   [ ! -f  "${USER_HOME}/.virtualboxinstallreboot" ] &&  touch "${USER_HOME}/.virtualboxinstallreboot" && _pause  "reboot 1" && reboot
   export KERN_DIR=/usr/src/kernels/`uname -r`
   echo $KERN_DIR
@@ -191,7 +191,7 @@ _fedora__64() {
     mokutil --import /root/module-signing/MOK.der
 
     echo 4- Reboot your system and a blue screen appear, select Enroll MOK --> Continue --> put the previous password and your system will start.
-    echo System wiil reboot now, after you press any key
+    echo System will reboot now, after you press any key
     [ ! -f  "${USER_HOME}/.virtualboxinstallrebootsigned" ] && touch "${USER_HOME}/.virtualboxinstallrebootsigned"  && _pause "sign reboot 2" && reboot
   }
   fi
