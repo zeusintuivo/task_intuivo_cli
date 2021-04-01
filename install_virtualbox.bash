@@ -156,7 +156,7 @@ _fedora__64() {
 
   cd  "${USER_HOME}"
   [ ! -f  "${USER_HOME}/.virtualboxinstallreboot" ] && echo System wiil reboot now, after you press any key
-  [ ! -f  "${USER_HOME}/.virtualboxinstallreboot" ] &&  touch "${USER_HOME}/.virtualboxinstallreboot" && _pause && reboot
+  [ ! -f  "${USER_HOME}/.virtualboxinstallreboot" ] &&  touch "${USER_HOME}/.virtualboxinstallreboot" && _pause  "reboot 1" && reboot
   export KERN_DIR=/usr/src/kernels/`uname -r`
   echo $KERN_DIR
   cd  "${USER_HOME}"
@@ -192,7 +192,7 @@ _fedora__64() {
 
     echo 4- Reboot your system and a blue screen appear, select Enroll MOK --> Continue --> put the previous password and your system will start.
     echo System wiil reboot now, after you press any key
-    [ ! -f  "${USER_HOME}/.virtualboxinstallrebootsigned" ] && touch "${USER_HOME}/.virtualboxinstallrebootsigned"  && _pause && reboot
+    [ ! -f  "${USER_HOME}/.virtualboxinstallrebootsigned" ] && touch "${USER_HOME}/.virtualboxinstallrebootsigned"  && _pause "sign reboot 2" && reboot
   }
   fi
   cd /root/signed-modules
@@ -382,14 +382,14 @@ rm /home/zeus/.virtualboxinstallrebootsigned
 
 
 } # end _fedora__64
-_pause(){
-  echo "Press any key to continue"
+_pause() {
+  echo "Press any key to continue ${1}"
   while [ true ] ; do
     read -t 3 -n 1
     if [ $? = 0 ] ; then
       break ;
     else
-      echo "waiting for the keypress"
+      echo "waiting for the keypress ${1}"
     fi
   done
   return 0
