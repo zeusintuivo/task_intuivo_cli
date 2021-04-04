@@ -46,12 +46,12 @@ _linux_prepare(){
   enforce_variable_with_value USER_HOME "${USER_HOME}"
 }  # end _linux_prepare
 
-_get_dowload_target(){
+_get_download_target(){
   # Sample call:
   #
-  #  _get_dowload_target "https://linux.dropbox.com/packages/fedora/" rpm 64
-  #  _get_dowload_target "https://linux.dropbox.com/packages/fedora/" rpm 32
-  #  _get_dowload_target "https://linux.dropbox.com/packages/debian/" deb 32
+  #  _get_download_target "https://linux.dropbox.com/packages/fedora/" rpm 64
+  #  _get_download_target "https://linux.dropbox.com/packages/fedora/" rpm 32
+  #  _get_download_target "https://linux.dropbox.com/packages/debian/" deb 32
   #
   # DEBUG=1
   local URL="${1}"   #           param order    varname    varvalue     sample_value
@@ -79,15 +79,18 @@ _get_dowload_target(){
   enforce_variable_with_value TARGETNAME "${TARGETNAME}"
   echo -n "${URL}/${TARGETNAME}"
   return 0
-} # end _get_dowload_target
+} # end _get_download_target
 
 _extract_version(){
   echo "${*}" | sed s/\>/\>\\n/g | sed "s/&apos;/\'/g" | sed 's/&nbsp;/ /g'  | grep -v "<a" | sort | sed s/\</\\n\</g | grep -v "</a"
 } # end _extract_version
 
+_centos__64() {
+  _fedora__64
+}
 _fedora__64() {
   _linux_prepare
-  local TARGET_URL=$(_get_dowload_target "https://linux.dropbox.com/packages/fedora/" "rpm" "64")
+  local TARGET_URL=$(_get_download_target "https://linux.dropbox.com/packages/fedora/" "rpm" "64")
   # DEBUG=1
   (( DEBUG )) && echo -n """${TARGET_URL}""" > .tmp.html
   (( DEBUG )) && echo -n "${TARGET_URL}"

@@ -3,10 +3,19 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 #
-  export THISSCRIPTCOMPLETEPATH
-  typeset -gr THISSCRIPTCOMPLETEPATH="$(basename "$0")"   # § This goes in the FATHER-MOTHER script
-  export _err
-  typeset -i _err=0
+# Compatible start with low version bash, like mac before zsh change and after
+export USER_HOME
+export THISSCRIPTCOMPLETEPATH
+typeset -r THISSCRIPTCOMPLETEPATH="$(realpath $(which $(basename "$0")))"   # § This goes in the FATHER-MOTHER script
+
+export BASH_VERSION_NUMBER
+typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
+
+export  THISSCRIPTNAME
+typeset -r THISSCRIPTNAME="$(realpath $(which $(basename "$0")))"
+
+export _err
+typeset -i _err=0
 
 load_struct_testing_wget(){
     local provider="$HOME/_/clis/execute_command_intuivo_cli/struct_testing"
@@ -16,11 +25,27 @@ load_struct_testing_wget(){
 } # end load_struct_testing_wget
 load_struct_testing_wget
 
-
 export sudo_it
 function sudo_it() {
   raise_to_sudo_and_user_home
+  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
+  enforce_variable_with_value SUDO_USER "${SUDO_USER}"
+  enforce_variable_with_value SUDO_UID "${SUDO_UID}"
+  enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
+  # Override bigger error trap  with local
+  function _trap_on_error(){
+    echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}\(\) \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}\(\) \\n ERR INT ...\033[0m"
+
+  }
+  trap _trap_on_error ERR INT
 } # end sudo_it
+
+_linux_prepare(){
+  sudo_it
+  [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
+  export USER_HOME="/home/${SUDO_USER}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+}  # end _linux_prepare
 
 
 _downloadfile_link(){
@@ -72,18 +97,17 @@ _extract_version(){
 	# | grep "What&apos;s New in&nbsp;WebStorm&nbsp;" | sed 's/\;/\;'\\n'/g' | sed s/\</\\n\</g  )
 } # end _extract_version
 
-
+_centos__64() {
+  _fedora__64
+}
 _fedora__64() {
-  sudo_it
-  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home
-	# [ $? -gt 0 ] && exit 1
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  _linux_prepare
   local TARGET_URL=https://download.teamviewer.com/download/linux/teamviewer.x86_64.rpm
   enforce_variable_with_value TARGET_URL "${TARGET_URL}"
   local CODENAME=$(basename "${TARGET_URL}")
   enforce_variable_with_value CODENAME "${CODENAME}"
-	local DOWNLOADFOLDER="${USER_HOME}/Downloads"
-	enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+	local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
  	_do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
   _install_rpm "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
 } # end _fedora__64
