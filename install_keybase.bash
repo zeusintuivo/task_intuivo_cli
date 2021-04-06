@@ -48,7 +48,7 @@ _linux_prepare(){
 }  # end _linux_prepare
 
 _debian__64(){
-  _linux_prepare 
+  _linux_prepare
   local TARGET_URL=https://prerelease.keybase.io/keybase_amd64.deb
   enforce_variable_with_value TARGET_URL "${TARGET_URL}"
   local CODENAME=$(basename "${TARGET_URL}")
@@ -58,9 +58,9 @@ _debian__64(){
   _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
   _install_apt "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
   _err=$?
-  _remove_downloaded_codename_or_err  $_err "${DOWNLOADFOLDER}/${CODENAME}" 
+  _remove_downloaded_codename_or_err  $_err "${DOWNLOADFOLDER}/${CODENAME}"
   _err=$?
-  return  $_err  
+  return  $_err
 } # end __debian__64
 
 _debian__32(){
@@ -74,9 +74,9 @@ _debian__32(){
   _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
   _install_apt "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
   _err=$?
-  _remove_downloaded_codename_or_err  $_err "${DOWNLOADFOLDER}/${CODENAME}" 
+  _remove_downloaded_codename_or_err  $_err "${DOWNLOADFOLDER}/${CODENAME}"
   _err=$?
-  return  $_err  
+  return  $_err
 } # end __debian__64
 
 _fedora__32() {
@@ -90,13 +90,15 @@ _fedora__32() {
   _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
   _install_rpm "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
   _err=$?
-  _remove_downloaded_codename_or_err  $_err "${DOWNLOADFOLDER}/${CODENAME}" 
+  _remove_downloaded_codename_or_err  $_err "${DOWNLOADFOLDER}/${CODENAME}"
   _err=$?
   return  $_err
 } # end _fedora__32
-
+_centos__64(){
+  _fedora__64
+} # end _centos__64
 _fedora__64() {
-  _linux_prepare 
+  _linux_prepare
   local TARGET_URL=https://prerelease.keybase.io/keybase_amd64.rpm
   enforce_variable_with_value TARGET_URL "${TARGET_URL}"
   local CODENAME=$(basename "${TARGET_URL}")
@@ -106,7 +108,7 @@ _fedora__64() {
   _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
   _install_rpm "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
   _err=$?
-  _remove_downloaded_codename_or_err  $_err "${DOWNLOADFOLDER}/${CODENAME}" 
+  _remove_downloaded_codename_or_err  $_err "${DOWNLOADFOLDER}/${CODENAME}"
   _err=$?
   return  $_err
 } # end _fedora__64
