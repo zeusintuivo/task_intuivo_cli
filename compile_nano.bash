@@ -416,9 +416,9 @@ _fedora__64() {
 
   cd "${DOWNLOADFOLDER}"
   rm -rf nano-*
-  mv  /usr/bin/nano /usr/bin/nano_old
-  mv /usr/local/bin/nano /usr/local/bin/nano_old
-  mv /usr/local/bin/nano_old /usr/local/bin/nano
+  mv  /usr/bin/nano /usr/bin/nano_old$(date +"%Y%m%d%H%M")  # military date format
+  mv /usr/local/bin/nano /usr/local/bin/nano_old$(date +"%Y%m%d%H%M")  # military date format
+  mv /usr/local/bin/nano_old$(date +"%Y%m%d%H%M")  /usr/local/bin/nano   # military date format
   cp /usr/local/bin/nano /usr/bin/nano
   # Make sure we are using nano we compiled and not the boring system nano
 
@@ -428,12 +428,26 @@ _fedora__64() {
   which nano
   # REF: https://github.com/scopatz/nanorc
   cd "${USER_HOME}"
-  curl -O https://raw.githubusercontent.com/scopatz/nanorc/master/install.sh
-  chmod 744 install.sh
-  ./install.sh
-  su - "${SUDO_USER}" -c "${USER_HOME}/install.sh"
-  # directory_exists_with_spaces "/root/.nanorc"
-  directory_exists_with_spaces "${USER_HOME}/.nanorc"
+  _do_not_downloadtwice https://raw.githubusercontent.com/scopatz/nanorc/master/install.sh "${DOWNLOADFOLDER}"  install.sh
+  # curl -O https://raw.githubusercontent.com/scopatz/nanorc/master/install.sh
+  file_exists_with_spaces "${DOWNLOADFOLDER}/install.sh"
+  chown  "${SUDO_USER}" "${DOWNLOADFOLDER}/install.sh"
+  chmod a+x "${DOWNLOADFOLDER}/install.sh"
+  cd "${DOWNLOADFOLDER}"
+  # bash "${DOWNLOADFOLDER}/install.sh"
+  echo Install for user nanorc
+  su - "${SUDO_USER}" -c "${DOWNLOADFOLDER}/install.sh"
+  echo Install for user root
+  "${DOWNLOADFOLDER}/install.sh"
+  directory_exists_with_spaces "${USER_HOME}/.nano"
+  chown  "${SUDO_USER}" "${USER_HOME}/.nano"
+  directory_exists_with_spaces "/root/.nano"
+  file_exists_with_spaces "/root/.nanorc"
+  cp "/root/.nanorc" "${USER_HOME}/.nanorc"
+  file_exists_with_spaces "${USER_HOME}/.nanorc"
+  chown  "${SUDO_USER}" "${USER_HOME}/.nanorc"
+  which nano
+  nano --version
   return 0
 } # end _fedora__64
 
