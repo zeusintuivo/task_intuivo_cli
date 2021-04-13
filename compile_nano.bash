@@ -440,12 +440,29 @@ _fedora__64() {
   echo Install for user root
   "${DOWNLOADFOLDER}/install.sh"
   directory_exists_with_spaces "${USER_HOME}/.nano"
-  chown  "${SUDO_USER}" "${USER_HOME}/.nano"
+  chown -R "${SUDO_USER}" "${USER_HOME}/.nano"
   directory_exists_with_spaces "/root/.nano"
   file_exists_with_spaces "/root/.nanorc"
   cp "/root/.nanorc" "${USER_HOME}/.nanorc"
   file_exists_with_spaces "${USER_HOME}/.nanorc"
   chown  "${SUDO_USER}" "${USER_HOME}/.nanorc"
+  [[ ! -e "/root/.nano/syntax"  ]] && git clone https://github.com/YSakhno/nanorc.git "/root/.nano/syntax"
+  [[ ! -e "${USER_HOME}/.nano/syntax"  ]] && git clone https://github.com/YSakhno/nanorc.git "${USER_HOME}/.nano/syntax"
+  chown -R "${SUDO_USER}" "${USER_HOME}/.nano"
+  directory_exists_with_spaces "/root/.nano/syntax"
+  directory_exists_with_spaces "${USER_HOME}/.nano/syntax"
+  cd "${USER_HOME}/.nano/syntax"
+  make install
+  chown -R "${SUDO_USER}" "${USER_HOME}/.nano/syntax"
+  cd "/root/.nano/syntax"
+  make install
+  echo Append missing definitions
+  echo " " >> "/root/.nanorc"
+  echo " " >> "${USER_HOME}/.nanorc"
+  directory_exists_with_spaces "/root/.nano/syntax/build"
+  directory_exists_with_spaces "${USER_HOME}/.nano/syntax/build"
+  diff -q "${USER_HOME}/.nano/syntax/build" "${USER_HOME}/.nano" |grep "Only in" | grep "syntax" | grep ".nanorc" | cut -d":" -f2 | xargs -I {} echo "include \"~/.nano/syntax/build/{}\"" >> "${USER_HOME}/.nanorc"
+  diff -q "/root/.nano/syntax/build" "/root/.nano" |grep "Only in" | grep "syntax" | grep ".nanorc" | cut -d":" -f2 | xargs -I {} echo "include \"~/.nano/syntax/build/{}\"" >> "/root/.nanorc"
   which nano
   nano --version
   return 0
