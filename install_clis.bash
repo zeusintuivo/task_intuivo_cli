@@ -146,10 +146,29 @@ _checka_tools_commander(){
     verify_is_installed vim
     verify_is_installed pygmentize
 }
-
 _debian__64() {
-  _ubuntu__64
+    COMANDDER="apt"
+    is_not_installed npm &&  $COMANDDER install -y npm             # Ubuntu only
+    #is_not_installed node && $COMANDDER install -y nodejs          # In Fedora installs npm and node
+    #verify_is_installed npm
+    #verify_is_installed node
+    if it_does_not_exist_with_spaces /etc/apt/sources.list.d/cloudfoundry-cli.list ; then
+    {
+        Installing cloudfoundry cf 7
+        curl -s -o - https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | apt-key add -
+        echo "deb https://packages.cloudfoundry.org/debian stable main" | sudo tee /etc/apt/sources.list.d/cloudfoundry-cli.list
+        echo  ...then, update your local package index, then finally install the cf CLI
+        $COMANDDER update -y
+        $COMANDDER install -y cf-cli
+        snap install cf-cli
+    }
+    fi
+    #chown $SUDO_USER -R $USER_HOME/.cf
+    #verify_is_installed cf
+    _checka_tools_commander $COMANDDER
+
 } # end _debian__64
+
 _ubuntu__64() {
     # debian sudo usermod -aG sudo $SUDO_USER
     # chown $SUDO_USER:$SUDO_USER -R /home

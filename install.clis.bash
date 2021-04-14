@@ -1199,6 +1199,7 @@ function is_not_installed (){
   fi
 } # end is_not_installed
 _debian__64() {
+  pip install pygments
  _ubuntu__64
 } # end _debian__64
 _ubuntu__64() {
