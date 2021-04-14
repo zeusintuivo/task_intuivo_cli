@@ -83,6 +83,8 @@ _checka_tools_commander(){
     vim
     nano
     pv
+    # Ubuntu only
+    python-pip
     "
     verify_is_installed "
     xclip
