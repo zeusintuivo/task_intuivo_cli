@@ -96,7 +96,7 @@ function sudo_it() {
   trap _trap_on_error ERR INT
 } # end sudo_it
 
-linux_prepare(){
+#linux_prepare(){
   sudo_it
   [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
   export USER_HOME
@@ -105,7 +105,7 @@ linux_prepare(){
   typeset -r USER_HOME="$(echo -n $(bash -c "cd ~${SUDO_USER} && pwd"))"  # Get the caller's of sudo home dir LINUX and MAC
   # USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)   # Get the caller's of sudo home dir LINUX
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-}  # end _linux_prepare
+#}  # end _linux_prepare
 
 
 linux_prepare
@@ -1198,7 +1198,9 @@ function is_not_installed (){
     return 0
   fi
 } # end is_not_installed
-
+_debian__64() {
+ _ubuntu__64
+} # end _debian__64
 _ubuntu__64() {
   # debian sudo usermod -aG sudo $SUDO_USER
   # chown $SUDO_USER:$SUDO_USER -R /home
