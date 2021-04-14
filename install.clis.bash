@@ -14,15 +14,16 @@ typeset -i _err=0
 
 load_struct_testing_wget(){
     local provider="$HOME/_/clis/execute_command_intuivo_cli/struct_testing"
-    [   -e "${provider}"  ] && source "${provider}" && echo "Loaded locally"
+    [   -e "${provider}"  ] && source "${provider}" && echo "Loaded locally" && return 0
     ( [ ! -e "${provider}"  ] && ( command -v curl >/dev/null 2>&1 ) ) && echo "Loading Struct Testing from the net using curl " && eval """$(curl https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/execute_command -o -  2>/dev/null )"""   # suppress only curl download messages, but keep curl output for variable
     ( [ ! -e "${provider}"  ] && ( ! command -v passed >/dev/null 2>&1; ) && ( command -v wget >/dev/null 2>&1 ) ) && echo "Loading Struct Testing from the net using curl " && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing -O -   2>/dev/null )"""   # suppress only curl download messages, but keep curl output for variable
-    ( ( ! command -v curl >/dev/null 2>&1; ) && ( ! command -v wget >/dev/null 2>&1; ) ) echo -e "\n \n  ERROR! Loading struct_testing could not find wget or curl to download  \n \n " && exit 69;
+    (  ( ! command -v curl >/dev/null 2>&1; ) && ( ! command -v wget >/dev/null 2>&1; ) && ( echo -e "\n \n  ERROR! Loading struct_testing could not find wget or curl to download  \n \n " ) && ( exit 69 ); )
     ( ( ! command -v passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing. Passed was not loaded !!!  \n \n " && exit 69; )
+    return 0
 } # end load_struct_testing_wget
 load_struct_testing_wget
  _err=$?
-[ $_err -ne 0 ]  && echo -e "\n \n  ERROR FATAL! load_struct_testing_wget !!!  \n \n " && exit 69;
+[ $_err -ne 0 ]  && echo -e "\n \n  ERROR FATAL! load_struct_testing_wget !!! returned:<$_err> \n \n  " && exit 69;
 
 export sudo_it
 function sudo_it() {
