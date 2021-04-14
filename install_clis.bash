@@ -147,6 +147,9 @@ _checka_tools_commander(){
     verify_is_installed pygmentize
 }
 
+_debian__64() {
+  _ubuntu__64
+} # end _debian__64
 _ubuntu__64() {
     # debian sudo usermod -aG sudo $SUDO_USER
     # chown $SUDO_USER:$SUDO_USER -R /home
@@ -169,7 +172,7 @@ _ubuntu__64() {
     chown $SUDO_USER -R $USER_HOME/.cf
     verify_is_installed cf
     _checka_tools_commander $COMANDDER
-}
+} # end _ubuntu__64
 
 _centos__64() {
   _fedora__64
