@@ -1,75 +1,57 @@
 #!/usr/bin/env bash
-
-# Script to install all intuivo_clis
-
-# SUDO_USER only exists during execution of sudo
-# REF: https://stackoverflow.com/questions/7358611/get-users-home-directory-when-they-run-a-script-as-root
-# Global:
+# 20200414 Compatible with Fedora, Mac, Ubuntu "sudo_up" "load_struct" "#
 export THISSCRIPTCOMPLETEPATH
-typeset -r THISSCRIPTCOMPLETEPATH="$(pwd)/$(basename "$0")"   # § This goes in the FATHER-MOTHER script
+typeset -r THISSCRIPTCOMPLETEPATH="$(realpath "$(basename "$0")")"   # § This goe$
 
 export BASH_VERSION_NUMBER
 typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
 
 export  THISSCRIPTNAME
-typeset -r THISSCRIPTNAME="$(pwd)/$(basename "$0")"
+typeset -r THISSCRIPTNAME="$(basename "$0")"
 
 export _err
 typeset -i _err=0
 
-execute_as_sudo(){
-  if [ -z $SUDO_USER ] ; then
-    if [[ -z "$THISSCRIPTNAME" ]] ; then
-    {
-        echo "error You need to add THISSCRIPTNAME variable like this:"
-        echo "     THISSCRIPTNAME=\`basename \"\$0\"\`"
-    }
-    else
-    {
-        if [ -f "./$THISSCRIPTNAME" ] ; then
-        {
-          sudo "./$THISSCRIPTNAME"
-        }
-        elif ( command -v "$THISSCRIPTNAME" >/dev/null 2>&1 );  then
-        {
-          echo "sudo sudo sudo "
-          sudo "$THISSCRIPTNAME"
-        }
-        else
-        {
-          echo -e "\033[05;7m*** Failed to find script to recall it as sudo ...\033[0m"
-          exit 1
-        }
-        fi
-    }
-    fi
-    wait
-    exit 0
-  fi
-  # REF: http://superuser.com/questions/93385/run-part-of-a-bash-script-as-a-different-user
-  # REF: http://superuser.com/questions/195781/sudo-is-there-a-command-to-check-if-i-have-sudo-and-or-how-much-time-is-left
-  local CAN_I_RUN_SUDO=$(sudo -n uptime 2>&1|grep "load"|wc -l)
-  if [ ${CAN_I_RUN_SUDO} -gt 0 ]; then
-    echo -e "\033[01;7m*** Installing as sudo...\033[0m"
-  else
-    echo "Needs to run as sudo ... ${0}"
-  fi
-} # end execute_as_sudo
-execute_as_sudo
-
-export USER_HOME
-# shellcheck disable=SC2046
-# shellcheck disable=SC2031
-typeset -r USER_HOME="$(echo -n $(bash -c "cd ~${SUDO_USER} && pwd"))"  # Get the caller's of sudo home dir LINUX and MAC
-# USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)   # Get the caller's of sudo home dir LINUX
-
 load_struct_testing_wget(){
-    local provider="$USER_HOME/_/clis/execute_command_intuivo_cli/struct_testing"
-    [   -e "${provider}"  ] && source "${provider}"
-    [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
-    ( ( ! command -v passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
+    local provider="$HOME/_/clis/execute_command_intuivo_cli/struct_testing"
+    [   -e "${provider}"  ] && source "${provider}" && echo "Loaded locally"
+    ( [ ! -e "${provider}"  ] && ( command -v curl >/dev/null 2>&1 ) ) && echo "Loading Struct Testing from the net using curl " && eval """$(curl https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/execute_command -o -  2>/dev/null )"""   # suppress only curl download messages, but keep curl output for variable
+    ( [ ! -e "${provider}"  ] && ( ! command -v passed >/dev/null 2>&1; ) && ( command -v wget >/dev/null 2>&1 ) ) && echo "Loading Struct Testing from the net using curl " && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing -O -   2>/dev/null )"""   # suppress only curl download messages, but keep curl output for variable
+    ( ( ! command -v curl >/dev/null 2>&1; ) && ( ! command -v wget >/dev/null 2>&1; ) ) echo -e "\n \n  ERROR! Loading struct_testing could not find wget or curl to download  \n \n " && exit 69;
+    ( ( ! command -v passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing. Passed was not loaded !!!  \n \n " && exit 69; )
 } # end load_struct_testing_wget
 load_struct_testing_wget
+ _err=$?
+[ $_err -ne 0 ]  && echo -e "\n \n  ERROR FATAL! load_struct_testing_wget !!!  \n \n " && exit 69;
+
+export sudo_it
+function sudo_it() {
+  raise_to_sudo_and_user_home
+  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
+  enforce_variable_with_value SUDO_USER "${SUDO_USER}"
+  enforce_variable_with_value SUDO_UID "${SUDO_UID}"
+  enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
+  # Override bigger error trap  with local
+  function _trap_on_error(){
+    echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}\(\) \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}\(\) \\n ERR INT ...\033[0m"
+
+  }
+  trap _trap_on_error ERR INT
+} # end sudo_it
+
+linux_prepare(){
+  sudo_it
+  [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
+  export USER_HOME
+  # shellcheck disable=SC2046
+  # shellcheck disable=SC2031
+  typeset -r USER_HOME="$(echo -n $(bash -c "cd ~${SUDO_USER} && pwd"))"  # Get the caller's of sudo home dir LINUX and MAC
+  # USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)   # Get the caller's of sudo home dir LINUX
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+}  # end _linux_prepare
+
+
+linux_prepare
 
 enforce_variable_with_value USER_HOME $USER_HOME
 enforce_variable_with_value SUDO_USER $SUDO_USER
