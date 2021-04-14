@@ -94,7 +94,7 @@ _softlink_user_it(){
   ln -s "/home/linuxbrew/.linuxbrew" "${USER_HOME}/.linuxbrew"
   Message Make sure we did overlap current folders
   softlink_exists "${USER_HOME}/.linuxbrew>/home/linuxbrew/.linuxbrew"
-  unlink /home/linuxbrew/.linuxbrew/.linuxbrew
+  [ -s  /home/linuxbrew/.linuxbrew/.linuxbrew ] && unlink /home/linuxbrew/.linuxbrew/.linuxbrew
   file_does_not_exist_with_spaces "/home/linuxbrew/.linuxbrew/.linuxbrew"
   directory_does_not_exist_with_spaces "/home/linuxbrew/.linuxbrew/.linuxbrew"
   file_does_not_exist_with_spaces "${USER_HOME}/.linuxbrew/.linuxbrew"
@@ -125,6 +125,8 @@ _softlink_user_it(){
 
 _debian_flavor_install(){
   sudo_it
+  export USER_HOME="/home/${SUDO_USER}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
   install_requirements "linux" "
     # Debian Ubuntu only
     build-essential
