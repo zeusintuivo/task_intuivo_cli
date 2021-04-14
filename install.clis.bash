@@ -129,21 +129,21 @@ _checka_node_commander() {
 } # end _checka_node_commander
 
 _checka_tools_commander(){
-    install_requirements "linux" "
-    xclip
-    tree
-    ag@the_silver_searcher
-    # Ubuntu only
-    ag@silversearcher-ag
-    ack
-    # Ubuntu only
-    ack@ack-grep
-    vim
-    nano
-    pv
-    # Ubuntu only
-    python-pip
-    "
+    # install_requirements "linux" "
+    # xclip
+    # tree
+    # ag@the_silver_searcher
+    # # Ubuntu only
+    # ag@silversearcher-ag
+    # ack
+    # # Ubuntu only
+    # ack@ack-grep
+    # vim
+    # nano
+    # pv
+    # # Ubuntu only
+    # python-pip
+    # "
     verify_is_installed "
     xclip
     tree
@@ -1208,6 +1208,18 @@ _ubuntu__64() {
   # sudo usermod -aG docker $SUDO_USER
 
   COMANDDER="apt install -y"
+
+   install_requirements "linux" "
+    # Ubuntu only
+    xclip
+    tree
+    ag@silversearcher-ag
+    ack@ack-grep
+    vim
+    nano
+    pv
+    python-pip
+    "
   _checka_tools_commander
   _configure_git
   _install_npm_utils
@@ -1258,6 +1270,16 @@ _centos__64() {
 
 _fedora__64() {
   COMANDDER="dnf install -y"
+  install_requirements "linux" "
+    xclip
+    tree
+    ag@the_silver_searcher
+    ack
+    vim
+    nano
+    pv
+    python-pip
+    "
   _checka_tools_commander
   _configure_git
   _install_npm_utils
