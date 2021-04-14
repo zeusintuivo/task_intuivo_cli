@@ -108,7 +108,7 @@ function sudo_it() {
 #}  # end _linux_prepare
 
 
-linux_prepare
+# linux_prepare
 
 enforce_variable_with_value USER_HOME $USER_HOME
 enforce_variable_with_value SUDO_USER $SUDO_USER
