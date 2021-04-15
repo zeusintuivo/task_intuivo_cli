@@ -1276,10 +1276,10 @@ _centos__64() {
 
 _fedora__64() {
   COMANDDER="dnf install -y"
+  is_not_installed ag && $COMANDDER the_silver_searcher          # In Fedora
   install_requirements "linux" "
     xclip
     tree
-    ag@the_silver_searcher
     ack
     vim
     nano
