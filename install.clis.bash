@@ -1203,17 +1203,9 @@ function is_not_installed (){
 } # end is_not_installed
 _debian__64() {
   pip install pygments
- _ubuntu__64
-} # end _debian__64
-_ubuntu__64() {
-  # debian sudo usermod -aG sudo $SUDO_USER
-  # chown $SUDO_USER:$SUDO_USER -R /home
-  # sudo groupadd docker
-  # sudo usermod -aG docker $SUDO_USER
-
   COMANDDER="apt install -y"
- is_not_installed ag && $COMANDDER silversearcher-ag         # In Ubuntu
- is_not_installed ack && $COMANDDER ack-grep        # In Ubuntu
+  is_not_installed ag && $COMANDDER silversearcher-ag         # In Ubuntu
+  is_not_installed ack && $COMANDDER ack-grep        # In Ubuntu
    install_requirements "linux" "
     # Ubuntu only
     xclip
@@ -1224,6 +1216,57 @@ _ubuntu__64() {
     python-pip
     zsh
     "
+
+  _checka_tools_commander
+  _configure_git
+  _install_nvm
+  _install_nvm_version 14.16.1
+  _install_npm_utils
+
+  _setup_ohmy
+  _install_colorls
+  _setup_clis
+  _setup_mycd
+
+
+
+  # _password_simple
+  # _password_simple2
+
+  if it_does_not_exist_with_spaces /etc/apt/sources.list.d/cloudfoundry-cli.list ; then
+  {
+    Installing cloudfoundry cf 7
+    wget -q -O - https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | apt-key add -
+    echo "deb https://packages.cloudfoundry.org/debian stable main" | sudo tee /etc/apt/sources.list.d/cloudfoundry-cli.list
+    echo  ...then, update your local package index, then finally install the cf CLI
+    apt update -y
+    $COMANDDER cf-cli
+    snap install cf-cli
+  }
+  fi
+  chown $SUDO_USER -R $USER_HOME/.cf
+  verify_is_installed cf
+
+} # end _debian__64
+_ubuntu__64() {
+  # debian sudo usermod -aG sudo $SUDO_USER
+  # chown $SUDO_USER:$SUDO_USER -R /home
+  # sudo groupadd docker
+  # sudo usermod -aG docker $SUDO_USER
+  COMANDDER="apt install -y"
+  is_not_installed ag && $COMANDDER silversearcher-ag         # In Ubuntu
+  is_not_installed ack && $COMANDDER ack-grep        # In Ubuntu
+  install_requirements "linux" "
+    # Ubuntu only
+    xclip
+    tree
+    vim
+    nano
+    pv
+    python3-pip
+    zsh
+    "
+
   _checka_tools_commander
   _configure_git
   _install_nvm
