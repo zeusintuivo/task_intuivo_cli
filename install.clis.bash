@@ -932,22 +932,33 @@ _setup_mycd(){
     directory_exists_with_spaces  "${USER_HOME}/.config/git"
     chown -R "${SUDO_USER}" "${USER_HOME}/.config/git"
     touch  "${USER_HOME}/.config/git/ignore"
-    file_exists_with_spaces  "${USER_HOME}/.config/git/ignore"
+    file_exists_with_spaces "${USER_HOME}/.config/git/ignore"
+    echo hola 1
     # DEBUG=1
-    _if_not_contains "${USER_HOME}/.config/git/ignore"  ".dir_bash_history" ||  echo -e "\n.dir_bash_history" >> "${USER_HOME}/.config/git/ignore"
+    (_if_not_contains "${USER_HOME}/.config/git/ignore"  ".dir_bash_history") ||  (echo -e "\n.dir_bash_history" >> "${USER_HOME}/.config/git/ignore")
+    echo hola 2
     # DEBUG=0
 
     local otherignore=$(git config --global core.excludesfile)
+    echo hola 3
     if [[ -n "${otherignore}" ]] ; then
     {
+    echo hola 4
       local realdir=$(su - $SUDO_USER -c "realpath  ${otherignore}")
+    echo hola 5
       local dirother=$(dirname  "${realdir}")
+    echo hola 6
       mkdir -p   "${dirother}"
+    echo hola 7
       directory_exists_with_spaces "${dirother}"
+    echo hola 8
       chown -R "${SUDO_USER}" "${dirother}"
+    echo hola 9
       touch "${realdir}"
+    echo hola 10
       file_exists_with_spaces "${realdir}"
-      _if_not_contains "${realdir}"  ".dir_bash_history" ||  echo -e "\n.dir_bash_history" >> "${realdir}"
+    echo hola 11
+      (_if_not_contains "${realdir}"  ".dir_bash_history") ||  (echo -e "\n.dir_bash_history" >> "${realdir}")
     }
     fi
   }
