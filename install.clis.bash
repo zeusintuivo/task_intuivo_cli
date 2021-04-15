@@ -95,7 +95,6 @@ function sudo_it() {
   # Override bigger error trap  with local
   function _trap_on_error(){
     echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR INT ...\033[0m"
-
   }
   trap _trap_on_error ERR INT
 } # end sudo_it
@@ -939,28 +938,19 @@ _setup_mycd(){
 
     if local otherignore="$(git config --global core.excludesfile)" ; then
     {
-      echo "hola 3 otherignore <..<${otherignore}>..>"
+      echo "More ignore choices for excludesfile <..<${otherignore}>..>"
       if [[ -n "${otherignore}" ]] ; then
       {
-      echo "hola 4 otherignore ${otherignore}"
-      echo "hola 4 $(realpath  "${otherignore}")"
-      echo "hola 4 $(su - $SUDO_USER -c "realpath  ${otherignore}")"
         local realdir=$(su - $SUDO_USER -c "realpath  ${otherignore}")
-      echo hola 5
-      echo hola 5 realdir "${realdir}"
         local dirother=$(dirname  "${realdir}")
-      echo hola 6 dirother "${dirother}"
         mkdir -p   "${dirother}"
-      echo hola 7
         directory_exists_with_spaces "${dirother}"
-      echo hola 8
         chown -R "${SUDO_USER}" "${dirother}"
-      echo hola 9
         touch "${realdir}"
-      echo hola 10
         file_exists_with_spaces "${realdir}"
-      echo hola 11
         (_if_not_contains "${realdir}"  ".dir_bash_history") ||  (echo -e "\n.dir_bash_history" >> "${realdir}")
+      } else {
+        echo "More ignore choices for excludesfile Empty. .Not Found."
       }
       fi
 
@@ -1322,7 +1312,6 @@ _centos__64() {
 
 _fedora__64() {
   COMANDDER="dnf install -y"
-  _setup_mycd
   is_not_installed ag && $COMANDDER the_silver_searcher          # In Fedora
   install_requirements "linux" "
     xclip
