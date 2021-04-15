@@ -1202,7 +1202,6 @@ function is_not_installed (){
   fi
 } # end is_not_installed
 _debian__64() {
-  pip install pygments
   COMANDDER="apt install -y"
   is_not_installed ag && $COMANDDER silversearcher-ag         # In Ubuntu
   is_not_installed ack && $COMANDDER ack-grep        # In Ubuntu
@@ -1216,6 +1215,7 @@ _debian__64() {
     python-pip
     zsh
     "
+  pip install pygments
 
   _checka_tools_commander
   _configure_git
@@ -1266,6 +1266,7 @@ _ubuntu__64() {
     python3-pip
     zsh
     "
+  pip install pygments
 
   _checka_tools_commander
   _configure_git
