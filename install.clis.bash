@@ -1213,13 +1213,12 @@ _ubuntu__64() {
   # sudo usermod -aG docker $SUDO_USER
 
   COMANDDER="apt install -y"
-
+ is_not_installed ag && $COMANDDER silversearcher-ag         # In Ubuntu
+ is_not_installed ack && $COMANDDER ack-grep        # In Ubuntu
    install_requirements "linux" "
     # Ubuntu only
     xclip
     tree
-    ag@silversearcher-ag
-    ack@ack-grep
     vim
     nano
     pv
