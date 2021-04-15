@@ -14,11 +14,11 @@ typeset -r THISSCRIPTNAME="$(basename "$0")"
 
 export _err
 typeset -i _err=0
-  # function _trap_on_error(){
-  #   echo -e "\\n \033[01;7m*** ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR ...\033[0m"
-  #   exit 1
-  # }
-  # trap _trap_on_error ERR
+  function _trap_on_error(){
+    echo -e "\\n \033[01;7m*** ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR ...\033[0m"
+    exit 1
+  }
+  trap _trap_on_error ERR
   function _trap_on_int(){
     echo -e "\\n \033[01;7m*** INTERRUPT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n  INT ...\033[0m"
     exit 0
@@ -27,23 +27,23 @@ typeset -i _err=0
   trap _trap_on_int INT
 
 load_struct_testing(){
-  # function _trap_on_error(){
-  #   local -ir __trapped_error_exit_num="${2:-0}"
-  #   echo -e "\\n \033[01;7m*** ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR ...\033[0m  \n \n "
-  #   echo ". ${1}"
-  #   echo ". exit  ${__trapped_error_exit_num}  "
-  #   echo ". caller $(caller) "
-  #   echo ". ${BASH_COMMAND}"
-  #   local -r __caller=$(caller)
-  #   local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
-  #   local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-  #   awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+  function _trap_on_error(){
+    local -ir __trapped_error_exit_num="${2:-0}"
+    echo -e "\\n \033[01;7m*** ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR ...\033[0m  \n \n "
+    echo ". ${1}"
+    echo ". exit  ${__trapped_error_exit_num}  "
+    echo ". caller $(caller) "
+    echo ". ${BASH_COMMAND}"
+    local -r __caller=$(caller)
+    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
 
-  #   # $(eval ${BASH_COMMAND}  2>&1; )
-  #   # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
-  #   exit 1
-  # }
-  # trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+    # $(eval ${BASH_COMMAND}  2>&1; )
+    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+    exit 1
+  }
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
     local provider="$HOME/_/clis/execute_command_intuivo_cli/struct_testing"
     local _err=0 structsource
     if [   -e "${provider}"  ] ; then
@@ -93,11 +93,11 @@ function sudo_it() {
   enforce_variable_with_value SUDO_UID "${SUDO_UID}"
   enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
   # Override bigger error trap  with local
-  # function _trap_on_error(){
-  #   echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR INT ...\033[0m"
+  function _trap_on_error(){
+    echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR INT ...\033[0m"
 
-  # }
-  # trap _trap_on_error ERR INT
+  }
+  trap _trap_on_error ERR INT
 } # end sudo_it
 
 # _linux_prepare(){
@@ -939,8 +939,8 @@ _setup_mycd(){
     echo hola 2
     # DEBUG=0
 
-    local otherignore=$(git config --global core.excludesfile)
-    echo hola 3
+    local otherignore="$(git config --global core.excludesfile)"
+    echo "hola 3 otherignore <..<${otherignore}>..>"
     if [[ -n "${otherignore}" ]] ; then
     {
     echo "hola 4 otherignore ${otherignore}"
