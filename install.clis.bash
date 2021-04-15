@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+#
+# @author Zeus Intuivo <zeus@intuivo.com>
+#
 # 20200414 Compatible with Fedora, Mac, Ubuntu "sudo_up" "load_struct" "#
 set -E -o functrace
 export THISSCRIPTCOMPLETEPATH
@@ -68,6 +71,7 @@ load_struct_testing(){
     [[ -z "${structsource}" ]] && echo -e "\n \n  ERROR! Loading struct_testing. structsource did not download or is empty " && exit 1
     local _temp_dir="$(mktemp -d 2>/dev/null || mktemp -d -t 'struct_testing_source')"
     echo "${structsource}">"${_temp_dir}/struct_testing"
+    echo "Temp location ${_temp_dir}/struct_testing"
     source "${_temp_dir}/struct_testing"
     _err=$?
     [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading struct_testing. Occured while running 'source' err:$_err  \n \n  " && exit 1
@@ -97,7 +101,7 @@ function sudo_it() {
   trap _trap_on_error ERR INT
 } # end sudo_it
 
-#linux_prepare(){
+# _linux_prepare(){
   sudo_it
   [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
   export USER_HOME
@@ -106,10 +110,10 @@ function sudo_it() {
   typeset -r USER_HOME="$(echo -n $(bash -c "cd ~${SUDO_USER} && pwd"))"  # Get the caller's of sudo home dir LINUX and MAC
   # USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)   # Get the caller's of sudo home dir LINUX
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-#}  # end _linux_prepare
+# }  # end _linux_prepare
 
 
-# linux_prepare
+# _linux_prepare
 
 enforce_variable_with_value USER_HOME $USER_HOME
 enforce_variable_with_value SUDO_USER $SUDO_USER
