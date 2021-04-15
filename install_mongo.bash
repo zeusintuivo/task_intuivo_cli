@@ -93,7 +93,7 @@ load_struct_testing_wget
 
 passed Caller user identified:$SUDO_USER
 passed Home identified:$USER_HOME
-file_exists_with_spaces "$USER_HOME"
+directory_exists_with_spaces "$USER_HOME"
 
 
 

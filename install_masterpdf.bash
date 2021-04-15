@@ -67,7 +67,7 @@ enforce_variable_with_value SUDO_USER "${SUDO_USER}"
 passed Caller user identified:$SUDO_USER
 enforce_variable_with_value USER_HOME "${USER_HOME}"
 passed Home identified:$USER_HOME
-file_exists_with_spaces "$USER_HOME"
+directory_exists_with_spaces "$USER_HOME"
 
 
 # https://code.visualstudio.com/docs/?dv=linux64_rpm
