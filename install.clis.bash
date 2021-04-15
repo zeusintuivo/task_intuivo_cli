@@ -2,11 +2,10 @@
 #
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
-# 20200414 Compatible with Fedora, Mac, Ubuntu "sudo_up" "load_struct" "#
+# 20200415 Compatible with Fedora, Mac, Ubuntu "sudo_up" "load_struct" "#
 set -E -o functrace
 export THISSCRIPTCOMPLETEPATH
-typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")"   # § This goe$
-
+typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")"
 export BASH_VERSION_NUMBER
 typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
 
