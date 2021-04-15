@@ -2,11 +2,19 @@
 #
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
-#
-  export THISSCRIPTCOMPLETEPATH
-  typeset -gr THISSCRIPTCOMPLETEPATH="$(realpath "$0")"   # § This goes in the FATHER-MOTHER script
-  export _err
-  typeset -i _err=0
+# Compatible start with low version bash, like mac before zsh change and after
+export USER_HOME
+export THISSCRIPTCOMPLETEPATH
+typeset -r THISSCRIPTCOMPLETEPATH="$(realpath $(which $(basename "$0")))"   # § This goes in the FATHER-MOTHER script
+
+export BASH_VERSION_NUMBER
+typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
+
+export  THISSCRIPTNAME
+typeset -r THISSCRIPTNAME="$(realpath $(which $(basename "$0")))"
+
+export _err
+typeset -i _err=0
 
 load_struct_testing_wget(){
     local provider="$HOME/_/clis/execute_command_intuivo_cli/struct_testing"
@@ -16,11 +24,27 @@ load_struct_testing_wget(){
 } # end load_struct_testing_wget
 load_struct_testing_wget
 
-
 export sudo_it
 function sudo_it() {
   raise_to_sudo_and_user_home
+  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
+  enforce_variable_with_value SUDO_USER "${SUDO_USER}"
+  enforce_variable_with_value SUDO_UID "${SUDO_UID}"
+  enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
+  # Override bigger error trap  with local
+  function _trap_on_error(){
+    echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}\(\) \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}\(\) \\n ERR INT ...\033[0m"
+
+  }
+  trap _trap_on_error ERR INT
 } # end sudo_it
+
+_linux_prepare(){
+  sudo_it
+  [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
+  export USER_HOME="/home/${SUDO_USER}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+}  # end _linux_prepare
 
 _darwin__64() {
   # Using homebrew seemed like the best choice so far
@@ -215,7 +239,7 @@ _ubuntu__64() {
   enforce_variable_with_value TARGET_URL "${TARGET_URL}"
   local CODENAME=$(basename "${TARGET_URL}")
   enforce_variable_with_value CODENAME "${CODENAME}"
-  local DOWNLOADFOLDER="${USER_HOME}/Downloads"
+  local DOWNLOADFOLDER="$(_find_downloads_folder)"
   enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
   directory_exists_with_spaces "${DOWNLOADFOLDER}"
   _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}" "${CODENAME}"
@@ -289,7 +313,7 @@ _ubuntu__32() {
 } # end _ubuntu__32
 
 _fedora__32() {
-  sudo_it
+  _linux_prepare
   [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home
   local CODENAME=$(_version "linux" "nano*.*.*.*.i386.rpm")
   # THOUGHT                          nano-4.3.3.24545.i386.rpm
@@ -353,14 +377,14 @@ _extract_version(){
 
 
 _fedora__64() {
-  sudo_it
+  _linux_prepare
   [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   local TARGET_URL=$(_get_dowload_target "https://www.nano-editor.org/dist/v5/")
   enforce_variable_with_value TARGET_URL "${TARGET_URL}"
   local CODENAME=$(basename "${TARGET_URL}")
   enforce_variable_with_value CODENAME "${CODENAME}"
-  local DOWNLOADFOLDER="${USER_HOME}/Downloads"
+  local DOWNLOADFOLDER="$(_find_downloads_folder)"
   # VERBOSE=1
   (( VERBOSE )) && echo -n "${TARGET_URL}"
   (( VERBOSE )) && echo "DEBUG EXIT 0"
@@ -392,9 +416,9 @@ _fedora__64() {
 
   cd "${DOWNLOADFOLDER}"
   rm -rf nano-*
-  mv  /usr/bin/nano /usr/bin/nano_old
-  mv /usr/local/bin/nano /usr/local/bin/nano_old
-  mv /usr/local/bin/nano_old /usr/local/bin/nano
+  mv  /usr/bin/nano /usr/bin/nano_old$(date +"%Y%m%d%H%M")  # military date format
+  mv /usr/local/bin/nano /usr/local/bin/nano_old$(date +"%Y%m%d%H%M")  # military date format
+  mv /usr/local/bin/nano_old$(date +"%Y%m%d%H%M")  /usr/local/bin/nano   # military date format
   cp /usr/local/bin/nano /usr/bin/nano
   # Make sure we are using nano we compiled and not the boring system nano
 
@@ -404,12 +428,43 @@ _fedora__64() {
   which nano
   # REF: https://github.com/scopatz/nanorc
   cd "${USER_HOME}"
-  curl -O https://raw.githubusercontent.com/scopatz/nanorc/master/install.sh
-  chmod 744 install.sh
-  ./install.sh
-  su - "${SUDO_USER}" -c "${USER_HOME}/install.sh"
-  # directory_exists_with_spaces "/root/.nanorc"
-  directory_exists_with_spaces "${USER_HOME}/.nanorc"
+  _do_not_downloadtwice https://raw.githubusercontent.com/scopatz/nanorc/master/install.sh "${DOWNLOADFOLDER}"  install.sh
+  # curl -O https://raw.githubusercontent.com/scopatz/nanorc/master/install.sh
+  file_exists_with_spaces "${DOWNLOADFOLDER}/install.sh"
+  chown  "${SUDO_USER}" "${DOWNLOADFOLDER}/install.sh"
+  chmod a+x "${DOWNLOADFOLDER}/install.sh"
+  cd "${DOWNLOADFOLDER}"
+  # bash "${DOWNLOADFOLDER}/install.sh"
+  echo Install for user nanorc
+  su - "${SUDO_USER}" -c "${DOWNLOADFOLDER}/install.sh"
+  echo Install for user root
+  "${DOWNLOADFOLDER}/install.sh"
+  directory_exists_with_spaces "${USER_HOME}/.nano"
+  chown -R "${SUDO_USER}" "${USER_HOME}/.nano"
+  directory_exists_with_spaces "/root/.nano"
+  file_exists_with_spaces "/root/.nanorc"
+  cp "/root/.nanorc" "${USER_HOME}/.nanorc"
+  file_exists_with_spaces "${USER_HOME}/.nanorc"
+  chown  "${SUDO_USER}" "${USER_HOME}/.nanorc"
+  [[ ! -e "/root/.nano/syntax"  ]] && git clone https://github.com/YSakhno/nanorc.git "/root/.nano/syntax"
+  [[ ! -e "${USER_HOME}/.nano/syntax"  ]] && git clone https://github.com/YSakhno/nanorc.git "${USER_HOME}/.nano/syntax"
+  chown -R "${SUDO_USER}" "${USER_HOME}/.nano"
+  directory_exists_with_spaces "/root/.nano/syntax"
+  directory_exists_with_spaces "${USER_HOME}/.nano/syntax"
+  cd "${USER_HOME}/.nano/syntax"
+  make install
+  chown -R "${SUDO_USER}" "${USER_HOME}/.nano/syntax"
+  cd "/root/.nano/syntax"
+  make install
+  echo Append missing definitions
+  echo " " >> "/root/.nanorc"
+  echo " " >> "${USER_HOME}/.nanorc"
+  directory_exists_with_spaces "/root/.nano/syntax/build"
+  directory_exists_with_spaces "${USER_HOME}/.nano/syntax/build"
+  diff -q "${USER_HOME}/.nano/syntax/build" "${USER_HOME}/.nano" |grep "Only in" | grep "syntax" | grep ".nanorc" | cut -d":" -f2 | xargs -I {} echo "include \"~/.nano/syntax/build/{}\"" >> "${USER_HOME}/.nanorc"
+  diff -q "/root/.nano/syntax/build" "/root/.nano" |grep "Only in" | grep "syntax" | grep ".nanorc" | cut -d":" -f2 | xargs -I {} echo "include \"~/.nano/syntax/build/{}\"" >> "/root/.nanorc"
+  which nano
+  nano --version
   return 0
 } # end _fedora__64
 
