@@ -835,41 +835,59 @@ task_intuivo_cli
 
 while read -r ONE ; do
 {
-    if [ -n "$ONE" ] ; then  # is not empty
+  if [ -n "$ONE" ] ; then  # is not empty
+  {
+    Installing "$ONE"
+    if  it_does_not_exist_with_spaces "$USER_HOME/_/clis/${ONE}" ; then
     {
-        Installing "$ONE"
-        if  it_does_not_exist_with_spaces "$USER_HOME/_/clis/${ONE}" ; then
-        {
-            cd $USER_HOME/_/clis
-            su - $SUDO_USER -c "yes | git clone git@github.com:zeusintuivo/${ONE}.git  $USER_HOME/_/clis/${ONE}"
-            if it_does_not_exist_with_spaces ${USER_HOME}/_/clis/${ONE} ; then
-            {
-              su - $SUDO_USER -c "yes | git clone https://github.com/zeusintuivo/${ONE}.git  $USER_HOME/_/clis/${ONE}"
-            }
-            fi
-            cd $USER_HOME/_/clis/${ONE}
-            chown -R $SUDO_USER $USER_HOME/_/clis/${ONE}
-          git remote remove origin
-            git remote add origin git@github.com:zeusintuivo/${ONE}.git
-            directory_exists_with_spaces $USER_HOME/_/clis/${ONE}
-            bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts
-      if [[ "$ONE" == "git_intuivo_cli" ]] ; then  # is not empty
+      cd $USER_HOME/_/clis
+      su - $SUDO_USER -c "yes | git clone git@github.com:zeusintuivo/${ONE}.git  $USER_HOME/_/clis/${ONE}"
+      if it_does_not_exist_with_spaces ${USER_HOME}/_/clis/${ONE} ; then
       {
-              cd $USER_HOME/_/clis/${ONE}/en
-              bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts
+        su - $SUDO_USER -c "yes | git clone https://github.com/zeusintuivo/${ONE}.git  $USER_HOME/_/clis/${ONE}"
       }
       fi
-        } else {
-            Installing else $ONE
-            passed clis: ${ONE} folder exists
       cd $USER_HOME/_/clis/${ONE}
       chown -R $SUDO_USER $USER_HOME/_/clis/${ONE}
-      pwd
-      bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts
+      git remote remove origin
+      git remote add origin git@github.com:zeusintuivo/${ONE}.git
+      directory_exists_with_spaces $USER_HOME/_/clis/${ONE}
+      if bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts ; then
+      {
+        echo "linked $USER_HOME/_/clis/${ONE}"
+      }
+      fi
       if [[ "$ONE" == "git_intuivo_cli" ]] ; then  # is not empty
       {
         cd $USER_HOME/_/clis/${ONE}/en
-        bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts
+        if bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts ; then
+        {
+          echo "linked $USER_HOME/_/clis/${ONE}/en"
+        }
+        fi
+      }
+      fi
+    }
+    else
+    {
+      Installing else $ONE
+      passed clis: ${ONE} folder exists
+      cd $USER_HOME/_/clis/${ONE}
+      chown -R $SUDO_USER $USER_HOME/_/clis/${ONE}
+      pwd
+      if bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts ; then
+      {
+        echo "linked $USER_HOME/_/clis/${ONE}"
+      }
+      fi
+      if [[ "$ONE" == "git_intuivo_cli" ]] ; then  # is not empty
+      {
+        cd $USER_HOME/_/clis/${ONE}/en
+        if bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts ; then
+        {
+          echo "linked $USER_HOME/_/clis/${ONE}/en"
+        }
+        fi
       }
       fi
       # msg=$(link_folder_scripts)
@@ -878,10 +896,10 @@ while read -r ONE ; do
       [ $ret -gt 0 ] && Configuring $ONE existed with $ret
       # [ $ret -gt 0 ] && failed clis: execute link_folder_scripts && echo -E $msg && pwd
 
-        }
-        fi
     }
     fi
+  }
+  fi
 }
 done <<< "${clis}"
 # unlink /usr/local/bin/ag # Bug path we need to do something abot this
@@ -889,11 +907,18 @@ done <<< "${clis}"
 if  softlink_exists_with_spaces "/usr/local/bin/added>$USER_HOME/_/clis/git_intuivo_cli/en/added" ; then
 {
     passed clis: git_intuivo_cli/en folder exists and is linked
-} else {
-    Configuring extra work git_intuivo_cli/en
-    directory_exists_with_spaces $USER_HOME/_/clis/git_intuivo_cli/en
-    cd $USER_HOME/_/clis/git_intuivo_cli/en
-    bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts
+}
+else
+{
+  Configuring extra work git_intuivo_cli/en
+  directory_exists_with_spaces $USER_HOME/_/clis/git_intuivo_cli/en
+  cd $USER_HOME/_/clis/git_intuivo_cli/en
+  if bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts ; then
+  {
+    echo "linked $USER_HOME/_/clis/git_intuivo_cli/en"
+  }
+  fi
+
 }
 fi
 
@@ -1414,6 +1439,7 @@ _darwin__64() {
 
   composer global require laravel/valet
   _password_simple
+  return 0
   # _password_simple2
 } # end _darwin__64
 
