@@ -487,9 +487,9 @@ _install_nvm_version(){
     #nvm use "${TARGETVERSION}"
 }
 
-_install_npm_utils
+# _install_npm_utils
 
-_install_nvm
+# _install_nvm
 #_install_nvm_version 10
 #_install_npm_utils
 
@@ -566,7 +566,7 @@ it_does_not_exist_with_spaces ${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-autosug
 
 _if_not_contains "$USER_HOME/.zshrc" "zsh-syntax-highlighting" echo "plugins=(git zsh-syntax-highlighting zsh-autosuggestions)"   >> $USER_HOME/.zshrc
 
-}
+} # end _setup_ohmy
 #_setup_ohmy
 
 COMANDDER=gem

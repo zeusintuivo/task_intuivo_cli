@@ -162,9 +162,9 @@ _checka_tools_commander(){
     is_not_installed pygmentize &&    pip install pygments
     verify_is_installed pygmentize
   ensure pygmentize or "Canceling Install. Could not find pygmentize.  pip install pygments"
-  ensure npm or "Canceling Install. Could not find npm"
-  ensure node or "Canceling Install. Could not find node"
-  ensure cf or "Canceling Install. Could not find cf"
+  # ensure npm or "Canceling Install. Could not find npm"
+  # ensure node or "Canceling Install. Could not find node"
+  # ensure cf or "Canceling Install. Could not find cf"
   #MTASCHECK=$(su - $SUDO_USER -c 'cf mtas --help' >/dev/null 2>&1)
   #if [[ -n "$MTASCHECK" ]] &&  [[ "$MTASCHECK" == *"FAILED"* ]]  ; then
   #{
@@ -504,32 +504,31 @@ _install_nvm() {
         Installing  nvm setup
         su - $SUDO_USER -c 'HOME='$USER_HOME' curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash'
 
-export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${USER_HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
-[ -s "$USER_HOME/.nvm/nvm.sh" ] && \. "$USER_HOME/.nvm/nvm.sh" # This loads nvm
+        export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${USER_HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
+        [ -s "$USER_HOME/.nvm/nvm.sh" ] && \. "$USER_HOME/.nvm/nvm.sh" # This loads nvm
 
-Configuring  nvm setup
+        Configuring  nvm setup
 
-_if_not_contains "$USER_HOME/.bash_profile" "NVM_DIR/nvm.sh" || echo '
+        _if_not_contains "$USER_HOME/.bash_profile" "NVM_DIR/nvm.sh" || echo '
 export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
 '  >> $USER_HOME/.bash_profile
 
-file_exists_with_spaces "$USER_HOME/.bash_profile"
+        file_exists_with_spaces "$USER_HOME/.bash_profile"
 
-_if_not_contains "$USER_HOME/.bashrc" "NVM_DIR/nvm.sh" ||  echo '
+        _if_not_contains "$USER_HOME/.bashrc" "NVM_DIR/nvm.sh" ||  echo '
 export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
 '  >> $USER_HOME/.bashrc
 
-file_exists_with_spaces "$USER_HOME/.bashrc"
+        file_exists_with_spaces "$USER_HOME/.bashrc"
 
-
-_if_not_contains "$USER_HOME/.zshrc" "NVM_DIR/nvm.sh" ||  echo '
+        _if_not_contains "$USER_HOME/.zshrc" "NVM_DIR/nvm.sh" ||  echo '
 export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
 '  >> $USER_HOME/.zshrc
 
-file_exists_with_spaces "$USER_HOME/.zshrc"
+        file_exists_with_spaces "$USER_HOME/.zshrc"
 
         msg=$(su - $SUDO_USER -c 'nvm' >/dev/null 2>&1)
         ret=$?
@@ -1226,9 +1225,9 @@ _ubuntu__64() {
     "
   _checka_tools_commander
   _configure_git
-  _install_npm_utils
   _install_nvm
-  _install_nvm_version
+  _install_nvm_version 14.16.1
+  _install_npm_utils
   # _install_npm_utils
 
   # _install_nvm
@@ -1286,9 +1285,9 @@ _fedora__64() {
     "
   _checka_tools_commander
   _configure_git
-  _install_npm_utils
   _install_nvm
-  _install_nvm_version
+  _install_nvm_version 14.16.1
+  _install_npm_utils
   # _install_npm_utils
 
   # _install_nvm
@@ -1347,9 +1346,6 @@ _darwin__64() {
   if ( ! command -v pygmentize >/dev/null 2>&1; ) ;  then
     pip3 install pygments
   fi
-  if ( ! command -v cf >/dev/null 2>&1; ) ;  then
-    npm i -g cloudfoundry/tap/cf-cli@7
-  fi
   verify_is_installed "
     tree
     ag
@@ -1361,9 +1357,12 @@ _darwin__64() {
     pygmentize
     "
     _configure_git
-  #_install_npm_utils
-  #_install_nvm
-  #_install_nvm_version
+  _install_nvm
+  _install_nvm_version 14.16.1
+  _install_npm_utils
+  if ( ! command -v cf >/dev/null 2>&1; ) ;  then
+    npm i -g cloudfoundry/tap/cf-cli@7
+  fi
   # _install_npm_utils
 
   # _install_nvm
@@ -1382,8 +1381,8 @@ _darwin__64() {
   _setup_clis
   _setup_mycd
 
-    _add_self_cron_update /usr/lib/cron/  /usr/lib/cron/cron.allow
-    _add_launchd $USER_HOME/Library/LaunchAgents $USER_HOME/Library/LaunchAgents/com.intuivo.clis_pull_all.plist
+  _add_self_cron_update /usr/lib/cron/  /usr/lib/cron/cron.allow
+  _add_launchd $USER_HOME/Library/LaunchAgents $USER_HOME/Library/LaunchAgents/com.intuivo.clis_pull_all.plist
 
   composer global require laravel/valet
   _password_simple
