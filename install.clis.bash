@@ -66,8 +66,9 @@ load_struct_testing(){
       fi
     fi
     [[ -z "${structsource}" ]] && echo -e "\n \n  ERROR! Loading struct_testing. structsource did not download or is empty " && exit 1
-    echo "${structsource}">/tmp/struct_testing
-    source /tmp/struct_testing
+    local _temp_dir="$(mktemp -d 2>/dev/null || mktemp -d -t 'struct_testing_source')"
+    echo "${structsource}">"${_temp_dir}/struct_testing"
+    source "${_temp_dir}/struct_testing"
     _err=$?
     [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading struct_testing. Occured while running 'source' err:$_err  \n \n  " && exit 1
     if  ! typeset -f passed >/dev/null 2>&1; then
