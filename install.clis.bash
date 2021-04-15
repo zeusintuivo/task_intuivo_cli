@@ -933,35 +933,37 @@ _setup_mycd(){
     chown -R "${SUDO_USER}" "${USER_HOME}/.config/git"
     touch  "${USER_HOME}/.config/git/ignore"
     file_exists_with_spaces "${USER_HOME}/.config/git/ignore"
-    echo hola 1
     # DEBUG=1
     (_if_not_contains "${USER_HOME}/.config/git/ignore"  ".dir_bash_history") ||  (echo -e "\n.dir_bash_history" >> "${USER_HOME}/.config/git/ignore")
-    echo hola 2
     # DEBUG=0
 
-    local otherignore="$(git config --global core.excludesfile)"
-    echo "hola 3 otherignore <..<${otherignore}>..>"
-    if [[ -n "${otherignore}" ]] ; then
+    if local otherignore="$(git config --global core.excludesfile)" ; then
     {
-    echo "hola 4 otherignore ${otherignore}"
-    echo "hola 4 $(realpath  "${otherignore}")"
-    echo "hola 4 $(su - $SUDO_USER -c "realpath  ${otherignore}")"
-      local realdir=$(su - $SUDO_USER -c "realpath  ${otherignore}")
-    echo hola 5
-    echo hola 5 realdir "${realdir}"
-      local dirother=$(dirname  "${realdir}")
-    echo hola 6 dirother "${dirother}"
-      mkdir -p   "${dirother}"
-    echo hola 7
-      directory_exists_with_spaces "${dirother}"
-    echo hola 8
-      chown -R "${SUDO_USER}" "${dirother}"
-    echo hola 9
-      touch "${realdir}"
-    echo hola 10
-      file_exists_with_spaces "${realdir}"
-    echo hola 11
-      (_if_not_contains "${realdir}"  ".dir_bash_history") ||  (echo -e "\n.dir_bash_history" >> "${realdir}")
+      echo "hola 3 otherignore <..<${otherignore}>..>"
+      if [[ -n "${otherignore}" ]] ; then
+      {
+      echo "hola 4 otherignore ${otherignore}"
+      echo "hola 4 $(realpath  "${otherignore}")"
+      echo "hola 4 $(su - $SUDO_USER -c "realpath  ${otherignore}")"
+        local realdir=$(su - $SUDO_USER -c "realpath  ${otherignore}")
+      echo hola 5
+      echo hola 5 realdir "${realdir}"
+        local dirother=$(dirname  "${realdir}")
+      echo hola 6 dirother "${dirother}"
+        mkdir -p   "${dirother}"
+      echo hola 7
+        directory_exists_with_spaces "${dirother}"
+      echo hola 8
+        chown -R "${SUDO_USER}" "${dirother}"
+      echo hola 9
+        touch "${realdir}"
+      echo hola 10
+        file_exists_with_spaces "${realdir}"
+      echo hola 11
+        (_if_not_contains "${realdir}"  ".dir_bash_history") ||  (echo -e "\n.dir_bash_history" >> "${realdir}")
+      }
+      fi
+
     }
     fi
   }
@@ -1320,6 +1322,7 @@ _centos__64() {
 
 _fedora__64() {
   COMANDDER="dnf install -y"
+  _setup_mycd
   is_not_installed ag && $COMANDDER the_silver_searcher          # In Fedora
   install_requirements "linux" "
     xclip
