@@ -1222,32 +1222,21 @@ _ubuntu__64() {
     nano
     pv
     python-pip
+    zsh
     "
   _checka_tools_commander
   _configure_git
   _install_nvm
   _install_nvm_version 14.16.1
   _install_npm_utils
-  # _install_npm_utils
 
-  # _install_nvm
-  #_install_nvm_version 10
-  #_install_npm_utils
-
-  #_install_nvm_version 12
-  #_install_npm_utils
-
-  #_install_nvm_version 14
-  #_install_npm_utils
   _setup_ohmy
   _install_colorls
   _setup_clis
   _setup_mycd
 
 
-  install_requirements "
-     zsh
-  "
+
   # _password_simple
   # _password_simple2
 
@@ -1282,32 +1271,21 @@ _fedora__64() {
     nano
     pv
     python-pip
+    zsh
     "
   _checka_tools_commander
   _configure_git
   _install_nvm
   _install_nvm_version 14.16.1
   _install_npm_utils
-  # _install_npm_utils
 
-  # _install_nvm
-  #_install_nvm_version 10
-  #_install_npm_utils
-
-  #_install_nvm_version 12
-  #_install_npm_utils
-
-  #_install_nvm_version 14
-  #_install_npm_utils
   _setup_ohmy
   _install_colorls
   _setup_clis
   _setup_mycd
 
 
-  install_requirements "
-     zsh
-  "
+
   # _password_simple
   # _password_simple2
   if  it_does_not_exist_with_spaces /etc/yum.repos.d/cloudfoundry-cli.repo ; then
