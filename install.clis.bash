@@ -14,11 +14,11 @@ typeset -r THISSCRIPTNAME="$(basename "$0")"
 
 export _err
 typeset -i _err=0
-  # function _trap_on_error(){
-  #   echo -e "\\n \033[01;7m*** ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR ...\033[0m"
-  #   exit 1
-  # }
-  # trap _trap_on_error ERR
+  function _trap_on_error(){
+    echo -e "\\n \033[01;7m*** ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR ...\033[0m"
+    exit 1
+  }
+  trap _trap_on_error ERR
   function _trap_on_int(){
     echo -e "\\n \033[01;7m*** INTERRUPT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n  INT ...\033[0m"
     exit 0
@@ -27,23 +27,23 @@ typeset -i _err=0
   trap _trap_on_int INT
 
 load_struct_testing(){
-  # function _trap_on_error(){
-  #   local -ir __trapped_error_exit_num="${2:-0}"
-  #   echo -e "\\n \033[01;7m*** ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR ...\033[0m  \n \n "
-  #   echo ". ${1}"
-  #   echo ". exit  ${__trapped_error_exit_num}  "
-  #   echo ". caller $(caller) "
-  #   echo ". ${BASH_COMMAND}"
-  #   local -r __caller=$(caller)
-  #   local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
-  #   local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-  #   awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+  function _trap_on_error(){
+    local -ir __trapped_error_exit_num="${2:-0}"
+    echo -e "\\n \033[01;7m*** ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR ...\033[0m  \n \n "
+    echo ". ${1}"
+    echo ". exit  ${__trapped_error_exit_num}  "
+    echo ". caller $(caller) "
+    echo ". ${BASH_COMMAND}"
+    local -r __caller=$(caller)
+    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
 
-  #   # $(eval ${BASH_COMMAND}  2>&1; )
-  #   # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
-  #   exit 1
-  # }
-  # trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+    # $(eval ${BASH_COMMAND}  2>&1; )
+    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+    exit 1
+  }
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
     local provider="$HOME/_/clis/execute_command_intuivo_cli/struct_testing"
     local _err=0 structsource
     if [   -e "${provider}"  ] ; then
@@ -95,7 +95,6 @@ function sudo_it() {
   # Override bigger error trap  with local
   function _trap_on_error(){
     echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR INT ...\033[0m"
-
   }
   trap _trap_on_error ERR INT
 } # end sudo_it
@@ -836,41 +835,59 @@ task_intuivo_cli
 
 while read -r ONE ; do
 {
-    if [ -n "$ONE" ] ; then  # is not empty
+  if [ -n "$ONE" ] ; then  # is not empty
+  {
+    Installing "$ONE"
+    if  it_does_not_exist_with_spaces "$USER_HOME/_/clis/${ONE}" ; then
     {
-        Installing "$ONE"
-        if  it_does_not_exist_with_spaces "$USER_HOME/_/clis/${ONE}" ; then
-        {
-            cd $USER_HOME/_/clis
-            su - $SUDO_USER -c "yes | git clone git@github.com:zeusintuivo/${ONE}.git  $USER_HOME/_/clis/${ONE}"
-            if it_does_not_exist_with_spaces ${USER_HOME}/_/clis/${ONE} ; then
-            {
-              su - $SUDO_USER -c "yes | git clone https://github.com/zeusintuivo/${ONE}.git  $USER_HOME/_/clis/${ONE}"
-            }
-            fi
-            cd $USER_HOME/_/clis/${ONE}
-            chown -R $SUDO_USER $USER_HOME/_/clis/${ONE}
-          git remote remove origin
-            git remote add origin git@github.com:zeusintuivo/${ONE}.git
-            directory_exists_with_spaces $USER_HOME/_/clis/${ONE}
-            bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts
-      if [[ "$ONE" == "git_intuivo_cli" ]] ; then  # is not empty
+      cd $USER_HOME/_/clis
+      su - $SUDO_USER -c "yes | git clone git@github.com:zeusintuivo/${ONE}.git  $USER_HOME/_/clis/${ONE}"
+      if it_does_not_exist_with_spaces ${USER_HOME}/_/clis/${ONE} ; then
       {
-              cd $USER_HOME/_/clis/${ONE}/en
-              bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts
+        su - $SUDO_USER -c "yes | git clone https://github.com/zeusintuivo/${ONE}.git  $USER_HOME/_/clis/${ONE}"
       }
       fi
-        } else {
-            Installing else $ONE
-            passed clis: ${ONE} folder exists
       cd $USER_HOME/_/clis/${ONE}
       chown -R $SUDO_USER $USER_HOME/_/clis/${ONE}
-      pwd
-      bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts
+      git remote remove origin
+      git remote add origin git@github.com:zeusintuivo/${ONE}.git
+      directory_exists_with_spaces $USER_HOME/_/clis/${ONE}
+      if bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts ; then
+      {
+        echo "linked $USER_HOME/_/clis/${ONE}"
+      }
+      fi
       if [[ "$ONE" == "git_intuivo_cli" ]] ; then  # is not empty
       {
         cd $USER_HOME/_/clis/${ONE}/en
-        bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts
+        if bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts ; then
+        {
+          echo "linked $USER_HOME/_/clis/${ONE}/en"
+        }
+        fi
+      }
+      fi
+    }
+    else
+    {
+      Installing else $ONE
+      passed clis: ${ONE} folder exists
+      cd $USER_HOME/_/clis/${ONE}
+      chown -R $SUDO_USER $USER_HOME/_/clis/${ONE}
+      pwd
+      if bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts ; then
+      {
+        echo "linked $USER_HOME/_/clis/${ONE}"
+      }
+      fi
+      if [[ "$ONE" == "git_intuivo_cli" ]] ; then  # is not empty
+      {
+        cd $USER_HOME/_/clis/${ONE}/en
+        if bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts ; then
+        {
+          echo "linked $USER_HOME/_/clis/${ONE}/en"
+        }
+        fi
       }
       fi
       # msg=$(link_folder_scripts)
@@ -879,10 +896,10 @@ while read -r ONE ; do
       [ $ret -gt 0 ] && Configuring $ONE existed with $ret
       # [ $ret -gt 0 ] && failed clis: execute link_folder_scripts && echo -E $msg && pwd
 
-        }
-        fi
     }
     fi
+  }
+  fi
 }
 done <<< "${clis}"
 # unlink /usr/local/bin/ag # Bug path we need to do something abot this
@@ -890,11 +907,18 @@ done <<< "${clis}"
 if  softlink_exists_with_spaces "/usr/local/bin/added>$USER_HOME/_/clis/git_intuivo_cli/en/added" ; then
 {
     passed clis: git_intuivo_cli/en folder exists and is linked
-} else {
-    Configuring extra work git_intuivo_cli/en
-    directory_exists_with_spaces $USER_HOME/_/clis/git_intuivo_cli/en
-    cd $USER_HOME/_/clis/git_intuivo_cli/en
-    bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts
+}
+else
+{
+  Configuring extra work git_intuivo_cli/en
+  directory_exists_with_spaces $USER_HOME/_/clis/git_intuivo_cli/en
+  cd $USER_HOME/_/clis/git_intuivo_cli/en
+  if bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts ; then
+  {
+    echo "linked $USER_HOME/_/clis/git_intuivo_cli/en"
+  }
+  fi
+
 }
 fi
 
@@ -932,22 +956,29 @@ _setup_mycd(){
     directory_exists_with_spaces  "${USER_HOME}/.config/git"
     chown -R "${SUDO_USER}" "${USER_HOME}/.config/git"
     touch  "${USER_HOME}/.config/git/ignore"
-    file_exists_with_spaces  "${USER_HOME}/.config/git/ignore"
+    file_exists_with_spaces "${USER_HOME}/.config/git/ignore"
     # DEBUG=1
-    _if_not_contains "${USER_HOME}/.config/git/ignore"  ".dir_bash_history" ||  echo -e "\n.dir_bash_history" >> "${USER_HOME}/.config/git/ignore"
+    (_if_not_contains "${USER_HOME}/.config/git/ignore"  ".dir_bash_history") ||  (echo -e "\n.dir_bash_history" >> "${USER_HOME}/.config/git/ignore")
     # DEBUG=0
 
-    local otherignore=$(git config --global core.excludesfile)
-    if [[ -n "${otherignore}" ]] ; then
+    if local otherignore="$(git config --global core.excludesfile)" ; then
     {
-      local realdir=$(su - $SUDO_USER -c "realpath  ${otherignore}")
-      local dirother=$(dirname  "${realdir}")
-      mkdir -p   "${dirother}"
-      directory_exists_with_spaces "${dirother}"
-      chown -R "${SUDO_USER}" "${dirother}"
-      touch "${realdir}"
-      file_exists_with_spaces "${realdir}"
-      _if_not_contains "${realdir}"  ".dir_bash_history" ||  echo -e "\n.dir_bash_history" >> "${realdir}"
+      echo "More ignore choices for excludesfile <..<${otherignore}>..>"
+      if [[ -n "${otherignore}" ]] ; then
+      {
+        local realdir=$(su - $SUDO_USER -c "realpath  ${otherignore}")
+        local dirother=$(dirname  "${realdir}")
+        mkdir -p   "${dirother}"
+        directory_exists_with_spaces "${dirother}"
+        chown -R "${SUDO_USER}" "${dirother}"
+        touch "${realdir}"
+        file_exists_with_spaces "${realdir}"
+        (_if_not_contains "${realdir}"  ".dir_bash_history") ||  (echo -e "\n.dir_bash_history" >> "${realdir}")
+      } else {
+        echo "More ignore choices for excludesfile Empty. .Not Found."
+      }
+      fi
+
     }
     fi
   }
@@ -1455,6 +1486,7 @@ _darwin__64() {
 
   composer global require laravel/valet
   _password_simple
+  return 0
   # _password_simple2
 } # end _darwin__64
 
