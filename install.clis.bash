@@ -118,7 +118,7 @@ enforce_variable_with_value USER_HOME $USER_HOME
 enforce_variable_with_value SUDO_USER $SUDO_USER
 passed Caller user identified:$SUDO_USER
 passed Home identified:$USER_HOME
-file_exists_with_spaces "$USER_HOME"
+directory_exists_with_spaces "$USER_HOME"
 
 
 # exit 0
