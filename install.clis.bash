@@ -93,11 +93,11 @@ function sudo_it() {
   enforce_variable_with_value SUDO_UID "${SUDO_UID}"
   enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
   # Override bigger error trap  with local
-  function _trap_on_error(){
-    echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR INT ...\033[0m"
+  # function _trap_on_error(){
+  #   echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR INT ...\033[0m"
 
-  }
-  trap _trap_on_error ERR INT
+  # }
+  # trap _trap_on_error ERR INT
 } # end sudo_it
 
 # _linux_prepare(){
@@ -943,11 +943,14 @@ _setup_mycd(){
     echo hola 3
     if [[ -n "${otherignore}" ]] ; then
     {
-    echo hola 4
+    echo "hola 4 otherignore ${otherignore}"
+    echo "hola 4 $(realpath  "${otherignore}")"
+    echo "hola 4 $(su - $SUDO_USER -c "realpath  ${otherignore}")"
       local realdir=$(su - $SUDO_USER -c "realpath  ${otherignore}")
     echo hola 5
+    echo hola 5 realdir "${realdir}"
       local dirother=$(dirname  "${realdir}")
-    echo hola 6
+    echo hola 6 dirother "${dirother}"
       mkdir -p   "${dirother}"
     echo hola 7
       directory_exists_with_spaces "${dirother}"
