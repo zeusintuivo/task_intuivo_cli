@@ -119,7 +119,7 @@ enforce_variable_with_value USER_HOME $USER_HOME
 enforce_variable_with_value SUDO_USER $SUDO_USER
 passed Caller user identified:$SUDO_USER
 passed Home identified:$USER_HOME
-file_exists_with_spaces "$USER_HOME"
+directory_exists_with_spaces "$USER_HOME"
 
 
 _darwin__64() {
@@ -301,7 +301,7 @@ _darwin__64_manual() {
 } # end _darwin__64
 
 _ubuntu__64() {
-  file_exists_with_spaces "$USER_HOME"
+  directory_exists_with_spaces "$USER_HOME"
 
   # install_nano.bash
   sudo add-apt-repository ppa:n-muench/programs-ppa
@@ -378,7 +378,7 @@ _fedora__32() {
 
 _centos__64() {
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  file_exists_with_spaces "$USER_HOME"
+  directory_exists_with_spaces "$USER_HOME"
   install_requirements "linux" "
     curl
     wget
@@ -424,7 +424,7 @@ _extract_version(){
 
 _fedora__64() {
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  file_exists_with_spaces "$USER_HOME"
+  directory_exists_with_spaces "$USER_HOME"
   install_requirements "linux" "
     curl
     wget
