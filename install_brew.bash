@@ -147,7 +147,7 @@ _debian_flavor_install(){
   _add_to_file .profile
   _add_to_file .zshrc
   return 0
-}
+} # end _debian_flavor_install
 _debian__32() {
   echo "CURRENTLY NOT SUPPORTED BY LINUX BREW REF: https://docs.brew.sh/Homebrew-on-Linux#install"
 }
@@ -217,7 +217,7 @@ _readhat_flavor_install(){
   _add_to_file .bash_profile
   _add_to_file .zshrc
   return 0
-}
+} # end _readhat_flavor_install
 _centos__32() {
   echo "CURRENTLY NOT SUPPORTED BY LINUX BREW REF: https://docs.brew.sh/Homebrew-on-Linux#install"
 }

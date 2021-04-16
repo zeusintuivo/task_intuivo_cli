@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+#!/bin/bash
+#
+# @author Zeus Intuivo <zeus@intuivo.com>
+#
+#
+
+
+function loader_installer(){
+	local _sudoer="$(<tasks_base/sudoer.bash)"
+	echo "${_sudoer}" > install_"${1}".bash
+	chmod a+x install_"${1}".bash
+} # end loader_installer
+
+loader_installer "${1}"
+
