@@ -4,6 +4,49 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 #
+.each() {
+  local local_actions="${1}"
+  local local_items="${2}"
+  local one_item
+  local one_action
+  local action
+
+  while read -r one_item; do
+  {
+    if [[ -n "${one_item}" ]] ; then  # if not empty
+    {
+      while read -r one_action; do
+      {
+        if [[ -n "${one_action}" ]] ; then  # if not empty
+        {
+          action="${one_action/\{\#\}/$one_item}"  # replace value inside string substitution expresion bash
+          eval ${action}
+        }
+        fi
+      }
+      done <<< "${local_actions}"
+    }
+    fi
+  }
+  done <<< "${local_items}"
+}
+
+
+BASETEMPLATES="$(ls -1 ./tasks_templates)"
+CYAN="\\\\033[01;36m"
+LIGHTYELLOW="\\\\\033[38;5;227m"
+CURDIR="${PWD}"
+ACTIONS="echo -e \".\"
+echo \"${CYAN}Task:${LIGHTYELLOW}{#} \"
+[[ -d .git/ ]] && pull
+"
+cd "${CURDIR}"
+
+# Perform all actions in
+#        LIST1
+#          for each element in
+#                           LIST2
+.each  "${ACTIONS}"   "${BASETEMPLATES}"
 
 
 function loader_installer(){

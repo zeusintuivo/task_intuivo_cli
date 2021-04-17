@@ -16,11 +16,11 @@ function loader_installer(){
   echo -e "\n\n\n #--------\/\/\/\/-- Work here below \/, test, and transfer to tasks_templates/${1} having a working version -\/\/\/\/-------\n\n" >> "install_${1}.bash"
   echo "${_linuxes_body_templates}" >> "install_${1}.bash"
   echo -e "\n\n\n #--------/\/\/\/\-- Work here above /\, test, and transfer to tasks_templates/${1} having a working version -/\/\/\/\-------\n\n" >> "install_${1}.bash"
-  touch "tasks_templates/${1}"
+  touch "tasks_templates_sudo/${1}"
   echo "${_main}" >> "install_${1}.bash"
 	chmod a+x "install_${1}.bash"
   subl "install_${1}.bash:${_sudoer_lines}"
 } # end loader_installer
-
+[[ -z "${1}" ]] && echo -e "ERROR $0 requires one argument. \n A task name   like    \n $0 brew    to create  install_brew.bash and tasks_templates_sudo/brew " && exit 1
 loader_installer "${1}"
 
