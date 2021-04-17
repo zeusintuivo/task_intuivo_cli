@@ -3,7 +3,7 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 #
-# Compatible start with low version bash 
+# Compatible start with low version bash
 export THISSCRIPTCOMPLETEPATH
 typeset -r THISSCRIPTCOMPLETEPATH="$(realpath $(which $(basename "$0")))"   # § This goes in the FATHER-MOTHER script
 
@@ -39,22 +39,22 @@ function sudo_it() {
 
 
 _debian_flavor_install(){
-  sudo_it  
+  sudo_it
   install_requirements "linux" "
     # Debian Ubuntu only
-    network-manager 
-    libnss3-tools 
-    jq 
+    network-manager
+    libnss3-tools
+    jq
     xsel
   "
   verify_is_installed "
-    network-manager 
-    libnss3-tools 
-    jq 
+    network-manager
+    libnss3-tools
+    jq
     xsel
     composer
     php
-  "  
+  "
     PHPS=$(which php)
   COMPOSERS=$(which composer)
 
@@ -85,14 +85,14 @@ _readhat_flavor_install(){
   sudo_it
   install_requirements "linux" "
     # ReadHat Flavor only
-    nss-tools 
-    jq 
-    xsel      
+    nss-tools
+    jq
+    xsel
   "
   verify_is_installed "
-    nss-tools 
-    jq 
-    xsel     
+    nss-tools
+    jq
+    xsel
     composer
     php
   "
@@ -101,7 +101,7 @@ _readhat_flavor_install(){
 
     Open /etc/selinux/config
     Change SELINUX=enforcing to SELINUX=permissive"
-  
+
   PHPS=$(which php)
   COMPOSERS=$(which composer)
 
