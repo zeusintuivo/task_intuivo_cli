@@ -1,81 +1,124 @@
 #!/usr/bin/env bash
-
-# Script to install all intuivo_clis
-
-# SUDO_USER only exists during execution of sudo
-# REF: https://stackoverflow.com/questions/7358611/get-users-home-directory-when-they-run-a-script-as-root
-# Global:
+#
+# @author Zeus Intuivo <zeus@intuivo.com>
+#
+# 20200415 Compatible with Fedora, Mac, Ubuntu "sudo_up" "load_struct" "#
+set -E -o functrace
 export THISSCRIPTCOMPLETEPATH
-typeset -r THISSCRIPTCOMPLETEPATH="$(pwd)/$(basename "$0")"   # § This goes in the FATHER-MOTHER script
-
+typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")"
 export BASH_VERSION_NUMBER
 typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
 
 export  THISSCRIPTNAME
-typeset -r THISSCRIPTNAME="$(pwd)/$(basename "$0")"
+typeset -r THISSCRIPTNAME="$(basename "$0")"
 
 export _err
 typeset -i _err=0
-
-execute_as_sudo(){
-  if [ -z $SUDO_USER ] ; then
-    if [[ -z "$THISSCRIPTNAME" ]] ; then
-    {
-        echo "error You need to add THISSCRIPTNAME variable like this:"
-        echo "     THISSCRIPTNAME=\`basename \"\$0\"\`"
-    }
-    else
-    {
-        if [ -f "./$THISSCRIPTNAME" ] ; then
-        {
-          sudo "./$THISSCRIPTNAME"
-        }
-        elif ( command -v "$THISSCRIPTNAME" >/dev/null 2>&1 );  then
-        {
-          echo "sudo sudo sudo "
-          sudo "$THISSCRIPTNAME"
-        }
-        else
-        {
-          echo -e "\033[05;7m*** Failed to find script to recall it as sudo ...\033[0m"
-          exit 1
-        }
-        fi
-    }
-    fi
-    wait
+  function _trap_on_error(){
+    echo -e "\\n \033[01;7m*** ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR ...\033[0m"
+    exit 1
+  }
+  trap _trap_on_error ERR
+  function _trap_on_int(){
+    echo -e "\\n \033[01;7m*** INTERRUPT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n  INT ...\033[0m"
     exit 0
-  fi
-  # REF: http://superuser.com/questions/93385/run-part-of-a-bash-script-as-a-different-user
-  # REF: http://superuser.com/questions/195781/sudo-is-there-a-command-to-check-if-i-have-sudo-and-or-how-much-time-is-left
-  local CAN_I_RUN_SUDO=$(sudo -n uptime 2>&1|grep "load"|wc -l)
-  if [ ${CAN_I_RUN_SUDO} -gt 0 ]; then
-    echo -e "\033[01;7m*** Installing as sudo...\033[0m"
-  else
-    echo "Needs to run as sudo ... ${0}"
-  fi
-} # end execute_as_sudo
-execute_as_sudo
+  }
 
-export USER_HOME
-# shellcheck disable=SC2046
-# shellcheck disable=SC2031
-typeset -r USER_HOME="$(echo -n $(bash -c "cd ~${SUDO_USER} && pwd"))"  # Get the caller's of sudo home dir LINUX and MAC
-# USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)   # Get the caller's of sudo home dir LINUX
+  trap _trap_on_int INT
 
-load_struct_testing_wget(){
-    local provider="$USER_HOME/_/clis/execute_command_intuivo_cli/struct_testing"
-    [   -e "${provider}"  ] && source "${provider}"
-    [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
-    ( ( ! command -v passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
-} # end load_struct_testing_wget
-load_struct_testing_wget
+load_struct_testing(){
+  function _trap_on_error(){
+    local -ir __trapped_error_exit_num="${2:-0}"
+    echo -e "\\n \033[01;7m*** ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR ...\033[0m  \n \n "
+    echo ". ${1}"
+    echo ". exit  ${__trapped_error_exit_num}  "
+    echo ". caller $(caller) "
+    echo ". ${BASH_COMMAND}"
+    local -r __caller=$(caller)
+    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+
+    # $(eval ${BASH_COMMAND}  2>&1; )
+    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+    exit 1
+  }
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+    local provider="$HOME/_/clis/execute_command_intuivo_cli/struct_testing"
+    local _err=0 structsource
+    if [   -e "${provider}"  ] ; then
+      echo "Loading locally"
+      structsource="""$(<"${provider}")"""
+      _err=$?
+      [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading struct_testing. running 'source locally' returned error did not download or is empty err:$_err  \n \n  " && exit 1
+    else
+      if ( command -v curl >/dev/null 2>&1; )  ; then
+        echo "Loading struct_testing from the net using curl "
+        structsource="""$(curl https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing  -so -   2>/dev/null )"""  #  2>/dev/null suppress only curl download messages, but keep curl output for variable
+        _err=$?
+        [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading struct_testing. running 'curl' returned error did not download or is empty err:$_err  \n \n  " && exit 1
+      elif ( command -v wget >/dev/null 2>&1; ) ; then
+        echo "Loading struct_testing from the net using wget "
+        structsource="""$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing -O -   2>/dev/null )"""  #  2>/dev/null suppress only wget download messages, but keep wget output for variable
+        _err=$?
+        [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading struct_testing. running 'wget' returned error did not download or is empty err:$_err  \n \n  " && exit 1
+      else
+        echo -e "\n \n  ERROR! Loading struct_testing could not find wget or curl to download  \n \n "
+        exit 69
+      fi
+    fi
+    [[ -z "${structsource}" ]] && echo -e "\n \n  ERROR! Loading struct_testing. structsource did not download or is empty " && exit 1
+    local _temp_dir="$(mktemp -d 2>/dev/null || mktemp -d -t 'struct_testing_source')"
+    echo "${structsource}">"${_temp_dir}/struct_testing"
+    echo "Temp location ${_temp_dir}/struct_testing"
+    source "${_temp_dir}/struct_testing"
+    _err=$?
+    [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading struct_testing. Occured while running 'source' err:$_err  \n \n  " && exit 1
+    if  ! typeset -f passed >/dev/null 2>&1; then
+      echo -e "\n \n  ERROR! Loading struct_testing. Passed was not loaded !!!  \n \n "
+      exit 69;
+    fi
+    return $_err
+} # end load_struct_testing
+load_struct_testing
+
+ _err=$?
+[ $_err -ne 0 ]  && echo -e "\n \n  ERROR FATAL! load_struct_testing_wget !!! returned:<$_err> \n \n  " && exit 69;
+
+export sudo_it
+function sudo_it() {
+  raise_to_sudo_and_user_home
+  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
+  enforce_variable_with_value SUDO_USER "${SUDO_USER}"
+  enforce_variable_with_value SUDO_UID "${SUDO_UID}"
+  enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
+  # Override bigger error trap  with local
+  function _trap_on_error(){
+    echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR INT ...\033[0m"
+  }
+  trap _trap_on_error ERR INT
+} # end sudo_it
+
+# _linux_prepare(){
+  sudo_it
+  [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
+  export USER_HOME
+  # shellcheck disable=SC2046
+  # shellcheck disable=SC2031
+  typeset -r USER_HOME="$(echo -n $(bash -c "cd ~${SUDO_USER} && pwd"))"  # Get the caller's of sudo home dir LINUX and MAC
+  # USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)   # Get the caller's of sudo home dir LINUX
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+# }  # end _linux_prepare
+
+
+# _linux_prepare
 
 enforce_variable_with_value USER_HOME $USER_HOME
 enforce_variable_with_value SUDO_USER $SUDO_USER
 passed Caller user identified:$SUDO_USER
 passed Home identified:$USER_HOME
-file_exists_with_spaces "$USER_HOME"
+directory_exists_with_spaces "$USER_HOME"
+
 
 # exit 0
 COMANDDER=""
@@ -89,19 +132,21 @@ _checka_node_commander() {
 } # end _checka_node_commander
 
 _checka_tools_commander(){
-    install_requirements "linux" "
-    xclip
-    tree
-    ag@the_silver_searcher
-    # Ubuntu only
-    ag@silversearcher-ag
-    ack
-    # Ubuntu only
-    ack@ack-grep
-    vim
-    nano
-    pv
-    "
+    # install_requirements "linux" "
+    # xclip
+    # tree
+    # ag@the_silver_searcher
+    # # Ubuntu only
+    # ag@silversearcher-ag
+    # ack
+    # # Ubuntu only
+    # ack@ack-grep
+    # vim
+    # nano
+    # pv
+    # # Ubuntu only
+    # python-pip
+    # "
     verify_is_installed "
     xclip
     tree
@@ -116,9 +161,9 @@ _checka_tools_commander(){
     is_not_installed pygmentize &&    pip install pygments
     verify_is_installed pygmentize
   ensure pygmentize or "Canceling Install. Could not find pygmentize.  pip install pygments"
-  ensure npm or "Canceling Install. Could not find npm"
-  ensure node or "Canceling Install. Could not find node"
-  ensure cf or "Canceling Install. Could not find cf"
+  # ensure npm or "Canceling Install. Could not find npm"
+  # ensure node or "Canceling Install. Could not find node"
+  # ensure cf or "Canceling Install. Could not find cf"
   #MTASCHECK=$(su - $SUDO_USER -c 'cf mtas --help' >/dev/null 2>&1)
   #if [[ -n "$MTASCHECK" ]] &&  [[ "$MTASCHECK" == *"FAILED"* ]]  ; then
   #{
@@ -458,32 +503,31 @@ _install_nvm() {
         Installing  nvm setup
         su - $SUDO_USER -c 'HOME='$USER_HOME' curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash'
 
-export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${USER_HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
-[ -s "$USER_HOME/.nvm/nvm.sh" ] && \. "$USER_HOME/.nvm/nvm.sh" # This loads nvm
+        export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${USER_HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
+        [ -s "$USER_HOME/.nvm/nvm.sh" ] && \. "$USER_HOME/.nvm/nvm.sh" # This loads nvm
 
-Configuring  nvm setup
+        Configuring  nvm setup
 
-_if_not_contains "$USER_HOME/.bash_profile" "NVM_DIR/nvm.sh" || echo '
+        _if_not_contains "$USER_HOME/.bash_profile" "NVM_DIR/nvm.sh" || echo '
 export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
 '  >> $USER_HOME/.bash_profile
 
-file_exists_with_spaces "$USER_HOME/.bash_profile"
+        file_exists_with_spaces "$USER_HOME/.bash_profile"
 
-_if_not_contains "$USER_HOME/.bashrc" "NVM_DIR/nvm.sh" ||  echo '
+        _if_not_contains "$USER_HOME/.bashrc" "NVM_DIR/nvm.sh" ||  echo '
 export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
 '  >> $USER_HOME/.bashrc
 
-file_exists_with_spaces "$USER_HOME/.bashrc"
+        file_exists_with_spaces "$USER_HOME/.bashrc"
 
-
-_if_not_contains "$USER_HOME/.zshrc" "NVM_DIR/nvm.sh" ||  echo '
+        _if_not_contains "$USER_HOME/.zshrc" "NVM_DIR/nvm.sh" ||  echo '
 export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
 '  >> $USER_HOME/.zshrc
 
-file_exists_with_spaces "$USER_HOME/.zshrc"
+        file_exists_with_spaces "$USER_HOME/.zshrc"
 
         msg=$(su - $SUDO_USER -c 'nvm' >/dev/null 2>&1)
         ret=$?
@@ -791,41 +835,59 @@ task_intuivo_cli
 
 while read -r ONE ; do
 {
-    if [ -n "$ONE" ] ; then  # is not empty
+  if [ -n "$ONE" ] ; then  # is not empty
+  {
+    Installing "$ONE"
+    if  it_does_not_exist_with_spaces "$USER_HOME/_/clis/${ONE}" ; then
     {
-        Installing "$ONE"
-        if  it_does_not_exist_with_spaces "$USER_HOME/_/clis/${ONE}" ; then
-        {
-            cd $USER_HOME/_/clis
-            su - $SUDO_USER -c "yes | git clone git@github.com:zeusintuivo/${ONE}.git  $USER_HOME/_/clis/${ONE}"
-            if it_does_not_exist_with_spaces ${USER_HOME}/_/clis/${ONE} ; then
-            {
-              su - $SUDO_USER -c "yes | git clone https://github.com/zeusintuivo/${ONE}.git  $USER_HOME/_/clis/${ONE}"
-            }
-            fi
-            cd $USER_HOME/_/clis/${ONE}
-            chown -R $SUDO_USER $USER_HOME/_/clis/${ONE}
-          git remote remove origin
-            git remote add origin git@github.com:zeusintuivo/${ONE}.git
-            directory_exists_with_spaces $USER_HOME/_/clis/${ONE}
-            bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts
-      if [[ "$ONE" == "git_intuivo_cli" ]] ; then  # is not empty
+      cd $USER_HOME/_/clis
+      su - $SUDO_USER -c "yes | git clone git@github.com:zeusintuivo/${ONE}.git  $USER_HOME/_/clis/${ONE}"
+      if it_does_not_exist_with_spaces ${USER_HOME}/_/clis/${ONE} ; then
       {
-              cd $USER_HOME/_/clis/${ONE}/en
-              bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts
+        su - $SUDO_USER -c "yes | git clone https://github.com/zeusintuivo/${ONE}.git  $USER_HOME/_/clis/${ONE}"
       }
       fi
-        } else {
-            Installing else $ONE
-            passed clis: ${ONE} folder exists
       cd $USER_HOME/_/clis/${ONE}
       chown -R $SUDO_USER $USER_HOME/_/clis/${ONE}
-      pwd
-      bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts
+      git remote remove origin
+      git remote add origin git@github.com:zeusintuivo/${ONE}.git
+      directory_exists_with_spaces $USER_HOME/_/clis/${ONE}
+      if bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts ; then
+      {
+        echo "linked $USER_HOME/_/clis/${ONE}"
+      }
+      fi
       if [[ "$ONE" == "git_intuivo_cli" ]] ; then  # is not empty
       {
         cd $USER_HOME/_/clis/${ONE}/en
-        bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts
+        if bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts ; then
+        {
+          echo "linked $USER_HOME/_/clis/${ONE}/en"
+        }
+        fi
+      }
+      fi
+    }
+    else
+    {
+      Installing else $ONE
+      passed clis: ${ONE} folder exists
+      cd $USER_HOME/_/clis/${ONE}
+      chown -R $SUDO_USER $USER_HOME/_/clis/${ONE}
+      pwd
+      if bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts ; then
+      {
+        echo "linked $USER_HOME/_/clis/${ONE}"
+      }
+      fi
+      if [[ "$ONE" == "git_intuivo_cli" ]] ; then  # is not empty
+      {
+        cd $USER_HOME/_/clis/${ONE}/en
+        if bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts ; then
+        {
+          echo "linked $USER_HOME/_/clis/${ONE}/en"
+        }
+        fi
       }
       fi
       # msg=$(link_folder_scripts)
@@ -834,10 +896,10 @@ while read -r ONE ; do
       [ $ret -gt 0 ] && Configuring $ONE existed with $ret
       # [ $ret -gt 0 ] && failed clis: execute link_folder_scripts && echo -E $msg && pwd
 
-        }
-        fi
     }
     fi
+  }
+  fi
 }
 done <<< "${clis}"
 # unlink /usr/local/bin/ag # Bug path we need to do something abot this
@@ -845,11 +907,18 @@ done <<< "${clis}"
 if  softlink_exists_with_spaces "/usr/local/bin/added>$USER_HOME/_/clis/git_intuivo_cli/en/added" ; then
 {
     passed clis: git_intuivo_cli/en folder exists and is linked
-} else {
-    Configuring extra work git_intuivo_cli/en
-    directory_exists_with_spaces $USER_HOME/_/clis/git_intuivo_cli/en
-    cd $USER_HOME/_/clis/git_intuivo_cli/en
-    bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts
+}
+else
+{
+  Configuring extra work git_intuivo_cli/en
+  directory_exists_with_spaces $USER_HOME/_/clis/git_intuivo_cli/en
+  cd $USER_HOME/_/clis/git_intuivo_cli/en
+  if bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts ; then
+  {
+    echo "linked $USER_HOME/_/clis/git_intuivo_cli/en"
+  }
+  fi
+
 }
 fi
 
@@ -887,22 +956,29 @@ _setup_mycd(){
     directory_exists_with_spaces  "${USER_HOME}/.config/git"
     chown -R "${SUDO_USER}" "${USER_HOME}/.config/git"
     touch  "${USER_HOME}/.config/git/ignore"
-    file_exists_with_spaces  "${USER_HOME}/.config/git/ignore"
+    file_exists_with_spaces "${USER_HOME}/.config/git/ignore"
     # DEBUG=1
-    _if_not_contains "${USER_HOME}/.config/git/ignore"  ".dir_bash_history" ||  echo -e "\n.dir_bash_history" >> "${USER_HOME}/.config/git/ignore"
+    (_if_not_contains "${USER_HOME}/.config/git/ignore"  ".dir_bash_history") ||  (echo -e "\n.dir_bash_history" >> "${USER_HOME}/.config/git/ignore")
     # DEBUG=0
 
-    local otherignore=$(git config --global core.excludesfile)
-    if [[ -n "${otherignore}" ]] ; then
+    if local otherignore="$(git config --global core.excludesfile)" ; then
     {
-      local realdir=$(su - $SUDO_USER -c "realpath  ${otherignore}")
-      local dirother=$(dirname  "${realdir}")
-      mkdir -p   "${dirother}"
-      directory_exists_with_spaces "${dirother}"
-      chown -R "${SUDO_USER}" "${dirother}"
-      touch "${realdir}"
-      file_exists_with_spaces "${realdir}"
-      _if_not_contains "${realdir}"  ".dir_bash_history" ||  echo -e "\n.dir_bash_history" >> "${realdir}"
+      echo "More ignore choices for excludesfile <..<${otherignore}>..>"
+      if [[ -n "${otherignore}" ]] ; then
+      {
+        local realdir=$(su - $SUDO_USER -c "realpath  ${otherignore}")
+        local dirother=$(dirname  "${realdir}")
+        mkdir -p   "${dirother}"
+        directory_exists_with_spaces "${dirother}"
+        chown -R "${SUDO_USER}" "${dirother}"
+        touch "${realdir}"
+        file_exists_with_spaces "${realdir}"
+        (_if_not_contains "${realdir}"  ".dir_bash_history") ||  (echo -e "\n.dir_bash_history" >> "${realdir}")
+      } else {
+        echo "More ignore choices for excludesfile Empty. .Not Found."
+      }
+      fi
+
     }
     fi
   }
@@ -1156,39 +1232,133 @@ function is_not_installed (){
     return 0
   fi
 } # end is_not_installed
-
-_ubuntu__64() {
-  # debian sudo usermod -aG sudo $SUDO_USER
-  # chown $SUDO_USER:$SUDO_USER -R /home
-  # sudo groupadd docker
-  # sudo usermod -aG docker $SUDO_USER
-
+_debian__32() {
   COMANDDER="apt install -y"
+  is_not_installed ag && $COMANDDER silversearcher-ag         # In Ubuntu
+  is_not_installed ack && $COMANDDER ack-grep        # In Ubuntu
+   install_requirements "linux" "
+    # Ubuntu only
+    xclip
+    tree
+    vim
+    nano
+    pv
+    python-pip
+    zsh
+    "
+  pip install pygments
+
   _checka_tools_commander
   _configure_git
-  _install_npm_utils
   _install_nvm
-  _install_nvm_version
-  # _install_npm_utils
+  _install_nvm_version 14.16.1
+  _install_npm_utils
 
-  # _install_nvm
-  #_install_nvm_version 10
-  #_install_npm_utils
-
-  #_install_nvm_version 12
-  #_install_npm_utils
-
-  #_install_nvm_version 14
-  #_install_npm_utils
   _setup_ohmy
   _install_colorls
   _setup_clis
   _setup_mycd
 
 
-  install_requirements "
-     zsh
-  "
+
+  # _password_simple
+  # _password_simple2
+
+  if it_does_not_exist_with_spaces /etc/apt/sources.list.d/cloudfoundry-cli.list ; then
+  {
+    Installing cloudfoundry cf 7
+    wget -q -O - https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | apt-key add -
+    echo "deb https://packages.cloudfoundry.org/debian stable main" | sudo tee /etc/apt/sources.list.d/cloudfoundry-cli.list
+    echo  ...then, update your local package index, then finally install the cf CLI
+    apt update -y
+    $COMANDDER cf-cli
+    snap install cf-cli
+  }
+  fi
+  chown $SUDO_USER -R $USER_HOME/.cf
+  verify_is_installed cf
+
+} # end _debian__32
+_debian__64() {
+  COMANDDER="apt install -y"
+  is_not_installed ag && $COMANDDER silversearcher-ag         # In Ubuntu
+  is_not_installed ack && $COMANDDER ack-grep        # In Ubuntu
+   install_requirements "linux" "
+    # Ubuntu only
+    xclip
+    tree
+    vim
+    nano
+    pv
+    python-pip
+    zsh
+    "
+  pip install pygments
+
+  _checka_tools_commander
+  _configure_git
+  _install_nvm
+  _install_nvm_version 14.16.1
+  _install_npm_utils
+
+  _setup_ohmy
+  _install_colorls
+  _setup_clis
+  _setup_mycd
+
+
+
+  # _password_simple
+  # _password_simple2
+
+  if it_does_not_exist_with_spaces /etc/apt/sources.list.d/cloudfoundry-cli.list ; then
+  {
+    Installing cloudfoundry cf 7
+    wget -q -O - https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | apt-key add -
+    echo "deb https://packages.cloudfoundry.org/debian stable main" | sudo tee /etc/apt/sources.list.d/cloudfoundry-cli.list
+    echo  ...then, update your local package index, then finally install the cf CLI
+    apt update -y
+    $COMANDDER cf-cli
+    snap install cf-cli
+  }
+  fi
+  chown $SUDO_USER -R $USER_HOME/.cf
+  verify_is_installed cf
+
+} # end _debian__64
+_ubuntu__64() {
+  # debian sudo usermod -aG sudo $SUDO_USER
+  # chown $SUDO_USER:$SUDO_USER -R /home
+  # sudo groupadd docker
+  # sudo usermod -aG docker $SUDO_USER
+  COMANDDER="apt install -y"
+  is_not_installed ag && $COMANDDER silversearcher-ag         # In Ubuntu
+  is_not_installed ack && $COMANDDER ack-grep        # In Ubuntu
+  install_requirements "linux" "
+    # Ubuntu only
+    xclip
+    tree
+    vim
+    nano
+    pv
+    python3-pip
+    zsh
+    "
+  pip install pygments
+
+  _checka_tools_commander
+  _configure_git
+  _install_nvm
+  _install_nvm_version 14.16.1
+  _install_npm_utils
+
+  _setup_ohmy
+  _install_colorls
+  _setup_clis
+  _setup_mycd
+
+
+
   # _password_simple
   # _password_simple2
 
@@ -1214,31 +1384,30 @@ _centos__64() {
 
 _fedora__64() {
   COMANDDER="dnf install -y"
+  is_not_installed ag && $COMANDDER the_silver_searcher          # In Fedora
+  install_requirements "linux" "
+    xclip
+    tree
+    ack
+    vim
+    nano
+    pv
+    python-pip
+    zsh
+    "
   _checka_tools_commander
   _configure_git
-  _install_npm_utils
   _install_nvm
-  _install_nvm_version
-  # _install_npm_utils
+  _install_nvm_version 14.16.1
+  _install_npm_utils
 
-  # _install_nvm
-  #_install_nvm_version 10
-  #_install_npm_utils
-
-  #_install_nvm_version 12
-  #_install_npm_utils
-
-  #_install_nvm_version 14
-  #_install_npm_utils
   _setup_ohmy
   _install_colorls
   _setup_clis
   _setup_mycd
 
 
-  install_requirements "
-     zsh
-  "
+
   # _password_simple
   # _password_simple2
   if  it_does_not_exist_with_spaces /etc/yum.repos.d/cloudfoundry-cli.repo ; then
@@ -1277,9 +1446,6 @@ _darwin__64() {
   if ( ! command -v pygmentize >/dev/null 2>&1; ) ;  then
     pip3 install pygments
   fi
-  if ( ! command -v cf >/dev/null 2>&1; ) ;  then
-    npm i -g cloudfoundry/tap/cf-cli@7
-  fi
   verify_is_installed "
     tree
     ag
@@ -1291,9 +1457,12 @@ _darwin__64() {
     pygmentize
     "
     _configure_git
-  #_install_npm_utils
-  #_install_nvm
-  #_install_nvm_version
+  _install_nvm
+  _install_nvm_version 14.16.1
+  _install_npm_utils
+  if ( ! command -v cf >/dev/null 2>&1; ) ;  then
+    npm i -g cloudfoundry/tap/cf-cli@7
+  fi
   # _install_npm_utils
 
   # _install_nvm
@@ -1312,11 +1481,12 @@ _darwin__64() {
   _setup_clis
   _setup_mycd
 
-    _add_self_cron_update /usr/lib/cron/  /usr/lib/cron/cron.allow
-    _add_launchd $USER_HOME/Library/LaunchAgents $USER_HOME/Library/LaunchAgents/com.intuivo.clis_pull_all.plist
+  _add_self_cron_update /usr/lib/cron/  /usr/lib/cron/cron.allow
+  _add_launchd $USER_HOME/Library/LaunchAgents $USER_HOME/Library/LaunchAgents/com.intuivo.clis_pull_all.plist
 
   composer global require laravel/valet
   _password_simple
+  return 0
   # _password_simple2
 } # end _darwin__64
 

@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+#!/bin/bash
+#
+# @author Zeus Intuivo <zeus@intuivo.com>
+#
+#
+
+
+function generate_installer(){
+	local _sudoer="$(<tasks_base/sudoer.bash)"
+  local _sudoer_lines="$(cat tasks_base/sudoer.bash | wc -l)"
+  local _body_template="$(<tasks_templates_sudo/${1})"
+  local _main="$(<tasks_base/main.bash)"
+  echo "${_sudoer}" > "install_${1}.bash"
+  echo -e "\n\n\n #--------\/\/\/\/-- install_${1}.bash -- Custom code -\/\/\/\/-------\n\n" >> "install_${1}.bash"
+  echo "${_body_template}" >> "install_${1}.bash"
+  echo -e "\n\n\n #--------/\/\/\/\-- install_${1}.bash -- Custom code-/\/\/\/\-------\n\n" >> "install_${1}.bash"
+  echo "${_main}" >> "install_${1}.bash"
+  chmod a+x "install_${1}.bash"
+  subl "install_${1}.bash:${_sudoer_lines}"
+} # end loader_installer
+
+[[ -z "${1}" ]] && echo -e "ERROR $0 requires one argument. \n A file name inside tasks_templates_sudo   like    \n $0 brew    to generate install_brew.bash from tasks_templates_sudo/brew " && exit 1
+[[ ! -f "./tasks_templates_sudo/${1}" ]] && echo -e "ERROR ./tasks_templates_sudo/$1 was not found  " && exit 1
+
+generate_installer "${1}"

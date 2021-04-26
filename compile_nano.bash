@@ -1,26 +1,126 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
-#
-  export THISSCRIPTCOMPLETEPATH
-  typeset -gr THISSCRIPTCOMPLETEPATH="$(realpath "$0")"   # § This goes in the FATHER-MOTHER script
-  export _err
-  typeset -i _err=0
+# 20200415 Compatible with Fedora, Mac, Ubuntu "sudo_up" "load_struct" "#
+set -E -o functrace
+export THISSCRIPTCOMPLETEPATH
+typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")"
 
-load_struct_testing_wget(){
+export BASH_VERSION_NUMBER
+typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
+
+export  THISSCRIPTNAME
+typeset -r THISSCRIPTNAME="$(basename "$0")"
+
+export _err
+typeset -i _err=0
+  # function _trap_on_error(){
+  #   echo -e "\\n \033[01;7m*** ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR ...\033[0m"
+  #   exit 1
+  # }
+  # trap _trap_on_error ERR
+  function _trap_on_int(){
+    echo -e "\\n \033[01;7m*** INTERRUPT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n  INT ...\033[0m"
+    exit 0
+  }
+
+  trap _trap_on_int INT
+
+load_struct_testing(){
+  # function _trap_on_error(){
+  #   local -ir __trapped_error_exit_num="${2:-0}"
+  #   echo -e "\\n \033[01;7m*** ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR ...\033[0m  \n \n "
+  #   echo ". ${1}"
+  #   echo ". exit  ${__trapped_error_exit_num}  "
+  #   echo ". caller $(caller) "
+  #   echo ". ${BASH_COMMAND}"
+  #   local -r __caller=$(caller)
+  #   local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+  #   local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+  #   awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+
+  #   # $(eval ${BASH_COMMAND}  2>&1; )
+  #   # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+  #   exit 1
+  # }
+  # trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
     local provider="$HOME/_/clis/execute_command_intuivo_cli/struct_testing"
-    [   -e "${provider}"  ] && source "${provider}" && echo "Loaded locally"
-    [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
-    ( ( ! command -v passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
-} # end load_struct_testing_wget
-load_struct_testing_wget
+    local _err=0 structsource
+    if [   -e "${provider}"  ] ; then
+      echo "Loading locally"
+      structsource="""$(<"${provider}")"""
+      _err=$?
+      [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading struct_testing. running 'source locally' returned error did not download or is empty err:$_err  \n \n  " && exit 1
+    else
+      if ( command -v curl >/dev/null 2>&1; )  ; then
+        echo "Loading struct_testing from the net using curl "
+        structsource="""$(curl https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing  -so -   2>/dev/null )"""  #  2>/dev/null suppress only curl download messages, but keep curl output for variable
+        _err=$?
+        [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading struct_testing. running 'curl' returned error did not download or is empty err:$_err  \n \n  " && exit 1
+      elif ( command -v wget >/dev/null 2>&1; ) ; then
+        echo "Loading struct_testing from the net using wget "
+        structsource="""$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing -O -   2>/dev/null )"""  #  2>/dev/null suppress only wget download messages, but keep wget output for variable
+        _err=$?
+        [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading struct_testing. running 'wget' returned error did not download or is empty err:$_err  \n \n  " && exit 1
+      else
+        echo -e "\n \n  ERROR! Loading struct_testing could not find wget or curl to download  \n \n "
+        exit 69
+      fi
+    fi
+    [[ -z "${structsource}" ]] && echo -e "\n \n  ERROR! Loading struct_testing. structsource did not download or is empty " && exit 1
+    local _temp_dir="$(mktemp -d 2>/dev/null || mktemp -d -t 'struct_testing_source')"
+    echo "${structsource}">"${_temp_dir}/struct_testing"
+    echo "Temp location ${_temp_dir}/struct_testing"
+    source "${_temp_dir}/struct_testing"
+    _err=$?
+    [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading struct_testing. Occured while running 'source' err:$_err  \n \n  " && exit 1
+    if  ! typeset -f passed >/dev/null 2>&1; then
+      echo -e "\n \n  ERROR! Loading struct_testing. Passed was not loaded !!!  \n \n "
+      exit 69;
+    fi
+    return $_err
+} # end load_struct_testing
+load_struct_testing
 
+ _err=$?
+[ $_err -ne 0 ]  && echo -e "\n \n  ERROR FATAL! load_struct_testing_wget !!! returned:<$_err> \n \n  " && exit 69;
 
 export sudo_it
 function sudo_it() {
   raise_to_sudo_and_user_home
+  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
+  enforce_variable_with_value SUDO_USER "${SUDO_USER}"
+  enforce_variable_with_value SUDO_UID "${SUDO_UID}"
+  enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
+  # Override bigger error trap  with local
+  function _trap_on_error(){
+    echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR INT ...\033[0m"
+
+  }
+  trap _trap_on_error ERR INT
 } # end sudo_it
+
+# _linux_prepare(){
+  sudo_it
+  [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
+  export USER_HOME
+  # shellcheck disable=SC2046
+  # shellcheck disable=SC2031
+  typeset -r USER_HOME="$(echo -n $(bash -c "cd ~${SUDO_USER} && pwd"))"  # Get the caller's of sudo home dir LINUX and MAC
+  # USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)   # Get the caller's of sudo home dir LINUX
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+# }  # end _linux_prepare
+
+
+# _linux_prepare
+
+enforce_variable_with_value USER_HOME $USER_HOME
+enforce_variable_with_value SUDO_USER $SUDO_USER
+passed Caller user identified:$SUDO_USER
+passed Home identified:$USER_HOME
+directory_exists_with_spaces "$USER_HOME"
+
 
 _darwin__64() {
   # Using homebrew seemed like the best choice so far
@@ -201,85 +301,28 @@ _darwin__64_manual() {
 } # end _darwin__64
 
 _ubuntu__64() {
-
-  sudo_it
-  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home
+  directory_exists_with_spaces "$USER_HOME"
 
   # install_nano.bash
   sudo add-apt-repository ppa:n-muench/programs-ppa
   sudo apt install nano
   sudo apt update nano
-
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
-  local TARGET_URL=$(_get_dowload_target "https://www.nano-editor.org/dist/v5")
-  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
-  local CODENAME=$(basename "${TARGET_URL}")
-  enforce_variable_with_value CODENAME "${CODENAME}"
-  local DOWNLOADFOLDER="${USER_HOME}/Downloads"
-  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-  directory_exists_with_spaces "${DOWNLOADFOLDER}"
-  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}" "${CODENAME}"
-
-  cd "${DOWNLOADFOLDER}"
-  tar -xvf "${CODENAME}"
-  cd nano-*
-
-  cat -n INSTALL | grep configure
-  install_requirements "
+  install_requirements "linux" "
+    curl
+    wget
+    libncurses-dev
     libncursesw5-dev
     groff
   "
-  # sudo apt install libncursesw5-dev -y
-  # sudo apt install groff -y
-  ./install-sh
-  ./autogen.sh
-  ./configure
-  make -j3 -B --debug
-  make -j3
-  sudo make install
-
-  cd "${DOWNLOADFOLDER}"
-  rm -rf nano-*
-  # Make sure we are using nano we compiled and not the boring system nano
-  nano --version
-    # should match 5.2
-  which nano
-  # /usr/local/share/nano --version
-  # sudo /usr/local/share/nano --version
-  # sudo /usr/local/bin/nano --version
-  # sudo mv /bin/nano /bin/nano_old
-  # nano --version
-
-  # REF: https://github.com/scopatz/nanorc
-  # curl https://raw.githubusercontent.com/scopatz/nanorc/master/install.sh | sh
-  wget https://raw.githubusercontent.com/scopatz/nanorc/master/install.sh -O- | sh
-
-  #
-  # .nanorc
-  # ~/.nano/
-  # cp ~/.nano/javascript.nanorc ~/.nano/typescript.nanorc
-    # ersetseindatei
-    # syntax "JavaScript" "\.js$"
-    # >
-    # syntax "Typescript" "\.ts$"
-    # in   ~/.nano/typescript.nanorc
-
-    # ersetseindatei
-    # include "~/.nano/tex.nanorc"
-    # >
-    # include "~/.nano/tex.nanorc"
-    # include "~/.nano/typescript.nanorc"
-    # in .nanorc
-
-    # PORT=3000
-    # curl -X POST http://$HOST:$PORT -H "accept: application/json" -H "Content-Type: application/json" -d "{}"
-    # curl -X POST http://$HOST:$PORT -H "accept: application/json" -H "Content-Type: application/json" -d "{"":"" }"
+  verify_is_installed "
+    curl
+    wget
+  "
+  _download_compile_install
+    return 0
 } # end _ubuntu__64
 
 _ubuntu__32() {
-  sudo_it
-  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home
-
     local CODENAME=$(_version "linux" "nano-*.*.*.*i386.deb")
     # THOUGHT local CODENAME="nano-4.3.3.24545_i386.deb"
     local URL="https://www.nano-editor.org/dist/v5/${CODENAME}"
@@ -289,18 +332,32 @@ _ubuntu__32() {
 } # end _ubuntu__32
 
 _fedora__32() {
-  sudo_it
-  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  install_requirements "linux" "
+    curl
+    wget
+    ncurses-devel
+    tar
+  "
+  verify_is_installed "
+    curl
+    wget
+    tar
+  "
+
   local CODENAME=$(_version "linux" "nano*.*.*.*.i386.rpm")
   # THOUGHT                          nano-4.3.3.24545.i386.rpm
   local TARGET_URL="https://www.nano-editor.org/dist/v5/${CODENAME}"
-  file_exists_with_spaces $USER_HOME/Downloads
-  cd $USER_HOME/Downloads
-  _download "${TARGET_URL}"
-  file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}"
+  local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  directory_exists_with_spaces "${DOWNLOADFOLDER}"
+  cd "${DOWNLOADFOLDER}"
+  # _download "${TARGET_URL}"
+  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+  file_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
   ensure tar or "Canceling Install. Could not find tar command to execute unzip"
 
-  # provide error handling , once learned goes here. LEarn under if, once learned here.
+  # provide error handling , once learned goes here. Learn under if, once learned here.
   # Start loop while ERROR flag in case needs to try again, based on error
   _try "rpm --import https://www.nano-editor.org/dist/v5/RPM-GPG-KEY-nano"
   local msg=$(_try "rpm -ivh \"$USER_HOME/Downloads/${CODENAME}\"" )
@@ -315,13 +372,26 @@ _fedora__32() {
     passed Install with RPM success!
   }
   fi
-  ensure nano or "Failed to install Beyond Compare"
-  rm -f "$USER_HOME/Downloads/${CODENAME}"
-  file_does_not_exist_with_spaces "$USER_HOME/Downloads/${CODENAME}"
+  _download_compile_install
+  return 0
 } # end _fedora__32
 
 _centos__64() {
-  _fedora__64
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  directory_exists_with_spaces "$USER_HOME"
+  install_requirements "linux" "
+    curl
+    wget
+    ncurses-devel
+    tar
+  "
+  verify_is_installed "
+    curl
+    wget
+    tar
+  "
+  _download_compile_install
+  return 0
 } # end _centos__64
 
 _get_dowload_target(){
@@ -353,14 +423,33 @@ _extract_version(){
 
 
 _fedora__64() {
-  sudo_it
-  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  directory_exists_with_spaces "$USER_HOME"
+  install_requirements "linux" "
+    curl
+    wget
+    ncurses-devel
+    tar
+  "
+  verify_is_installed "
+    curl
+    wget
+    tar
+  "
+  _download_compile_install
+  return 0
+} # end _fedora__64
+_download_compile_install(){
+  # Sample use
+  #   _download_compile_install
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   local TARGET_URL=$(_get_dowload_target "https://www.nano-editor.org/dist/v5/")
   enforce_variable_with_value TARGET_URL "${TARGET_URL}"
   local CODENAME=$(basename "${TARGET_URL}")
   enforce_variable_with_value CODENAME "${CODENAME}"
-  local DOWNLOADFOLDER="${USER_HOME}/Downloads"
+  local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  directory_exists_with_spaces "${DOWNLOADFOLDER}"
   # VERBOSE=1
   (( VERBOSE )) && echo -n "${TARGET_URL}"
   (( VERBOSE )) && echo "DEBUG EXIT 0"
@@ -377,12 +466,22 @@ _fedora__64() {
   cd "${DOWNLOADFOLDER}"
   tar -xvf "${CODENAME}"
   [ $? -gt 0 ] && failed to untar: tar -xvf "${CODENAME}"
-
+  _build_add_nanorc "${DOWNLOADFOLDER}" "${CODENAME}"  "${USER_HOME}"
+  ensure nano or "Failed to install nano"
+  rm -f "${DOWNLOADFOLDER}/${CODENAME}"
+  file_does_not_exist_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
+  return 0
+} # end _download_and_install
+_build_add_nanorc(){
+  # Sample use
+  #  _build_add_nanorc "${DOWNLOADFOLDER}" "${CODENAME}" "${USER_HOME}"
+  local DOWNLOADFOLDER="${1}"
+  local CODENAME="${2}"
+  local USER_HOME="${3}"
   local FOLDER="$(echo "${CODENAME}" | sed 's/.tar.xz//g')"
   local VERSION="$(echo "${FOLDER}" | sed 's/nano-//g')"
   directory_exists_with_spaces "${FOLDER}"
   cd "${FOLDER}"
-
   ./configure
   [ $? -gt 0 ] && failed to ./configure
   make -j3
@@ -392,9 +491,9 @@ _fedora__64() {
 
   cd "${DOWNLOADFOLDER}"
   rm -rf nano-*
-  mv  /usr/bin/nano /usr/bin/nano_old
-  mv /usr/local/bin/nano /usr/local/bin/nano_old
-  mv /usr/local/bin/nano_old /usr/local/bin/nano
+  mv  /usr/bin/nano /usr/bin/nano_old$(date +"%Y%m%d%H%M")  # military date format
+  mv /usr/local/bin/nano /usr/local/bin/nano_old$(date +"%Y%m%d%H%M")  # military date format
+  mv /usr/local/bin/nano_old$(date +"%Y%m%d%H%M")  /usr/local/bin/nano   # military date format
   cp /usr/local/bin/nano /usr/bin/nano
   # Make sure we are using nano we compiled and not the boring system nano
 
@@ -404,15 +503,62 @@ _fedora__64() {
   which nano
   # REF: https://github.com/scopatz/nanorc
   cd "${USER_HOME}"
-  curl -O https://raw.githubusercontent.com/scopatz/nanorc/master/install.sh
-  chmod 744 install.sh
-  ./install.sh
-  su - "${SUDO_USER}" -c "${USER_HOME}/install.sh"
-  # directory_exists_with_spaces "/root/.nanorc"
-  directory_exists_with_spaces "${USER_HOME}/.nanorc"
-  return 0
-} # end _fedora__64
+  _do_not_downloadtwice https://raw.githubusercontent.com/scopatz/nanorc/master/install.sh "${DOWNLOADFOLDER}"  install.sh
+  # curl -O https://raw.githubusercontent.com/scopatz/nanorc/master/install.sh
+  file_exists_with_spaces "${DOWNLOADFOLDER}/install.sh"
+  chown  "${SUDO_USER}" "${DOWNLOADFOLDER}/install.sh"
+  chmod a+x "${DOWNLOADFOLDER}/install.sh"
+  cd "${DOWNLOADFOLDER}"
+  # bash "${DOWNLOADFOLDER}/install.sh"
+  echo Install for user nanorc
+  su - "${SUDO_USER}" -c "${DOWNLOADFOLDER}/install.sh"
+  echo Install for user root
+  "${DOWNLOADFOLDER}/install.sh"
+  directory_exists_with_spaces "${USER_HOME}/.nano"
+  chown -R "${SUDO_USER}" "${USER_HOME}/.nano"
+  directory_exists_with_spaces "/root/.nano"
+  file_exists_with_spaces "/root/.nanorc"
+  cp "/root/.nanorc" "${USER_HOME}/.nanorc"
+  file_exists_with_spaces "${USER_HOME}/.nanorc"
+  chown  "${SUDO_USER}" "${USER_HOME}/.nanorc"
+  [[ ! -e "/root/.nano/syntax"  ]] && git clone https://github.com/YSakhno/nanorc.git "/root/.nano/syntax"
+  [[ ! -e "${USER_HOME}/.nano/syntax"  ]] && git clone https://github.com/YSakhno/nanorc.git "${USER_HOME}/.nano/syntax"
+  chown -R "${SUDO_USER}" "${USER_HOME}/.nano"
+  directory_exists_with_spaces "/root/.nano/syntax"
+  directory_exists_with_spaces "${USER_HOME}/.nano/syntax"
+  cd "${USER_HOME}/.nano/syntax"
+  make install
+  chown -R "${SUDO_USER}" "${USER_HOME}/.nano/syntax"
+  cd "/root/.nano/syntax"
+  make install
+  echo Append missing definitions
+  echo " " >> "/root/.nanorc"
+  echo " " >> "${USER_HOME}/.nanorc"
+  echo "set linenumbers" >> "/root/.nanorc"
+  echo "set linenumbers" >> "${USER_HOME}/.nanorc"
+    # .nanorc
+  # ~/.nano/
+  # cp ~/.nano/javascript.nanorc ~/.nano/typescript.nanorc
+    # ersetseindatei
+    # syntax "JavaScript" "\.js$"
+    # >
+    # syntax "Typescript" "\.ts$"
+    # in   ~/.nano/typescript.nanorc
 
+    # ersetseindatei
+    # include "~/.nano/tex.nanorc"
+    # >
+    # include "~/.nano/tex.nanorc"
+    # include "~/.nano/typescript.nanorc"
+    # in .nanorc
+  directory_exists_with_spaces "/root/.nano/syntax/build"
+  directory_exists_with_spaces "${USER_HOME}/.nano/syntax/build"
+  diff -q "${USER_HOME}/.nano/syntax/build" "${USER_HOME}/.nano" |grep "Only in" | grep "syntax" | grep ".nanorc" | cut -d":" -f2 | xargs -I {} echo "include \"~/.nano/syntax/build/{}\"" >> "${USER_HOME}/.nanorc"
+  diff -q "/root/.nano/syntax/build" "/root/.nano" |grep "Only in" | grep "syntax" | grep ".nanorc" | cut -d":" -f2 | xargs -I {} echo "include \"~/.nano/syntax/build/{}\"" >> "/root/.nanorc"
+  which nano
+  nano --version
+  return 0
+} # end _build_add_nanorc
 _mingw__64() {
     local CODENAME=$(_version "win" "nano*.*.*.*.exe")
     # THOUGHT        local CODENAME="nano-4.3.3.24545.exe"

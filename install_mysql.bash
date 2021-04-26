@@ -121,7 +121,7 @@ directory_exists_with_spaces "$USER_HOME"
 
 
 
- #--------\/\/\/\/-- Work here below \/, test, and transfer to tasks_templates/brew having a working version -\/\/\/\/-------
+ #--------\/\/\/\/-- Work here below \/, test, and transfer to tasks_templates/mysql having a working version -\/\/\/\/-------
 
 
 
@@ -225,7 +225,7 @@ _darwin__64() {
 
 
 
- #--------/\/\/\/\-- Work here above /\, test, and transfer to tasks_templates/brew having a working version -/\/\/\/\-------
+ #--------/\/\/\/\-- Work here above /\, test, and transfer to tasks_templates/mysql having a working version -/\/\/\/\-------
 
 
 _main() {
