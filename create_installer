@@ -22,5 +22,6 @@ function loader_installer(){
   subl "install_${1}.bash:${_sudoer_lines}"
 } # end loader_installer
 [[ -z "${1}" ]] && echo -e "ERROR $0 requires one argument. \n A task name   like    \n $0 brew    to create  install_brew.bash and tasks_templates_sudo/brew " && exit 1
+[[ -f "./tasks_templates_sudo/${1}" ]] && echo -e "ERROR ./tasks_templates_sudo/$1 already exists  " && exit 1
 loader_installer "${1}"
 

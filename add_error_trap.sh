@@ -68,6 +68,7 @@ function colorize(){
 }
 
 function _trap_on_error() {
+  local DEBUG=1
   local __trapped_script_name="${1:-0}"
   local -ir __trapped_error_exit_num="${2:-0}"
   local -i _this_lineno="${3:-LINENO}"
@@ -76,8 +77,8 @@ function _trap_on_error() {
   local  _this_last_command="${6:-BASH_COMMAND}"
   local __trapped_function="${7:-0}"
   local -i __trapped_bash_line_before="${8:-0}"
-  if local -i __trapped_line="${9:-0}" ; then
-    if local -r __trapped_bash_command="${*:10}" ; then
+  if (local -i __trapped_line="${9:-0}") ; then
+    if (local -r __trapped_bash_command="${*:10}") ; then
       (( DEBUG )) && echo 'add error trap loading'
     fi
   fi
@@ -86,7 +87,6 @@ function _trap_on_error() {
   local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
   echo -e " ☠ ${LIGHTPINK} KILL EXECUTION SIGNAL SEND ${RESET}"
   # echo -e " ☠ ${YELLOW_OVER_DARKBLUE}  ${*} ${RESET}"
-  #  DEBUG=1
   # Tests
   (( DEBUG )) && echo "Total args ${#} should be 12++ .. more for BASH_COMMAND that vary and provide more  " >&2
   (( DEBUG )) && echo " " >&2

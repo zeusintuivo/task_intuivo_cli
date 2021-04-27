@@ -1,520 +1,334 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
-#
-# SUDO_USER only exists during execution of sudo
-# REF: https://stackoverflow.com/questions/7358611/get-users-home-directory-when-they-run-a-script-as-root
-# Global:
-THISSCRIPTNAME=`basename "$0"`
+# 20200415 Compatible with Fedora, Mac, Ubuntu "sudo_up" "load_struct"
+set -E -o functrace
+export THISSCRIPTCOMPLETEPATH
+typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")"
+export BASH_VERSION_NUMBER
+typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
 
-execute_as_sudo(){
-  if [ -z $SUDO_USER ] ; then
-    if [[ -z "$THISSCRIPTNAME" ]] ; then
-    {
-        echo "error You need to add THISSCRIPTNAME variable like this:"
-        echo "     THISSCRIPTNAME=\`basename \"\$0\"\`"
-    }
-    else
-    {
-        if [ -e "./$THISSCRIPTNAME" ] ; then
-        {
-          sudo "./$THISSCRIPTNAME"
-        }
-        elif ( command -v "$THISSCRIPTNAME" >/dev/null 2>&1 );  then
-        {
-          echo "sudo sudo sudo "
-          sudo "$THISSCRIPTNAME"
-        }
-        else
-        {
-          echo -e "\033[05;7m*** Failed to find script to recall it as sudo ...\033[0m"
-          exit 1
-        }
-        fi
-    }
-    fi
-    wait
+export  THISSCRIPTNAME
+typeset -r THISSCRIPTNAME="$(basename "$0")"
+
+export _err
+typeset -i _err=0
+  function _trap_on_error(){
+    echo -e "\\n \033[01;7m*** ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR ...\033[0m"
+    exit 1
+  }
+  trap _trap_on_error ERR
+  function _trap_on_int(){
+    echo -e "\\n \033[01;7m*** INTERRUPT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n  INT ...\033[0m"
     exit 0
-  fi
-  # REF: http://superuser.com/questions/93385/run-part-of-a-bash-script-as-a-different-user
-  # REF: http://superuser.com/questions/195781/sudo-is-there-a-command-to-check-if-i-have-sudo-and-or-how-much-time-is-left
-  local CAN_I_RUN_SUDO=$(sudo -n uptime 2>&1|grep "load"|wc -l)
-  if [ ${CAN_I_RUN_SUDO} -gt 0 ]; then
-    echo -e "\033[01;7m*** Installing as sudo...\033[0m"
-  else
-    echo "Needs to run as sudo ... ${0}"
-  fi
-}
-execute_as_sudo
+  }
 
-export USER_HOME
-# typeset -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)  # Get the caller's of sudo home dir Just Linux
-# shellcheck disable=SC2046
-# shellcheck disable=SC2031
-typeset -rg USER_HOME="$(echo -n $(bash -c "cd ~${SUDO_USER} && pwd"))"  # Get the caller's of sudo home dir LINUX and MAC
+  trap _trap_on_int INT
 
-load_struct_testing_wget(){
-    local provider="$USER_HOME/_/clis/execute_command_intuivo_cli/struct_testing"
-    [   -e "${provider}"  ] && source "${provider}"
-    [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
-    ( ( ! command -v passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
-} # end load_struct_testing_wget
-load_struct_testing_wget
+load_struct_testing(){
+  function _trap_on_error(){
+    local -ir __trapped_error_exit_num="${2:-0}"
+    echo -e "\\n \033[01;7m*** ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR ...\033[0m  \n \n "
+    echo ". ${1}"
+    echo ". exit  ${__trapped_error_exit_num}  "
+    echo ". caller $(caller) "
+    echo ". ${BASH_COMMAND}"
+    local -r __caller=$(caller)
+    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
 
+    # $(eval ${BASH_COMMAND}  2>&1; )
+    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+    exit 1
+  }
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+    local provider="$HOME/_/clis/execute_command_intuivo_cli/struct_testing"
+    local _err=0 structsource
+    if [   -e "${provider}"  ] ; then
+      echo "Loading locally"
+      structsource="""$(<"${provider}")"""
+      _err=$?
+      [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading struct_testing. running 'source locally' returned error did not download or is empty err:$_err  \n \n  " && exit 1
+    else
+      if ( command -v curl >/dev/null 2>&1; )  ; then
+        echo "Loading struct_testing from the net using curl "
+        structsource="""$(curl https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing  -so -   2>/dev/null )"""  #  2>/dev/null suppress only curl download messages, but keep curl output for variable
+        _err=$?
+        [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading struct_testing. running 'curl' returned error did not download or is empty err:$_err  \n \n  " && exit 1
+      elif ( command -v wget >/dev/null 2>&1; ) ; then
+        echo "Loading struct_testing from the net using wget "
+        structsource="""$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing -O -   2>/dev/null )"""  #  2>/dev/null suppress only wget download messages, but keep wget output for variable
+        _err=$?
+        [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading struct_testing. running 'wget' returned error did not download or is empty err:$_err  \n \n  " && exit 1
+      else
+        echo -e "\n \n  ERROR! Loading struct_testing could not find wget or curl to download  \n \n "
+        exit 69
+      fi
+    fi
+    [[ -z "${structsource}" ]] && echo -e "\n \n  ERROR! Loading struct_testing. structsource did not download or is empty " && exit 1
+    local _temp_dir="$(mktemp -d 2>/dev/null || mktemp -d -t 'struct_testing_source')"
+    echo "${structsource}">"${_temp_dir}/struct_testing"
+    echo "Temp location ${_temp_dir}/struct_testing"
+    source "${_temp_dir}/struct_testing"
+    _err=$?
+    [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading struct_testing. Occured while running 'source' err:$_err  \n \n  " && exit 1
+    if  ! typeset -f passed >/dev/null 2>&1; then
+      echo -e "\n \n  ERROR! Loading struct_testing. Passed was not loaded !!!  \n \n "
+      exit 69;
+    fi
+    return $_err
+} # end load_struct_testing
+load_struct_testing
+
+ _err=$?
+[ $_err -ne 0 ]  && echo -e "\n \n  ERROR FATAL! load_struct_testing_wget !!! returned:<$_err> \n \n  " && exit 69;
+
+export sudo_it
+function sudo_it() {
+  raise_to_sudo_and_user_home
+  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
+  enforce_variable_with_value SUDO_USER "${SUDO_USER}"
+  enforce_variable_with_value SUDO_UID "${SUDO_UID}"
+  enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
+  # Override bigger error trap  with local
+  function _trap_on_error(){
+    echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR INT ...\033[0m"
+  }
+  trap _trap_on_error ERR INT
+} # end sudo_it
+
+# _linux_prepare(){
+  sudo_it
+  [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
+  export USER_HOME
+  # shellcheck disable=SC2046
+  # shellcheck disable=SC2031
+  typeset -r USER_HOME="$(echo -n $(bash -c "cd ~${SUDO_USER} && pwd"))"  # Get the caller's of sudo home dir LINUX and MAC
+  # USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)   # Get the caller's of sudo home dir LINUX
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+# }  # end _linux_prepare
+
+
+# _linux_prepare
+
+enforce_variable_with_value USER_HOME $USER_HOME
+enforce_variable_with_value SUDO_USER $SUDO_USER
 passed Caller user identified:$SUDO_USER
 passed Home identified:$USER_HOME
 directory_exists_with_spaces "$USER_HOME"
 
 
+
+ #--------\/\/\/\/-- Work here below \/, test, and transfer to tasks_templates/filezilla having a working version -\/\/\/\/-------
+
+
+
+
+#!/bin/bash
+#
+# @author Zeus Intuivo <zeus@intuivo.com>
+#
+#
+
+#
+_download_page(){
+  # Samople use :
+  #
+  #   _download_page   https://filezilla-project.org/download.php?platform=linux64
+  #
+  local target_url="${1}"
+  local CODEFILE=""
+  local _WGETCURLMAND=""
+  local _WGETCURLusing=""
+  local -i _err=0
+  enforce_variable_with_value target_url "${target_url}"
+  if ( command -v curl >/dev/null 2>&1; )  ; then
+    _WGETCURLMAND="curl \"${target_url}\" -so -"
+    _WGETCURLusing='curl'
+  elif ( command -v wget >/dev/null 2>&1; ) ; then
+    _WGETCURLMAND="wget --quiet --no-check-certificate  \"${target_url}\"-O -"
+    _WGETCURLusing='wget'
+  else
+    echo -e "\n \n  ${RED}ERROR! ${YELLOW}Loading ${target_url} could not find wget or curl to download  \n \n "
+    return 1
+  fi
+  echo -e "${YELLOW} +${ORANGE}-- ${CYAN}Loading ${target_url} from the net using ${RED}${_WGETCURLusing}"
+  echo -e "${YELLOW} +${ORANGE}-- ${CYAN}${_WGETCURLMAND}  "
+  CODEFILE="""$(eval ${_WGETCURLMAND}   2>/dev/null )"""  #  2>/dev/null suppress only curl download messages, but keep curl output for variable
+  _err=$?
+  [ $_err -gt 0 ] &&  echo -e "\n \n  ${RED}ERROR! ${YELLOW}Loading ${target_url}. running ${PURPLE}'${RED}${_WGETCURLusing}${PURPLE}'${YELLOW} returned error did not download or is empty err:$_err  \n \n  " && return $_err
+  echo -e "${CODEFILE}"
+  return $_err
+} # end _download_page
+
+_dowload_link(){
+  # Usage:
+  #
+  #
+  #  local _filezilla_download_url=$(_dowload_link win64)
+  #  enforce_variable_with_value _filezilla_download_url  "${_filezilla_download_url}"
+
+  local PLATFORM="${1}"
+  #                    param order varname    varvalue      validoptions
+  enforce_parameter_with_options 2 PLATFORM "${PLATFORM}" "osx win64 win32 linux64 linux32"
+  local _downloadurl="https://filezilla-project.org/download.php?platform=${PLATFORM}"
+  echo -e "${_downloadurl}"
+  return 0
+}
 _version() {
   # Usage:
-  local PLATFORM="${1}"
-  local PATTERN="${2}"
-  # https://filezilla-project.org/download.php?platform=linux64
-  # https://filezilla-project.org/download.php?platform=linux32
-  # https://filezilla-project.org/download.php?platform=win64
-  # https://filezilla-project.org/download.php?platform=win32
-  # https://filezilla-project.org/download.php?platform=osx Requires OS X 10.13.2 or newer
+  #
+  #    local _filezilla_version=$(_version)
+  #    enforce_variable_with_value _filezilla_version  "${_filezilla_version}"
+  #
   local url="https://filezilla-project.org/download.php"
-  local CODEFILE=$(curl -d "zz=dl4&platform=${PLATFORM}" -H "Content-Type: application/x-www-form-urlencoded" -X POST  -sSLo - "${url}"  2>&1;) # suppress only wget download messages, but keep wget output for variable
-  # https://dl2.cdn.filezilla-project.org/client/FileZilla_3.50.0_macosx-x86.app.tar.bz2?h=rjBi_Z2lil6O76EGwA9Xqw&x=1598793414
-  # https://dl3.cdn.filezilla-project.org/client/FileZilla_3.50.0_x86_64-linux-gnu.tar.bz2?h=GHvx3uPV-PuIXkUKf1Oc9Q&x=1598795875
-  # https://dl2.cdn.filezilla-project.org/client/FileZilla_3.50.0_i686-linux-gnu.tar.bz2?h=e5YY0z4yBZyp7b8hp-COQQ&x=1598795941
-  # https://download.filezilla-project.org/client/FileZilla_3.50.0_win64_sponsored-setup.exe
-  # https://download.filezilla-project.org/client/FileZilla_3.50.0_win32_sponsored-setup.exe
+  enforce_variable_with_value url  "${url}"
 
-  local CODELASTESTBUILD=$(echo $CODEFILE | sed s/\</\\n\</g | grep "${PATTERN}" | sed s/\"/\\n/g | grep "/" | cüt "/")
-  # fedora 32 local CODELASTESTBUILD=$(echo $CODEFILE | sed s/\</\\n\</g | grep "FileZilla*.*.*.*.i386.rpm" | sed s/\"/\\n/g | grep "/" | cüt "/")
-  wait
-  [[ -z "${CODELASTESTBUILD}" ]] && failed "FileZilla Version not found! :${CODELASTESTBUILD}:"
+  local CODEFILE="$(_download_page "${url}"  2>&1;)" # suppress only wget download messages, but keep wget output for variable
+  enforce_variable_with_value CODEFILE  "${CODEFILE}"
+  echo "${CODEFILE}"
 
+  local _filezilla_version=$(echo "${CODEFILE}" | sed s/\</\\n\</g | grep "The latest stable version of FileZilla Client is" | sed s/\"/\\n/g | sed 's/ /\n/g' | tail -1)
+  # enforce_variable_with_value _filezilla_version  "${_filezilla_version}"
 
-  # enforce_variable_with_value USER_HOME "${USER_HOME}"
-  # enforce_variable_with_value CODELASTESTBUILD "${CODELASTESTBUILD}"
-
-  local CODENAME="${CODELASTESTBUILD}"
-  echo "${CODELASTESTBUILD}"
-  unset PATTERN
-  unset PLATFORM
+  echo "${_filezilla_version}"
+  unset url
   unset CODEFILE
-  unset CODELASTESTBUILD
+  unset _filezilla_version
+  return 0
 } # end _version
 
 _version_test(){
-  local CODENAME=$(_version "mac" "FileZillaOSX*.*.*.*.zip")
+  local CODENAME="$(_version )"
+  echo "${CODENAME}"
 }
-_version_test
-exit 1
-_darwin__64() {
-    local CODENAME=$(_version "mac" "FileZillaOSX*.*.*.*.zip")
-    # THOUGHT        local CODENAME="FileZillaOSX-4.3.3.24545.zip"
-    local URL="https://download-cf.jetbrains.com/webide/${CODENAME}"
-    cd $USER_HOME/Downloads/
-    _download "${URL}"
-    unzip ${CODENAME}
-    sudo hdiutil attach ${CODENAME}
-    sudo cp -R /Volumes/Beyond\ Compare/Beyond\ Compare.app /Applications/
-    sudo hdiutil detach /Volumes/Beyond \ Compare
-} # end _darwin__64
 
-_ubuntu__64() {
-    local CODENAME=$(_version "linux" "FileZilla-*.*.*.*amd64.deb")
-    # THOUGHT          local CODENAME="FileZilla-4.3.3.24545_amd64.deb"
-    local URL="https://download-cf.jetbrains.com/webide/${CODENAME}"
-    cd $USER_HOME/Downloads/
-    _download "${URL}"
-    sudo dpkg -i ${CODENAME}
-} # end _ubuntu__64
 
-_ubuntu__32() {
-    local CODENAME=$(_version "linux" "FileZilla-*.*.*.*i386.deb")
-    # THOUGHT local CODENAME="FileZilla-4.3.3.24545_i386.deb"
-    local URL="https://download-cf.jetbrains.com/webide/${CODENAME}"
-    cd $USER_HOME/Downloads/
-    _download "${URL}"
-    sudo dpkg -i ${CODENAME}
-} # end _ubuntu__32
+_debian_flavor_install() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _debian_flavor_install
 
-_fedora__32() {
-  local CODENAME=$(_version "linux" "FileZilla*.*.*.*.i386.rpm")
-  # THOUGHT                          FileZilla-4.3.3.24545.i386.rpm
-  local TARGET_URL="https://download-cf.jetbrains.com/webide/${CODENAME}"
-  file_exists_with_spaces $USER_HOME/Downloads
-  cd $USER_HOME/Downloads
-  _download "${TARGET_URL}"
-  file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}"
-  ensure tar or "Canceling Install. Could not find tar command to execute unzip"
+_redhat_flavor_install() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _redhat_flavor_install
 
-  # provide error handling , once learned goes here. LEarn under if, once learned here.
-  # Start loop while ERROR flag in case needs to try again, based on error
-  _try "rpm --import https://download-cf.jetbrains.com/webide/RPM-GPG-KEY-scootersoftware"
-  local msg=$(_try "rpm -ivh \"$USER_HOME/Downloads/${CODENAME}\"" )
-  local ret=$?
-  if [ $ret -gt 0 ] ; then
-  {
-    failed "${ret}:${msg}"
-    # add error handling knowledge while learning.
-  }
-  else
-  {
-    passed Install with RPM success!
-  }
-  fi
-  ensure FileZilla or "Failed to install Beyond Compare"
-  rm -f "$USER_HOME/Downloads/${CODENAME}"
-  file_does_not_exist_with_spaces "$USER_HOME/Downloads/${CODENAME}"
-} # end _fedora__32
+_redhat_flavor_install_64() {
+  enforce_web_is_reachable  "filezilla-project.org"
+  #
+  local _filezilla_version=$(_version)
+  echo  "${_filezilla_version}"
+  enforce_variable_with_value _filezilla_version  "${_filezilla_version}"
+
+  local _filezilla_download_url=$(_dowload_link win64)
+  enforce_variable_with_value _filezilla_download_url  "${_filezilla_download_url}"
+
+  local CODENAME=$(basename "${_filezilla_download_url}")
+  enforce_variable_with_value CODENAME "${CODENAME}"
+  local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  echo "${DOWNLOADFOLDER}"
+  # _do_not_downloadtwice "${_filezilla_download_url}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+  # _install_rpm "${_filezilla_download_url}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
+  local _err=$?
+  # _remove_downloaded_codename_or_err  $_err "${DOWNLOADFOLDER}/${CODENAME}"
+  # _err=$?
+  # return  $_err
+} # end _redhat_flavor_install_64
+
+_arch_flavor_install() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _readhat_flavor_install
+
+_arch_flavor_install() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _readhat_flavor_install
+
+_arch__32() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _arch__32
+
+_arch__64() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _arch__64
+
+_centos__32() {
+  _redhat_flavor_install
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _centos__32
 
 _centos__64() {
-  _fedora__64
+  _redhat_flavor_install
+  echo "Procedure not yet implemented. I don't know what to do."
 } # end _centos__64
 
+_debian__32() {
+  _debian_flavor_install
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _debian__32
+
+_debian__64() {
+  _debian_flavor_install
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _debian__64
+
+_fedora__32() {
+  _redhat_flavor_install
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _fedora__32
+
 _fedora__64() {
-  # Lives Samples
-  # https://download.jetbrains.com/webide/FileZilla-2019.3.4.tar.gz
-  # https://download-cf.jetbrains.com/webide/FileZilla-2019.3.4.tar.gz
-  local CODENAME=$(_version "linux" "FileZilla*.*.*.tar.gz")
-
-  CODENAME=$(echo "FileZilla-2020.2")
-  local TARGET_URL="https://download-cf.jetbrains.com/webide/${CODENAME}.tar.gz"
-  if  it_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}.tar.gz" ; then
-  {
-    file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}.tar.gz"
-  }
-  else
-  {
-    file_exists_with_spaces $USER_HOME/Downloads
-    cd $USER_HOME/Downloads
-    _download "${TARGET_URL}" $USER_HOME/Downloads  ${CODENAME}.tar.gz
-    file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}.tar.gz"
-  }
-  fi
-  if  it_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}" ; then
-  {
-    rm -rf "$USER_HOME/Downloads/${CODENAME}"
-    directory_does_not_exist_with_spaces "$USER_HOME/Downloads/${CODENAME}"
-  }
-  fi
-
-  ensure tar or "Canceling Install. Could not find tar command to execute unzip"
-  ensure awk or "Canceling Install. Could not find awk command to execute unzip"
-  ensure pv or "Canceling Install. Could not find pv command to execute unzip"
-  ensure du or "Canceling Install. Could not find du command to execute unzip"
-  ensure gzip or "Canceling Install. Could not find gzip command to execute unzip"
-  ensure gio or "Canceling Install. Could not find gio command to execute gio"
-  ensure update-mime-database or "Canceling Install. Could not find update-mime-database command to execute update-mime-database"
-  ensure update-desktop-database or "Canceling Install. Could not find update-desktop-database command to execute update"
-  ensure touch or "Canceling Install. Could not find touch command to execute touch"
-
-  # provide error handling , once learned goes here. LEarn under if, once learned here.
-  # Start loop while ERROR flag in case needs to try again, based on error
-  cd $USER_HOME/Downloads
-  #_try "tar xvzf  \"$USER_HOME/Downloads/${CODENAME}.tar.gz\"--directory=$USER_HOME/Downloads"
-  # GROw bar with tar Progress bar tar REF: https://superuser.com/questions/168749/is-there-a-way-to-see-any-tar-progress-per-file
-  # Compress tar cvfj big-files.tar.bz2 folder-with-big-files
-  # Compress tar cf - $USER_HOME/Downloads/${CODENAME}.tar.gz --directory=$USER_HOME/Downloads -P | pv -s $(du -sb $USER_HOME/Downloads/${CODENAME}.tar.gz | awk '{print $1}') | gzip > big-files.tar.gz
-  # Extract tar Progress bar REF: https://coderwall.com/p/l_m2yg/tar-untar-on-osx-linux-with-progress-bars
-  # Extract tar sample pv file.tgz | tar xzf - -C target_directory
-  # Working simplme tar:  tar xvzf $USER_HOME/Downloads/${CODENAME}.tar.gz --directory=$USER_HOME/Downloads
-  pv $USER_HOME/Downloads/${CODENAME}.tar.gz  | tar xzf - -C $USER_HOME/Downloads
-  #local msg=$(_try "tar xvzf  \"$USER_HOME/Downloads/${CODENAME}.tar.gz\" --directory=$USER_HOME/Downloads " )
-  #  tar xvzf file.tar.gz
-  # Where,
-  # x: This option tells tar to extract the files.
-  # v: The “v” stands for “verbose.” This option will list all of the files one by one in the archive.
-  # z: The z option is very important and tells the tar command to uncompress the file (gzip).
-  # f: This options tells tar that you are going to give it a file name to work with.
-  local msg
-  local folder_date
-  local ret=$?
-  if [ $ret -gt 0 ] ; then
-  {
-    failed "${ret}:${msg}"
-    # add error handling knowledge while learning.
-  }
-  else
-  {
-    passed Install with Untar Unzip success!
-  }
-  fi
-
-  local NEWDIRCODENAME=$(ls -1tr /home/zeus/Downloads/  | tail  -1)
-  local FROMUZIPPED="$USER_HOME/Downloads/${NEWDIRCODENAME}"
-  directory_exists_with_spaces  "${FROMUZIPPED}"
-
-
-  if  it_exists_with_spaces "$USER_HOME/_/software/filezilla" ; then
-  {
-     folder_date=$(date +"%Y%m%d")
-     if  it_exists_with_spaces "$USER_HOME/_/software/filezilla_${folder_date}" ; then
-     {
-       warning A backup already exists for today "${ret}:${msg} \n ... adding time"
-       folder_date=$(date +"%Y%m%d%H%M")
-     }
-     fi
-     msg=$(mv "$USER_HOME/_/software/filezilla" "$USER_HOME/_/software/filezilla_${folder_date}")
-     ret=$?
-     if [ $ret -gt 0 ] ; then
-     {
-       warning failed to move backup "${ret}:${msg} \n"
-     }
-     fi
-     directory_exists_with_spaces "$USER_HOME/_/software/filezilla_${folder_date}"
-     file_does_not_exist_with_spaces "$USER_HOME/_/software/filezilla"
-  }
-  fi
-  mkdir -p "$USER_HOME/_/software"
-  directory_exists_with_spaces "$USER_HOME/_/software"
-  mv "${FROMUZIPPED}" "$USER_HOME/_/software/filezilla"
-  directory_does_not_exist_with_spaces "${FROMUZIPPED}"
-  directory_exists_with_spaces "$USER_HOME/_/software/filezilla"
-  directory_exists_with_spaces "$USER_HOME/_/software/filezilla/bin"
-  mkdir -p "$USER_HOME/.local/share/applications"
-  directory_exists_with_spaces "$USER_HOME/.local/share/applications"
-  mkdir -p "$USER_HOME/.local/share/mime/packages"
-  directory_exists_with_spaces "$USER_HOME/.local/share/mime/packages"
-  file_exists_with_spaces "$USER_HOME/_/software/filezilla/bin/filezilla.sh"
-
-  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/_/software/filezilla"
-
-  # Now Proceed to register REF:  https://gist.github.com/c80609a/752e566093b1489bd3aef0e56ee0426c
-  ensure cat or "Failed to use cat command does not exists"
-  ensure xdg-mime or "Failed to install run xdg-mime"
-
-   cat << EOF > $USER_HOME/_/software/filezilla/bin/pstorm-open.rb
-#!/usr/bin/env ruby
-
-# $USER_HOME/_/software/filezilla/bin/pstorm-open.rb
-# script opens URL in format filezilla://open?file=%{file}:%{line} in filezilla
-
-require 'uri'
-
-begin
-    url = ARGV.first
-    u = URI.parse(url)
-    # puts u
-    q = URI.decode_www_form(u.query)
-    # puts q
-    h = q.to_h
-    # puts h
-    file = h['file']
-    line = h['line']
-    # puts file
-    # puts line
-    if line
-        arg = "#{file}:#{line}"
-    else
-        arg = "#{file}"
-    end
-rescue
-    arg = ""
-end
-puts arg
-EOF
-  file_exists_with_spaces "$USER_HOME/_/software/filezilla/bin/pstorm-open.rb"
-  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/_/software/filezilla/bin/pstorm-open.rb"
-  chmod +x $USER_HOME/_/software/filezilla/bin/pstorm-open.rb
-
-
-    cat << EOF > $USER_HOME/_/software/filezilla/bin/pstorm-open.sh
-#!/usr/bin/env bash
-#encoding: UTF-8
-# $USER_HOME/_/software/filezilla/bin/pstorm-open.sh
-# script opens URL in format filezilla://open?file=%{file}:%{line} in filezilla
-
-echo "\${@}"
-echo "\${@}" >>  $USER_HOME/_/work/requested.log
-$USER_HOME/_/software/filezilla/bin/pstorm-open.rb \${@}
-filetoopen=\$($USER_HOME/_/software/filezilla/bin/pstorm-open.rb "\${@}")
-echo filetoopen "\${filetoopen}"
-echo "\${filetoopen}" >>  $USER_HOME/_/work/requestedfiletoopen.log
-pstorm "\${filetoopen}"
-
-EOF
-  mkdir -p $USER_HOME/_/work/
-  directory_exists_with_spaces $USER_HOME/_/work/
-  chown $SUDO_USER:$SUDO_USER $USER_HOME/_/work/
-  touch $USER_HOME/_/work/requestedfiletoopen.log
-  file_exists_with_spaces $USER_HOME/_/work/requestedfiletoopen.log
-  chown $SUDO_USER:$SUDO_USER -R $USER_HOME/_/work/requestedfiletoopen.log
-  file_exists_with_spaces "$USER_HOME/_/software/filezilla/bin/pstorm-open.sh"
-  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/_/software/filezilla/bin/pstorm-open.sh"
-  chmod +x $USER_HOME/_/software/filezilla/bin/pstorm-open.sh
-
- cat << EOF > $USER_HOME/.local/share/mime/packages/application-x-pstorm.xml
-<?xml version="1.0" encoding="UTF-8"?>
-<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
-  <mime-type type="application/x-pstorm">
-    <comment>new mime type</comment>
-    <glob pattern="*.x-pstorm;*.rb;*.html;*.html.erb;*.js.erb;*.html.haml;*.js.haml;*.erb;*.haml;*.js"/>
-  </mime-type>
-</mime-info>
-EOF
-  file_exists_with_spaces "$USER_HOME/.local/share/mime/packages/application-x-pstorm.xml"
-  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/.local/share/mime/packages/application-x-pstorm.xml"
-
-
-
-
-  cat << EOF > $USER_HOME/.local/share/applications/jetbrains-filezilla.desktop
-# $USER_HOME/.local/share/applications/jetbrains-filezilla.desktop
-[Desktop Entry]
-Encoding=UTF-8
-Version=2020.2
-Type=Application
-Name=filezilla
-Icon=$USER_HOME/_/software/filezilla/bin/filezilla.svg
-Exec="$USER_HOME/_/software/filezilla/bin/filezilla.sh" %f
-MimeType=application/x-pstorm;text/x-pstorm;text/plain;text/x-chdr;text/x-csrc;text/x-c++hdr;text/x-c++src;text/x-java;text/x-dsrc;text/x-pascal;text/x-perl;text/x-python;application/x-php;application/x-httpd-php3;application/x-httpd-php4;application/x-httpd-php5;application/xml;text/html;text/css;text/x-sql;text/x-diff;x-directory/normal;inode/directory;
-Comment=The Most Intelligent Php IDE
-Categories=Development;IDE;
-Terminal=true
-StartupWMClass=jetbrains-filezilla
-EOF
-  file_exists_with_spaces "$USER_HOME/.local/share/applications/jetbrains-filezilla.desktop"
-  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/.local/share/applications/jetbrains-filezilla.desktop"
-
-
-  cat << EOF > $USER_HOME/.local/share/applications/filezilla.mimeinfo.cache
-# $USER_HOME/.local/share/applications/mimeinfo.cache
-
-[MIME Cache]
-x-scheme-handler/filezilla=pstorm-open.desktop;
-EOF
-  file_exists_with_spaces "$USER_HOME/.local/share/applications/filezilla.mimeinfo.cache"
-  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/.local/share/applications/filezilla.mimeinfo.cache"
-
-  cat << EOF > $USER_HOME/.local/share/applications/pstorm-open.desktop
-# $USER_HOME/.local/share/applications/pstorm-open.desktop
-[Desktop Entry]
-Encoding=UTF-8
-Version=1.0
-Type=Application
-Terminal=true
-Exec="$USER_HOME/_/software/filezilla/bin/pstorm-open.sh" %f
-MimeType=application/filezilla;x-scheme-handler/filezilla;
-Name=MineOpen
-Comment=BetterErrors
-EOF
-  file_exists_with_spaces "$USER_HOME/.local/share/applications/pstorm-open.desktop"
-  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/.local/share/applications/pstorm-open.desktop"
-
-  # xdg-mime default jetbrains-filezilla.desktop text/plain;text/x-chdr;text/x-csrc;text/x-c++hdr;text/x-c++src;text/x-java;text/x-dsrc;text/x-pascal;text/x-perl;text/x-python;application/x-php;application/x-httpd-php3;application/x-httpd-php4;application/x-httpd-php5;application/xml;text/html;text/css;text/x-sql;text/x-diff;x-directory/normal;inode/directory;
-  # xdg-mime default pstorm-open.desktop x-scheme-handler/filezilla
-  # msg=$(_try "xdg-mime default pstorm-open.desktop x-scheme-handler/filezilla" )
-  su - "${SUDO_USER}" -c "xdg-mime default pstorm-open.desktop x-scheme-handler/filezilla"
-  su - "${SUDO_USER}" -c "xdg-mime default pstorm-open.desktop text/filezilla"
-  su - "${SUDO_USER}" -c "xdg-mime default pstorm-open.desktop application/filezilla"
-  su - "${SUDO_USER}" -c "xdg-mime default jetbrains-filezilla.desktop x-scheme-handler/x-pstorm"
-  su - "${SUDO_USER}" -c "xdg-mime default jetbrains-filezilla.desktop text/x-pstorm"
-  su - "${SUDO_USER}" -c "xdg-mime default jetbrains-filezilla.desktop application/x-pstorm"
-
-#   cat << EOF > $USER_HOME/.config/mimeapps.list
-#   cat << EOF > $USER_HOME/.local/share/applications/mimeapps.list
-# [Default Applications]
-# x-scheme-handler/filezilla=pstorm-open.desktop
-# text/filezilla=pstorm-open.desktop
-# application/filezilla=pstorm-open.desktop
-# x-scheme-handler/x-pstorm=jetbrains-filezilla.desktop
-# text/x-pstorm=jetbrains-filezilla.desktop
-# application/x-pstorm=jetbrains-filezilla.desktop
-
-# [Added Associations]
-# x-scheme-handler/filezilla=pstorm-open.desktop;
-# text/filezilla=pstorm-open.desktop;
-# application/filezilla=pstorm-open.desktop;
-# x-scheme-handler/x-pstorm=jetbrains-filezilla.desktop;
-# text/x-pstorm=jetbrains-filezilla.desktop;
-# application/x-pstorm=jetbrains-filezilla.desktop;
-# EOF
-#   file_exists_with_spaces "$USER_HOME/.local/share/applications/mimeapps.list"
-#   file_exists_with_spaces "$USER_HOME/.config/mimeapps.list"
-ln -fs "$USER_HOME/.config/mimeapps.list" "$USER_HOME/.local/share/applications/mimeapps.list"
-softlink_exists_with_spaces "$USER_HOME/.local/share/applications/mimeapps.list>$USER_HOME/.config/mimeapps.list"
-chown $SUDO_USER:$SUDO_USER -R  "$USER_HOME/.local/share/applications/mimeapps.list"
-
-file_exists_with_spaces "$USER_HOME/_/software/filezilla/bin/pstorm-open.sh"
-
-  su - "${SUDO_USER}" -c "xdg-mime query default x-scheme-handler/filezilla"
-  su - "${SUDO_USER}" -c "xdg-mime query default x-scheme-handler/x-pstorm"
-  su - "${SUDO_USER}" -c "xdg-mime query default text/x-pstorm"
-  su - "${SUDO_USER}" -c "xdg-mime query default application/x-pstorm"
-  su - "${SUDO_USER}" -c "xdg-mime query default text/filezilla"
-  su - "${SUDO_USER}" -c "xdg-mime query default application/filezilla"
-  msg=$(_try "su - \"${SUDO_USER}\" -c \"xdg-mime query default x-scheme-handler/filezilla\"")
-  ret=$?
-  if [ $ret -gt 0 ] ; then
-  {
-
-    failed "${ret}:${msg} Install with xdg-mime scheme failed!"
-  }
-  else
-  {
-    passed Install with xdg-mime scheme success!
-  }
-  fi
-  su - "${SUDO_USER}" -c "update-mime-database \"$USER_HOME/.local/share/mime\""
-  su - "${SUDO_USER}" -c "update-desktop-database \"$USER_HOME/.local/share/applications\""
-  su - "${SUDO_USER}" -c "touch test12345.rb "
-  su - "${SUDO_USER}" -c "gio info test12345.rb  | grep \"standard::content-type\""
-  su - "${SUDO_USER}" -c "touch test12345.erb "
-  su - "${SUDO_USER}" -c "gio info test12345.erb  | grep \"standard::content-type\""
-  su - "${SUDO_USER}" -c "touch test12345.js.erb "
-  su - "${SUDO_USER}" -c "gio info test12345.js.erb  | grep \"standard::content-type\""
-  su - "${SUDO_USER}" -c "touch test12345.html.erb "
-  su - "${SUDO_USER}" -c "gio info test12345.html.erb  | grep \"standard::content-type\""
-  su - "${SUDO_USER}" -c "touch test12345.haml "
-  su - "${SUDO_USER}" -c "gio info test12345.haml  | grep \"standard::content-type\""
-  su - "${SUDO_USER}" -c "touch test12345.html.haml "
-  su - "${SUDO_USER}" -c "gio info test12345.html.haml  | grep \"standard::content-type\""
-  su - "${SUDO_USER}" -c "touch test12345.js.haml "
-  su - "${SUDO_USER}" -c "gio info test12345.js.haml  | grep \"standard::content-type\""
-
-  su - "${SUDO_USER}" -c "gio mime x-scheme-handler/filezilla"
-  su - "${SUDO_USER}" -c "gio mime x-scheme-handler/x-pstorm"
-  su - "${SUDO_USER}" -c "gio mime text/x-pstorm"
-  su - "${SUDO_USER}" -c "gio mime application/x-pstorm"
-  su - "${SUDO_USER}" -c "gio mime text/filezilla"
-  su - "${SUDO_USER}" -c "gio mime application/filezilla"
-  su - "${SUDO_USER}" -c "rm test12345.rb"
-  su - "${SUDO_USER}" -c "rm test12345.erb"
-  su - "${SUDO_USER}" -c "rm test12345.js.erb"
-  su - "${SUDO_USER}" -c "rm test12345.html.erb"
-  su - "${SUDO_USER}" -c "rm test12345.haml"
-  su - "${SUDO_USER}" -c "rm test12345.js.haml"
-  su - "${SUDO_USER}" -c "rm test12345.html.haml"
-  echo " "
-  echo "HINT: Add this to your config/initializers/better_errors.php file "
-  echo "better_errors.rb
-  # ... /path_to_php_project/ ... /config/initializers/better_errors.php
-
-  if (defined?(\$BetterErrors) {
-    \$BetterErrors.editor = \"filezilla://open?file=%{file}:%{line}\"
-    \$BetterErrors.editor = \"x-pstorm://open?file=%{file}:%{line}\"
-  }
-  "
+  _redhat_flavor_install_64
 } # end _fedora__64
 
-_mingw__64() {
-    local CODENAME=$(_version "win" "FileZilla*.*.*.*.exe")
-    # THOUGHT        local CODENAME="FileZilla-4.3.3.24545.exe"
-    local URL="https://download-cf.jetbrains.com/webide/${CODENAME}"
-    cd $HOMEDIR
-	  cd Downloads
-    curl -O $URL
-    ${CODENAME}
-} # end _mingw__64
+_gentoo__32() {
+  _redhat_flavor_install
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _gentoo__32
 
-_mingw__32() {
-    local CODENAME=$(_version "win" "FileZilla*.*.*.*.exe")
-    # THOUGHT        local CODENAME="FileZilla-4.3.3.24545.exe"
-    local URL="https://download-cf.jetbrains.com/webide/${CODENAME}"
-    cd $HOMEDIR
-    cd Downloads
-	  curl -O $URL
-	  ${CODENAME}
-} # end
+_gentoo__64() {
+  _redhat_flavor_install
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _gentoo__64
+
+_madriva__32() {
+  _redhat_flavor_install
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _madriva__32
+
+_madriva__64() {
+  _redhat_flavor_install
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _madriva__64
+
+_suse__32() {
+  _redhat_flavor_install
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _suse__32
+
+_suse__64() {
+  _redhat_flavor_install
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _suse__64
+
+_ubuntu__32() {
+  _debian_flavor_install
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _ubuntu__32
+
+_ubuntu__64() {
+  _debian_flavor_install
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _ubuntu__64
+
+_darwin__64() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _darwin__64
+
+
+
+ #--------/\/\/\/\-- Work here above /\, test, and transfer to tasks_templates/filezilla having a working version -/\/\/\/\-------
 
 
 _main() {
@@ -523,6 +337,5 @@ _main() {
 
 _main
 
-echo ":)"
-
-
+echo "🥦"
+exit 0
