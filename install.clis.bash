@@ -491,7 +491,8 @@ _if_not_is_installed(){
 _install_nvm() {
     local -i ret
     local msg
-    chown $SUDO_USER -R $USER_HOME/.config
+    [[  ! -e "$USER_HOME/.config" ]] && touch "$USER_HOME/.config"
+    chown "$SUDO_USER" -R "$USER_HOME/.config"
     [ -s "$USER_HOME/.nvm/nvm.sh" ] && . "$USER_HOME/.nvm/nvm.sh" # This loads nvm
 
     msg=$(nvm >/dev/null 2>&1)
@@ -1073,7 +1074,7 @@ _install_dmgs_list(){
   Firefox 84.0.2.dmg|Firefox/Firefox.app|https://download-installer.cdn.mozilla.net/pub/firefox/releases/84.0.2/mac/de/Firefox%2084.0.2.dmg
   MFF2_latest.dmg|MultiFirefox/MultiFirefox.app|http://mff.s3.amazonaws.com/MFF2_latest.dmg
   vlc-3.0.11.dmg|VLC media player/VLC.app|https://download.vlc.de/vlc/macosx/vlc-3.0.11.dmg
-  mattermost-desktop-4.6.2-mac.dmg|Mattermost 4.6.2.app/Mattermost.app|https://releases.mattermost.com/desktop/4.6.2/mattermost-desktop-4.6.2-mac.dmg?src=dl
+  mattermost-desktop-4.6.2-mac.dmg|Mattermost 4.6.2/Mattermost.app|https://releases.mattermost.com/desktop/4.6.2/mattermost-desktop-4.6.2-mac.dmg
   gimp-2.10.22-x86_64-2.dmg|GIMP 2.10 Install/GIMP-2.10.app|https://ftp.lysator.liu.se/pub/gimp/v2.10/osx/gimp-2.10.22-x86_64-2.dmg
   sketch-70.3-109109.zip|Sketch.app|https://download.sketch.com/sketch-70.3-109109.zip
   Iris-1.2.0-OSX.zip|Iris.app|https://raw.githubusercontent.com/danielng01/product-builds/master/iris/macos/Iris-1.2.0-OSX.zip
@@ -1082,12 +1083,12 @@ _install_dmgs_list(){
   tsetup.2.5.7.dmg|Telegram Desktop/Telegram.app|https://updates.tdesktop.com/tmac/tsetup.2.5.7.dmg
   VSCode-darwin.zip|Visual Studio Code.app|https://az764295.vo.msecnd.net/stable/ea3859d4ba2f3e577a159bc91e3074c5d85c0523/VSCode-darwin.zip
   VSCode-darwin.zip|Visual Studio Code.app|https://code.visualstudio.com/sha/download?build=stable&os=darwin
-  VSCode-darwin.zip|Visual Studio Code - Insiders.app|https://az764295.vo.msecnd.net/insider/5a52bc29d5e9bc419077552d336ea26d904299fa/VSCode-darwin.zip
-  VSCode-darwin.zip|Visual Studio Code - Insiders.app|https://code.visualstudio.com/sha/download?build=insider&os=darwin
+  VSCode-darwin.zip|Visual Studio Code.app|https://az764295.vo.msecnd.net/insider/5a52bc29d5e9bc419077552d336ea26d904299fa/VSCode-darwin.zip
+  VSCode-darwin.zip|Visual Studio Code.app|https://code.visualstudio.com/sha/download?build=insider&os=darwin
   BCompareOSX-4.3.7.25118.zip|Beyond Compare.app|https://www.scootersoftware.com/BCompareOSX-4.3.7.25118.zip
   dbeaver-ce-7.3.4-macos.dmg|DBeaver Community/DBeaver.app|https://download.dbeaver.com/community/7.3.4/dbeaver-ce-7.3.4-macos.dmg
   Inkscape-1.0.2.dmg|Inkscape/Inkscape.app|https://media.inkscape.org/dl/resources/file/Inkscape-1.0.2.dmg
-  LittleSnitch-4.6.dmg|Little Snitch 4.6/Little Installer.app|https://www.obdev.at/ftp/pub/Products/littlesnitch/LittleSnitch-4.6.dmg
+  LittleSnitch-4.6.dmg|Little Snitch 4.6/Little Snitch Installer.app|https://www.obdev.at/ftp/pub/Products/littlesnitch/LittleSnitch-4.6.dmg
   "
   Checking dmgs apps
   while read -r one ; do
@@ -1107,7 +1108,7 @@ _install_dmgs_list(){
           if [[ ! -d "/Applications/${app_name}" ]] ; then
           {
             Installing "${app_name}"
-            _install_dmg__64 "${target_name}" "${target_app}" "${target_url}"
+            _install_dmgs_dmg__64 "${target_name}" "${target_app}" "${target_url}"
           }
           else
           {
@@ -1434,6 +1435,7 @@ _darwin__64() {
     the_silver_searcher
     # ag@the_silver_searcher
     ack
+    gawk
     vim
     nano
     pv
@@ -1446,6 +1448,10 @@ _darwin__64() {
   if ( ! command -v pygmentize >/dev/null 2>&1; ) ;  then
     pip3 install pygments
   fi
+  #is_not_installed pygmentize &&   pip3 install pygments
+  pip3 install pygments
+    #cf
+
   verify_is_installed "
     tree
     ag
@@ -1453,7 +1459,7 @@ _darwin__64() {
     pv
     nano
     vim
-    cf
+    gawk
     pygmentize
     "
     _configure_git

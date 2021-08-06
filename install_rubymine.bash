@@ -3,6 +3,21 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 # Compatible start with low version bash, like mac before zsh change and after
+# type -a realpath
+realpath ()                                                                                                                                                                                   
+{                                                                                                                                                                                             
+    f=$@;                                                                                                                                                                                     
+    if [ -d "$f" ]; then                                                                                                                                                                      
+        base="";                                                                                                                                                                              
+        dir="$f";                                                                                                                                                                             
+    else                                                                                                                                                                                      
+        base="/$(basename "$f")";                                                                                                                                                             
+        dir=$(dirname "$f");                                                                                                                                                                  
+    fi;                                                                                                                                                                                       
+    dir=$(cd "$dir" && /bin/pwd);                                                                                                                                                             
+    echo "$dir$base"                                                                                                                                                                          
+}         
+
 export USER_HOME
 export THISSCRIPTCOMPLETEPATH
 typeset -r THISSCRIPTCOMPLETEPATH="$(realpath $(which $(basename "$0")))"   # § This goes in the FATHER-MOTHER script
