@@ -2,7 +2,21 @@
 #
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
-# 20200415 Compatible with Fedora, Mac, Ubuntu "sudo_up" "load_struct"
+# 20200415 Compatible with Fedora, Mac, Ubuntu "sudo_up" "load_struct" "#
+export realpath
+function realpath() {
+    local base dir f=$@;
+    if [ -d "$f" ]; then
+        base="";
+        dir="$f";
+    else
+        base="/$(basename "$f")";
+        dir=$(dirname "$f");
+    fi;
+    dir=$(cd "$dir" && /bin/pwd);
+    echo "$dir$base"
+}
+
 set -E -o functrace
 export THISSCRIPTCOMPLETEPATH
 typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")"
@@ -106,15 +120,15 @@ function sudo_it() {
   # shellcheck disable=SC2046
   # shellcheck disable=SC2031
   typeset -r USER_HOME="$(echo -n $(bash -c "cd ~${SUDO_USER} && pwd"))"  # Get the caller's of sudo home dir LINUX and MAC
-  # USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)   # Get the caller's of sudo home dir LINUX
+  # USER_HOME=$(getent passwd "${SUDO_USER}" | cut -d: -f6)   # Get the caller's of sudo home dir LINUX
   enforce_variable_with_value USER_HOME "${USER_HOME}"
 # }  # end _linux_prepare
 
 
 # _linux_prepare
-
-enforce_variable_with_value USER_HOME $USER_HOME
-enforce_variable_with_value SUDO_USER $SUDO_USER
-passed Caller user identified:$SUDO_USER
-passed Home identified:$USER_HOME
-directory_exists_with_spaces "$USER_HOME"
+export SUDO_GRP='staff'
+enforce_variable_with_value USER_HOME "${USER_HOME}"
+enforce_variable_with_value SUDO_USER "${SUDO_USER}"
+passed "Caller user identified:${SUDO_USER}"
+passed "Home identified:${USER_HOME}"
+directory_exists_with_spaces "${USER_HOME}"
