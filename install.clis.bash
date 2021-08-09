@@ -3,6 +3,20 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 # 20200415 Compatible with Fedora, Mac, Ubuntu "sudo_up" "load_struct" "#
+export realpath
+function realpath() {
+    local base dir f=$@;
+    if [ -d "$f" ]; then
+        base="";
+        dir="$f";
+    else
+        base="/$(basename "$f")";
+        dir=$(dirname "$f");
+    fi;
+    dir=$(cd "$dir" && /bin/pwd);
+    echo "$dir$base"
+}
+
 set -E -o functrace
 export THISSCRIPTCOMPLETEPATH
 typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")"
@@ -14,36 +28,37 @@ typeset -r THISSCRIPTNAME="$(basename "$0")"
 
 export _err
 typeset -i _err=0
-  function _trap_on_error(){
-    echo -e "\\n \033[01;7m*** ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR ...\033[0m"
-    exit 1
-  }
-  trap _trap_on_error ERR
-  function _trap_on_int(){
-    echo -e "\\n \033[01;7m*** INTERRUPT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n  INT ...\033[0m"
-    exit 0
-  }
-
-  trap _trap_on_int INT
+  # function _trap_on_error(){
+  #   echo -e "\\n \033[01;7m*** ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR ...\033[0m"
+  #   exit 1
+  # }
+  # trap _trap_on_error ERR
+  # function _trap_on_int(){
+  #   echo -e "\\n \033[01;7m*** INTERRUPT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n  INT ...\033[0m"
+  #   exit 0
+  # }
+  # trap _trap_on_int INT
 
 load_struct_testing(){
-  function _trap_on_error(){
-    local -ir __trapped_error_exit_num="${2:-0}"
-    echo -e "\\n \033[01;7m*** ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR ...\033[0m  \n \n "
-    echo ". ${1}"
-    echo ". exit  ${__trapped_error_exit_num}  "
-    echo ". caller $(caller) "
-    echo ". ${BASH_COMMAND}"
-    local -r __caller=$(caller)
-    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
-    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+  # function _trap_on_error(){
+  #   local -ir __trapped_error_exit_num="${2:-0}"
+  #   warning "${@}"
+  #   echo -e "\\n \033[01;7m*** ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR ...\033[0m  \n \n "
+  #   echo ". ${1}"
+  #   echo ". exit  ${__trapped_error_exit_num}  "
+  #   echo ". caller $(caller) "
+  #   echo ". ${BASH_COMMAND}"
+  #   local -r __caller=$(caller)
+  #   local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+  #   local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+  #   awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
 
-    # $(eval ${BASH_COMMAND}  2>&1; )
-    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
-    exit 1
-  }
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  #   # $(eval ${BASH_COMMAND}  2>&1; )
+  #   # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+  #   warning "${@}"
+  #   # exit 1
+  # }
+  # trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
     local provider="$HOME/_/clis/execute_command_intuivo_cli/struct_testing"
     local _err=0 structsource
     if [   -e "${provider}"  ] ; then
@@ -106,18 +121,18 @@ function sudo_it() {
   # shellcheck disable=SC2046
   # shellcheck disable=SC2031
   typeset -r USER_HOME="$(echo -n $(bash -c "cd ~${SUDO_USER} && pwd"))"  # Get the caller's of sudo home dir LINUX and MAC
-  # USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)   # Get the caller's of sudo home dir LINUX
+  # USER_HOME=$(getent passwd "${SUDO_USER}" | cut -d: -f6)   # Get the caller's of sudo home dir LINUX
   enforce_variable_with_value USER_HOME "${USER_HOME}"
 # }  # end _linux_prepare
 
 
 # _linux_prepare
-
-enforce_variable_with_value USER_HOME $USER_HOME
-enforce_variable_with_value SUDO_USER $SUDO_USER
-passed Caller user identified:$SUDO_USER
-passed Home identified:$USER_HOME
-directory_exists_with_spaces "$USER_HOME"
+export SUDO_GRP='staff'
+enforce_variable_with_value USER_HOME "${USER_HOME}"
+enforce_variable_with_value SUDO_USER "${SUDO_USER}"
+passed "Caller user identified:${SUDO_USER}"
+passed "Home identified:${USER_HOME}"
+directory_exists_with_spaces "${USER_HOME}"
 
 
 # exit 0
@@ -164,10 +179,10 @@ _checka_tools_commander(){
   # ensure npm or "Canceling Install. Could not find npm"
   # ensure node or "Canceling Install. Could not find node"
   # ensure cf or "Canceling Install. Could not find cf"
-  #MTASCHECK=$(su - $SUDO_USER -c 'cf mtas --help' >/dev/null 2>&1)
+  #MTASCHECK=$(su - "${SUDO_USER}" -c 'cf mtas --help' >/dev/null 2>&1)
   #if [[ -n "$MTASCHECK" ]] &&  [[ "$MTASCHECK" == *"FAILED"* ]]  ; then
   #{
-  #    su - $SUDO_USER -c 'yes | cf install-plugin multiapps'
+  #    su - "${SUDO_USER}" -c 'yes | cf install-plugin multiapps'
   #}
   #fi
   #
@@ -235,14 +250,41 @@ function _if_contains(){
   # echo "${policies}" > temp.xml
   # if _if_contains temp.xml "{1,}" ; then
   # {
-  # passed "passwords policy already set to {1,}"
+  #   passed "passwords policy already set to {1,}"
   # } else {
-  # run this
+  #   run this
   # }
   # fi
-  return ! _if_not_contains  "$1" "$2"
+  # if
+  if ! ( _if_not_contains  "$1" "$2" ) ; then
+  {
+    return 1
+  }
+  fi
+  return 0
 } # end _if_contains
 
+Checking selftest _if_contains
+if _if_contains  $USER_HOME/.bashrc "PETERPIZZA" ; then
+{
+  failed "bad .bashrc should not have PETERPIZZA word"
+}
+else
+{
+  passed " good .bashrc should not have PETERPIZZA"
+}
+fi
+if _if_contains  $USER_HOME/.bashrc "HOME" ; then
+{
+  passed " good .bashrc should have the HOME word"
+}
+else
+{
+  failed ".bashrc should have the HOME word"
+}
+fi
+# echo hola
+# exit 0
 
 function _ensure_touch_dir_and_file() {
   local launchdir_default="${1}"
@@ -264,7 +306,7 @@ function _ensure_touch_dir_and_file() {
   file_exists_with_spaces "${launchfile_default}"
 } # end _ensure_touch_dir_and_file
 
-_add_self_cron_update(){
+_add_self_cron_update() {
   # Make a cron REF: https://www.golinuxcloud.com/create-schedule-cron-job-shell-script-linux/
   local -i DEBUG=0
   local -i _err=0
@@ -294,21 +336,60 @@ _add_self_cron_update(){
   (_if_not_contains  "${cronallowfile}" "${SUDO_USER}") ||  echo "${SUDO_USER}" >> "${cronallowfile}"
   (( DEBUG )) &&  cat  "${cronallowfile}"
   Installing crontab to pull clis automatically
-  (crontab -u  "${SUDO_USER}" -l   2>&1) >/tmp/crontab
-  _err=$?
-  [ ${_err} -eq 0 ] || failed installing to read crontab or write to file /tmp/crontab
-  # this line will email locally, check with mail or mailx commands  REF: https://www.cyberciti.biz/faq/disable-the-mail-alert-by-crontab-command/bash
-  # adding > /dev/null 2>&1 || true will block email sending
-  (_if_not_contains  "/tmp/crontab" "/_/clis && pull_all_subdirectories") || \
-    /bin/echo "* * * * * \$(cd $USER_HOME/_/clis && pull_all_subdirectories  && echo \"updated \$(date +%Y%m%d%H%M)\" \$? >> $USER_HOME/_/clis/uploaded.log) > /dev/null 2>&1 || true" >> /tmp/crontab
-  crontab -u "${SUDO_USER}" /tmp/crontab
-
+  local _tmp_directory="$(_find_downloads_folder)"
+   enforce_variable_with_value _tmp_directory "${_tmp_directory}"
+   cd "${_tmp_directory}"
+  local _tmp_cronfile="${_tmp_directory}/cronfile"
+   enforce_variable_with_value _tmp_cronfile "${_tmp_cronfile}"
+  Checking crontab is not empty
+  if (su - "${SUDO_USER}" -c "crontab  \"${SUDO_USER}\" -l" /dev/null 2>&1 ) ; then
+  {
+    Loading crontab into _tmp_cronfile:"${_tmp_cronfile}"
+    (crontab -u  "${SUDO_USER}" -l   2>&1) >"${_tmp_cronfile}"
+  }
+  else
+  {
+    Comment crontab is empty
+    Creating _tmp_cronfile:"${_tmp_cronfile}" with new cron
+    /bin/echo "* * * * * \$(cd \"${USER_HOME}/_/clis\" && pull_all_subdirectories  && echo \"updated \$(date +%Y%m%d%H%M)\" \$? >> \"${USER_HOME}/_/clis/uploaded.log\") > /dev/null 2>&1 || true" >> "${_tmp_cronfile}"
+    # note about this cron this line will email locally, check with mail or mailx commands  REF: https://www.cyberciti.biz/faq/disable-the-mail-alert-by-crontab-command/bash
+    # adding > /dev/null 2>&1 || true will block email sending
+  }
+  fi
+  # exit 0
+  if (_if_not_contains  "${_tmp_cronfile}" "/_/clis && pull_all_subdirectories") ; then
+  {
+    Updating _tmp_cronfile:"${_tmp_cronfile}" into crontab
+    /bin/echo "* * * * * \$(cd \"${USER_HOME}/_/clis\" && pull_all_subdirectories  && echo \"updated \$(date +%Y%m%d%H%M)\" \$? >> \"${USER_HOME}/_/clis/uploaded.log\") > /dev/null 2>&1 || true" >> "${_tmp_cronfile}"
+    # note about this cron this line will email locally, check with mail or mailx commands  REF: https://www.cyberciti.biz/faq/disable-the-mail-alert-by-crontab-command/bash
+    # adding > /dev/null 2>&1 || true will block email sending
+    su - "${SUDO_USER}" -c "crontab  \"${SUDO_USER}\" \"${_tmp_cronfile}\""
+    Checking crontab exists
+    if (su - "${SUDO_USER}" -c "crontab  \"${SUDO_USER}\" -l" /dev/null 2>&1 ) ; then
+    {
+      Loading crontab exists
+      Checking crontab updated
+      # crontab -u "${SUDO_USER}" "${_tmp_cronfile}"
+      (crontab -u  "${SUDO_USER}" -l   2>&1) >"${_tmp_cronfile}"
+      _err=$?
+      [ ${_err} -eq 0 ] || failed checking to read crontab or write to file "${_tmp_cronfile}"
+      (_if_not_contains  "${_tmp_cronfile}" "/_/clis && pull_all_subdirectories") || failed installing crontab
+      (_if_not_contains  "${_tmp_cronfile}" "/_/clis && pull_all_subdirectories") || failed installing crontab
+    }
+    else
+    {
+      Comment crontab is still empty
+      failed updated crontab
+      # _err=$?
+      # [ ${_err} -eq 0 ] || failed installing to read crontab or write to file "${_tmp_cronfile}"
+      # this line will email locally, check with mail or mailx commands  REF: https://www.cyberciti.biz/faq/disable-the-mail-alert-by-crontab-command/bash
+      # adding > /dev/null 2>&1 || true will block email sending
+    }
+    fi
+  }
+  fi
   # how to install crontab automatically REF: https://stackoverflow.com/questions/878600/how-to-create-a-cron-job-using-bash-automatically-without-the-interactive-editor/878647#878647
-  Checking it installed crontab
-  (crontab -u  "${SUDO_USER}" -l   2>&1) >/tmp/crontab
-  _err=$?
-  [ ${_err} -eq 0 ] || failed checking to read crontab or write to file /tmp/crontab
-  (_if_not_contains  "/tmp/crontab" "/_/clis && pull_all_subdirectories") || failed installing crontab
+  passed Installing cron with clis_autoupdate
 } # end _add  _self_cron_update
 
 _add_launchd(){
@@ -318,6 +399,7 @@ _add_launchd(){
   local launchdir
   local launchfile
   local launchname
+  local launchservice
   if is_not_installed launchd ; then
   {
     echo -e "\033[05;7m*** Failed there is no launchd installed ...\033[0m"
@@ -325,12 +407,18 @@ _add_launchd(){
   }
   fi
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  if [[ -n "${1}" ]] && [[ -n "${2}" ]] ; then {
-  launchdir="${1}"
+  if [[ -n "${1}" ]] && [[ -n "${2}" ]] ; then
+  {
+    launchdir="${1}"
     launchfile="${2}"
-  } else {
+    launchservice="$(basename "${2}")"
+  }
+  else
+  {
     launchfile="${USER_HOME}/Library/LaunchAgents/com.intuivo.clis_pull_all.plist"
     launchdir=$(dirname "${launchfile}")
+    launchservice="$(basename "${launchfile}")"
+
   }
   fi
   _ensure_touch_dir_and_file "${launchdir}" "${launchfile}"
@@ -340,22 +428,30 @@ _add_launchd(){
   Installing launchd "${launchdir}" "${launchfile}"
   Installing  /Library/LaunchDaemons - run when no users are logged in. run as 'administrator'
   Installing  /Library/LaunchAgents - when users are logged in. run as 'administrator'
-  Installing  $USER_HOME/Library/LaunchAgents -  when as user when user is logged.
+  Installing  "${USER_HOME}/Library/LaunchAgents -  when as user when user is logged."
   su - "${SUDO_USER}" -c "echo '#!/usr/bin/env bash
   THISDIR=\"\$( cd \"\$( dirname \"\${BASH_SOURCE[0]}\" )\" && pwd )\" # Getting the source directory of a Bash script from within REF: https://stackoverflow.com/questions/59895/how-can-i-get-the-source-directory-of-a-bash-script-from-within-the-script-itsel/246128#246128
   cd \"\${THISDIR}\"
   su - \"${SUDO_USER}\" -c \"${USER_HOME}/_/clis/git_intuivo_cli/pull_all_subdirectories\"
   _err=\$?
-  su - \"${SUDO_USER}\" -c \"touch ${USER_HOME}/_/clis/pulled.log\"
   if [ \${_err} -eq 0 ] ; then
   {
-    su - \"${SUDO_USER}\" -c \"echo \"\$(date +%Y%m%d%H%M) failed \" > ${USER_HOME}/_/clis/pulled.log\"
+    su - \"${SUDO_USER}\" -c \"echo \"\$(date +%Y%m%d%H%M) failed \" > \"${USER_HOME}/_/clis/git_intuivo_cli/pull_all_subdirectories\"\"
   } else {
-    su - \"${SUDO_USER}\" -c \"echo \"\$(date +%Y%m%d%H%M) passed \" > ${USER_HOME}/_/clis/pulled.log\"
+    su - \"${SUDO_USER}\" -c \"echo \"\$(date +%Y%m%d%H%M) passed \" > \"${USER_HOME}/_/clis/git_intuivo_cli/pull_all_subdirectories\"\"
+  }
+  fi
+  su - \"${SUDO_USER}\" -c \"touch \"${USER_HOME}/_/clis/pulled.log\"\"
+  _err=\$?
+  if [ \${_err} -eq 0 ] ; then
+  {
+    su - \"${SUDO_USER}\" -c \"echo \"\$(date +%Y%m%d%H%M) failed \" > \"${USER_HOME}/_/clis/pulled.log\"\"
+  } else {
+    su - \"${SUDO_USER}\" -c \"echo \"\$(date +%Y%m%d%H%M) passed \" > \"${USER_HOME}/_/clis/pulled.log\"\"
   }
   fi
 ' > \"${USER_HOME}/_/clis/updateall.bash\" "
-  (_if_not_contains  "${USER_HOME}/_/clis/updateall.bash" "pull_all_subdirectories") || failed writting to ${USER_HOME}/_/clis/updateall.bash
+  (_if_not_contains  "${USER_HOME}/_/clis/updateall.bash" "pull_all_subdirectories") || failed writting to "${USER_HOME}/_/clis/updateall.bash"
   (( DEBUG )) && cat "${USER_HOME}/_/clis/updateall.bash"
   chmod +x "${USER_HOME}/_/clis/updateall.bash"
 
@@ -391,40 +487,64 @@ _add_launchd(){
 ' > "${launchfile}"
    #(( DEBUG )) && cat "${launchfile}"
 
-   Installing file "${launchfile}"
+   Checking "${launchfile}"
    # Set correct permissions REF: https://stackoverflow.com/questions/28063598/error-while-executing-plist-file-path-had-bad-ownership-permissions
    # sudo chown root "${launchfile}"
    chown "${SUDO_USER}"  "${launchfile}"
    chgrp wheel "${launchfile}"
    chmod o-w  "${launchfile}"
-   launchctl unload "${launchfile}"
-   su - $SUDO_USER -c 'launchctl load '"${launchfile}"
+   if [[ -n "$( su - "${SUDO_USER}" -c "launchctl list | grep \"${launchservice}\"" )" ]] ; then
+   # if ( launchctl list "${launchservice}" | grep "${launchservice}" ) ; then
+   {
+     wait
+     Comment exists "${launchfile}"
+     su - "${SUDO_USER}" -c "launchctl unload \"${launchfile}\" "
+     wait
+     # launchctl unload "${launchservice}"
+     # _err=$?
+     # [ ${_err} -ne 0 ] || failed "${_err} -err launchctl unload \"${launchfile}\" "
+   }
+   else
+   {
+     Comment exists not "${launchfile}"
+   }
+   fi
+
+   wait
+   Installing "${launchfile}"
+   su - "${SUDO_USER}" -c "launchctl load \"${launchfile}\""
+   wait
+   # launchctl load "${launchfile}"
+   # _err=$?
+  # [ ${_err} -ne 0 ] || failed "${_err} -err launchctl load \"${launchfile}\""
+  # exit 0
+
 } # end _add_launchd
 
 _configure_git(){
   ensure git or "Canceling Install. Could not find git"
-  CURRENTGITUSER=$(su - $SUDO_USER -c 'git config --global --get user.name')
-  CURRENTGITEMAIL=$(su - $SUDO_USER -c 'git config --global --get user.email')
+  local CURRENTGITUSER=$(su - "${SUDO_USER}" -c 'git config --global --get user.name')
+  local CURRENTGITEMAIL=$(su - "${SUDO_USER}" -c 'git config --global --get user.email')
   # exit 0
 
   if [[ -z "$CURRENTGITEMAIL" ]] ; then
   {
-    Configuring git user.email with  $SUDO_USER@$(hostname)
-    su - $SUDO_USER -c 'git config --global user.email '$SUDO_USER'@$(hostname)'
+    Configuring git user.email with  "${SUDO_USER}"@$(hostname)
+    su - "${SUDO_USER}" -c 'git config --global user.email '${SUDO_USER}'@$(hostname)'
   }
   fi
   # exit 0
   if [[ -z "$CURRENTGITUSER" ]] ; then
   {
-    Configuring git user.name with  $SUDO_USER
-    su - $SUDO_USER -c 'git config --global user.name '$SUDO_USER
+    Configuring git user.name with  "${SUDO_USER}"
+    su - "${SUDO_USER}" -c 'git config --global user.name '${SUDO_USER}
   }
   fi
 } # end _configure_git
 
 _install_npm_utils() {
-    chown $SUDO_USER -R $USER_HOME/.npm
-    chown $SUDO_USER -R $USER_HOME/.nvm
+    chown -R "${SUDO_USER}" "${USER_HOME}/.npm"
+    chown -R "${SUDO_USER}" "${USER_HOME}/.nvm"
     # Global node utils
     is_not_installed nodemon  && npm i -g nodemon
     if  is_not_installed live-server  ; then
@@ -436,27 +556,27 @@ _install_npm_utils() {
     verify_is_installed nodemon
     # is_not_installed jest &&  npm i -g jest
     # verify_is_installed jest
-    CHAINSTALLED=$(su - $SUDO_USER -c 'npm -g info chai >/dev/null 2>&1')
+    CHAINSTALLED=$(su - "${SUDO_USER}" -c 'npm -g info chai >/dev/null 2>&1')
     if [[ -n "$CHAINSTALLED" ]] &&  [[ "$CHAINSTALLED" == *"npm ERR"* ]]  ; then
     {
         Installing npm chai
         npm i -g chai
     }
     fi
-    MOCHAINSTALLED=$(su - $SUDO_USER -c 'npm -g info mocha >/dev/null 2>&1')
+    MOCHAINSTALLED=$(su - "${SUDO_USER}" -c 'npm -g info mocha >/dev/null 2>&1')
     if [[ -n "$MOCHAINSTALLED" ]] &&  [[ "$MOCHAINSTALLED" == *"npm ERR"* ]]  ; then
     {
         npm i -g mocha
     }
     fi
     local ret msg
-    #msg=$(su - $SUDO_USER -c 'cds >/dev/null 2>&1')
+    #msg=$(su - "${SUDO_USER}" -c 'cds >/dev/null 2>&1')
     #ret=$?
     #if [ $ret -gt 0 ] ; then
     #{
         Installing --skipped npm cds
     #    npm i -g @sap/cds-dk
-    #    msg=$(su - $SUDO_USER -c 'cds')
+    #    msg=$(su - "${SUDO_USER}" -c 'cds')
     #    ret=$?
     #    if [ $ret -gt 0 ] ; then
     #    {
@@ -491,9 +611,9 @@ _if_not_is_installed(){
 _install_nvm() {
     local -i ret
     local msg
-    [[  ! -e "$USER_HOME/.config" ]] && touch "$USER_HOME/.config"
-    chown "$SUDO_USER" -R "$USER_HOME/.config"
-    [ -s "$USER_HOME/.nvm/nvm.sh" ] && . "$USER_HOME/.nvm/nvm.sh" # This loads nvm
+    [[  ! -e "${USER_HOME}/.config" ]] && touch "${USER_HOME}/.config"
+    chown  -R "${SUDO_USER}" "${USER_HOME}/.config"
+    [ -s "${USER_HOME}/.nvm/nvm.sh" ] && . "${USER_HOME}/.nvm/nvm.sh" # This loads nvm
 
     msg=$(nvm >/dev/null 2>&1)
     ret=$?
@@ -502,35 +622,35 @@ _install_nvm() {
     {
         Installing nvm Node Version Manager
         Installing  nvm setup
-        su - $SUDO_USER -c 'HOME='$USER_HOME' curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash'
+        su - "${SUDO_USER}" -c 'HOME='${USER_HOME}' curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash'
 
         export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${USER_HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
-        [ -s "$USER_HOME/.nvm/nvm.sh" ] && \. "$USER_HOME/.nvm/nvm.sh" # This loads nvm
+        [ -s "${USER_HOME}/.nvm/nvm.sh" ] && \. "${USER_HOME}/.nvm/nvm.sh" # This loads nvm
 
         Configuring  nvm setup
 
-        _if_not_contains "$USER_HOME/.bash_profile" "NVM_DIR/nvm.sh" || echo '
+        _if_not_contains "${USER_HOME}/.bash_profile" "NVM_DIR/nvm.sh" || echo '
 export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
-'  >> $USER_HOME/.bash_profile
+'  >> "${USER_HOME}/.bash_profile"
 
-        file_exists_with_spaces "$USER_HOME/.bash_profile"
+        file_exists_with_spaces "${USER_HOME}/.bash_profile"
 
-        _if_not_contains "$USER_HOME/.bashrc" "NVM_DIR/nvm.sh" ||  echo '
+        _if_not_contains "${USER_HOME}/.bashrc" "NVM_DIR/nvm.sh" ||  echo '
 export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
-'  >> $USER_HOME/.bashrc
+'  >> "${USER_HOME}/.bashrc"
 
-        file_exists_with_spaces "$USER_HOME/.bashrc"
+        file_exists_with_spaces "${USER_HOME}/.bashrc"
 
-        _if_not_contains "$USER_HOME/.zshrc" "NVM_DIR/nvm.sh" ||  echo '
+        _if_not_contains "${USER_HOME}/.zshrc" "NVM_DIR/nvm.sh" ||  echo '
 export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
-'  >> $USER_HOME/.zshrc
+'  >> "${USER_HOME}/.zshrc"
 
-        file_exists_with_spaces "$USER_HOME/.zshrc"
+        file_exists_with_spaces "${USER_HOME}/.zshrc"
 
-        msg=$(su - $SUDO_USER -c 'nvm' >/dev/null 2>&1)
+        msg=$(su - "${SUDO_USER}" -c 'nvm' >/dev/null 2>&1)
         ret=$?
         if [ $ret -gt 0 ] ; then
         {
@@ -552,40 +672,41 @@ export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || pr
 
 _install_nvm_version(){
     local TARGETVERSION="${1}"
-    Configuring nvm node ${TARGETVERSION}
-    [ -s "$USER_HOME/.nvm/nvm.sh" ] && . "$USER_HOME/.nvm/nvm.sh" # This loads nvm
+    # chown -R $SUDO_USER:$(id -gn $SUDO_USER) "${USER_HOME}/.config"
+    Configuring nvm node "${TARGETVERSION}"
+    [ -s "${USER_HOME}/.nvm/nvm.sh" ] && . "${USER_HOME}/.nvm/nvm.sh" # This loads nvm
 
 
     local VERSION12=$(nvm ls | grep "v${TARGETVERSION}" |tail -1 >/dev/null 2>&1 )
-    if [[ -n "$VERSION12" ]] ; then
+    if [[ -n "${VERSION12}" ]] ; then
     {
-        if [[ "$VERSION12" == *"not found"* ]] || [[ "$VERSION12" == *"nvm help"* ]]  ; then
+        if [[ "${VERSION12}" == *"not found"* ]] || [[ "${VERSION12}" == *"nvm help"* ]]  ; then
         {
             failed "Nvm command not found or failed! It should have been installed by this point."
         }
         fi
-        if [[ "$VERSION12" == *"v${TARGETVERSION}"* ]]  ; then
+        if [[ "${VERSION12}" == *"v${TARGETVERSION}"* ]]  ; then
         {
-            passed that: node ${TARGETVERSION} installed. Version Found $VERSION12
+            passed that: node "${TARGETVERSION}" installed. Version Found "${VERSION12}"
         }
         else
         {
             Installing node using nvm install  "${TARGETVERSION}"
           VERSION12=$(nvm ls | grep "v${TARGETVERSION}" |tail -1 >/dev/null 2>&1 )
-            if [[ -n "$VERSION12" ]] ; then
+            if [[ -n "${VERSION12}" ]] ; then
             {
-                if [[ "$VERSION12" == *"not found"* ]] || [[ "$VERSION12" == *"nvm help"* ]]  ; then
+                if [[ "${VERSION12}" == *"not found"* ]] || [[ "${VERSION12}" == *"nvm help"* ]]  ; then
                 {
                     failed "Nvm command not found or failed! It should have been installed by this point."
                 }
                 fi
-                if [[ "$VERSION12" == *"v${TARGETVERSION}"* ]]  ; then
+                if [[ "${VERSION12}" == *"v${TARGETVERSION}"* ]]  ; then
                 {
-                    passed that: node ${TARGETVERSION} installed. Version Found $VERSION12
+                    passed that: node "${TARGETVERSION}" installed. Version Found "${VERSION12}"
                 }
                 else
                 {
-                    failed to install node using nvm for version ${TARGETVERSION}
+                    failed to install node using nvm for version "${TARGETVERSION}"
                 }
                 fi
             }
@@ -594,28 +715,28 @@ _install_nvm_version(){
         fi
     }
     fi
-    if [[ "$VERSION12" == *"v${TARGETVERSION}"* ]]  ; then
+    if [[ "${VERSION12}" == *"v${TARGETVERSION}"* ]]  ; then
     {
-        passed that: node ${TARGETVERSION} installed. Version Found $VERSION12
+        passed that: node "${TARGETVERSION}" installed. Version Found "${VERSION12}"
     }
     else
     {
         Installing node using nvm install  "${TARGETVERSION}"
           VERSION12=$(nvm ls | grep "v${TARGETVERSION}" |tail -1 >/dev/null 2>&1 )
-            if [[ -n "$VERSION12" ]] ; then
+            if [[ -n "${VERSION12}" ]] ; then
             {
-                if [[ "$VERSION12" == *"not found"* ]] || [[ "$VERSION12" == *"nvm help"* ]]  ; then
+                if [[ "${VERSION12}" == *"not found"* ]] || [[ "${VERSION12}" == *"nvm help"* ]]  ; then
                 {
                     failed "Nvm command not found or failed! It should have been installed by this point."
                 }
                 fi
-                if [[ "$VERSION12" == *"v${TARGETVERSION}"* ]]  ; then
+                if [[ "${VERSION12}" == *"v${TARGETVERSION}"* ]]  ; then
                 {
-                    passed that: node ${TARGETVERSION} installed. Version Found $VERSION12
+                    passed that: node "${TARGETVERSION}" installed. Version Found "${VERSION12}"
                 }
                 else
                 {
-                    failed to install node using nvm for version ${TARGETVERSION}
+                    failed to install node using nvm for version "${TARGETVERSION}"
                 }
                 fi
             }
@@ -623,34 +744,36 @@ _install_nvm_version(){
         }
     fi
     Setting . nvm use "${TARGETVERSION}"
-    # su - $SUDO_USER -c '. ${USER_HOME}/.nvm/nvm.sh && ${USER_HOME}/.nvm/nvm.sh use "${TARGETVERSION}"'
-    chown -R $SUDO_USER:$SUDO_USER $USER_HOME/.nvm
-    nvm install ${TARGETVERSION}
-    chown -R $SUDO_USER:$SUDO_USER $USER_HOME/.nvm
-    nvm use ${TARGETVERSION}
-    # su - $SUDO_USER -c ''${USER_HOME}'/.nvm/nvm.sh && . '${USER_HOME}'/.nvm/nvm.sh && nvm use "${TARGETVERSION}"'
+    # su - "${SUDO_USER}" -c '. "${USER_HOME}/.nvm/nvm.sh && "${USER_HOME}/.nvm/nvm.sh use "${TARGETVERSION}"'
+    chown -R "${SUDO_USER}"  "${USER_HOME}/.nvm"
+    chgrp -R "${SUDO_GRP}" "${USER_HOME}/.nvm"
+    nvm install "${TARGETVERSION}"
+    chown -R "${SUDO_USER}"  "${USER_HOME}/.nvm"
+    chgrp -R "${SUDO_GRP}" "${USER_HOME}/.nvm"
+    nvm use "${TARGETVERSION}"
+    # su - "${SUDO_USER}" -c ''${USER_HOME}'/.nvm/nvm.sh && . '${USER_HOME}'/.nvm/nvm.sh && nvm use "${TARGETVERSION}"'
     # node --version
     #nvm use "${TARGETVERSION}"
 } # end _install_nvm_version
 
 _install_nerd_fonts(){
 
-  if  it_does_not_exist_with_spaces "$USER_HOME/.nerd-fonts" ; then
+  if  it_does_not_exist_with_spaces "${USER_HOME}/.nerd-fonts" ; then
   {
-    cd $USER_HOME
-    su - $SUDO_USER -c  "git clone --depth=1 https://github.com/ryanoasis/nerd-fonts $USER_HOME/.nerd-fonts"
-    directory_exists_with_spaces "$USER_HOME/.nerd-fonts"
-    file_exists_with_spaces "$USER_HOME/.nerd-fonts/install.sh"
-  chown -R $SUDO_USER $USER_HOME/.nerd-fonts
+    cd "${USER_HOME}"
+    su - "${SUDO_USER}" -c  "git clone --depth=1 https://github.com/ryanoasis/nerd-fonts \"${USER_HOME}/.nerd-fonts\""
+    directory_exists_with_spaces "${USER_HOME}/.nerd-fonts"
+    file_exists_with_spaces "${USER_HOME}/.nerd-fonts/install.sh"
+    chown -R "${SUDO_USER}" "${USER_HOME}/.nerd-fonts"
 
-  cd $USER_HOME/.nerd-fonts
-  su - $SUDO_USER -c  "bash -c $USER_HOME/.nerd-fonts/install.sh"
-   }
-   fi
+    cd "${USER_HOME}/.nerd-fonts"
+    su - "${SUDO_USER}" -c  "bash -c \"${USER_HOME}/.nerd-fonts/install.sh\""
+  }
+  fi
 } # end _install_nerd_fonts
 
 _setup_ohmy(){
-    if  it_does_not_exist_with_spaces "$USER_HOME/.oh-my-zsh/" ; then
+    if  it_does_not_exist_with_spaces "${USER_HOME}/.oh-my-zsh/" ; then
     {
         Installing ohmy
         if [[ "$COMANDDER" == *"apt-get"* ]]  ; then
@@ -669,7 +792,9 @@ _setup_ohmy(){
     {
       su - "${SUDO_USER}" -c "brew install --cask font-fontawesome"
       err_buff=$?
-    } else {
+    }
+    else
+    {
       _if_not_is_installed fontawesome-fonts && $COMANDDER fontawesome-fonts
       _if_not_is_installed powerline && $COMANDDER powerline vim-powerline tmux-powerline powerline-fonts
       echo REF: https://fedoramagazine.org/tuning-your-bash-or-zsh-shell-in-workstation-and-silverblue/
@@ -686,10 +811,10 @@ _setup_ohmy(){
 
 
         # install ohmyzsh
-        su - $SUDO_USER -c 'sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"'
-    chown -R $SUDO_USER $USER_HOME/.oh-my-zsh
+        su - "${SUDO_USER}" -c 'sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"'
+        chown -R "${SUDO_USER}" "${USER_HOME}/.oh-my-zsh"
         Testing ohmyzsh
-        directory_exists_with_spaces "$USER_HOME/.oh-my-zsh"
+        directory_exists_with_spaces "${USER_HOME}/.oh-my-zsh"
     }
     else
     {
@@ -698,45 +823,54 @@ _setup_ohmy(){
     fi
 
 
-  if it_does_not_exist_with_spaces ${USER_HOME}/.oh-my-zsh/themes/powerlevel10k ; then
+  if it_does_not_exist_with_spaces "${USER_HOME}/.oh-my-zsh/themes/powerlevel10k" ; then
   {
-    su - $SUDO_USER -c "git clone https://github.com/romkatv/powerlevel10k.git ${USER_HOME}/.oh-my-zsh/themes/powerlevel10k"
-    _if_not_contains "$USER_HOME/.zshrc" "powerlevel10k" || echo "ZSH_THEME=powerlevel10k/powerlevel10k" >> $USER_HOME/.zshrc
-    } else {
-      passed powerlevel10k already there
-    }
-    fi
-  if it_does_not_exist_with_spaces ${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting ; then
+    su - "${SUDO_USER}" -c "git clone https://github.com/romkatv/powerlevel10k.git \"${USER_HOME}/.oh-my-zsh/themes/powerlevel10k\""
+    _if_not_contains "${USER_HOME}/.zshrc" "powerlevel10k" || echo "ZSH_THEME=powerlevel10k/powerlevel10k" >> "${USER_HOME}/.zshrc"
+  }
+  else
   {
-    su - $SUDO_USER -c "git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
-  } else {
+    passed powerlevel10k already there
+  }
+  fi
+  if it_does_not_exist_with_spaces "${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting" ; then
+  {
+    su - "${SUDO_USER}" -c "git clone https://github.com/zsh-users/zsh-syntax-highlighting.git \"${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting\""
+  }
+  else
+  {
     passed zsh-syntax-highlighting already there
   }
   fi
-  if it_does_not_exist_with_spaces ${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions ; then
+  if it_does_not_exist_with_spaces "${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions" ; then
   {
-    su - $SUDO_USER -c "git clone https://github.com/zsh-users/zsh-autosuggestions ${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
-    _if_not_contains "$USER_HOME/.zshrc" "zsh-syntax-highlighting" || echo "plugins=(git zsh-syntax-highlighting zsh-autosuggestions)"   >> $USER_HOME/.zshrc
-    } else {
-      passed zsh-autosuggestions  already there
-    }
-    fi
+    su - "${SUDO_USER}" -c "git clone https://github.com/zsh-users/zsh-autosuggestions \"${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions\""
+    _if_not_contains "${USER_HOME}/.zshrc" "zsh-syntax-highlighting" || echo "plugins=(git zsh-syntax-highlighting zsh-autosuggestions)"   >> "${USER_HOME}/.zshrc"
+  }
+  else
+  {
+    passed zsh-autosuggestions  already there
+  }
+  fi
+  return 0
 } # end _setup_ohmy
 
 _install_colorls(){
 if ( gem list colorls | grep -q "^colorls" ) ; then
 {
   passed colorls is already installed as gem
-    return 0
-} else {
-    Installing colorls
+  return 0
+}
+else
+{
+  Installing colorls
   yes | gem install colorls
   yes | gem update colorls
-  chown $SUDO_USER /Library/Ruby
-  _if_not_contains "$USER_HOME/.zshrc" "colorls" || echo "alias ll='colorls -lA --sd --gs --group-directories-first'" >> $USER_HOME/.zshrc
-  _if_not_contains "$USER_HOME/.zshrc" "colorls" || echo "alias ls='colorls --group-directories-first'" >> $USER_HOME/.zshrc
-  _if_not_contains "$USER_HOME/.bashrc" "colorls" || echo "alias ll='colorls -lA --sd --gs --group-directories-first'" >> $USER_HOME/.bashrc
-  _if_not_contains "$USER_HOME/.bashrc" "colorls" || echo "alias ls='colorls --group-directories-first'" >> $USER_HOME/.bashrc
+  chown -R "${SUDO_USER}" /Library/Ruby
+  _if_not_contains "${USER_HOME}/.zshrc" "colorls" || echo "alias ll='colorls -lA --sd --gs --group-directories-first'" >> "${USER_HOME}/.zshrc"
+  _if_not_contains "${USER_HOME}/.zshrc" "colorls" || echo "alias ls='colorls --group-directories-first'" >> "${USER_HOME}/.zshrc"
+  _if_not_contains "${USER_HOME}/.bashrc" "colorls" || echo "alias ll='colorls -lA --sd --gs --group-directories-first'" >> "${USER_HOME}/.bashrc"
+  _if_not_contains "${USER_HOME}/.bashrc" "colorls" || echo "alias ls='colorls --group-directories-first'" >> "${USER_HOME}/.bashrc"
 }
 fi
 return 0
@@ -746,79 +880,91 @@ _setup_clis(){
   local -i ret
   local msg
   ret=0
-  if  it_exists_with_spaces "$USER_HOME/_/clis" ; then
+  if  it_exists_with_spaces "${USER_HOME}/_/clis" ; then
   {
-    directory_exists_with_spaces $USER_HOME/_/clis
+    directory_exists_with_spaces "${USER_HOME}/_/clis"
   }
   fi
-  if  it_does_not_exist_with_spaces "$USER_HOME/_/clis" ; then
+  if  it_does_not_exist_with_spaces "${USER_HOME}/_/clis" ; then
   {
-    su - $SUDO_USER -c "mkdir -p $USER_HOME/_/clis"
-    chown $SUDO_USER:$SUDO_USER -R $USER_HOME/_
-    cd $USER_HOME/_/clis
-  } else {
+    su - "${SUDO_USER}" -c "mkdir -p \"${USER_HOME}/_/clis\""
+    chown  -R  "${SUDO_USER}" "${USER_HOME}/_"
+    chgrp -R "${SUDO_GRP}" "${USER_HOME}/_"
+    cd "${USER_HOME}/_/clis"
+  }
+  else
+  {
     passed clis: clis folder exists
   }
   fi
-  if  it_does_not_exist_with_spaces "$USER_HOME/_/clis/bash_intuivo_cli" ; then
+  if  it_does_not_exist_with_spaces "${USER_HOME}/_/clis/bash_intuivo_cli" ; then
   {
-  cd $USER_HOME/_/clis
-  Installing Clis pre work  bash_intuivo_cli  for link_folder_scripts
-  su - $SUDO_USER -c "yes | git clone git@github.com:zeusintuivo/bash_intuivo_cli.git $USER_HOME/_/clis/bash_intuivo_cli"
-  if it_does_not_exist_with_spaces ${USER_HOME}/_/clis/bash_intuivo_cli ; then
-  {
-    su - $SUDO_USER -c "yes | git clone https://github.com/zeusintuivo/bash_intuivo_cli.git $USER_HOME/_/clis/bash_intuivo_cli"
+    cd "${USER_HOME}/_/clis"
+    Installing Clis pre work  bash_intuivo_cli  for link_folder_scripts
+    su - "${SUDO_USER}" -c "yes | git clone git@github.com:zeusintuivo/bash_intuivo_cli.git \"${USER_HOME}/_/clis/bash_intuivo_cli\""
+    if it_does_not_exist_with_spaces "${USER_HOME}/_/clis/bash_intuivo_cli" ; then
+    {
+      su - "${SUDO_USER}" -c "yes | git clone https://github.com/zeusintuivo/bash_intuivo_cli.git \"${USER_HOME}/_/clis/bash_intuivo_cli\""
+    }
+    fi
+    cd "${USER_HOME}/_/clis/bash_intuivo_cli"
+    git remote remove origin
+    git remote add origin git@github.com:zeusintuivo/bash_intuivo_cli.git
+    bash -c "${USER_HOME}/_/clis/bash_intuivo_cli/link_folder_scripts"
   }
-  fi
-  cd $USER_HOME/_/clis/bash_intuivo_cli
-  git remote remove origin
-  git remote add origin git@github.com:zeusintuivo/bash_intuivo_cli.git
-  bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts
-  } else {
-  passed clis: bash_intuivo_cli folder exists
+  else
+  {
+    passed clis: bash_intuivo_cli folder exists
   }
   fi
   if  is_not_installed link_folder_scripts ; then
   {
-  cd $USER_HOME/_/clis
-  Installing No. 2 Clis pre work  bash_intuivo_cli  for link_folder_scripts
-  su - $SUDO_USER -c "yes | git clone git@github.com:zeusintuivo/bash_intuivo_cli.git  $USER_HOME/_/clis/bash_intuivo_cli"
-  if it_does_not_exist_with_spaces ${USER_HOME}/_/clis/bash_intuivo_cli ; then
+    cd "${USER_HOME}/_/clis"
+    Installing No. 2 Clis pre work  bash_intuivo_cli  for link_folder_scripts
+    su - "${SUDO_USER}" -c "yes | git clone git@github.com:zeusintuivo/bash_intuivo_cli.git  \"${USER_HOME}/_/clis/bash_intuivo_cli\""
+    if it_does_not_exist_with_spaces "${USER_HOME}/_/clis/bash_intuivo_cli" ; then
+    {
+      su - "${SUDO_USER}" -c "yes | git clone https://github.com/zeusintuivo/bash_intuivo_cli.git \"${USER_HOME}/_/clis/bash_intuivo_cli\""
+    }
+    fi
+    chown -R "${SUDO_USER}"  "${USER_HOME}/_/clis/bash_intuivo_cli"
+    chgrp -R "${SUDO_GRP}" "${USER_HOME}/_/clis/bash_intuivo_cli"
+    cd "${USER_HOME}/_/clis/bash_intuivo_cli"
+    git remote remove origin
+    git remote add origin git@github.com:zeusintuivo/bash_intuivo_cli.git
+    bash -c "${USER_HOME}/_/clis/bash_intuivo_cli/link_folder_scripts"
+  }
+  else
   {
-    su - $SUDO_USER -c "yes | git clone https://github.com/zeusintuivo/bash_intuivo_cli.git $USER_HOME/_/clis/bash_intuivo_cli"
+    passed clis: bash_intuivo_cli folder exists
   }
   fi
-  chown -R $SUDO_USER:$SUDO_USER $USER_HOME/_/clis/bash_intuivo_cli
-  cd $USER_HOME/_/clis/bash_intuivo_cli
-  git remote remove origin
-  git remote add origin git@github.com:zeusintuivo/bash_intuivo_cli.git
-  bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts
-  } else {
-  passed clis: bash_intuivo_cli folder exists
-  }
-  fi
-  if  it_does_not_exist_with_spaces ${USER_HOME}/_/clis/ssh_intuivo_cli ; then
+  if  it_does_not_exist_with_spaces "${USER_HOME}/_/clis/ssh_intuivo_cli" ; then
   {
-  cd $USER_HOME/_/clis
-  Installing No. 3 Clis pre work ssh_intuivo_cli  for link_folder_scripts
-  yes | git clone git@github.com:zeusintuivo/ssh_intuivo_cli.git
-  if it_does_not_exist_with_spaces ${USER_HOME}/_/clis/ssh_intuivo_cli ; then
-  {
-    su - $SUDO_USER -c "yes | git clone https://github.com/zeusintuivo/ssh_intuivo_cli.git  $USER_HOME/_/clis/ssh_intuivo_cli"
+    cd "${USER_HOME}/_/clis"
+    Installing No. 3 Clis pre work ssh_intuivo_cli  for link_folder_scripts
+    yes | git clone git@github.com:zeusintuivo/ssh_intuivo_cli.git
+    if it_does_not_exist_with_spaces "${USER_HOME}/_/clis/ssh_intuivo_cli" ; then
+    {
+      su - "${SUDO_USER}" -c "yes | git clone https://github.com/zeusintuivo/ssh_intuivo_cli.git  \"${USER_HOME}/_/clis/ssh_intuivo_cli\""
+    }
+    fi
+    cd "${USER_HOME}/_/clis/ssh_intuivo_cli"
+    chown -R "${SUDO_USER}" "${USER_HOME}/_/clis/ssh_intuivo_cli"
+    chgrp -R "${SUDO_GRP}" "${USER_HOME}/_/clis/ssh_intuivo_cli"
+    chown -R "${SUDO_USER}"  "${USER_HOME}/.ssh"
+    chgrp -R "${SUDO_GRP}" "${USER_HOME}/.ssh"
+    git remote remove origin
+    git remote add origin git@github.com:zeusintuivo/ssh_intuivo_cli.git
+    bash -c "${USER_HOME}/_/clis/bash_intuivo_cli/link_folder_scripts"
+    ./sshswitchkey zeus
+  }
+  else {
+    passed clis: ssh_intuivo_cli folder exists
   }
   fi
-  cd $USER_HOME/_/clis/ssh_intuivo_cli
-  chown -R $SUDO_USER:$SUDO_USER $USER_HOME/_/clis/ssh_intuivo_cli
-  chown -R $SUDO_USER:$SUDO_USER $USER_HOME/.ssh
-  git remote remove origin
-  git remote add origin git@github.com:zeusintuivo/ssh_intuivo_cli.git
-  bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts
-  ./sshswitchkey zeus
-  } else {
-  passed clis: ssh_intuivo_cli folder exists
-  }
-  fi
-# rm -rf $USER_HOME/_/clis/ssh_intuivo_cli
+  return 0
+# rm -rf "${USER_HOME}/_/clis/ssh_intuivo_cli
 
 clis="
 bin
@@ -839,31 +985,31 @@ while read -r ONE ; do
   if [ -n "$ONE" ] ; then  # is not empty
   {
     Installing "$ONE"
-    if  it_does_not_exist_with_spaces "$USER_HOME/_/clis/${ONE}" ; then
+    if  it_does_not_exist_with_spaces "${USER_HOME}/_/clis/${ONE}" ; then
     {
-      cd $USER_HOME/_/clis
-      su - $SUDO_USER -c "yes | git clone git@github.com:zeusintuivo/${ONE}.git  $USER_HOME/_/clis/${ONE}"
-      if it_does_not_exist_with_spaces ${USER_HOME}/_/clis/${ONE} ; then
+      cd "${USER_HOME}/_/clis"
+      su - "${SUDO_USER}" -c "yes | git clone git@github.com:zeusintuivo/${ONE}.git  \"${USER_HOME}/_/clis/${ONE}\""
+      if it_does_not_exist_with_spaces "${USER_HOME}/_/clis/${ONE}" ; then
       {
-        su - $SUDO_USER -c "yes | git clone https://github.com/zeusintuivo/${ONE}.git  $USER_HOME/_/clis/${ONE}"
+        su - "${SUDO_USER}" -c "yes | git clone https://github.com/zeusintuivo/${ONE}.git  \"${USER_HOME}/_/clis/${ONE}\""
       }
       fi
-      cd $USER_HOME/_/clis/${ONE}
-      chown -R $SUDO_USER $USER_HOME/_/clis/${ONE}
+      cd "${USER_HOME}/_/clis/${ONE}"
+      chown -R "${SUDO_USER}" "${USER_HOME}/_/clis/${ONE}"
       git remote remove origin
       git remote add origin git@github.com:zeusintuivo/${ONE}.git
-      directory_exists_with_spaces $USER_HOME/_/clis/${ONE}
-      if bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts ; then
+      directory_exists_with_spaces "${USER_HOME}/_/clis/${ONE}"
+      if bash -c "${USER_HOME}/_/clis/bash_intuivo_cli/link_folder_scripts" ; then
       {
-        echo "linked $USER_HOME/_/clis/${ONE}"
+        echo "linked \"${USER_HOME}/_/clis/${ONE}\""
       }
       fi
       if [[ "$ONE" == "git_intuivo_cli" ]] ; then  # is not empty
       {
-        cd $USER_HOME/_/clis/${ONE}/en
-        if bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts ; then
+        cd "${USER_HOME}/_/clis/${ONE}/en"
+        if bash -c "${USER_HOME}/_/clis/bash_intuivo_cli/link_folder_scripts" ; then
         {
-          echo "linked $USER_HOME/_/clis/${ONE}/en"
+          echo "linked \"${USER_HOME}/_/clis/${ONE}/en\""
         }
         fi
       }
@@ -873,20 +1019,20 @@ while read -r ONE ; do
     {
       Installing else $ONE
       passed clis: ${ONE} folder exists
-      cd $USER_HOME/_/clis/${ONE}
-      chown -R $SUDO_USER $USER_HOME/_/clis/${ONE}
+      cd "${USER_HOME}/_/clis/${ONE}"
+      chown -R "${SUDO_USER}" "${USER_HOME}/_/clis/${ONE}"
       pwd
-      if bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts ; then
+      if bash -c "${USER_HOME}/_/clis/bash_intuivo_cli/link_folder_scripts" ; then
       {
-        echo "linked $USER_HOME/_/clis/${ONE}"
+        echo "linked \"${USER_HOME}/_/clis/${ONE}\""
       }
       fi
       if [[ "$ONE" == "git_intuivo_cli" ]] ; then  # is not empty
       {
-        cd $USER_HOME/_/clis/${ONE}/en
-        if bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts ; then
+        cd "${USER_HOME}/_/clis/${ONE}/en"
+        if bash -c "${USER_HOME}/_/clis/bash_intuivo_cli/link_folder_scripts" ; then
         {
-          echo "linked $USER_HOME/_/clis/${ONE}/en"
+          echo "linked \"${USER_HOME}/_/clis/${ONE}/en\""
         }
         fi
       }
@@ -905,25 +1051,25 @@ while read -r ONE ; do
 done <<< "${clis}"
 # unlink /usr/local/bin/ag # Bug path we need to do something abot this
 
-if  softlink_exists_with_spaces "/usr/local/bin/added>$USER_HOME/_/clis/git_intuivo_cli/en/added" ; then
+if  softlink_exists_with_spaces "/usr/local/bin/added>${USER_HOME}/_/clis/git_intuivo_cli/en/added" ; then
 {
     passed clis: git_intuivo_cli/en folder exists and is linked
 }
 else
 {
   Configuring extra work git_intuivo_cli/en
-  directory_exists_with_spaces $USER_HOME/_/clis/git_intuivo_cli/en
-  cd $USER_HOME/_/clis/git_intuivo_cli/en
-  if bash -c $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts ; then
+  directory_exists_with_spaces "${USER_HOME}/_/clis/git_intuivo_cli/en"
+  cd "${USER_HOME}/_/clis/git_intuivo_cli/en"
+  if bash -c "${USER_HOME}/_/clis/bash_intuivo_cli/link_folder_scripts" ; then
   {
-    echo "linked $USER_HOME/_/clis/git_intuivo_cli/en"
+    echo "linked \"${USER_HOME}/_/clis/git_intuivo_cli/en\""
   }
   fi
 
 }
 fi
 
-chown -R $SUDO_USER $USER_HOME/_/clis
+chown -R "${SUDO_USER}" "${USER_HOME}/_/clis"
 return 0
 } # end _setup_clis
 
@@ -937,23 +1083,43 @@ _setup_mycd(){
   else
   {
     passed that: mycd is in home folder
-
-    chown -R "${SUDO_USER}"  "${USER_HOME}/.mycd"
-    chmod +x  "${USER_HOME}/.mycd/mycd.sh"
+    chmod 0755 "${USER_HOME}/.mycd"
+    if ( chown -R "${SUDO_USER}"  "${USER_HOME}/.mycd" ) ; then
+    {
+      Commnent failed  chown -R "${SUDO_USER}"  "${USER_HOME}/.mycd"
+    }
+    fi
+    chmod +x "${USER_HOME}/.mycd/mycd.sh"
 
     # Add to MAC Bash:
     # DEBUG=1
-    _if_not_contains "${USER_HOME}/.bash_profile" ".mycd/mycd.sh" || echo -e "\n# MYCD\n[[ -d \"${USER_HOME}/.mycd\" ]] && . ${USER_HOME}/.mycd/mycd.sh\n" >> "${USER_HOME}/.bash_profile"
+    _if_not_contains "${USER_HOME}/.bash_profile" ".mycd/mycd.sh" || echo -e "\n# MYCD\n[[ -d \"${USER_HOME}/.mycd\" ]] && . \"${USER_HOME}/.mycd/mycd.sh\"\n" >> "${USER_HOME}/.bash_profile"
     # DEBUG=0
     # Add to Linux Bash:
 
-    # _if_not_contains "$USER_HOME/.bashrc" ".mycd/mycd.sh" || echo -e "\n# MYCD\n[[ -d \"$USER_HOME/.mycd\" ]] && . $USER_HOME/.mycd/mycd.sh\n" >> $USER_HOME/.bashrc
+    # _if_not_contains "${USER_HOME}/.bashrc" ".mycd/mycd.sh" || echo -e "\n# MYCD\n[[ -d \"${USER_HOME}/.mycd\" ]] && . \"${USER_HOME}/.mycd/mycd.sh\"\n" >> "${USER_HOME}/.bashrc"
 
     # Add to Zsh:
-    # _if_not_contains "$USER_HOME/.zshrc" ".mycd/mycd.sh" ||  echo -e "\n# MYCD\n[[ -d \"$USER_HOME/.mycd\" ]] && . $USER_HOME/.mycd/mycd.sh\n" >> $USER_HOME/.zshrc
+    # _if_not_contains "${USER_HOME}/.zshrc" ".mycd/mycd.sh" ||  echo -e "\n# MYCD\n[[ -d \"${USER_HOME}/.mycd\" ]] && . \"${USER_HOME}/.mycd/mycd.sh\"\n" >> "${USER_HOME}/.zshrc"
 
     # OR - Add .dir_bash_history to the GLOBAL env .gitignore, ignore:
-    mkdir -p   "${USER_HOME}/.config/git"
+    if it_exists_with_spaces "${USER_HOME}/.config"  ; then
+    {
+      [[ -f "${USER_HOME}/.config"  ]] && rm "${USER_HOME}/.config"
+    }
+    fi
+    if it_does_not_exist_with_spaces "${USER_HOME}/.config"  ; then
+    {
+      mkdir -p   "${USER_HOME}/.config"
+    }
+    fi
+    directory_exists_with_spaces  "${USER_HOME}/.config"
+    chown -R "${SUDO_USER}" "${USER_HOME}/.config"
+    if it_does_not_exist_with_spaces "${USER_HOME}/.config/git"  ; then
+    {
+      mkdir -p   "${USER_HOME}/.config/git"
+    }
+    fi
     directory_exists_with_spaces  "${USER_HOME}/.config/git"
     chown -R "${SUDO_USER}" "${USER_HOME}/.config/git"
     touch  "${USER_HOME}/.config/git/ignore"
@@ -967,7 +1133,7 @@ _setup_mycd(){
       echo "More ignore choices for excludesfile <..<${otherignore}>..>"
       if [[ -n "${otherignore}" ]] ; then
       {
-        local realdir=$(su - $SUDO_USER -c "realpath  ${otherignore}")
+        local realdir=$(su - "${SUDO_USER}" -c "realpath  ${otherignore}")
         local dirother=$(dirname  "${realdir}")
         mkdir -p   "${dirother}"
         directory_exists_with_spaces "${dirother}"
@@ -975,7 +1141,9 @@ _setup_mycd(){
         touch "${realdir}"
         file_exists_with_spaces "${realdir}"
         (_if_not_contains "${realdir}"  ".dir_bash_history") ||  (echo -e "\n.dir_bash_history" >> "${realdir}")
-      } else {
+      }
+      else
+      {
         echo "More ignore choices for excludesfile Empty. .Not Found."
       }
       fi
@@ -1058,7 +1226,7 @@ _install_dmg__64() {
     directory_exists_with_spaces "/Applications/${APPDIR}"
     ls -d "/Applications/${APPDIR}"
     echo  Removing macOS gatekeeper quarantine attribute
-    chown  -R $SUDO_USER "/Applications/${APPDIR}"
+    chown  -R "${SUDO_USER}" "/Applications/${APPDIR}"
     chgrp  -R staff "/Applications/${APPDIR}"
     xattr -d com.apple.quarantine  "/Applications/${APPDIR}"
 } # end _install_dmg__64
@@ -1127,20 +1295,19 @@ _install_dmgs_list(){
 } # end _install_dmgs_list
 
 _password_simple(){
+  Installing password change
   local Answer
   read -p 'Change Passwords? [Y/n] (Enter Defaults - No/N/n )' Answer
   case $Answer in
     '' | [Nn]* )
       passed you said no "Skip Password change"
       return 0
-      break;
       ;;
     [Yy]* )
       passed you said Yes
-      break;
       ;;
     * )
-      echo Please answer YES or NO.
+      echo Please click lettes Y,y or N,n only or CTRL +C to cancel all script.
   esac
 
   local policies
@@ -1176,6 +1343,7 @@ _password_simple(){
   }
   fi
 
+Updating passwd root
 # Password simple
 (
 sudo passwd <<< "\\
@@ -1191,17 +1359,21 @@ sudo passwd root <<< "\\
 #\"
 )
 
+Updating passwd "${SUDO_USER}"
 (
-sudo passwd $SUDO_USER <<< "\\
+sudo passwd "${SUDO_USER}" <<< "\\
 \\
 "
 #\"
 )
+Updating security set-keychain-password default
+security set-keychain-password
 return 0
 } # end _password_simple
 
 _password_simple2(){
 # Password simple2
+Updating passwd default user
 (
 sudo passwd <<< "#
 #
@@ -1209,19 +1381,22 @@ sudo passwd <<< "#
 #\"
 )
 
+Updating passwd root
 (
 sudo passwd root <<< "#
 #
 "
 #\"
 )
-
+Updating passwd "${SUDO_USER}"
 (
-sudo passwd $SUDO_USER <<< "#
+sudo passwd "${SUDO_USER}" <<< "#
 #
 "
 #\"
 )
+Updating security set-keychain-password default
+security set-keychain-password
 return 0
 } # end password_simple2
 
@@ -1276,7 +1451,7 @@ _debian__32() {
     snap install cf-cli
   }
   fi
-  chown $SUDO_USER -R $USER_HOME/.cf
+  chown -R "${SUDO_USER}" "${USER_HOME}/.cf"
   verify_is_installed cf
 
 } # end _debian__32
@@ -1323,15 +1498,16 @@ _debian__64() {
     snap install cf-cli
   }
   fi
-  chown $SUDO_USER -R $USER_HOME/.cf
+  chown -R "${SUDO_USER}" "${USER_HOME}/.cf"
   verify_is_installed cf
 
 } # end _debian__64
 _ubuntu__64() {
-  # debian sudo usermod -aG sudo $SUDO_USER
-  # chown $SUDO_USER:$SUDO_USER -R /home
+  # debian sudo usermod -aG sudo "${SUDO_USER}"
+  # chown "${SUDO_USER}" /home
+  # chgrp -R "${SUDO_GRP}" /home
   # sudo groupadd docker
-  # sudo usermod -aG docker $SUDO_USER
+  # sudo usermod -aG docker "${SUDO_USER}"
   COMANDDER="apt install -y"
   is_not_installed ag && $COMANDDER silversearcher-ag         # In Ubuntu
   is_not_installed ack && $COMANDDER ack-grep        # In Ubuntu
@@ -1374,7 +1550,7 @@ _ubuntu__64() {
     snap install cf-cli
   }
   fi
-  chown $SUDO_USER -R $USER_HOME/.cf
+  chown -R "${SUDO_USER}" "${USER_HOME}/.cf"
   verify_is_installed cf
 
 } # end _ubuntu__64
@@ -1424,18 +1600,27 @@ _fedora__64() {
 } # end _fedora__64
 
 _darwin__64() {
-  _add_launchd $USER_HOME/Library/LaunchAgents $USER_HOME/Library/LaunchAgents/com.intuivo.clis_pull_all.plist
+  SUDO_GRP='wheel'
+  [[  -e "${USER_HOME}/.bash_profile" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.bash_profile"
+  [[  -e "${USER_HOME}/.bashrc" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.bashrc"
+  [[  -e "${USER_HOME}/.zshrc" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.zshrc"
+  [[  -e "${USER_HOME}/.composer" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.composer"
+
+  _add_launchd "${USER_HOME}/Library/LaunchAgents" "${USER_HOME}/Library/LaunchAgents/com.intuivo.clis_pull_all.plist"
   _install_dmgs_list
   # exit 0
   COMANDDER="_run_command /usr/local/bin/brew install "
   # $COMANDDER install nodejs
   # version 6 brew install cloudfoundry/tap/cf-cli
+  anounce_command chown -R "${SUDO_USER}" "${USER_HOME}/Library/Caches/"
+  su - "${SUDO_USER}" -c 'brew install the_silver_searcher'
   install_requirements "darwin" "
     tree
-    the_silver_searcher
+    # the_silver_searcher
     # ag@the_silver_searcher
     ack
     gawk
+    pyenv
     vim
     nano
     pv
@@ -1444,17 +1629,18 @@ _darwin__64() {
     powerline-go
     zsh
   "
+  su - "${SUDO_USER}" -c 'pip3 install --upgrade pip'
   verify_is_installed pip3
   if ( ! command -v pygmentize >/dev/null 2>&1; ) ;  then
-    pip3 install pygments
+    su - "${SUDO_USER}" -c 'pip3 install pygments'
   fi
   #is_not_installed pygmentize &&   pip3 install pygments
-  pip3 install pygments
+  # su - "${SUDO_USER}" -c 'pip3 install pygments'
     #cf
 
   verify_is_installed "
     tree
-    ag
+    # ag
     ack
     pv
     nano
@@ -1462,12 +1648,14 @@ _darwin__64() {
     gawk
     pygmentize
     "
-    _configure_git
-  _install_nvm
-  _install_nvm_version 14.16.1
+
+  _configure_git
+  # _install_nvm
+  # _install_nvm_version 14.16.1
+  # _install_nvm_version 16.6.1
   _install_npm_utils
   if ( ! command -v cf >/dev/null 2>&1; ) ;  then
-    npm i -g cloudfoundry/tap/cf-cli@7
+    su - "${SUDO_USER}" -c 'npm i -g cloudfoundry/tap/cf-cli@7'
   fi
   # _install_npm_utils
 
@@ -1482,15 +1670,20 @@ _darwin__64() {
   #_install_npm_utils
 
   _setup_ohmy
-  chown $SUDO_USER /Library/Ruby
+  chown -R "${SUDO_USER}" "/Library/Ruby"
   _install_colorls
   _setup_clis
   _setup_mycd
+  [[  -e "${USER_HOME}/.bash_profile" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.bash_profile"
+  [[  -e "${USER_HOME}/.bashrc" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.bashrc"
+  [[  -e "${USER_HOME}/.zshrc" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.zshrc"
+  [[  -e "${USER_HOME}/.composer" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.composer"
 
   _add_self_cron_update /usr/lib/cron/  /usr/lib/cron/cron.allow
-  _add_launchd $USER_HOME/Library/LaunchAgents $USER_HOME/Library/LaunchAgents/com.intuivo.clis_pull_all.plist
+  # _add_launchd "${USER_HOME}/Library/LaunchAgents" "${USER_HOME}/Library/LaunchAgents/com.intuivo.clis_pull_all.plist"
 
-  composer global require laravel/valet
+  su - "${SUDO_USER}" -c 'composer global require laravel/valet'
+  Updating _password_simple
   _password_simple
   return 0
   # _password_simple2
