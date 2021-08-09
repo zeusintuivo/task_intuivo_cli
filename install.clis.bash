@@ -1090,7 +1090,7 @@ _setup_mycd(){
     chmod 0755 "${USER_HOME}/.mycd"
     if ( chown -R "${SUDO_USER}"  "${USER_HOME}/.mycd" ) ; then
     {
-      Commnent failed  chown -R "${SUDO_USER}"  "${USER_HOME}/.mycd"
+      Comment failed  chown -R "${SUDO_USER}"  "${USER_HOME}/.mycd"
     }
     fi
     chmod +x "${USER_HOME}/.mycd/mycd.sh"
@@ -1568,16 +1568,36 @@ _centos__64() {
 _fedora__64() {
   COMANDDER="dnf install -y"
   is_not_installed ag && $COMANDDER the_silver_searcher          # In Fedora
+cd
+  git clone https://github.com/astrand/xclip.git
+./bootstrap
+./configure
+make
+make install
+  dnf groupinstall 'development tools' -y
+
   install_requirements "linux" "
-    xclip
-    tree
+  epel-release
+  python3-paramiko
+"
+  install_requirements "linux" "
+  # epel-release
+  snap
+    # xclip
+    # tree
     ack
     vim
     nano
     pv
-    python-pip
+    python2
+    python2-devel
+    python3
+    python3-devel
+    twisted
     zsh
     "
+   systemctl enable --now snapd.socket
+   sudo snap install tree
   _checka_tools_commander
   _configure_git
   _install_nvm
