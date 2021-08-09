@@ -10,7 +10,8 @@ load_struct_testing_wget(){
     ( ( ! command -v passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
 } # end load_struct_testing_wget
 load_struct_testing_wget
-
+echo hola
+exit 0
 get_lastest_sublime_version() {
     local SUBLIMELASTESTBUILD=$(curl -L https://www.sublimetext.com/3  2>/dev/null | sed -n "/<p\ class=\"latest\">/,/<\/div>/p" | head -1 | grep 'Build ....' | cut -c42-45)  # suppress only wget download messages, but keep wget output for variable
     wait
