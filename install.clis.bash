@@ -265,26 +265,30 @@ function _if_contains(){
 } # end _if_contains
 
 Checking selftest _if_contains
-if _if_contains  $USER_HOME/.bashrc "PETERPIZZA" ; then
+if it_exists_with_spaces "${USER_HOME}/.bashrc" ; then
 {
-  failed "bad .bashrc should not have PETERPIZZA word"
-}
-else
-{
-  passed " good .bashrc should not have PETERPIZZA"
+  if _if_contains  "${USER_HOME}/.bashrc" "PETERPIZZA" ; then
+  {
+    failed "bad .bashrc should not have PETERPIZZA word"
+  }
+  else
+  {
+    passed " good .bashrc should not have PETERPIZZA"
+  }
+  fi
+  if _if_contains  "${USER_HOME}/.bashrc" "then" ; then
+  {
+    passed " good .bashrc should have the then word"
+  }
+  else
+  {
+    failed ".bashrc should have the then word"
+  }
+  fi
+  # echo hola
+  # exit 0
 }
 fi
-if _if_contains  $USER_HOME/.bashrc "HOME" ; then
-{
-  passed " good .bashrc should have the HOME word"
-}
-else
-{
-  failed ".bashrc should have the HOME word"
-}
-fi
-# echo hola
-# exit 0
 
 function _ensure_touch_dir_and_file() {
   local launchdir_default="${1}"
