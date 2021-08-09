@@ -97,7 +97,8 @@ _version() {
     # local _sublime_version_page=$(curl -L https://www.sublimetext.com/3dev  2>/dev/null )  # suppress only wget download messages, but keep wget output for variable
     # set -x
     local _sublime_version_page=""
-    _sublime_version_page=$(curl -L https://www.sublimetext.com/3dev  2>&1 )  # stout and stderr both get
+    _sublime_version_page=$(curl -L https://www.sublimetext.com/ | grep Build 2>&1 )  # stout and stderr both get sublime
+    # _sublime_version_page=$(curl -L https://www.sublimetext.com/dev  2>&1 )  # stout and stderr both get sublime dev
     _err=$?
     if [ $_err -eq 6 ] ;  then # curl: (6) Could not resolve host:
     {
@@ -110,31 +111,36 @@ _version() {
       exit $_err
     }
     fi
-    local _sublime_string=$(echo "${_sublime_version_page}" | sed -n "/<p\ class=\"latest\">/,/<\/div>/p" | head -1)  # suppress only wget download messages, but keep wget output for variable
+    # local _sublime_string=$(echo "${_sublime_version_page}" | sed -n "/<p\ class=\"latest\">/,/<\/div>/p" | head -1)  # suppress only wget download messages, but keep wget output for variable
+    local _sublime_string=$(echo "${_sublime_version_page}" | cut -d'(' -f2 | cut -d')' -f1 | cut -d' ' -f2  | head -1)  # suppress only wget download messages, but keep wget output for variable
     _err=$?
     # echo -e "_sublime_string> ${_sublime_string} \n"
     # exit 0
-    local _sublime_build_line=$(echo "${_sublime_string}" | grep "Build ....")
+    local _sublime_build_line="${_sublime_string}"
+    # local _sublime_build_line=$(echo "${_sublime_version_page}" | grep "Build ....")
     _err=$?
-    # echo -e "----------------err> ${_err} \n"
-    # echo -e "_sublime_build_line> ${_sublime_build_line} \n"
+    >&2 echo -e "----------------err> ${_err} \n"
+    >&2 echo -e "_sublime_build_line> ${_sublime_build_line} \n"
+    >&2 echo -e "    _sublime_string> ${_sublime_string} \n"
     # exit 0
     if [ -z "${_sublime_build_line}" ] ; then
     {
-        echo "ERROR when doing check of line string from website. Got nothing"
-        echo "    _sublime_string: <${_sublime_string}>"
-        echo "                      0123456789 123456789 123456789 123456789 123456789 123456789 1234567889 123456789 123456789 123456789 123456789 "
-        echo "                                1         2         3         4         5         6          7         8         9        10        11"
-        echo "_sublime_build_line: <${_sublime_build_line}>"
-        failed "Error"
+        >&2 echo "ERROR when doing check of line string from website. Got nothing"
+        >&2 echo "    _sublime_string: <${_sublime_string}>"
+        >&2 echo "                      0123456789 123456789 123456789 123456789 123456789 123456789 1234567889 123456789 123456789 123456789 123456789 "
+        >&2 echo "                                1         2         3         4         5         6          7         8         9        10        11"
+        >&2 echo "_sublime_build_line: <${_sublime_build_line}>"
+        >&2 failed "Error"
         exit 69;
     }
     else
     {
-        local __online_version_from_page=$(echo "${_sublime_build_line}" | cut -c42-45)
-        wait
-        [[ -z "${__online_version_from_page}" ]] && failed "Sublime Version not found!"
-        echo "${__online_version_from_page}"
+        echo "${_sublime_string}"
+        # local __online_version_from_page=$(echo "${_sublime_build_line}" | cut -c42-45)
+        # wait
+        # [[ -z "${__online_version_from_page}" ]] && failed "Sublime Version not found!"
+        [[ -z "${_sublime_string}" ]] && >&2 failed "Sublime Version not found!"
+        # echo "${__online_version_from_page}"
     }
     fi
     # exit 0
@@ -270,25 +276,47 @@ EOF
 }
 
 _darwin__64() {
-    local __online_version_from_page=$(_version)
-    local SUBLIMENAME="Sublime%20Text%20Build%20${__online_version_from_page}.dmg"
-    local SUBLIMENAME_4_HDUTIL="Sublime Text Build ${__online_version_from_page}.dmg"
+    local __online_version_from_page=$(_version) # expected numnber 4113
+    # https://download.sublimetext.com/sublime_text_build_4113_mac.zip
+    local SUBLIMENAME="sublime_text_build_${__online_version_from_page}_mac.zip"
+ local installlist one  target_name target_url target_app app_name extension
+  installlist="
+  sublime_text_build_${SUBLIMENAME}_mac.zip|Sublime Text.app|https://download.sublimetext.com/sublime_text_build_${SUBLIMENAME}_mac.zip
+ "
+ Checking dmgs apps
+  while read -r one ; do
+  {
+    if [[ -n "${one}" ]] ; then
+    {
 
-    wait
-    cd ~/Downloads/
-    [ ! -e "${SUBLIMENAME_4_HDUTIL}" ] || download_sublime "${SUBLIMENAME}"
-    echo "${pwd}"
-    echo "${SUBLIMENAME_4_HDUTIL}"
-        echo hola
-    exit 0
-    ls -la "${SUBLIMENAME_4_HDUTIL}"
-    wait
-    sudo hdiutil attach "${SUBLIMENAME_4_HDUTIL}"
-    wait
-    sudo cp -R /Volumes/Sublime\ Text/Sublime\ Text.app /Applications/
-    wait
-    sudo hdiutil detach /Volumes/Sublime\ Text
-    wait
+      target_name="$(echo "${one}" | cut -d'|' -f1)"
+      extension="$(echo "${target_name}" | rev | cut -d'.' -f 1 | rev)"
+      target_app="$(echo "${one}" | cut -d'|' -f2)"
+      app_name="$(echo "$(basename "${target_app}")")"
+      target_url="$(echo "${one}" | cut -d'|' -f3-)"
+      if [[ -n "${target_name}" ]] ; then
+      {
+        if [[ -n "${target_url}" ]] ; then
+        {
+          if [[ ! -d "/Applications/${app_name}" ]] ; then
+          {
+            Installing "${app_name}"
+            _install_dmgs_dmg__64 "${target_name}" "${target_app}" "${target_url}"
+          }
+          else
+          {
+            passed  "/Applications/${app_name}"  --skipping already installed
+          }
+          fi
+        }
+        fi
+      }
+      fi
+    }
+    fi
+  }
+  done <<< "${installlist}"
+  return 0
 } # end _darwin__64
 
 add_rpm_gpg_key_and_add_install_repository() {

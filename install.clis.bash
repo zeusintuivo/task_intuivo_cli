@@ -1240,6 +1240,7 @@ _install_dmgs_list(){
   # 1Password.pkg|https://c.1password.com/dist/1P/mac7/1Password-7.7.pkg
   local installlist one  target_name target_url target_app app_name extension
   installlist="
+  sublime_text_build_4113_mac.zip|Sublime Text.app|https://download.sublimetext.com/sublime_text_build_4113_mac.zip
   Keka-1.2.16.dmg|Keka/Keka.app|https://github-releases.githubusercontent.com/73220421/eec2e3d8-ba82-4d01-ac25-b266ad0bcf64?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIWNJYAX4CSVEH53A%2F20210809%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20210809T155416Z&X-Amz-Expires=300&X-Amz-Signature=9f60b0ef230cff82eaebd6673579693211968bc6451c539af92d8b5cccec03f7&X-Amz-SignedHeaders=host&actor_id=0&key_id=0&repo_id=73220421&response-content-disposition=attachment%3B%20filename%3DKeka-1.2.16.dmg&response-content-type=application%2Foctet-stream
   KekaExternalHelper-v1.1.1.zip|KekaExternalHelper.app|https://github-releases.githubusercontent.com/73220421/dfb73d80-582e-11eb-80f7-180c8f11844b?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIWNJYAX4CSVEH53A%2F20210809%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20210809T155831Z&X-Amz-Expires=300&X-Amz-Signature=4360cc8d4b2cce8843548c0fcd52a188acd74ce764df82a24f3de7807a6cfa37&X-Amz-SignedHeaders=host&actor_id=0&key_id=0&repo_id=73220421&response-content-disposition=attachment%3B%20filename%3DKekaExternalHelper-v1.1.1.zip&response-content-type=application%2Foctet-stream
   Caffeine.dmg|Caffeine/Caffeine.app|https://github.com/IntelliScape/caffeine/releases/download/1.1.3/Caffeine.dmg
