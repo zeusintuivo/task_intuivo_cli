@@ -948,30 +948,30 @@ _setup_clis(){
     passed clis: bash_intuivo_cli folder exists
   }
   fi
-  if  it_does_not_exist_with_spaces "${USER_HOME}/_/clis/ssh_intuivo_cli" ; then
-  {
-    cd "${USER_HOME}/_/clis"
-    Installing No. 3 Clis pre work ssh_intuivo_cli  for link_folder_scripts
-    yes | git clone https://github.com/zeusintuivo/ssh_intuivo_cli.git
-    if it_does_not_exist_with_spaces "${USER_HOME}/_/clis/ssh_intuivo_cli" ; then
-    {
-      su - "${SUDO_USER}" -c "yes | git clone https://github.com/zeusintuivo/ssh_intuivo_cli.git  \"${USER_HOME}/_/clis/ssh_intuivo_cli\""
-    }
-    fi
-    cd "${USER_HOME}/_/clis/ssh_intuivo_cli"
-    chown -R "${SUDO_USER}" "${USER_HOME}/_/clis/ssh_intuivo_cli"
-    chgrp -R "${SUDO_GRP}" "${USER_HOME}/_/clis/ssh_intuivo_cli"
-    chown -R "${SUDO_USER}"  "${USER_HOME}/.ssh"
-    chgrp -R "${SUDO_GRP}" "${USER_HOME}/.ssh"
-    git remote remove origin
-    git remote add origin https://github.com/zeusintuivo/ssh_intuivo_cli.git
-    bash -c "${USER_HOME}/_/clis/bash_intuivo_cli/link_folder_scripts"
-    ./sshswitchkey zeus
-  }
-  else {
-    passed clis: ssh_intuivo_cli folder exists
-  }
-  fi
+  # if  it_does_not_exist_with_spaces "${USER_HOME}/_/clis/ssh_intuivo_cli" ; then
+  # {
+  #   cd "${USER_HOME}/_/clis"
+  #   Installing No. 3 Clis pre work ssh_intuivo_cli  for link_folder_scripts
+  #   yes | git clone https://github.com/zeusintuivo/ssh_intuivo_cli.git
+  #   if it_does_not_exist_with_spaces "${USER_HOME}/_/clis/ssh_intuivo_cli" ; then
+  #   {
+  #     su - "${SUDO_USER}" -c "yes | git clone https://github.com/zeusintuivo/ssh_intuivo_cli.git  \"${USER_HOME}/_/clis/ssh_intuivo_cli\""
+  #   }
+  #   fi
+  #   cd "${USER_HOME}/_/clis/ssh_intuivo_cli"
+  #   chown -R "${SUDO_USER}" "${USER_HOME}/_/clis/ssh_intuivo_cli"
+  #   chgrp -R "${SUDO_GRP}" "${USER_HOME}/_/clis/ssh_intuivo_cli"
+  #   chown -R "${SUDO_USER}"  "${USER_HOME}/.ssh"
+  #   chgrp -R "${SUDO_GRP}" "${USER_HOME}/.ssh"
+  #   git remote remove origin
+  #   git remote add origin https://github.com/zeusintuivo/ssh_intuivo_cli.git
+  #   bash -c "${USER_HOME}/_/clis/bash_intuivo_cli/link_folder_scripts"
+  #   ./sshswitchkey zeus
+  # }
+  # else {
+  #   passed clis: ssh_intuivo_cli folder exists
+  # }
+  # fi
   return 0
 # rm -rf "${USER_HOME}/_/clis/ssh_intuivo_cli
 
