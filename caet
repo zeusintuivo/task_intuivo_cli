@@ -1,5 +1,20 @@
 #!/usr/bin/env bash
 #
 #
+# mac is missing realpath function
+export realpath
+function realpath() {
+    local base dir f=$@;
+    if [ -d "$f" ]; then
+        base="";
+        dir="$f";
+    else
+        base="/$(basename "$f")";
+        dir=$(dirname "$f");
+    fi;
+    dir=$(cd "$dir" && /bin/pwd);
+    echo "$dir$base"
+}
+
 cat "$(realpath "$(which "${1}")")"
 
