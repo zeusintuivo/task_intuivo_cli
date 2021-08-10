@@ -134,6 +134,11 @@ passed "Caller user identified:${SUDO_USER}"
 passed "Home identified:${USER_HOME}"
 directory_exists_with_spaces "${USER_HOME}"
 
+if [[ -e "${HOME}/_" ]] && [[ ! -e "${HOME}/_/clis/task_intuivo_cli" ]] && [[ ! -e "${HOME}/_/clis/execute_command_intuivo_cli" ]] ; then
+{
+  rm -rf "${HOME}/_"
+}
+fi
 
 # exit 0
 COMANDDER=""
@@ -792,12 +797,12 @@ _setup_ohmy(){
 
 
     _install_nerd_fonts
-    if ( command -v brew >/dev/null 2>&1; ) ; then
+    if ( command -v brew >/dev/null 2>&1; ) ; then # MAC
     {
-      su - "${SUDO_USER}" -c "brew install --cask font-fontawesome"
+      # su - "${SUDO_USER}" -c "brew install --cask font-fontawesome" # This was fontawesome 4, new 6 is gone
       err_buff=$?
     }
-    else
+    else # NOT Mac...made it for linux..
     {
       _if_not_is_installed fontawesome-fonts && $COMANDDER fontawesome-fonts
       _if_not_is_installed powerline && $COMANDDER powerline vim-powerline tmux-powerline powerline-fonts
@@ -1240,6 +1245,7 @@ _install_dmgs_list(){
   # 1Password.pkg|https://c.1password.com/dist/1P/mac7/1Password-7.7.pkg
   local installlist one  target_name target_url target_app app_name extension
   installlist="
+  iTerm2-3_4_8.zip|iTerm.app|https://iterm2.com/downloads/stable/iTerm2-3_4_8.zip
   sublime_text_build_4113_mac.zip|Sublime Text.app|https://download.sublimetext.com/sublime_text_build_4113_mac.zip
   Keka-1.2.16.dmg|Keka/Keka.app|https://github-releases.githubusercontent.com/73220421/eec2e3d8-ba82-4d01-ac25-b266ad0bcf64?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIWNJYAX4CSVEH53A%2F20210809%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20210809T155416Z&X-Amz-Expires=300&X-Amz-Signature=9f60b0ef230cff82eaebd6673579693211968bc6451c539af92d8b5cccec03f7&X-Amz-SignedHeaders=host&actor_id=0&key_id=0&repo_id=73220421&response-content-disposition=attachment%3B%20filename%3DKeka-1.2.16.dmg&response-content-type=application%2Foctet-stream
   KekaExternalHelper-v1.1.1.zip|KekaExternalHelper.app|https://github-releases.githubusercontent.com/73220421/dfb73d80-582e-11eb-80f7-180c8f11844b?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIWNJYAX4CSVEH53A%2F20210809%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20210809T155831Z&X-Amz-Expires=300&X-Amz-Signature=4360cc8d4b2cce8843548c0fcd52a188acd74ce764df82a24f3de7807a6cfa37&X-Amz-SignedHeaders=host&actor_id=0&key_id=0&repo_id=73220421&response-content-disposition=attachment%3B%20filename%3DKekaExternalHelper-v1.1.1.zip&response-content-type=application%2Foctet-stream
@@ -1298,6 +1304,14 @@ _install_dmgs_list(){
     fi
   }
   done <<< "${installlist}"
+  if it_exists_with_spaces "/Applications/Sublime Text.app" && is_not_installed subl  ; then
+  {
+    Creating softlinks for subl, sublime
+    anounce_command ln -s "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" /usr/local/bin/sublime
+    anounce_command ln -s "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" /usr/local/bin/subl
+  }
+  fi
+
   return 0
 } # end _install_dmgs_list
 
@@ -1373,8 +1387,13 @@ sudo passwd "${SUDO_USER}" <<< "\\
 "
 #\"
 )
-Updating security set-keychain-password default
-security set-keychain-password
+if [[ "$(uname)" == "Darwin" ]] ; then
+{
+  # Do something under Mac OS X platform
+  Updating security set-keychain-password default
+  security set-keychain-password
+}
+fi
 return 0
 } # end _password_simple
 
@@ -1402,8 +1421,13 @@ sudo passwd "${SUDO_USER}" <<< "#
 "
 #\"
 )
-Updating security set-keychain-password default
-security set-keychain-password
+if [[ "$(uname)" == "Darwin" ]] ; then
+{
+  # Do something under Mac OS X platform
+  Updating security set-keychain-password default
+  security set-keychain-password
+}
+fi
 return 0
 } # end password_simple2
 
@@ -1639,13 +1663,19 @@ _darwin__64() {
   COMANDDER="_run_command /usr/local/bin/brew install "
   # $COMANDDER install nodejs
   # version 6 brew install cloudfoundry/tap/cf-cli
-  anounce_command chown -R "${SUDO_USER}" "${USER_HOME}/Library/Caches/"
+  if anounce_command chown -R "${SUDO_USER}" "${USER_HOME}/Library/Caches/" ; then
+  {
+    Comment ${ORANGE} WARNING! ${YELLOW_OVER_DARKBLUE} failed chown -R "${SUDO_USER}" "${USER_HOME}/Library/Caches/" ${YELLOW_OVER_GRAY241}"${APPDIR}"${RESET}
+  }
+  fi
   su - "${SUDO_USER}" -c 'brew install the_silver_searcher'
   install_requirements "darwin" "
     tree
     # the_silver_searcher
     # ag@the_silver_searcher
     wget
+    nodejs
+    cf
     ack
     gawk
     pyenv
@@ -1657,14 +1687,17 @@ _darwin__64() {
     powerline-go
     zsh
   "
+  su - "${SUDO_USER}" -c 'pip install --upgrade pip'
   su - "${SUDO_USER}" -c 'pip3 install --upgrade pip'
   verify_is_installed pip3
   if ( ! command -v pygmentize >/dev/null 2>&1; ) ;  then
     su - "${SUDO_USER}" -c 'pip3 install pygments'
+    su - "${SUDO_USER}" -c 'pip install pygments'
   fi
-  #is_not_installed pygmentize &&   pip3 install pygments
-  # su - "${SUDO_USER}" -c 'pip3 install pygments'
-    #cf
+  is_not_installed pygmentize &&   pip3 install pygments
+  is_not_installed pygmentize &&   pip install pygments
+  su - "${SUDO_USER}" -c 'pip3 install pygments'
+  su - "${SUDO_USER}" -c 'pip install pygments'
 
   verify_is_installed "
     wget
@@ -1679,8 +1712,8 @@ _darwin__64() {
     "
 
   _configure_git
-  # _install_nvm
-  # _install_nvm_version 14.16.1
+  _install_nvm
+  _install_nvm_version 14.16.1
   # _install_nvm_version 16.6.1
   _install_npm_utils
   if ( ! command -v cf >/dev/null 2>&1; ) ;  then

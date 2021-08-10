@@ -1,7 +1,45 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
+# 20200415 Compatible with Fedora, Mac, Ubuntu "sudo_up" "load_struct" "#
+export realpath
+function realpath() {
+    local base dir f=$@;
+    if [ -d "$f" ]; then
+        base="";
+        dir="$f";
+    else
+        base="/$(basename "$f")";
+        dir=$(dirname "$f");
+    fi;
+    dir=$(cd "$dir" && /bin/pwd);
+    echo "$dir$base"
+}
+
+set -E -o functrace
+export THISSCRIPTCOMPLETEPATH
+typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")"
+export BASH_VERSION_NUMBER
+typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
+
+export  THISSCRIPTNAME
+typeset -r THISSCRIPTNAME="$(basename "$0")"
+
+export _err
+typeset -i _err=0
+  function _trap_on_error(){
+    echo -e "\\n \033[01;7m*** ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR ...\033[0m"
+    exit 1
+  }
+  trap _trap_on_error ERR
+  function _trap_on_int(){
+    echo -e "\\n \033[01;7m*** INTERRUPT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n  INT ...\033[0m"
+    exit 0
+  }
+
+  trap _trap_on_int INT
+
 load_struct_testing(){
   function _trap_on_error(){
     local -ir __trapped_error_exit_num="${2:-0}"
@@ -57,3 +95,60 @@ load_struct_testing(){
     return $_err
 } # end load_struct_testing
 load_struct_testing
+
+ _err=$?
+[ $_err -ne 0 ]  && echo -e "\n \n  ERROR FATAL! load_struct_testing_wget !!! returned:<$_err> \n \n  " && exit 69;
+
+export sudo_it
+function sudo_it() {
+  raise_to_sudo_and_user_home
+  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
+  enforce_variable_with_value SUDO_USER "${SUDO_USER}"
+  enforce_variable_with_value SUDO_UID "${SUDO_UID}"
+  enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
+  # Override bigger error trap  with local
+  function _trap_on_error(){
+    echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR INT ...\033[0m"
+  }
+  trap _trap_on_error ERR INT
+} # end sudo_it
+
+# _linux_prepare(){
+  sudo_it
+  [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
+  export USER_HOME
+  # shellcheck disable=SC2046
+  # shellcheck disable=SC2031
+  typeset -r USER_HOME="$(echo -n $(bash -c "cd ~${SUDO_USER} && pwd"))"  # Get the caller's of sudo home dir LINUX and MAC
+  # USER_HOME=$(getent passwd "${SUDO_USER}" | cut -d: -f6)   # Get the caller's of sudo home dir LINUX
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+# }  # end _linux_prepare
+
+
+# _linux_prepare
+export SUDO_GRP='staff'
+enforce_variable_with_value USER_HOME "${USER_HOME}"
+enforce_variable_with_value SUDO_USER "${SUDO_USER}"
+passed "Caller user identified:${SUDO_USER}"
+passed "Home identified:${USER_HOME}"
+directory_exists_with_spaces "${USER_HOME}"
+
+
+
+ #--------\/\/\/\/-- Work here below \/, test, and transfer to tasks_templates/smart_workspace_localhost having a working version -\/\/\/\/-------
+
+
+
+
+
+ #--------/\/\/\/\-- Work here above /\, test, and transfer to tasks_templates/smart_workspace_localhost having a working version -/\/\/\/\-------
+
+
+_main() {
+  determine_os_and_fire_action
+} # end _main
+
+_main
+
+echo "🥦"
+exit 0
