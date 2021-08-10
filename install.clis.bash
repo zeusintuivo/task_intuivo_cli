@@ -910,7 +910,7 @@ _setup_clis(){
   {
     cd "${USER_HOME}/_/clis"
     Installing Clis pre work  bash_intuivo_cli  for link_folder_scripts
-    su - "${SUDO_USER}" -c "yes | git clone git@github.com:zeusintuivo/bash_intuivo_cli.git \"${USER_HOME}/_/clis/bash_intuivo_cli\""
+    su - "${SUDO_USER}" -c "yes | git clone https://github.com/zeusintuivo/bash_intuivo_cli.git \"${USER_HOME}/_/clis/bash_intuivo_cli\""
     if it_does_not_exist_with_spaces "${USER_HOME}/_/clis/bash_intuivo_cli" ; then
     {
       su - "${SUDO_USER}" -c "yes | git clone https://github.com/zeusintuivo/bash_intuivo_cli.git \"${USER_HOME}/_/clis/bash_intuivo_cli\""
@@ -918,7 +918,7 @@ _setup_clis(){
     fi
     cd "${USER_HOME}/_/clis/bash_intuivo_cli"
     git remote remove origin
-    git remote add origin git@github.com:zeusintuivo/bash_intuivo_cli.git
+    git remote add origin https://github.com/zeusintuivo/bash_intuivo_cli.git
     bash -c "${USER_HOME}/_/clis/bash_intuivo_cli/link_folder_scripts"
   }
   else
@@ -930,7 +930,7 @@ _setup_clis(){
   {
     cd "${USER_HOME}/_/clis"
     Installing No. 2 Clis pre work  bash_intuivo_cli  for link_folder_scripts
-    su - "${SUDO_USER}" -c "yes | git clone git@github.com:zeusintuivo/bash_intuivo_cli.git  \"${USER_HOME}/_/clis/bash_intuivo_cli\""
+    su - "${SUDO_USER}" -c "yes | git clone https://github.com/zeusintuivo/bash_intuivo_cli.git  \"${USER_HOME}/_/clis/bash_intuivo_cli\""
     if it_does_not_exist_with_spaces "${USER_HOME}/_/clis/bash_intuivo_cli" ; then
     {
       su - "${SUDO_USER}" -c "yes | git clone https://github.com/zeusintuivo/bash_intuivo_cli.git \"${USER_HOME}/_/clis/bash_intuivo_cli\""
@@ -940,7 +940,7 @@ _setup_clis(){
     chgrp -R "${SUDO_GRP}" "${USER_HOME}/_/clis/bash_intuivo_cli"
     cd "${USER_HOME}/_/clis/bash_intuivo_cli"
     git remote remove origin
-    git remote add origin git@github.com:zeusintuivo/bash_intuivo_cli.git
+    git remote add origin https://github.com/zeusintuivo/bash_intuivo_cli.git
     bash -c "${USER_HOME}/_/clis/bash_intuivo_cli/link_folder_scripts"
   }
   else
@@ -952,7 +952,7 @@ _setup_clis(){
   {
     cd "${USER_HOME}/_/clis"
     Installing No. 3 Clis pre work ssh_intuivo_cli  for link_folder_scripts
-    yes | git clone git@github.com:zeusintuivo/ssh_intuivo_cli.git
+    yes | git clone https://github.com/zeusintuivo/ssh_intuivo_cli.git
     if it_does_not_exist_with_spaces "${USER_HOME}/_/clis/ssh_intuivo_cli" ; then
     {
       su - "${SUDO_USER}" -c "yes | git clone https://github.com/zeusintuivo/ssh_intuivo_cli.git  \"${USER_HOME}/_/clis/ssh_intuivo_cli\""
@@ -964,7 +964,7 @@ _setup_clis(){
     chown -R "${SUDO_USER}"  "${USER_HOME}/.ssh"
     chgrp -R "${SUDO_GRP}" "${USER_HOME}/.ssh"
     git remote remove origin
-    git remote add origin git@github.com:zeusintuivo/ssh_intuivo_cli.git
+    git remote add origin https://github.com/zeusintuivo/ssh_intuivo_cli.git
     bash -c "${USER_HOME}/_/clis/bash_intuivo_cli/link_folder_scripts"
     ./sshswitchkey zeus
   }
@@ -997,7 +997,7 @@ while read -r ONE ; do
     if  it_does_not_exist_with_spaces "${USER_HOME}/_/clis/${ONE}" ; then
     {
       cd "${USER_HOME}/_/clis"
-      su - "${SUDO_USER}" -c "yes | git clone git@github.com:zeusintuivo/${ONE}.git  \"${USER_HOME}/_/clis/${ONE}\""
+      su - "${SUDO_USER}" -c "yes | git clone https://github.com/zeusintuivo/${ONE}.git  \"${USER_HOME}/_/clis/${ONE}\""
       if it_does_not_exist_with_spaces "${USER_HOME}/_/clis/${ONE}" ; then
       {
         su - "${SUDO_USER}" -c "yes | git clone https://github.com/zeusintuivo/${ONE}.git  \"${USER_HOME}/_/clis/${ONE}\""
@@ -1006,7 +1006,7 @@ while read -r ONE ; do
       cd "${USER_HOME}/_/clis/${ONE}"
       chown -R "${SUDO_USER}" "${USER_HOME}/_/clis/${ONE}"
       git remote remove origin
-      git remote add origin git@github.com:zeusintuivo/${ONE}.git
+      git remote add origin https://github.com/zeusintuivo/${ONE}.git
       directory_exists_with_spaces "${USER_HOME}/_/clis/${ONE}"
       if bash -c "${USER_HOME}/_/clis/bash_intuivo_cli/link_folder_scripts" ; then
       {
@@ -1237,7 +1237,11 @@ _install_dmg__64() {
     echo  Removing macOS gatekeeper quarantine attribute
     chown  -R "${SUDO_USER}" "/Applications/${APPDIR}"
     chgrp  -R staff "/Applications/${APPDIR}"
-    xattr -d com.apple.quarantine  "/Applications/${APPDIR}"
+    if xattr -d com.apple.quarantine  "/Applications/${APPDIR}" ; then
+    {
+      Comment ${ORANGE} WARNING! ${YELLOW_OVER_DARKBLUE} failed xattr -d com.apple.quarantine  "/Applications/${APPDIR}" ${YELLOW_OVER_GRAY241}"${APPDIR}"${RESET}
+    }
+    if
 } # end _install_dmg__64
 
 _install_dmgs_list(){
@@ -1674,7 +1678,7 @@ _darwin__64() {
     # the_silver_searcher
     # ag@the_silver_searcher
     wget
-    nodejs
+    node@nodejs
     cf
     ack
     gawk
@@ -1712,8 +1716,8 @@ _darwin__64() {
     "
 
   _configure_git
-  _install_nvm
-  _install_nvm_version 14.16.1
+  # _install_nvm
+  # _install_nvm_version 14.16.1
   # _install_nvm_version 16.6.1
   _install_npm_utils
   if ( ! command -v cf >/dev/null 2>&1; ) ;  then
