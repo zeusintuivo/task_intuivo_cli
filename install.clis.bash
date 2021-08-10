@@ -972,7 +972,7 @@ _setup_clis(){
   #   passed clis: ssh_intuivo_cli folder exists
   # }
   # fi
-  return 0
+
 # rm -rf "${USER_HOME}/_/clis/ssh_intuivo_cli
 
 clis="
@@ -1241,7 +1241,7 @@ _install_dmg__64() {
     {
       Comment ${ORANGE} WARNING! ${YELLOW_OVER_DARKBLUE} failed xattr -d com.apple.quarantine  "/Applications/${APPDIR}" ${YELLOW_OVER_GRAY241}"${APPDIR}"${RESET}
     }
-    if
+    fi
 } # end _install_dmg__64
 
 _install_dmgs_list(){
@@ -1567,7 +1567,7 @@ _ubuntu__64() {
   _setup_ohmy
   _install_colorls
   _setup_clis
-  _setup_mycd
+  # _setup_mycd
 
 
 
@@ -1586,7 +1586,7 @@ _ubuntu__64() {
   }
   fi
   chown -R "${SUDO_USER}" "${USER_HOME}/.cf"
-  verify_is_installed cf
+  # verify_is_installed cf
 
 } # end _ubuntu__64
 
