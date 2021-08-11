@@ -972,7 +972,16 @@ _setup_clis(){
   #   passed clis: ssh_intuivo_cli folder exists
   # }
   # fi
-
+#   TODO: Consider installing like here with no Sudo support.
+#   TODO: Adding it as plugin to ohmyzsh
+#   https://www.scootersoftware.com/support.php?zz=kb_OSXInstallCLT
+# INSTALL COMMAND LINE TOOLS WITHOUT SUDO/ROOT ACCESS
+# Go to the Terminal and run:
+# mkdir ~/bin
+# nano ~/.zshrc (macOS Catalina) or nano ~/.bash_profile (macOS Mohave or older)
+# Add the line export PATH=$HOME/bin:$PATH
+# ln -s /Applications/Beyond\ Compare.app/Contents/MacOS/bcomp ~/bin/bcompare
+# ln -s /Applications/Beyond\ Compare.app/Contents/MacOS/bcomp ~/bin/bcomp
 # rm -rf "${USER_HOME}/_/clis/ssh_intuivo_cli
 
 clis="
