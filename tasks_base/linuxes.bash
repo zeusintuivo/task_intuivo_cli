@@ -82,3 +82,11 @@ _darwin__64() {
 _tar() {
   echo "Procedure not yet implemented. I don't know what to do."
 } # end tar
+
+_windows__64() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _windows__64
+
+_windows__32() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _windows__32
