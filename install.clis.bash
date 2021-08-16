@@ -1685,7 +1685,8 @@ _darwin__64() {
   install_requirements "darwin" "
     tree
     # the_silver_searcher
-    # ag@the_silver_searcher
+    ag@the_silver_searcher
+    pt@the_platinum_searcher
     wget
     node@nodejs
     cf
@@ -1695,7 +1696,7 @@ _darwin__64() {
     vim
     nano
     pv
-    # gsed
+    gsed@gnu-sed
     powerlevel10k@romkatv/powerlevel10k/powerlevel10k
     powerline-go
     zsh
@@ -1715,7 +1716,10 @@ _darwin__64() {
   verify_is_installed "
     wget
     tree
-    # ag
+    ag
+    pt
+    cf
+    node
     ack
     pv
     nano
@@ -1760,6 +1764,18 @@ _darwin__64() {
   su - "${SUDO_USER}" -c 'composer global require laravel/valet'
   Updating _password_simple
   _password_simple
+  Installing disable spotlight using significant power REF: https://discussions.apple.com/thread/5610674
+  syslog -k Sender mdworker -o -k Sender mds | grep -v 'boxd\|Norm' | tail | open -ef
+  mdutil -as | open -ef
+  Message disable "Integrity protection" reboot mac . Commnd R Terminal csrutil disable
+  Message then reboot
+  Message REF: https://cleanmymac.com/faq/how-to-turn-off-spotlight-search-on-mac
+  echo "# Message disable "Integrity protection" reboot mac . Commnd R Terminal csrutil disable"  > disable.spotlight.bash
+  echo "# Message REF: https://cleanmymac.com/faq/how-to-turn-off-spotlight-search-on-mac " > disable.spotlight.bash
+  echo "sudo launchctl load -w /System/Library/LaunchDaemons/com.apple.metadata.mds.plist"  > disable.spotlight.bash
+  Message then run this file  disable.spotlight.bash
+  chmod +x  disable.spotlight.bash
+  chown -R "${SUDO_USER}"   disable.spotlight.bash
   return 0
   # _password_simple2
 } # end _darwin__64
