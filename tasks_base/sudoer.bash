@@ -5,16 +5,16 @@
 # 20200415 Compatible with Fedora, Mac, Ubuntu "sudo_up" "load_struct" "#
 export realpath
 function realpath() {
-    local base dir f=$@;
-    if [ -d "$f" ]; then
+    local base dir f=${@};
+    if [[ -d "${f}" ]]; then
         base="";
-        dir="$f";
+        dir="${f}";
     else
-        base="/$(basename "$f")";
-        dir=$(dirname "$f");
+        base="/$(basename "${f}")";
+        dir="$(dirname "${f}")";
     fi;
-    dir=$(cd "$dir" && /bin/pwd);
-    echo "$dir$base"
+    dir="$(cd "$dir" && /bin/pwd)";
+    echo "${dir}${base}"
 }
 
 set -E -o functrace
