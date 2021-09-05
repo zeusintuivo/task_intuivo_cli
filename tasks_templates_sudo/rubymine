@@ -1,72 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
-# Compatible start with low version bash, like mac before zsh change and after
-export USER_HOME
-export THISSCRIPTCOMPLETEPATH
-typeset -r THISSCRIPTCOMPLETEPATH="$(realpath $(which $(basename "$0")))"   # § This goes in the FATHER-MOTHER script
-
-export BASH_VERSION_NUMBER
-typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
-
-export  THISSCRIPTNAME
-typeset -r THISSCRIPTNAME="$(realpath $(which $(basename "$0")))"
-
-export _err
-typeset -i _err=0
-
-load_struct_testing_wget(){
-    local provider="$HOME/_/clis/execute_command_intuivo_cli/struct_testing"
-    [   -e "${provider}"  ] && source "${provider}" && echo "Loaded locally"
-    [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
-    ( ( ! command -v passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
-} # end load_struct_testing_wget
-load_struct_testing_wget
-
-export sudo_it
-function sudo_it() {
-  raise_to_sudo_and_user_home
-  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
-  enforce_variable_with_value SUDO_USER "${SUDO_USER}"
-  enforce_variable_with_value SUDO_UID "${SUDO_UID}"
-  enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
-  # Override bigger error trap  with local
-  function _trap_on_error(){
-    _err=$?
-    echo -e "\033[01;7m*** ERROR TRAP $THISSCRIPTNAME err<$_err>  \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}\(\) \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}\(\) \\n ERR ...\033[0m"
-    pkill curl 
-    pkill wget 
-    
-    if [ $_err -eq 2 ] && [[ "${FUNCNAME[1]}" == "_unzip" ]]  ; then 
-    {
-      touch /tmp/corrupted.tar.gzeraseit
-      determine_os_and_fire_action
-    } 
-    else 
-    {
-      exit 1
-    }
-    fi
-  }
-  function _trap_on_int(){
-    _err=$?
-    echo -e "\033[01;7m*** INT TRAP $THISSCRIPTNAME err<$_err> \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}\(\) \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}\(\) \\n INT ...\033[0m"
-    pkill curl 
-    pkill wget 
-    exit 1
-  }
-  trap _trap_on_error ERR 
-  trap _trap_on_int INT
-} # end sudo_it
-
-
-function _linux_prepare(){
-  sudo_it
-  [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
-  export USER_HOME="/home/${SUDO_USER}"
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
-}  # end _linux_prepare
 
 _version() {
   local PLATFORM="${1}" # mac windows linux
@@ -107,8 +42,16 @@ _version() {
 } # end _version
 
 _darwin__64() {
+  verify_is_installed "
+    wget
+  "
+  local _err=$?
   local CODENAME=$(_version "mac" "*.*")
-  echo "${CODENAME}";
+  _err=$?
+  echo "${CODENAME}";  # show either version or log with errors
+  # exit on error
+  [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! _version:$_err  \n \n  " && exit 1
+
   local TARGET_URL="$(echo -en "${CODENAME}" | tail -1)"
   CODENAME="$(basename "${TARGET_URL}" )"
   local VERSION="$(echo -en "${CODENAME}" | sed 's/RubyMine-//g' | sed 's/.dmg//g' )"
@@ -217,7 +160,7 @@ _centos__64() {
 } # end _centos__64
 _unzip(){
   # Sample use
-  #    
+  #
   #     _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
   #
   local DOWNLOADFOLDER="${1}"
@@ -229,7 +172,7 @@ _unzip(){
   local CODENAME="${3}"
   enforce_variable_with_value CODENAME "${CODENAME}"
 
-  file_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}" 
+  file_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
   if  it_exists_with_spaces "${DOWNLOADFOLDER}/${UNZIPDIR}" ; then
   {
     rm -rf "${DOWNLOADFOLDER}/${UNZIPDIR}"
@@ -287,8 +230,8 @@ _unzip(){
 } # end _unzip
 _backup_current_target_and_remove_if_exists(){
   # Sample use
-  #    
-  #     _backup_current_target_and_remove_if_exists "${TARGETFOLDER}" 
+  #
+  #     _backup_current_target_and_remove_if_exists "${TARGETFOLDER}"
   #     _backup_current_target_and_remove_if_exists "${TARGETFOLDER}"
   #
   local TARGETFOLDER="${1}"
@@ -317,7 +260,7 @@ _backup_current_target_and_remove_if_exists(){
 } # end _backup_current_target_and_remove_if_exists
 _install_to_target(){
   # Sample use
-  #    
+  #
   #     _install_to_target "${TARGETFOLDER}" "${FROM_DOWNLOADEDFOLDER_UNZIPPED}"
   #
   local TARGETFOLDER="${1}"
@@ -325,7 +268,7 @@ _install_to_target(){
 
   local FROM_DOWNLOADEDFOLDER_UNZIPPED="${2}"
   enforce_variable_with_value FROM_DOWNLOADEDFOLDER_UNZIPPED "${FROM_DOWNLOADEDFOLDER_UNZIPPED}"
-  
+
   mkdir -p "${TARGETFOLDER}"
   directory_exists_with_spaces "${TARGETFOLDER}"
   directory_exists_with_spaces "${FROM_DOWNLOADEDFOLDER_UNZIPPED}"
@@ -342,9 +285,9 @@ _install_to_target(){
 } # end _install_to_target
 _add_mine_associacions_and_browser_click_to_open (){
   # Sample use
-  #    
+  #
   #     _add_mine_associacions_and_browser_click_to_open "${TARGETFOLDER}" "${LOCALSHAREFOLDER}"  "${LOGGERFOLDER}"
-  #     _add_mine_associacions_and_browser_click_to_open "${TARGETFOLDER}" "${USER_HOME}/.local/share" $USER_HOME/_/work" 
+  #     _add_mine_associacions_and_browser_click_to_open "${TARGETFOLDER}" "${USER_HOME}/.local/share" $USER_HOME/_/work"
   #
   local TARGETFOLDER="${1}"
   enforce_variable_with_value TARGETFOLDER "${TARGETFOLDER}"
@@ -595,19 +538,19 @@ _fedora__64() {
   enforce_variable_with_value TARGETFOLDER "${TARGETFOLDER}"
 
   # _remove_if_corrypted_zipfile_folder?
-  if it_exists_with_spaces /tmp/corrupted.tar.gzeraseit ; then 
+  if it_exists_with_spaces /tmp/corrupted.tar.gzeraseit ; then
   {
-    if it_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"; then 
+    if it_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"; then
     {
-      passed Removing Corrupted zip file 
+      passed Removing Corrupted zip file
       rm "${DOWNLOADFOLDER}/${CODENAME}"
       file_does_not_exist_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
-      rm  /tmp/corrupted.tar.gzeraseit 
+      rm  /tmp/corrupted.tar.gzeraseit
     }
     fi
   }
   fi
-  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 
+  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
   _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
   _backup_current_target_and_remove_if_exists "${TARGETFOLDER}"
   _install_to_target "${TARGETFOLDER}" "${DOWNLOADFOLDER}/${UNZIPDIR}"
@@ -619,10 +562,10 @@ _fedora__64() {
   # _remove_downloaded_file?
   rm "${DOWNLOADFOLDER}/${CODENAME}"
   file_does_not_exist_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
- 
-   _add_mine_associacions_and_browser_click_to_open "${TARGETFOLDER}" "${USER_HOME}/.local/share" "${USER_HOME}/_/work" 
 
-  
+   _add_mine_associacions_and_browser_click_to_open "${TARGETFOLDER}" "${USER_HOME}/.local/share" "${USER_HOME}/_/work"
+
+
 } # end _fedora__64
 
 _mingw__64() {
@@ -644,14 +587,4 @@ _mingw__32() {
 	  curl -O $URL
 	  ${CODENAME}
 } # end
-
-
-_main() {
-  determine_os_and_fire_action
-} # end _main
-
-_main
-
-echo ":)"
-
 

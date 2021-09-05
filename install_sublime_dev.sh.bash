@@ -3,8 +3,24 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 #
+export realpath
+function realpath() {
+    local base dir f=$@;
+    if [ -d "$f" ]; then
+        base="";
+        dir="$f";
+    else
+        base="/$(basename "$f")";
+        dir=$(dirname "$f");
+    fi;
+    dir=$(cd "$dir" && /bin/pwd);
+    echo "$dir$base"
+}
+
+set -E -o functrace
+
   export THISSCRIPTCOMPLETEPATH
-  typeset -r THISSCRIPTCOMPLETEPATH="$(realpath $(which $(basename "$0")))"   # § This goes in the FATHER-MOTHER script 
+  typeset -r THISSCRIPTCOMPLETEPATH="$(realpath $(which $(basename "$0")))"   # § This goes in the FATHER-MOTHER script
   export _err
   typeset -i _err=0
 load_struct_testing_wget(){
@@ -257,11 +273,14 @@ _darwin__64() {
     local __online_version_from_page=$(_version)
     local SUBLIMENAME="Sublime%20Text%20Build%20${__online_version_from_page}.dmg"
     local SUBLIMENAME_4_HDUTIL="Sublime Text Build ${__online_version_from_page}.dmg"
+
     wait
     cd ~/Downloads/
     [ ! -e "${SUBLIMENAME_4_HDUTIL}" ] || download_sublime "${SUBLIMENAME}"
     echo "${pwd}"
     echo "${SUBLIMENAME_4_HDUTIL}"
+        echo hola
+    exit 0
     ls -la "${SUBLIMENAME_4_HDUTIL}"
     wait
     sudo hdiutil attach "${SUBLIMENAME_4_HDUTIL}"

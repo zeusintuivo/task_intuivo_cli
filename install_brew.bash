@@ -251,7 +251,7 @@ _darwin__32() {
 }
 _darwin__64() {
   sudo_it
-  echo "MORE TODO - Install not implemented"
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 }
 _redhat_flavor_install(){
   sudo_it

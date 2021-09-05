@@ -121,136 +121,161 @@ directory_exists_with_spaces "$USER_HOME"
 
 
 
- #--------\/\/\/\/-- install_discord.bash -- Custom code -\/\/\/\/-------
+ #--------\/\/\/\/-- install_1password.bash -- Custom code -\/\/\/\/-------
 
 
-function only_alphanumeric(){
- sed 's/[^a-zA-Z0-9]//g'
-}
-function only_url_chars(){
- sed 's/[^a-zA-Z0-9_:.\/-]//g'
-}
-function just_download_it(){
-  # Sample use
-  #
-  #   _just_download_it
-  local TARGET_URL=$(echo ${1} | only_url_chars)
-  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
-  local CODENAME=$(echo ${2} | only_url_chars)
-  enforce_variable_with_value CODENAME "${CODENAME}"
-  echo  "TARGET_URL:<${TARGET_URL}>"
-  echo  "  CODENAME:<${CODENAME}>"
-  if ( command -v curl >/dev/null 2>&1; )  ; then
-    # echo "Downloading ${TARGET_URL} from the net using curl "
-    # REF: https://www.digitalocean.com/community/tutorials/workflow-downloading-files-curl
-    echo curl -LO "${TARGET_URL}"
-    #echo curl -L -o "${CODENAME}"  "${TARGET_URL}"
-    #curl -L -o "${CODENAME}"  "${TARGET_URL}"
-    (( DEBUG )) && echo "https://dl.discordapp.net/apps/linux/0.0.15/discord-0.0.15.tar.gz" | hexdump -C
-    (( DEBUG )) && echo ${TARGET_URL} |  hexdump -C
-    curl -LO ${TARGET_URL}
-    _err=$?
-    [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Downloading \n\n ${TARGET_URL}. running 'curl' returned error did not download or is empty err:$_err  \n \n  " && exit 1
-    return ${_err}
-  elif ( command -v wget >/dev/null 2>&1; ) ; then
-    echo "Downloading ${TARGET_URL} from the net using wget "
-    # REF: https://linuxconfig.org/wget-file-download-on-linux
-    wget --quiet --no-check-certificate  "${TARGET_URL}" -O "${CODENAME}"
-    _err=$?
-    [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Downloading ${TARGET_URL}. running 'wget' returned error did not download or is empty err:$_err  \n \n  " && exit 1
-    return ${_err}
-  else
-    echo -e "\n \n  ERROR! Downloading ${TARGET_URL}  could not find wget or curl to download  \n \n "
-    exit 69
-  fi
-  return 1
-} # end _just_download_it
+#!/bin/bash
+echo based on REF: https://support.1password.com/install-linux/
+_debian_flavor_install() {
+  echo "
+
+    1. Add the key for the 1Password apt repository:
+  "
+  curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo gpg --dearmor --output /usr/share/keyrings/1password-archive-keyring.gpg
+  echo "
+    2. Add the 1Password apt repository:
+  "
+  echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] https://downloads.1password.com/linux/debian/amd64 stable main' | sudo tee /etc/apt/sources.list.d/1password.list
+  echo "
+    3. Add the debsig-verify policy:
+  "
+  sudo mkdir -p /etc/debsig/policies/AC2D62742012EA22/
+  curl -sS https://downloads.1password.com/linux/debian/debsig/1password.pol | sudo tee /etc/debsig/policies/AC2D62742012EA22/1password.pol
+  sudo mkdir -p /usr/share/debsig/keyrings/AC2D62742012EA22
+  curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo gpg --dearmor --output /usr/share/debsig/keyrings/AC2D62742012EA22/debsig.gpg
+  echo "
+    4. Install 1Password:
+  "
+  sudo apt update && sudo apt install 1password -y
+  sudo apt update && sudo apt upgrade 1password -y
+
+} # end _debian_flavor_install
+
+_redhat_flavor_install() {
+  echo "
+
+    1. Add the key for the 1Password yum repository:
+  "
+  sudo rpm --import https://downloads.1password.com/linux/keys/1password.asc
+  echo "
+    2. Add the 1Password yum repository:
+  "
+  sudo sh -c 'echo -e "[1password]\nname=1Password Stable Channel\nbaseurl=https://downloads.1password.com/linux/rpm/stable/\$basearch\nenabled=1\ngpgcheck=1\nrepo_gpgcheck=1\ngpgkey=\"https://downloads.1password.com/linux/keys/1password.asc\"" > /etc/yum.repos.d/1password.repo'
+  echo "
+    3. Install 1Password:
+  "
+  sudo dnf install 1password -y
+  sudo dnf upgrade 1password --refresh
+
+} # end _redhat_flavor_install
+
+_arch_flavor_install() {
+  echo "
+
+    1. Get the 1Password signing key:
+  "
+  curl -sS https://downloads.1password.com/linux/keys/1password.asc | gpg --import
+  echo "
+    2. Clone the 1Password package:
+  "
+  git clone https://aur.archlinux.org/1password.git
+  echo "
+    3. Install 1Password:
+  "
+  cd 1password
+  makepkg -si
+
+} # end _readhat_flavor_install
+
+_arch__32() {
+  _arch_flavor_install
+} # end _arch__32
+
+_arch__64() {
+  _arch_flavor_install
+} # end _arch__64
+
+_centos__32() {
+  _redhat_flavor_install
+} # end _centos__32
+
+_centos__64() {
+  _redhat_flavor_install
+} # end _centos__64
+
+_debian__32() {
+  _debian_flavor_install
+} # end _debian__32
+
+_debian__64() {
+  _debian_flavor_install
+} # end _debian__64
+
+_fedora__32() {
+  _redhat_flavor_install
+} # end _fedora__32
 
 _fedora__64() {
-  raise_to_sudo_and_user_home
-  [ $? -gt 0 ] && failed to raise_to_sudo_and_user_home
-  # [ $? -gt 0 ] && exit 1
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
-  local FIRST_URL="https://discord.com/api/download?platform=linux&format=tar.gz"
-  enforce_variable_with_value FIRST_URL "${FIRST_URL}"
-  local CURLOUTPUT="$(curl -IL "${FIRST_URL}" 2>/dev/null)"
-  echo "curl -IL \"${FIRST_URL}\"  | grep \"location:\" | cut -d: -f2-"
-  # local CURLOUTPUT="$(curl -IL https://discord.com/api/download\?platform\=linux\&format\=tar.gz 2>/dev/null)"
-  enforce_variable_with_value CURLOUTPUT "${CURLOUTPUT}"
-  local TARGET_URL=$(echo "${CURLOUTPUT}" | grep "location:" | cut -d: -f2- | only_url_chars)
-  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
-  local CODENAME=$(basename "${TARGET_URL}" | only_url_chars)
-  enforce_variable_with_value CODENAME "${CODENAME}"
-  local DOWNLOADFOLDER="$(_find_downloads_folder)"
-  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-  cd "${DOWNLOADFOLDER}"
-  local _err=0
-  just_download_it "${TARGET_URL}"  "${CODENAME}"
-  _err=$?
-  if [ $_err -ne 0 ] ;  then
-  {
-    >&2 echo -e "${RED} ✘ ${YELLOW_OVER_DARKBLUE}${*}${RESET} Err:$_err Message: error deleting directory"
-    exit $_err
-  }
-  fi
-  file_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
-  tar -xvf "${DOWNLOADFOLDER}/${CODENAME}"
-  file_exists_with_spaces "${DOWNLOADFOLDER}/Discord"
-  directory_exists_with_spaces "/usr/lib64"
-  directory_exists_with_spaces "/usr/bin"
-  if  it_exists_with_spaces "/usr/lib64/discord" ; then
-  {
-    rm -rf "/usr/lib64/discord"
-    _err=$?
-  }
-  fi
-  if [ $_err -ne 0 ] ;  then
-  {
-    >&2 echo -e "${RED} ✘ ${YELLOW_OVER_DARKBLUE}${*}${RESET} Err:$_err Message: error deleting directory"
-    exit $_err
-  }
-  fi
-  directory_does_not_exist_with_spaces "/usr/lib64/discord"
-  if ! it_exists_with_spaces "/usr/bin/Discord" ; then
-  {
-    unlink "/usr/bin/Discord"
-    _err=$?
-  } else {
-    echo "whot"
-  }
-  fi
-  if [[ -L "/usr/bin/Discord" ]] ; then
-  {
-    echo "what"
-    unlink "/usr/bin/Discord"
-    _err=$?
-  }
-  fi
-  if [ $_err -ne 0 ] ;  then
-  {
-    >&2 echo -e "${RED} ✘ ${YELLOW_OVER_DARKBLUE}${*}${RESET} Err:$_err Message: error unlinking /usr/lib64/discord"
-    exit $_err
-  }
-  fi
-  file_does_not_exist_with_spaces "/usr/bin/Discord"
-  mv "${DOWNLOADFOLDER}/Discord" "/usr/lib64/discord"
-   _err=$?
-  if [ $_err -ne 0 ] ;  then
-  {
-    >&2 echo -e "${RED} ✘ ${YELLOW_OVER_DARKBLUE}${*}${RESET} Err:$_err Message: error moving directory from "${DOWNLOADFOLDER}/Discord" to /usr/lib64/discord"
-    exit $_err
-  }
-  fi
-  directory_exists_with_spaces "/usr/lib64/discord"
-  cd /usr/bin
-  ln -s /usr/lib64/discord/Discord /usr/bin/Discord
-  softlink_exists_with_spaces "/usr/bin/Discord>/usr/lib64/discord/Discord"
-  return 0
+  _redhat_flavor_install
 } # end _fedora__64
 
+_gentoo__32() {
+  _redhat_flavor_install
+} # end _gentoo__32
+
+_gentoo__64() {
+  _redhat_flavor_install
+} # end _gentoo__64
+
+_madriva__32() {
+  _redhat_flavor_install
+} # end _madriva__32
+
+_madriva__64() {
+  _redhat_flavor_install
+} # end _madriva__64
+
+_suse__32() {
+  _redhat_flavor_install
+} # end _suse__32
+
+_suse__64() {
+  _redhat_flavor_install
+} # end _suse__64
+
+_ubuntu__32() {
+  _debian_flavor_install
+} # end _ubuntu__32
+
+_ubuntu__64() {
+  _debian_flavor_install
+} # end _ubuntu__64
+
+_darwin__64() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _darwin__64
+
+_tar() {
+  echo "
+    1. Download 1Password:
+  "
+  curl -sSO https://downloads.1password.com/linux/tar/stable/x86_64/1password-latest.tar.gz
+  echo "
+    2. Extract and move the files:
+  "
+  tar -xf 1password-latest.tar.gz
+  sudo mkdir -p /opt/1Password
+  sudo mv 1password-*/* /opt/1Password
+  echo "
+    3. Run the installation script:
+  "
+  sudo /opt/1Password/after-install.sh
+
+} # end tar
 
 
- #--------/\/\/\/\-- install_discord.bash -- Custom code-/\/\/\/\-------
+
+ #--------/\/\/\/\-- install_1password.bash -- Custom code-/\/\/\/\-------
 
 
 _main() {

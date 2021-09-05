@@ -5,16 +5,16 @@
 # 20200415 Compatible with Fedora, Mac, Ubuntu "sudo_up" "load_struct" "#
 export realpath
 function realpath() {
-    local base dir f=${@};
-    if [[ -d "${f}" ]]; then
+    local base dir f=$@;
+    if [ -d "$f" ]; then
         base="";
-        dir="${f}";
+        dir="$f";
     else
-        base="/$(basename "${f}")";
-        dir="$(dirname "${f}")";
+        base="/$(basename "$f")";
+        dir=$(dirname "$f");
     fi;
-    dir="$(cd "$dir" && /bin/pwd)";
-    echo "${dir}${base}"
+    dir=$(cd "$dir" && /bin/pwd);
+    echo "$dir$base"
 }
 
 set -E -o functrace
@@ -57,48 +57,42 @@ load_struct_testing(){
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
     exit 1
   }
-  function load_library(){
-    local _library="${1:struct_testing}"
-    [[ -z "${1}" ]] && echo "Must call with name of library example: struct_testing execute_command" && exit 1
-    trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-      local provider="$HOME/_/clis/execute_command_intuivo_cli/${_library}"
-      local _err=0 structsource
-      if [   -e "${provider}"  ] ; then
-        echo "Loading locally"
-        structsource="""$(<"${provider}")"""
-        _err=$?
-        [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading ${_library}. running 'source locally' returned error did not download or is empty err:$_err  \n \n  " && exit 1
-      else
-        if ( command -v curl >/dev/null 2>&1; )  ; then
-          echo "Loading ${_library} from the net using curl "
-          structsource="""$(curl https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/${_library}  -so -   2>/dev/null )"""  #  2>/dev/null suppress only curl download messages, but keep curl output for variable
-          _err=$?
-          [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading ${_library}. running 'curl' returned error did not download or is empty err:$_err  \n \n  " && exit 1
-        elif ( command -v wget >/dev/null 2>&1; ) ; then
-          echo "Loading ${_library} from the net using wget "
-          structsource="""$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/${_library} -O -   2>/dev/null )"""  #  2>/dev/null suppress only wget download messages, but keep wget output for variable
-          _err=$?
-          [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading ${_library}. running 'wget' returned error did not download or is empty err:$_err  \n \n  " && exit 1
-        else
-          echo -e "\n \n  ERROR! Loading ${_library} could not find wget or curl to download  \n \n "
-          exit 69
-        fi
-      fi
-      [[ -z "${structsource}" ]] && echo -e "\n \n  ERROR! Loading ${_library} into ${_library}_source did not download or is empty " && exit 1
-      local _temp_dir="$(mktemp -d 2>/dev/null || mktemp -d -t "${_library}_source")"
-      echo "${structsource}">"${_temp_dir}/${_library}"
-      echo "Temp location ${_temp_dir}/${_library}"
-      source "${_temp_dir}/${_library}"
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+    local provider="$HOME/_/clis/execute_command_intuivo_cli/struct_testing"
+    local _err=0 structsource
+    if [   -e "${provider}"  ] ; then
+      echo "Loading locally"
+      structsource="""$(<"${provider}")"""
       _err=$?
-      [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading ${_library}. Occured while running 'source' err:$_err  \n \n  " && exit 1
-      if  ! typeset -f passed >/dev/null 2>&1; then
-        echo -e "\n \n  ERROR! Loading ${_library}. Passed was not loaded !!!  \n \n "
-        exit 69;
+      [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading struct_testing. running 'source locally' returned error did not download or is empty err:$_err  \n \n  " && exit 1
+    else
+      if ( command -v curl >/dev/null 2>&1; )  ; then
+        echo "Loading struct_testing from the net using curl "
+        structsource="""$(curl https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing  -so -   2>/dev/null )"""  #  2>/dev/null suppress only curl download messages, but keep curl output for variable
+        _err=$?
+        [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading struct_testing. running 'curl' returned error did not download or is empty err:$_err  \n \n  " && exit 1
+      elif ( command -v wget >/dev/null 2>&1; ) ; then
+        echo "Loading struct_testing from the net using wget "
+        structsource="""$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing -O -   2>/dev/null )"""  #  2>/dev/null suppress only wget download messages, but keep wget output for variable
+        _err=$?
+        [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading struct_testing. running 'wget' returned error did not download or is empty err:$_err  \n \n  " && exit 1
+      else
+        echo -e "\n \n  ERROR! Loading struct_testing could not find wget or curl to download  \n \n "
+        exit 69
       fi
-      return $_err
-  } # end load_library
-  load_library "struct_testing"
-  load_library "execute_command"
+    fi
+    [[ -z "${structsource}" ]] && echo -e "\n \n  ERROR! Loading struct_testing. structsource did not download or is empty " && exit 1
+    local _temp_dir="$(mktemp -d 2>/dev/null || mktemp -d -t 'struct_testing_source')"
+    echo "${structsource}">"${_temp_dir}/struct_testing"
+    echo "Temp location ${_temp_dir}/struct_testing"
+    source "${_temp_dir}/struct_testing"
+    _err=$?
+    [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading struct_testing. Occured while running 'source' err:$_err  \n \n  " && exit 1
+    if  ! typeset -f passed >/dev/null 2>&1; then
+      echo -e "\n \n  ERROR! Loading struct_testing. Passed was not loaded !!!  \n \n "
+      exit 69;
+    fi
+    return $_err
 } # end load_struct_testing
 load_struct_testing
 
@@ -138,3 +132,23 @@ enforce_variable_with_value SUDO_USER "${SUDO_USER}"
 passed "Caller user identified:${SUDO_USER}"
 passed "Home identified:${USER_HOME}"
 directory_exists_with_spaces "${USER_HOME}"
+
+
+
+ #--------\/\/\/\/-- Work here below \/, test, and transfer to tasks_templates/smart_workspace_localhost having a working version -\/\/\/\/-------
+
+
+
+
+
+ #--------/\/\/\/\-- Work here above /\, test, and transfer to tasks_templates/smart_workspace_localhost having a working version -/\/\/\/\-------
+
+
+_main() {
+  determine_os_and_fire_action
+} # end _main
+
+_main
+
+echo "🥦"
+exit 0

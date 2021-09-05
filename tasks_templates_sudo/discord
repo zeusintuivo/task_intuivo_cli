@@ -1,73 +1,123 @@
-#!/bin/bash
-#
-# @author Zeus Intuivo <zeus@intuivo.com>
-#
-#
-_downloadfile_link(){
-	_downloadfile_link "${PLATFORM}"  "${CODELASTESTBUILD}" "${URL}"
-	local CODENAME=""
-  case ${1} in
-  mac)
-    CODENAME="${3}-${2}.dmg"
-    ;;
-
-  windows)
-    CODENAME="${3}-${2}.exe"
-    CODENAME="${3}-${2}.win.zip"
-    ;;
-
-  linux)
-    CODENAME="${3}-${2}.tar.gz"
-    ;;
-
-  *)
-    CODENAME=""
-    ;;
-  esac
-  echo "${CODENAME}"
-  return 0
-} # end _downloadfile_link
-
-_version() {
-  local URL="${1}"      # https://www.website.com/product/
-  #                    param order varname    varvalue    sampleregex
-  enforce_parameter_with_value 1 URL "${URL}" "https://www.website.com/product/"
-  local PLATFORM="${2}" # mac windows linux
-  #                    param order varname    varvalue      validoptions
-  enforce_parameter_with_options 2 PLATFORM "${PLATFORM}" "mac windows linux"
-  local PATTERN="${3}"
-  #                    param order varname    varvalue    sampleregex
-  enforce_parameter_with_value 3 PATTERN "${PATTERN}" "BCompareOSX*.*.*.*.zip"
-  DEBUG=1
-  local CODEFILE="""$(wget --quiet --no-check-certificate  "${URL}" -O -  2>/dev/null )""" # suppress only wget download messages, but keep wget output for variable
-  enforce_variable_with_value CODEFILE "${CODEFILE}"
-  local CODELASTESTBUILD=$(_extract_version "${CODEFILE}")
-  enforce_variable_with_value CODELASTESTBUILD "${CODELASTESTBUILD}"
-  echo "${CODELASTESTBUILD}"
-  return 0
-} # end _version
-
-_extract_version(){
-	echo "${*}" | sed s/\</\\n\</g | sed s/\>/\>\\n/g | sed "s/&apos;/\'/g" | sed 's/&nbsp;/ /g' | grep  "New in WebStorm ${PATTERN}" | sed s/\ /\\n/g | tail -1
-	# | grep "What&apos;s New in&nbsp;WebStorm&nbsp;" | sed 's/\;/\;'\\n'/g' | sed s/\</\\n\</g  )
-} # end _extract_version
+function only_alphanumeric(){
+ sed 's/[^a-zA-Z0-9]//g'
+}
+function only_url_chars(){
+ sed 's/[^a-zA-Z0-9_:.\/-]//g'
+}
+function just_download_it(){
+  # Sample use
+  #
+  #   _just_download_it
+  local TARGET_URL=$(echo ${1} | only_url_chars)
+  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
+  local CODENAME=$(echo ${2} | only_url_chars)
+  enforce_variable_with_value CODENAME "${CODENAME}"
+  echo  "TARGET_URL:<${TARGET_URL}>"
+  echo  "  CODENAME:<${CODENAME}>"
+  if ( command -v curl >/dev/null 2>&1; )  ; then
+    # echo "Downloading ${TARGET_URL} from the net using curl "
+    # REF: https://www.digitalocean.com/community/tutorials/workflow-downloading-files-curl
+    echo curl -LO "${TARGET_URL}"
+    #echo curl -L -o "${CODENAME}"  "${TARGET_URL}"
+    #curl -L -o "${CODENAME}"  "${TARGET_URL}"
+    (( DEBUG )) && echo "https://dl.discordapp.net/apps/linux/0.0.15/discord-0.0.15.tar.gz" | hexdump -C
+    (( DEBUG )) && echo ${TARGET_URL} |  hexdump -C
+    curl -LO ${TARGET_URL}
+    _err=$?
+    [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Downloading \n\n ${TARGET_URL}. running 'curl' returned error did not download or is empty err:$_err  \n \n  " && exit 1
+    return ${_err}
+  elif ( command -v wget >/dev/null 2>&1; ) ; then
+    echo "Downloading ${TARGET_URL} from the net using wget "
+    # REF: https://linuxconfig.org/wget-file-download-on-linux
+    wget --quiet --no-check-certificate  "${TARGET_URL}" -O "${CODENAME}"
+    _err=$?
+    [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Downloading ${TARGET_URL}. running 'wget' returned error did not download or is empty err:$_err  \n \n  " && exit 1
+    return ${_err}
+  else
+    echo -e "\n \n  ERROR! Downloading ${TARGET_URL}  could not find wget or curl to download  \n \n "
+    exit 69
+  fi
+  return 1
+} # end _just_download_it
 
 _fedora__64() {
-	raise_to_sudo_and_user_home
-	[ $? -gt 0 ] && failed to raise_to_sudo_and_user_home
-	# [ $? -gt 0 ] && exit 1
+  raise_to_sudo_and_user_home
+  [ $? -gt 0 ] && failed to raise_to_sudo_and_user_home
+  # [ $? -gt 0 ] && exit 1
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  local FIRST_URL=https://discord.com/api/download?platform=linux&format=tar.gz
+  local FIRST_URL="https://discord.com/api/download?platform=linux&format=tar.gz"
   enforce_variable_with_value FIRST_URL "${FIRST_URL}"
-  local CURLOUTPUT="$(curl -IL https://discord.com/api/download/ptb?platform=linux&format=tar.gz 2>/dev/null)"
+  local CURLOUTPUT="$(curl -IL "${FIRST_URL}" 2>/dev/null)"
+  echo "curl -IL \"${FIRST_URL}\"  | grep \"location:\" | cut -d: -f2-"
   # local CURLOUTPUT="$(curl -IL https://discord.com/api/download\?platform\=linux\&format\=tar.gz 2>/dev/null)"
   enforce_variable_with_value CURLOUTPUT "${CURLOUTPUT}"
-  local TARGET_URL="$(echo "${TARGET_URL}" | grep "location:" | cut -d: -f2-)"
+  local TARGET_URL=$(echo "${CURLOUTPUT}" | grep "location:" | cut -d: -f2- | only_url_chars)
   enforce_variable_with_value TARGET_URL "${TARGET_URL}"
-  local CODENAME=$(basename "${TARGET_URL}")
+  local CODENAME=$(basename "${TARGET_URL}" | only_url_chars)
   enforce_variable_with_value CODENAME "${CODENAME}"
-  local DOWNLOADFOLDER="${USER_HOME}/Downloads"
+  local DOWNLOADFOLDER="$(_find_downloads_folder)"
   enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
-  _install_rpm "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
+  cd "${DOWNLOADFOLDER}"
+  local _err=0
+  just_download_it "${TARGET_URL}"  "${CODENAME}"
+  _err=$?
+  if [ $_err -ne 0 ] ;  then
+  {
+    >&2 echo -e "${RED} ✘ ${YELLOW_OVER_DARKBLUE}${*}${RESET} Err:$_err Message: error deleting directory"
+    exit $_err
+  }
+  fi
+  file_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
+  tar -xvf "${DOWNLOADFOLDER}/${CODENAME}"
+  file_exists_with_spaces "${DOWNLOADFOLDER}/Discord"
+  directory_exists_with_spaces "/usr/lib64"
+  directory_exists_with_spaces "/usr/bin"
+  if  it_exists_with_spaces "/usr/lib64/discord" ; then
+  {
+    rm -rf "/usr/lib64/discord"
+    _err=$?
+  }
+  fi
+  if [ $_err -ne 0 ] ;  then
+  {
+    >&2 echo -e "${RED} ✘ ${YELLOW_OVER_DARKBLUE}${*}${RESET} Err:$_err Message: error deleting directory"
+    exit $_err
+  }
+  fi
+  directory_does_not_exist_with_spaces "/usr/lib64/discord"
+  if ! it_exists_with_spaces "/usr/bin/Discord" ; then
+  {
+    unlink "/usr/bin/Discord"
+    _err=$?
+  } else {
+    echo "whot"
+  }
+  fi
+  if [[ -L "/usr/bin/Discord" ]] ; then
+  {
+    echo "what"
+    unlink "/usr/bin/Discord"
+    _err=$?
+  }
+  fi
+  if [ $_err -ne 0 ] ;  then
+  {
+    >&2 echo -e "${RED} ✘ ${YELLOW_OVER_DARKBLUE}${*}${RESET} Err:$_err Message: error unlinking /usr/lib64/discord"
+    exit $_err
+  }
+  fi
+  file_does_not_exist_with_spaces "/usr/bin/Discord"
+  mv "${DOWNLOADFOLDER}/Discord" "/usr/lib64/discord"
+   _err=$?
+  if [ $_err -ne 0 ] ;  then
+  {
+    >&2 echo -e "${RED} ✘ ${YELLOW_OVER_DARKBLUE}${*}${RESET} Err:$_err Message: error moving directory from "${DOWNLOADFOLDER}/Discord" to /usr/lib64/discord"
+    exit $_err
+  }
+  fi
+  directory_exists_with_spaces "/usr/lib64/discord"
+  cd /usr/bin
+  ln -s /usr/lib64/discord/Discord /usr/bin/Discord
+  softlink_exists_with_spaces "/usr/bin/Discord>/usr/lib64/discord/Discord"
+  return 0
 } # end _fedora__64

@@ -306,10 +306,15 @@ EOF
 # $USER_HOME/_/software/phpstorm/bin/pstorm-open.sh
 # script opens URL in format phpstorm://open?file=%{file}:%{line} in phpstorm
 
-echo "\${@}"
+echo "spaceSpace"
+echo "spaceSpace"
+echo "spaceSpace"
+echo "<\${@}> <--- There should be something here between <>"
+echo "<\${*}> <--- There should be something here between <>"
 echo "\${@}" >>  $USER_HOME/_/work/requested.log
-$USER_HOME/_/software/phpstorm/bin/pstorm-open.rb \${@}
-filetoopen=\$($USER_HOME/_/software/phpstorm/bin/pstorm-open.rb "\${@}")
+last_line=\$(tail -1<<<\$(grep 'file='<$USER_HOME/_/work/requested.log))
+$USER_HOME/_/software/phpstorm/bin/pstorm-open.rb \${last_line}
+filetoopen=\$($USER_HOME/_/software/phpstorm/bin/pstorm-open.rb "\${last_line}")
 echo filetoopen "\${filetoopen}"
 echo "\${filetoopen}" >>  $USER_HOME/_/work/requestedfiletoopen.log
 pstorm "\${filetoopen}"
@@ -348,7 +353,7 @@ Version=2020.2
 Type=Application
 Name=phpstorm
 Icon=$USER_HOME/_/software/phpstorm/bin/phpstorm.svg
-Exec="$USER_HOME/_/software/phpstorm/bin/phpstorm.sh" %f
+Exec=$USER_HOME/_/software/phpstorm/bin/phpstorm.sh %f
 MimeType=application/x-pstorm;text/x-pstorm;text/plain;text/x-chdr;text/x-csrc;text/x-c++hdr;text/x-c++src;text/x-java;text/x-dsrc;text/x-pascal;text/x-perl;text/x-python;application/x-php;application/x-httpd-php3;application/x-httpd-php4;application/x-httpd-php5;application/xml;text/html;text/css;text/x-sql;text/x-diff;x-directory/normal;inode/directory;
 Comment=The Most Intelligent Php IDE
 Categories=Development;IDE;
@@ -375,7 +380,7 @@ Encoding=UTF-8
 Version=1.0
 Type=Application
 Terminal=true
-Exec="$USER_HOME/_/software/phpstorm/bin/pstorm-open.sh" %f
+Exec=$USER_HOME/_/software/phpstorm/bin/pstorm-open.sh %f
 MimeType=application/phpstorm;x-scheme-handler/phpstorm;
 Name=MineOpen
 Comment=BetterErrors

@@ -3,6 +3,22 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 #
+export realpath
+function realpath() {
+    local base dir f=$@;
+    if [ -d "$f" ]; then
+        base="";
+        dir="$f";
+    else
+        base="/$(basename "$f")";
+        dir=$(dirname "$f");
+    fi;
+    dir=$(cd "$dir" && /bin/pwd);
+    echo "$dir$base"
+}
+
+set -E -o functrace
+
 load_struct_testing_wget(){
     local provider="$HOME/_/clis/execute_command_intuivo_cli/struct_testing"
     [   -e "${provider}"  ] && source "${provider}"
@@ -17,10 +33,10 @@ get_lastest_sublime_version() {
     [[ -z "${SUBLIMELASTESTBUILD}" ]] && failed "Sublime Version not found!"
     echo "${SUBLIMELASTESTBUILD}"
 }
-download_sublime(){
+download_sublime() {
   # sample https://download.sublimetext.com/sublime-text_build-3133_amd64.deb
   if ( command -v wget >/dev/null 2>&1; ) ; then
-   wget --quiet --no-check-certificate "https://download.sublimetext.com/${1}" 2>/dev/null   # suppress only wget download messages, but keep wget output for variable
+    wget --quiet --no-check-certificate "https://download.sublimetext.com/${1}" 2>/dev/null   # suppress only wget download messages, but keep wget output for variable
   elif ( command -v curl >/dev/null 2>&1; ); then
     curl -O "https://download.sublimetext.com/${1}" 2>/dev/null   # suppress only wget download messages, but keep wget output for variable
   else
@@ -30,6 +46,7 @@ download_sublime(){
 install_darwin_lastest_sublime_64() {
     local SUBLIMELASTESTBUILD=$(get_lastest_sublime_version)
     local SUBLIMENAME="Sublime%20Text%20Build%20${SUBLIMELASTESTBUILD}.dmg"
+
     wait
     cd ~/Downloads/
     download_sublime "${SUBLIMENAME}"

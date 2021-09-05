@@ -106,7 +106,8 @@ _darwin__64() {
   ls -d "/Applications/${APPDIR}"
 
   _trust_dmgs_application "${APPDIR}"
-
+  ln -s /Applications/Beyond\ Compare.app/Contents/MacOS/bcomp /usr/local/bin/bcompare
+  ln -s /Applications/Beyond\ Compare.app/Contents/MacOS/bcomp /usr/local/bin/bcomp
     # sudo hdiutil attach ${CODENAME}
     # sudo cp -R /Volumes/Beyond\ Compare/Beyond\ Compare.app /Applications/
     # sudo hdiutil detach /Volumes/Beyond \ Compare

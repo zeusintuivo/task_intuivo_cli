@@ -68,7 +68,7 @@ function colorize(){
 }
 
 function _trap_on_error() {
-  local DEBUG=1
+  local DEBUG=0
   local __trapped_script_name="${1:-0}"
   local -ir __trapped_error_exit_num="${2:-0}"
   local -i _this_lineno="${3:-LINENO}"

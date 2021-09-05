@@ -3,6 +3,21 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 # 20200415 Compatible with Fedora, Mac, Ubuntu "sudo_up" "load_struct" "#
+
+export realpath   # mac is missing realpath
+function realpath() {
+    local base dir f=$@;
+    if [ -d "$f" ]; then
+        base="";
+        dir="$f";
+    else
+        base="/$(basename "$f")";
+        dir=$(dirname "$f");
+    fi;
+    dir=$(cd "$dir" && /bin/pwd);
+    echo "$dir$base"
+}
+
 set -E -o functrace
 export THISSCRIPTCOMPLETEPATH
 typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")"
@@ -128,7 +143,19 @@ _darwin__64() {
   # tar xof /Users/benutzer/Library/Caches/Homebrew/downloads/91845ed41d14ccff1a66f16db7c7ec93f7d7958bb08be637dae24d2aa70a214d--nano-5.4.catalina.bottle.tar.gz -C /var/folders/8x/9phrghz97g38v9m8m6r59_0w0000gn/T/d20201221-96141-1fi6gd9
   # cp -pR /var/folders/8x/9phrghz97g38v9m8m6r59_0w0000gn/T/d20201221-96141-1fi6gd9/nano/. /usr/local/Cellar/nano
   # chmod -Rf +w /var/folders/8x/9phrghz97g38v9m8m6r59_0w0000gn/T/d20201221-96141-1fi6gd9
-  brew install nano
+  if ! (su - "${SUDO_USER}" -c "brew install nano") ; then
+  {
+    local _orr=$?
+    if ! (su - "${SUDO_USER}" -c "brew reinstall nano") ; then
+    {
+      _err=$?
+      failed "- err: $_orr for su - \"${SUDO_USER}\" -c \"brew install nano\"    and  later also failed - err $_err for   su - \"${SUDO_USER}\" -c \"brew reinstall nano\"   "
+      brew reinstall nano
+      exit 1
+    }
+    fi
+  }
+  fi
   nano --version
 
   # REF: https://github.com/scopatz/nanorc
