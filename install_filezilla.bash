@@ -2,10 +2,29 @@
 #
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
+if ! ( command -v realpath >/dev/null 2>&1; ) ; then # MAC  # updated realpath macos 20210902
+{
+  # updated realpath macos 20210902
+  export realpath    # updated realpath macos 20210902
+  function realpath() ( # Macos after BigSur is missing realpath  # updated realpath macos 20210902
+    local OURPWD=$PWD
+    cd "$(dirname "$1")"
+    local LINK=$(readlink "$(basename "$1")")
+    while [ "$LINK" ]; do
+      cd "$(dirname "$LINK")"
+      LINK=$(readlink "$(basename "$1")")
+    done
+    local REALPATH="$PWD/$(basename "$1")"
+    cd "$OURPWD"
+    echo "$REALPATH"
+  )
+}
+fi
+
 # 20200415 Compatible with Fedora, Mac, Ubuntu "sudo_up" "load_struct"
 set -E -o functrace
 export THISSCRIPTCOMPLETEPATH
-typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")"
+typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")" # updated realpath macos 20210902
 export BASH_VERSION_NUMBER
 typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
 

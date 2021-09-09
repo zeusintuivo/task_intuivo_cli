@@ -2,24 +2,31 @@
 #
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
-# 20200415 Compatible with Fedora, Mac, Ubuntu "sudo_up" "load_struct" "#
-export realpath
-function realpath() {
-    local base dir f=$@;
-    if [ -d "$f" ]; then
-        base="";
-        dir="$f";
-    else
-        base="/$(basename "$f")";
-        dir=$(dirname "$f");
-    fi;
-    dir=$(cd "$dir" && /bin/pwd);
-    echo "$dir$base"
+if ! ( command -v realpath >/dev/null 2>&1; ) ; then # MAC  # updated realpath macos 20210902
+{
+  # updated realpath macos 20210902
+  export realpath    # updated realpath macos 20210902
+  function realpath() ( # Macos after BigSur is missing realpath  # updated realpath macos 20210902
+    local OURPWD=$PWD
+    cd "$(dirname "$1")"
+    local LINK=$(readlink "$(basename "$1")")
+    while [ "$LINK" ]; do
+      cd "$(dirname "$LINK")"
+      LINK=$(readlink "$(basename "$1")")
+    done
+    local REALPATH="$PWD/$(basename "$1")"
+    cd "$OURPWD"
+    echo "$REALPATH"
+  )
 }
+fi
+
+# 20200415 Compatible with Fedora, Mac, Ubuntu "sudo_up" "load_struct" "#
+
 
 set -E -o functrace
 export THISSCRIPTCOMPLETEPATH
-typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")"
+typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")" # updated realpath macos 20210902
 export BASH_VERSION_NUMBER
 typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
 
@@ -315,7 +322,7 @@ function new_version_is_higher(){
 
 function _do_install() {
   local SUBLIMENAME="sublime-text-${__online_version_from_page}-1.x86_64.rpm"
-  enforce_variable_with_value SUBLIMENAME "${SUBLIMENAME}"  
+  enforce_variable_with_value SUBLIMENAME "${SUBLIMENAME}"
   passed ${SUBLIMENAME}
   local CODENAME=${SUBLIMENAME}
   enforce_variable_with_value CODENAME "${CODENAME}"
@@ -336,21 +343,21 @@ _redhat_flavor_install() {
   passed "${__online_version_from_page}"
   if new_version_is_higher "${__online_version_from_page}" ; then
   {
-    Installing sublimetext  "${__online_version_from_page}" 
+    Installing sublimetext  "${__online_version_from_page}"
     exit 0
-    _do_install "${__online_version_from_page}" 
+    _do_install "${__online_version_from_page}"
   }
-  else 
+  else
   {
-    if [[ "${*}" == "--force" ]] && [[ "${*}" == "--reinstall" ]] ; then 
+    if [[ "${*}" == "--force" ]] && [[ "${*}" == "--reinstall" ]] ; then
     {
-      Installing --force --reinstall sublimetext  "${__online_version_from_page}" 
+      Installing --force --reinstall sublimetext  "${__online_version_from_page}"
       dnf remove sublime-text
-      _do_install "${__online_version_from_page}" 
+      _do_install "${__online_version_from_page}"
     }
     else
     {
-      Skipping sublimetext version is higher or same as installed . Use force use --force or --reinstall  to force reinstall     
+      Skipping sublimetext version is higher or same as installed . Use force use --force or --reinstall  to force reinstall
     }
     fi
   }

@@ -2,24 +2,28 @@
 #
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
-# 20200415 Compatible with Fedora, Mac, Ubuntu "sudo_up" "load_struct" "#
-export realpath
-function realpath() {
-    local base dir f=$@;
-    if [ -d "$f" ]; then
-        base="";
-        dir="$f";
-    else
-        base="/$(basename "$f")";
-        dir=$(dirname "$f");
-    fi;
-    dir=$(cd "$dir" && /bin/pwd);
-    echo "$dir$base"
+if ! ( command -v realpath >/dev/null 2>&1; ) ; then # MAC  # updated realpath macos 20210902
+{
+  # updated realpath macos 20210902
+  export realpath    # updated realpath macos 20210902
+  function realpath() ( # Macos after BigSur is missing realpath  # updated realpath macos 20210902
+    local OURPWD=$PWD
+    cd "$(dirname "$1")"
+    local LINK=$(readlink "$(basename "$1")")
+    while [ "$LINK" ]; do
+      cd "$(dirname "$LINK")"
+      LINK=$(readlink "$(basename "$1")")
+    done
+    local REALPATH="$PWD/$(basename "$1")"
+    cd "$OURPWD"
+    echo "$REALPATH"
+  )
 }
-
+fi
+# 20200415 Compatible with Fedora, Mac, Ubuntu "sudo_up" "load_struct" "#
 set -E -o functrace
 export THISSCRIPTCOMPLETEPATH
-typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")"
+typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")" # updated realpath macos 20210902
 export BASH_VERSION_NUMBER
 typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
 
@@ -197,57 +201,60 @@ _checka_tools_commander(){
   #}
   #fi
 } # end _checka_tools_commander
-
 function _if_not_contains(){
-      # Sample use:
-      #       _if_not_contains  || run_this
-      #
-      # discouraged use ---confusing using && and
-      #    _if_not_contains  && run_this
-      #
-      # echo "${policies}" > temp.xml
-      # if ! _if_not_contains temp.xml "{1,}" ; then
-      # {
-      # run this
-      # } else {
-      # passed "passwords policy already set to {1,}"
-      # }
-      # fi
-            local -i ret
-            local msg
-            ret=0
-            (( DEBUG )) && echo "1if"
-            [ ! -e "$1" ] && return 1
-            (( DEBUG )) && (cat -n "$1" )
-            msg=$(cat "$1" 2>&1)
-            ret=$?
-            (( DEBUG )) && echo "2if"
-            (( DEBUG )) && echo "${msg}"
-            [ $ret -gt 0 ] && return 1
-            (( DEBUG )) && echo "3if"
-            [[ "$msg" == *"No such"* ]] && return 1
-            (( DEBUG )) && echo "4if"
-            [[ "$msg" == *"nicht gefunden"* ]] && return 1
-            (( DEBUG )) && echo "5if"
-            [[ "$msg" == *"Permission denied"* ]] && return 1
-            (( DEBUG )) && echo "6if"
-            ret=0
-            (( DEBUG )) && echo 'echo "$msg" | grep "$2"'
-            (( DEBUG )) && echo 'echo '"$msg"' | grep '"$2"
-            (( DEBUG )) && ([[ -n "$msg" ]] ||  echo "6.5if file is empty")
-            [[ -n "$msg" ]] || return 1    # Not found
-            msg=$(echo "$msg" | grep "$2" 2>&1)
-            ret=$?
-            (( DEBUG )) && echo "7if $ret"
-            [ $ret -eq 0 ] && return 0     # Found
-            [ $ret -gt 0 ] && return 1    # Not Found
-            (( DEBUG )) && echo "8if"
-            [[ "$msg" == *"No such"* ]] && return 1
-            (( DEBUG )) && echo "9 if"
-            [[ "$msg" == *"nicht gefunden"* ]] && return 1
-            [[ "$msg" == *"Permission denied"* ]] && return 1
-            return 0  # Found
-} # end _if_not_contains
+            # Sample use:
+            #       _if_not_contains  || run_this
+            #       (_if_not_contains  "${cronallowfile}" "root") || echo 'root' >> "${cronallowfile}"
+            #       (_if_not_contains  "${cronallowfile}" "${SUDO_USER}") ||  echo "${SUDO_USER}" >> "${cronallowfile}"
+            #
+            # discouraged use ---confusing using && and
+            #    _if_not_contains  && run_this
+            #
+            # or
+            #
+            # echo "${policies}" > temp.xml
+            # if ! _if_not_contains temp.xml "{1,}" ; then
+            # {
+            #   run this
+            # } else {
+            #    passed "passwords policy already set to {1,}"
+            # }
+            # fi
+                    local -i ret
+                    local msg
+                    ret=0
+                    (( DEBUG )) && echo "1if"
+                    [ ! -e "$1" ] && return 1
+                    (( DEBUG )) && (cat -n "$1" )
+                    msg=$(cat "$1" 2>&1)
+                    ret=$?
+                    (( DEBUG )) && echo "2if"
+                    (( DEBUG )) && echo "${msg}"
+                    [ $ret -gt 0 ] && return 1
+                    (( DEBUG )) && echo "3if"
+                    [[ "$msg" == *"No such"* ]] && return 1
+                    (( DEBUG )) && echo "4if"
+                    [[ "$msg" == *"nicht gefunden"* ]] && return 1
+                    (( DEBUG )) && echo "5if"
+                    [[ "$msg" == *"Permission denied"* ]] && return 1
+                    (( DEBUG )) && echo "6if"
+                    ret=0
+                    (( DEBUG )) && echo 'echo "$msg" | grep "$2"'
+                    (( DEBUG )) && echo 'echo '"$msg"' | grep '"$2"
+                    (( DEBUG )) && ([[ -n "$msg" ]] ||  echo "6.5if file is empty")
+                    [[ -n "$msg" ]] || return 1    # Not found
+                    msg=$(echo "$msg" | grep "$2" 2>&1)
+                    ret=$?
+                    (( DEBUG )) && echo "7if $ret"
+                    [ $ret -eq 0 ] && return 0     # Found
+                    [ $ret -gt 0 ] && return 1    # Not Found
+                    (( DEBUG )) && echo "8if"
+                    [[ "$msg" == *"No such"* ]] && return 1
+                    (( DEBUG )) && echo "9 if"
+                    [[ "$msg" == *"nicht gefunden"* ]] && return 1
+                    [[ "$msg" == *"Permission denied"* ]] && return 1
+                    return 0  # Found
+        } # end _if_not_contains
 
 function _if_contains(){
   # Sample use
@@ -1151,7 +1158,7 @@ _setup_mycd(){
       echo "More ignore choices for excludesfile <..<${otherignore}>..>"
       if [[ -n "${otherignore}" ]] ; then
       {
-        local realdir=$(su - "${SUDO_USER}" -c "realpath  ${otherignore}")
+        local realdir=$(su - "${SUDO_USER}" -c "realpath  ${otherignore}") # updated realpath macos 20210902
         local dirother=$(dirname  "${realdir}")
         mkdir -p   "${dirother}"
         directory_exists_with_spaces "${dirother}"
