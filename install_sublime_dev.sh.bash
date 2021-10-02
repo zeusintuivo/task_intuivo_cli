@@ -2,25 +2,31 @@
 #
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
-#
-export realpath
-function realpath() {
-    local base dir f=$@;
-    if [ -d "$f" ]; then
-        base="";
-        dir="$f";
-    else
-        base="/$(basename "$f")";
-        dir=$(dirname "$f");
-    fi;
-    dir=$(cd "$dir" && /bin/pwd);
-    echo "$dir$base"
+if ! ( command -v realpath >/dev/null 2>&1; ) ; then # MAC  # updated realpath macos 20210902
+{
+  # updated realpath macos 20210902
+  export realpath    # updated realpath macos 20210902
+  function realpath() ( # Macos after BigSur is missing realpath  # updated realpath macos 20210902
+    local OURPWD=$PWD
+    cd "$(dirname "$1")"
+    local LINK=$(readlink "$(basename "$1")")
+    while [ "$LINK" ]; do
+      cd "$(dirname "$LINK")"
+      LINK=$(readlink "$(basename "$1")")
+    done
+    local REALPATH="$PWD/$(basename "$1")"
+    cd "$OURPWD"
+    echo "$REALPATH"
+  )
 }
+fi
+#
+
 
 set -E -o functrace
 
   export THISSCRIPTCOMPLETEPATH
-  typeset -r THISSCRIPTCOMPLETEPATH="$(realpath $(which $(basename "$0")))"   # § This goes in the FATHER-MOTHER script
+  typeset -r THISSCRIPTCOMPLETEPATH="$(realpath $(which $(basename "$0")))"  # updated realpath macos 20210902 # § This goes in the FATHER-MOTHER script
   export _err
   typeset -i _err=0
 load_struct_testing_wget(){

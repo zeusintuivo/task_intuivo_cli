@@ -3,17 +3,34 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 #
-
+if ! ( command -v realpath >/dev/null 2>&1; ) ; then # MAC  # updated realpath macos 20210902
+{
+  # updated realpath macos 20210902
+  export realpath    # updated realpath macos 20210902
+  function realpath() ( # Macos after BigSur is missing realpath  # updated realpath macos 20210902
+    local OURPWD=$PWD
+    cd "$(dirname "$1")"
+    local LINK=$(readlink "$(basename "$1")")
+    while [ "$LINK" ]; do
+      cd "$(dirname "$LINK")"
+      LINK=$(readlink "$(basename "$1")")
+    done
+    local REALPATH="$PWD/$(basename "$1")"
+    cd "$OURPWD"
+    echo "$REALPATH"
+  )
+}
+fi
 # Compatible start with low version bash, like mac before zsh change and after
 export USER_HOME
 export THISSCRIPTCOMPLETEPATH
-typeset -r THISSCRIPTCOMPLETEPATH="$(realpath $(which $(basename "$0")))"   # § This goes in the FATHER-MOTHER script
+typeset -r THISSCRIPTCOMPLETEPATH="$(realpath $(which $(basename "$0")))"  # updated realpath macos 20210902  # § This goes in the FATHER-MOTHER script
 
 export BASH_VERSION_NUMBER
 typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
 
 export  THISSCRIPTNAME
-typeset -r THISSCRIPTNAME="$(realpath $(which $(basename "$0")))"
+typeset -r THISSCRIPTNAME="$(realpath $(which $(basename "$0")))"  # updated realpath macos 20210902
 
 export _err
 typeset -i _err=0
@@ -82,7 +99,7 @@ _fedora__64() {
   echo Fedora 32 REF: https://tecadmin.net/install-oracle-virtualbox-on-fedora/
   echo Fedora 33 https://www.if-not-true-then-false.com/2010/install-virtualbox-with-yum-on-fedora-centos-red-hat-rhel/
   _linux_prepare
-  
+
 	if it_exists_with_spaces "/etc/yum.repos.d/virtualbox.repo" ; then
   {
     file_exists_with_spaces "/etc/yum.repos.d/virtualbox.repo"
@@ -140,7 +157,7 @@ _fedora__64() {
     pv
     nano
     vim
-    
+
     gcc
     make
     modinfo
@@ -160,7 +177,7 @@ _fedora__64() {
   export KERN_DIR=/usr/src/kernels/`uname -r`
   echo $KERN_DIR
   cd  "${USER_HOME}"
-  if [ ! -f  "${USER_HOME}/.virtualboxinstallrebootsigned" ] ; then 
+  if [ ! -f  "${USER_HOME}/.virtualboxinstallrebootsigned" ] ; then
   {
     mkdir -p /root/signed-modules
     cd /root/signed-modules
@@ -195,12 +212,12 @@ _fedora__64() {
     [ ! -f  "${USER_HOME}/.virtualboxinstallrebootsigned" ] && touch "${USER_HOME}/.virtualboxinstallrebootsigned"  && _pause "sign reboot 4" && reboot
   }
   fi
-  if [ ! -f  "${USER_HOME}/.virtualboxinstallrebootsigned2" ] ; then 
+  if [ ! -f  "${USER_HOME}/.virtualboxinstallrebootsigned2" ] ; then
   {
       cd /root/signed-modules
       # need to sign the kernel modules (vboxdrv, vboxnetflt, vboxnetadp, vboxpci)
-        
-    cat <<EOF | tee /root/signed-modules/sign-virtual-box 
+
+    cat <<EOF | tee /root/signed-modules/sign-virtual-box
 #!/bin/bash
 
 for modfile in $(dirname $(modinfo -n vboxdrv))/*.ko; do
@@ -229,7 +246,7 @@ for modfile in $(dirname $(modinfo -n vboxpci))/*.ko; do
 done
 EOF
     echo REF: https://superuser.com/questions/1539756/virtualbox-6-fedora-30-efi-secure-boot-you-may-need-to-sign-the-kernel-modules
-    chmod 700 /root/signed-modules/sign-virtual-box 
+    chmod 700 /root/signed-modules/sign-virtual-box
     /root/signed-modules/sign-virtual-box
 
     echo "
@@ -243,7 +260,7 @@ EOF
 
 rm "${USER_HOME}/.virtualboxinstallrebootsigned"
 rm "${USER_HOME}/.virtualboxinstallrebootsigned2"
-rm "${USER_HOME}/.virtualboxinstallreboot" 
+rm "${USER_HOME}/.virtualboxinstallreboot"
 
   /usr/lib/virtualbox/vboxdrv.sh setup
 
@@ -278,7 +295,7 @@ rm "${USER_HOME}/.virtualboxinstallreboot"
 # sudo dnf -y remove VirtualBox
 # sudo dnf -y uninstall VirtualBox
 # sudo dnf -y remove VirtualBox
-# sudo dnf -y remove VirtualBox-6.0-6.0.14_133895_fedora29-1.x86_64 
+# sudo dnf -y remove VirtualBox-6.0-6.0.14_133895_fedora29-1.x86_64
 # sudo dnf -y clean
 # su - root /sbin/vboxconfig
 # sudo /etc/init.d/vboxdrv setup
@@ -322,7 +339,7 @@ rm "${USER_HOME}/.virtualboxinstallreboot"
 
 # kmodsign sha512 MOK.priv MOK.der module.ko
 
-# module.ko 
+# module.ko
 
 # hexdump -Cv module.ko | tail -n 5
 
@@ -371,11 +388,11 @@ EOF
 
 openssl req -x509 -new -nodes -utf8 -sha256 -days 36500 -batch -config configuration_file.config -outform DER -out public_key.der -keyout private_key.priv
 
-# mokutil -#-import 
+# mokutil -#-import
 
 # ls
 
-mokutil --import public_key.der 
+mokutil --import public_key.der
 
 # make -C /usr/src/kernels/$(uname -r) M=$PWD modules
 
@@ -383,7 +400,7 @@ mokutil --import public_key.der
 
 # perl /usr/src/kernels/$(uname -r)/scripts/sign-file sha256 my_signing_key.priv my_signing_key_pub.der my_module.ko
 
-# perl /usr/src/kernels/$(uname -r)/scripts/sign-file sha256 my_signing_key.priv my_signing_key_pub.der my_module.ko 
+# perl /usr/src/kernels/$(uname -r)/scripts/sign-file sha256 my_signing_key.priv my_signing_key_pub.der my_module.ko
 
 # mokutil
 
@@ -398,13 +415,13 @@ mokutil --import public_key.der
 # lsmod | grep vbox
 
 
-echo now login as root su 
-echo and run 
+echo now login as root su
+echo and run
 echo "
 su
-KERN_DIR=/usr/src/kernels/`uname -r` 
+KERN_DIR=/usr/src/kernels/`uname -r`
 export KERN_DIR
-/sbin/vboxconfig 
+/sbin/vboxconfig
 
 "
 _pause " Presiona tecla para terminar aqui "
