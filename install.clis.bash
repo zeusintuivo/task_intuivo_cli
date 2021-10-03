@@ -2,28 +2,31 @@
 #
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
-if ! ( command -v realpath >/dev/null 2>&1; ) ; then # MAC  # updated realpath macos 20210902
+if ! ( command -v realpath >/dev/null 2>&1; ) ; then # MAC  # updated realpath macos 20210924
 {
-  # updated realpath macos 20210902
-  export realpath    # updated realpath macos 20210902
-  function realpath() ( # Macos after BigSur is missing realpath  # updated realpath macos 20210902
-    local OURPWD=$PWD
-    cd "$(dirname "$1")"
-    local LINK=$(readlink "$(basename "$1")")
-    while [ "$LINK" ]; do
-      cd "$(dirname "$LINK")"
-      LINK=$(readlink "$(basename "$1")")
+  # updated realpath macos 20210924
+  export realpath    # updated realpath macos 20210924
+  function realpath() ( # Macos after BigSur is missing realpath  # updated realpath macos 20210924
+    local _our_pwd="${PWD}"
+    cd "$(dirname "${1}")" || (echo "${1}" && return 0)
+    local _link=""
+    _link="$(readlink "$(basename "${1}")")"
+    while [ "${_link}" ]; do
+      cd "$(dirname "${_link}")" || (echo "${1}" && return 0)
+      _link="$(readlink "$(basename "${1}")")"
     done
-    local REALPATH="$PWD/$(basename "$1")"
-    cd "$OURPWD"
-    echo "$REALPATH"
+    local _resolved_path=""
+    _resolved_path="${PWD}/$(basename "${1}")"
+    cd "${_our_pwd}" || (echo "${1}" && return 0)
+    echo "${_resolved_path}"
+    return 0
   )
 }
 fi
 # 20200415 Compatible with Fedora, Mac, Ubuntu "sudo_up" "load_struct" "#
 set -E -o functrace
 export THISSCRIPTCOMPLETEPATH
-typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")" # updated realpath macos 20210902
+typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")" # updated realpath macos 20210924
 export BASH_VERSION_NUMBER
 typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
 
@@ -1158,7 +1161,7 @@ _setup_mycd(){
       echo "More ignore choices for excludesfile <..<${otherignore}>..>"
       if [[ -n "${otherignore}" ]] ; then
       {
-        local realdir=$(su - "${SUDO_USER}" -c "realpath  ${otherignore}") # updated realpath macos 20210902
+        local realdir=$(su - "${SUDO_USER}" -c "realpath  ${otherignore}") # updated realpath macos 20210924
         local dirother=$(dirname  "${realdir}")
         mkdir -p   "${dirother}"
         directory_exists_with_spaces "${dirother}"
