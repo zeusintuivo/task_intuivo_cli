@@ -18,7 +18,7 @@ load_struct_testing_wget
 
 function _linux_prepare(){
   export  THISSCRIPTNAME
-  typeset -gr THISSCRIPTNAME="$(pwd)/$(basename "$0")"
+  typeset -r THISSCRIPTNAME="$(pwd)/$(basename "$0")"
   export _err
   typeset -i _err=0
   load_execute_boot_basic_with_sudo(){
@@ -29,7 +29,7 @@ function _linux_prepare(){
       # typeset -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)  # Get the caller's of sudo home dir Just Linux
       # shellcheck disable=SC2046
       # shellcheck disable=SC2031
-      typeset -rg USER_HOME="$(echo -n $(bash -c "cd ~${SUDO_USER} && pwd"))"  # Get the caller's of sudo home dir LINUX and MAC
+      typeset -r USER_HOME="$(echo -n $(bash -c "cd ~${SUDO_USER} && pwd"))"  # Get the caller's of sudo home dir LINUX and MAC
     }
     else
     {
