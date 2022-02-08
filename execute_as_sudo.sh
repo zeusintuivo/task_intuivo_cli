@@ -125,7 +125,7 @@ function execute_as_sudo(){
   # REF: http://superuser.com/questions/195781/sudo-is-there-a-command-to-check-if-i-have-sudo-and-or-how-much-time-is-left
   local -i CAN_I_RUN_SUDO=$(sudo -n uptime 2>&1|grep "load"|wc -l)
   if [ ${CAN_I_RUN_SUDO} -gt 0 ]; then
-    echo -e "\033[01;7m*** Running as sudo ...\033[0m"
+    (( DEBUG )) && echo -e "\033[01;7m*** Running as sudo ...\033[0m"
   else
     echo "Needs to run as sudo ... ${0}"
   fi

@@ -7,14 +7,15 @@
 
 
 function generate_installer(){
-	local _sudoer="$(<tasks_base/sudoer.bash)"
+  local _sudoer="$(<tasks_base/sudoer.bash)"
   local _sudoer_lines="$(cat tasks_base/sudoer.bash | wc -l)"
   local _body_template="$(<tasks_templates_sudo/${1})"
   local _main="$(<tasks_base/main.bash)"
   echo "${_sudoer}" > "install_${1}.bash"
-  echo -e "\n\n\n #--------\/\/\/\/-- install_${1}.bash -- Custom code -\/\/\/\/-------\n\n" >> "install_${1}.bash"
+  echo -e "\n\n\n #---------/\/\/\-- tasks_base/sudoer.bash -------------/\/\/\--------\n\n" >> "install_${1}.bash"
+  echo -e "\n\n\n #--------\/\/\/\/-- tasks_templates_sudo/${1} …install_${1}.bash” -- Custom code -\/\/\/\/-------\n\n" >> "install_${1}.bash"
   echo "${_body_template}" >> "install_${1}.bash"
-  echo -e "\n\n\n #--------/\/\/\/\-- install_${1}.bash -- Custom code-/\/\/\/\-------\n\n" >> "install_${1}.bash"
+  echo -e "\n\n\n #--------/\/\/\/\-- tasks_templates_sudo/${1} …install_${1}.bash” -- Custom code-/\/\/\/\-------\n\n" >> "install_${1}.bash"
   echo "${_main}" >> "install_${1}.bash"
   chmod a+x "install_${1}.bash"
   subl "install_${1}.bash:${_sudoer_lines}"

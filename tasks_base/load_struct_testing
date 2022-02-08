@@ -23,18 +23,18 @@ load_struct_testing(){
     local provider="$HOME/_/clis/execute_command_intuivo_cli/struct_testing"
     local _err=0 structsource
     if [   -e "${provider}"  ] ; then
-      echo "Loading locally"
+      (( DEBUG )) && echo "$0 tasks_base/load_struct_testing Loading locally"
       structsource="""$(<"${provider}")"""
       _err=$?
       [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading struct_testing. running 'source locally' returned error did not download or is empty err:$_err  \n \n  " && exit 1
     else
       if ( command -v curl >/dev/null 2>&1; )  ; then
-        echo "Loading struct_testing from the net using curl "
+        (( DEBUG )) && echo "$0 tasks_base/load_struct_testing curl Loading struct_testing from the net using curl "
         structsource="""$(curl https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing  -so -   2>/dev/null )"""  #  2>/dev/null suppress only curl download messages, but keep curl output for variable
         _err=$?
         [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading struct_testing. running 'curl' returned error did not download or is empty err:$_err  \n \n  " && exit 1
       elif ( command -v wget >/dev/null 2>&1; ) ; then
-        echo "Loading struct_testing from the net using wget "
+        (( DEBUG )) && echo "$0 tasks_base/load_struct_testing wget Loading struct_testing from the net using wget "
         structsource="""$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing -O -   2>/dev/null )"""  #  2>/dev/null suppress only wget download messages, but keep wget output for variable
         _err=$?
         [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading struct_testing. running 'wget' returned error did not download or is empty err:$_err  \n \n  " && exit 1
@@ -46,7 +46,7 @@ load_struct_testing(){
     [[ -z "${structsource}" ]] && echo -e "\n \n  ERROR! Loading struct_testing. structsource did not download or is empty " && exit 1
     local _temp_dir="$(mktemp -d 2>/dev/null || mktemp -d -t 'struct_testing_source')"
     echo "${structsource}">"${_temp_dir}/struct_testing"
-    echo "Temp location ${_temp_dir}/struct_testing"
+    (( DEBUG )) && echo "$0 tasks_base/load_struct_testing  Temp location ${_temp_dir}/struct_testing"
     source "${_temp_dir}/struct_testing"
     _err=$?
     [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading struct_testing. Occured while running 'source' err:$_err  \n \n  " && exit 1

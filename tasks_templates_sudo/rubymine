@@ -40,124 +40,6 @@ _version() {
   echo "${CODENAME}"
   return 0
 } # end _version
-
-_darwin__64() {
-  verify_is_installed "
-    wget
-  "
-  local _err=$?
-  local CODENAME=$(_version "mac" "*.*")
-  _err=$?
-  echo "${CODENAME}";  # show either version or log with errors
-  # exit on error
-  [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! _version:$_err  \n \n  " && exit 1
-
-  local TARGET_URL="$(echo -en "${CODENAME}" | tail -1)"
-  CODENAME="$(basename "${TARGET_URL}" )"
-  local VERSION="$(echo -en "${CODENAME}" | sed 's/RubyMine-//g' | sed 's/.dmg//g' )"
-  enforce_variable_with_value VERSION "${VERSION}"
-  local UNZIPDIR="$(echo -en "${CODENAME}" | sed 's/'"${VERSION}"'//g' | sed 's/.dmg//g'| sed 's/-//g')"
-  local APPDIR="$(echo -en "${CODENAME}" | sed 's/'"${VERSION}"'//g' | sed 's/.dmg//g'| sed 's/-//g').app"
-  # echo "${CODENAME}";
-  # echo "${URL}";
-  echo "CODENAME: ${CODENAME}"
-  enforce_variable_with_value CODENAME "${CODENAME}"
-  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
-  enforce_variable_with_value HOME "${HOME}"
-  echo "UNZIPDIR: ${UNZIPDIR}"
-  enforce_variable_with_value UNZIPDIR "${UNZIPDIR}"
-  echo "APPDIR: ${APPDIR}"
-  enforce_variable_with_value APPDIR "${APPDIR}"
-  local DOWNLOADFOLDER="${HOME}/Downloads"
-  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-  directory_exists_with_spaces "${DOWNLOADFOLDER}"
-
-  if it_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}" ; then
-  {
-    file_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
-  }
-  else
-  {
-    cd "${DOWNLOADFOLDER}"
-    _download "${TARGET_URL}" "${DOWNLOADFOLDER}"  ${CODENAME}
-    file_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
-  }
-  fi
-  if  it_exists_with_spaces "/Applications/${APPDIR}" ; then
-  {
-      echo Remove  unzipped "/Applications/${APPDIR}"
-      sudo rm -rf  "/Applications/${APPDIR}"
-      directory_does_not_exist_with_spaces  "/Applications/${APPDIR}"
-  }
-  fi
-  echo Attaching dmg downloaded
-  sudo hdiutil attach "${DOWNLOADFOLDER}/${CODENAME}"
-  ls "/Volumes"
-  directory_exists_with_spaces "/Volumes/${UNZIPDIR}"
-  directory_exists_with_spaces "/Volumes/${UNZIPDIR}/${APPDIR}"
-  echo "sudo  cp -R /Volumes/${UNZIPDIR}/${APPDIR} /Applications/"
-  sudo  cp -R /Volumes/${UNZIPDIR}/${APPDIR} /Applications/
-  ls -d "/Applications/${APPDIR}"
-  directory_exists_with_spaces "/Applications/${APPDIR}"
-  sudo hdiutil detach "/Volumes/${UNZIPDIR}"
-} # end _darwin__64
-
-_ubuntu__64() {
-  _linux_prepare
-  local CODENAME=$(_version "linux" "RubyMine-*.*.*.*amd64.deb")
-  # THOUGHT          local CODENAME="RubyMine-4.3.3.24545_amd64.deb"
-  local URL="https://download-cf.jetbrains.com/ruby/${CODENAME}"
-  cd $USER_HOME/Downloads/
-  _download "${URL}"
-  sudo dpkg -i ${CODENAME}
-} # end _ubuntu__64
-
-_ubuntu__32() {
-  local CODENAME=$(_version "linux" "RubyMine-*.*.*.*i386.deb")
-  # THOUGHT local CODENAME="RubyMine-4.3.3.24545_i386.deb"
-  local URL="https://download-cf.jetbrains.com/ruby/${CODENAME}"
-  cd $USER_HOME/Downloads/
-  _download "${URL}"
-  sudo dpkg -i ${CODENAME}
-} # end _ubuntu__32
-
-_fedora__32() {
-  _linux_prepare
-  local CODENAME=$(_version "linux" "RubyMine*.*.*.*.i386.rpm")
-  # THOUGHT                          RubyMine-4.3.3.24545.i386.rpm
-  local TARGET_URL="https://download-cf.jetbrains.com/ruby/${CODENAME}"
-  file_exists_with_spaces $USER_HOME/Downloads
-  enforce_variable_with_value CODENAME "${CODENAME}"
-  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
-  cd $USER_HOME/Downloads
-  _download "${TARGET_URL}" $USER_HOME/Downloads  ${CODENAME}
-  file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}"
-  ensure tar or "Canceling Install. Could not find tar command to execute unzip"
-
-  # provide error handling , once learned goes here. LEarn under if, once learned here.
-  # Start loop while ERROR flag in case needs to try again, based on error
-  _try "rpm --import https://download-cf.jetbrains.com/ruby/RPM-GPG-KEY-scootersoftware"
-  local msg=$(_try "rpm -ivh \"$USER_HOME/Downloads/${CODENAME}\"" )
-  local ret=$?
-  if [ $ret -gt 0 ] ; then
-  {
-    failed "${ret}:${msg}"
-    # add error handling knowledge while learning.
-  }
-  else
-  {
-    passed Install with RPM success!
-  }
-  fi
-  ensure RubyMine or "Failed to install RubyMine"
-  rm -f "$USER_HOME/Downloads/${CODENAME}"
-  file_does_not_exist_with_spaces "$USER_HOME/Downloads/${CODENAME}"
-} # end _fedora__32
-
-_centos__64() {
-  _fedora__64
-} # end _centos__64
 _unzip(){
   # Sample use
   #
@@ -519,6 +401,124 @@ EOF
   end
   "
 } # end _add_mine_associacions_and_browser_click_to_open
+
+_darwin__64() {
+  verify_is_installed "
+    wget
+  "
+  local _err=$?
+  local CODENAME=$(_version "mac" "*.*")
+  _err=$?
+  echo "${CODENAME}";  # show either version or log with errors
+  # exit on error
+  [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! _version:$_err  \n \n  " && exit 1
+
+  local TARGET_URL="$(echo -en "${CODENAME}" | tail -1)"
+  CODENAME="$(basename "${TARGET_URL}" )"
+  local VERSION="$(echo -en "${CODENAME}" | sed 's/RubyMine-//g' | sed 's/.dmg//g' )"
+  enforce_variable_with_value VERSION "${VERSION}"
+  local UNZIPDIR="$(echo -en "${CODENAME}" | sed 's/'"${VERSION}"'//g' | sed 's/.dmg//g'| sed 's/-//g')"
+  local APPDIR="$(echo -en "${CODENAME}" | sed 's/'"${VERSION}"'//g' | sed 's/.dmg//g'| sed 's/-//g').app"
+  # echo "${CODENAME}";
+  # echo "${URL}";
+  echo "CODENAME: ${CODENAME}"
+  enforce_variable_with_value CODENAME "${CODENAME}"
+  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
+  enforce_variable_with_value HOME "${HOME}"
+  echo "UNZIPDIR: ${UNZIPDIR}"
+  enforce_variable_with_value UNZIPDIR "${UNZIPDIR}"
+  echo "APPDIR: ${APPDIR}"
+  enforce_variable_with_value APPDIR "${APPDIR}"
+  local DOWNLOADFOLDER="${HOME}/Downloads"
+  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  directory_exists_with_spaces "${DOWNLOADFOLDER}"
+
+  if it_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}" ; then
+  {
+    file_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
+  }
+  else
+  {
+    cd "${DOWNLOADFOLDER}"
+    _download "${TARGET_URL}" "${DOWNLOADFOLDER}"  ${CODENAME}
+    file_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
+  }
+  fi
+  if  it_exists_with_spaces "/Applications/${APPDIR}" ; then
+  {
+      echo Remove  unzipped "/Applications/${APPDIR}"
+      sudo rm -rf  "/Applications/${APPDIR}"
+      directory_does_not_exist_with_spaces  "/Applications/${APPDIR}"
+  }
+  fi
+  echo Attaching dmg downloaded
+  sudo hdiutil attach "${DOWNLOADFOLDER}/${CODENAME}"
+  ls "/Volumes"
+  directory_exists_with_spaces "/Volumes/${UNZIPDIR}"
+  directory_exists_with_spaces "/Volumes/${UNZIPDIR}/${APPDIR}"
+  echo "sudo  cp -R /Volumes/${UNZIPDIR}/${APPDIR} /Applications/"
+  sudo  cp -R /Volumes/${UNZIPDIR}/${APPDIR} /Applications/
+  ls -d "/Applications/${APPDIR}"
+  directory_exists_with_spaces "/Applications/${APPDIR}"
+  sudo hdiutil detach "/Volumes/${UNZIPDIR}"
+} # end _darwin__64
+
+_ubuntu__64() {
+  _linux_prepare
+  local CODENAME=$(_version "linux" "RubyMine-*.*.*.*amd64.deb")
+  # THOUGHT          local CODENAME="RubyMine-4.3.3.24545_amd64.deb"
+  local URL="https://download-cf.jetbrains.com/ruby/${CODENAME}"
+  cd $USER_HOME/Downloads/
+  _download "${URL}"
+  sudo dpkg -i ${CODENAME}
+} # end _ubuntu__64
+
+_ubuntu__32() {
+  local CODENAME=$(_version "linux" "RubyMine-*.*.*.*i386.deb")
+  # THOUGHT local CODENAME="RubyMine-4.3.3.24545_i386.deb"
+  local URL="https://download-cf.jetbrains.com/ruby/${CODENAME}"
+  cd $USER_HOME/Downloads/
+  _download "${URL}"
+  sudo dpkg -i ${CODENAME}
+} # end _ubuntu__32
+
+_fedora__32() {
+  _linux_prepare
+  local CODENAME=$(_version "linux" "RubyMine*.*.*.*.i386.rpm")
+  # THOUGHT                          RubyMine-4.3.3.24545.i386.rpm
+  local TARGET_URL="https://download-cf.jetbrains.com/ruby/${CODENAME}"
+  file_exists_with_spaces $USER_HOME/Downloads
+  enforce_variable_with_value CODENAME "${CODENAME}"
+  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  cd $USER_HOME/Downloads
+  _download "${TARGET_URL}" $USER_HOME/Downloads  ${CODENAME}
+  file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}"
+  ensure tar or "Canceling Install. Could not find tar command to execute unzip"
+
+  # provide error handling , once learned goes here. LEarn under if, once learned here.
+  # Start loop while ERROR flag in case needs to try again, based on error
+  _try "rpm --import https://download-cf.jetbrains.com/ruby/RPM-GPG-KEY-scootersoftware"
+  local msg=$(_try "rpm -ivh \"$USER_HOME/Downloads/${CODENAME}\"" )
+  local ret=$?
+  if [ $ret -gt 0 ] ; then
+  {
+    failed "${ret}:${msg}"
+    # add error handling knowledge while learning.
+  }
+  else
+  {
+    passed Install with RPM success!
+  }
+  fi
+  ensure RubyMine or "Failed to install RubyMine"
+  rm -f "$USER_HOME/Downloads/${CODENAME}"
+  file_does_not_exist_with_spaces "$USER_HOME/Downloads/${CODENAME}"
+} # end _fedora__32
+
+_centos__64() {
+  _fedora__64
+} # end _centos__64
 
 _fedora__64() {
   _linux_prepare

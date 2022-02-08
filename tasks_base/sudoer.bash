@@ -51,18 +51,18 @@ load_struct_testing(){
       local provider="$HOME/_/clis/execute_command_intuivo_cli/${_library}"
       local _err=0 structsource
       if [   -e "${provider}"  ] ; then
-        echo "Loading locally"
+        (( DEBUG )) && echo "$0: tasks_base/sudoer.bash Loading locally"
         structsource="""$(<"${provider}")"""
         _err=$?
         [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading ${_library}. running 'source locally' returned error did not download or is empty err:$_err  \n \n  " && exit 1
       else
         if ( command -v curl >/dev/null 2>&1; )  ; then
-          echo "Loading ${_library} from the net using curl "
+          (( DEBUG )) && echo "$0: tasks_base/sudoer.bash Loading ${_library} from the net using curl "
           structsource="""$(curl https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/${_library}  -so -   2>/dev/null )"""  #  2>/dev/null suppress only curl download messages, but keep curl output for variable
           _err=$?
           [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading ${_library}. running 'curl' returned error did not download or is empty err:$_err  \n \n  " && exit 1
         elif ( command -v wget >/dev/null 2>&1; ) ; then
-          echo "Loading ${_library} from the net using wget "
+          (( DEBUG )) && echo "$0: tasks_base/sudoer.bash Loading ${_library} from the net using wget "
           structsource="""$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/${_library} -O -   2>/dev/null )"""  #  2>/dev/null suppress only wget download messages, but keep wget output for variable
           _err=$?
           [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading ${_library}. running 'wget' returned error did not download or is empty err:$_err  \n \n  " && exit 1
@@ -74,7 +74,7 @@ load_struct_testing(){
       [[ -z "${structsource}" ]] && echo -e "\n \n  ERROR! Loading ${_library} into ${_library}_source did not download or is empty " && exit 1
       local _temp_dir="$(mktemp -d 2>/dev/null || mktemp -d -t "${_library}_source")"
       echo "${structsource}">"${_temp_dir}/${_library}"
-      echo "Temp location ${_temp_dir}/${_library}"
+      (( DEBUG )) && echo "$0: tasks_base/sudoer.bash Temp location ${_temp_dir}/${_library}"
       source "${_temp_dir}/${_library}"
       _err=$?
       [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading ${_library}. Occured while running 'source' err:$_err  \n \n  " && exit 1

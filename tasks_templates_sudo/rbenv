@@ -1,6 +1,27 @@
 
 _debian_flavor_install() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  # 18.04
+  sudo apt update -y
+  sudo apt install autoconf bison build-essential libssl-dev libyaml-dev libreadline6-dev zlib1g-dev libncurses5-dev libffi-dev libgdbm5 libgdbm-dev -y
+  # 20.04
+  sudo apt update -y
+  sudo apt install autoconf bison build-essential libssl-dev libyaml-dev libreadline6-dev zlib1g-dev libncurses5-dev libffi-dev libgdbm6 libgdbm-dev -y
+
+  git clone https://github.com/rbenv/rbenv.git ~/.rbenv
+  echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bashrc
+  echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bash_profile
+  echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.profile
+  echo 'eval "$(rbenv init -)"' >> ~/.bashrc
+  echo 'eval "$(rbenv init -)"' >> ~/.zshrc
+  type rbenv
+  export PATH="$HOME/.rbenv/bin:$PATH"
+  eval "$(rbenv init -)"
+  git clone https://github.com/rbenv/ruby-build.git ~/.rbenv/plugins/ruby-build
+  rbenv install -l
+  rbenv install 2.6.5
+  rbenv global 2.6.5
+  rbenv rehash
+  ruby -v
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
