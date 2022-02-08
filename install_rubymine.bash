@@ -4,10 +4,9 @@
 #
 # 20200415 Compatible with Fedora, Mac, Ubuntu "sudo_up" "load_struct" "#
 
-
 set -E -o functrace
 export THISSCRIPTCOMPLETEPATH
-typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")"  # updated realpath macos 20210902
+typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")"   # updated realpath macos 20210902
 export BASH_VERSION_NUMBER
 typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
 
@@ -45,42 +44,48 @@ load_struct_testing(){
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
     exit 1
   }
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-    local provider="$HOME/_/clis/execute_command_intuivo_cli/struct_testing"
-    local _err=0 structsource
-    if [   -e "${provider}"  ] ; then
-      echo "Loading locally"
-      structsource="""$(<"${provider}")"""
-      _err=$?
-      [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading struct_testing. running 'source locally' returned error did not download or is empty err:$_err  \n \n  " && exit 1
-    else
-      if ( command -v curl >/dev/null 2>&1; )  ; then
-        echo "Loading struct_testing from the net using curl "
-        structsource="""$(curl https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing  -so -   2>/dev/null )"""  #  2>/dev/null suppress only curl download messages, but keep curl output for variable
+  function load_library(){
+    local _library="${1:struct_testing}"
+    [[ -z "${1}" ]] && echo "Must call with name of library example: struct_testing execute_command" && exit 1
+    trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+      local provider="$HOME/_/clis/execute_command_intuivo_cli/${_library}"
+      local _err=0 structsource
+      if [   -e "${provider}"  ] ; then
+        (( DEBUG )) && echo "$0: tasks_base/sudoer.bash Loading locally"
+        structsource="""$(<"${provider}")"""
         _err=$?
-        [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading struct_testing. running 'curl' returned error did not download or is empty err:$_err  \n \n  " && exit 1
-      elif ( command -v wget >/dev/null 2>&1; ) ; then
-        echo "Loading struct_testing from the net using wget "
-        structsource="""$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing -O -   2>/dev/null )"""  #  2>/dev/null suppress only wget download messages, but keep wget output for variable
-        _err=$?
-        [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading struct_testing. running 'wget' returned error did not download or is empty err:$_err  \n \n  " && exit 1
+        [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading ${_library}. running 'source locally' returned error did not download or is empty err:$_err  \n \n  " && exit 1
       else
-        echo -e "\n \n  ERROR! Loading struct_testing could not find wget or curl to download  \n \n "
-        exit 69
+        if ( command -v curl >/dev/null 2>&1; )  ; then
+          (( DEBUG )) && echo "$0: tasks_base/sudoer.bash Loading ${_library} from the net using curl "
+          structsource="""$(curl https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/${_library}  -so -   2>/dev/null )"""  #  2>/dev/null suppress only curl download messages, but keep curl output for variable
+          _err=$?
+          [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading ${_library}. running 'curl' returned error did not download or is empty err:$_err  \n \n  " && exit 1
+        elif ( command -v wget >/dev/null 2>&1; ) ; then
+          (( DEBUG )) && echo "$0: tasks_base/sudoer.bash Loading ${_library} from the net using wget "
+          structsource="""$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/${_library} -O -   2>/dev/null )"""  #  2>/dev/null suppress only wget download messages, but keep wget output for variable
+          _err=$?
+          [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading ${_library}. running 'wget' returned error did not download or is empty err:$_err  \n \n  " && exit 1
+        else
+          echo -e "\n \n  ERROR! Loading ${_library} could not find wget or curl to download  \n \n "
+          exit 69
+        fi
       fi
-    fi
-    [[ -z "${structsource}" ]] && echo -e "\n \n  ERROR! Loading struct_testing. structsource did not download or is empty " && exit 1
-    local _temp_dir="$(mktemp -d 2>/dev/null || mktemp -d -t 'struct_testing_source')"
-    echo "${structsource}">"${_temp_dir}/struct_testing"
-    echo "Temp location ${_temp_dir}/struct_testing"
-    source "${_temp_dir}/struct_testing"
-    _err=$?
-    [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading struct_testing. Occured while running 'source' err:$_err  \n \n  " && exit 1
-    if  ! typeset -f passed >/dev/null 2>&1; then
-      echo -e "\n \n  ERROR! Loading struct_testing. Passed was not loaded !!!  \n \n "
-      exit 69;
-    fi
-    return $_err
+      [[ -z "${structsource}" ]] && echo -e "\n \n  ERROR! Loading ${_library} into ${_library}_source did not download or is empty " && exit 1
+      local _temp_dir="$(mktemp -d 2>/dev/null || mktemp -d -t "${_library}_source")"
+      echo "${structsource}">"${_temp_dir}/${_library}"
+      (( DEBUG )) && echo "$0: tasks_base/sudoer.bash Temp location ${_temp_dir}/${_library}"
+      source "${_temp_dir}/${_library}"
+      _err=$?
+      [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading ${_library}. Occured while running 'source' err:$_err  \n \n  " && exit 1
+      if  ! typeset -f passed >/dev/null 2>&1; then
+        echo -e "\n \n  ERROR! Loading ${_library}. Passed was not loaded !!!  \n \n "
+        exit 69;
+      fi
+      return $_err
+  } # end load_library
+  load_library "struct_testing"
+  load_library "execute_command"
 } # end load_struct_testing
 load_struct_testing
 
@@ -117,13 +122,19 @@ function sudo_it() {
 export SUDO_GRP='staff'
 enforce_variable_with_value USER_HOME "${USER_HOME}"
 enforce_variable_with_value SUDO_USER "${SUDO_USER}"
-passed "Caller user identified:${SUDO_USER}"
-passed "Home identified:${USER_HOME}"
+(( DEBUG )) && passed "Caller user identified:${SUDO_USER}"
+(( DEBUG )) && passed "Home identified:${USER_HOME}"
 directory_exists_with_spaces "${USER_HOME}"
 
 
 
- #--------\/\/\/\/-- install_rubymine.bash -- Custom code -\/\/\/\/-------
+ #---------/\/\/\-- tasks_base/sudoer.bash -------------/\/\/\--------
+
+
+
+
+
+ #--------\/\/\/\/-- tasks_templates_sudo/rubymine …install_rubymine.bash” -- Custom code -\/\/\/\/-------
 
 
 #!/usr/bin/env bash
@@ -231,7 +242,7 @@ _darwin__64() {
 } # end _darwin__64
 
 _ubuntu__64() {
-  _linux_prepare
+  # _linux_prepare
   local CODENAME=$(_version "linux" "RubyMine-*.*.*.*amd64.deb")
   # THOUGHT          local CODENAME="RubyMine-4.3.3.24545_amd64.deb"
   local URL="https://download-cf.jetbrains.com/ruby/${CODENAME}"
@@ -250,7 +261,7 @@ _ubuntu__32() {
 } # end _ubuntu__32
 
 _fedora__32() {
-  _linux_prepare
+  # _linux_prepare
   local CODENAME=$(_version "linux" "RubyMine*.*.*.*.i386.rpm")
   # THOUGHT                          RubyMine-4.3.3.24545.i386.rpm
   local TARGET_URL="https://download-cf.jetbrains.com/ruby/${CODENAME}"
@@ -286,131 +297,7 @@ _fedora__32() {
 _centos__64() {
   _fedora__64
 } # end _centos__64
-_unzip(){
-  # Sample use
-  #
-  #     _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
-  #
-  local DOWNLOADFOLDER="${1}"
-  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
 
-  local UNZIPDIR="${2}"
-  enforce_variable_with_value UNZIPDIR "${UNZIPDIR}"
-
-  local CODENAME="${3}"
-  enforce_variable_with_value CODENAME "${CODENAME}"
-
-  file_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
-  if  it_exists_with_spaces "${DOWNLOADFOLDER}/${UNZIPDIR}" ; then
-  {
-    rm -rf "${DOWNLOADFOLDER}/${UNZIPDIR}"
-    directory_does_not_exist_with_spaces "${DOWNLOADFOLDER}/${UNZIPDIR}"
-  }
-  fi
-
-  ensure tar or "Canceling Install. Could not find tar command to execute unzip"
-  ensure awk or "Canceling Install. Could not find awk command to execute unzip"
-  ensure pv or "Canceling Install. Could not find pv command to execute unzip"
-  ensure du or "Canceling Install. Could not find du command to execute unzip"
-  ensure gzip or "Canceling Install. Could not find gzip command to execute unzip"
-  ensure gio or "Canceling Install. Could not find gio command to execute unzip"
-  ensure update-mime-database or "Canceling Install. Could not find update-mime-database command to execute unzip"
-  ensure update-desktop-database or "Canceling Install. Could not find update-desktop-database command to execute unzip"
-  ensure touch or "Canceling Install. Could not find touch command to execute unzip"
-
-  # provide error handling , once learned goes here. LEarn under if, once learned here.
-  # Start loop while ERROR flag in case needs to try again, based on error
-  cd "${DOWNLOADFOLDER}"
-  #_try "tar xvzf  \"${DOWNLOADFOLDER}/${CODENAME}.tar.gz\"--directory=${DOWNLOADFOLDER}"
-  # GROw bar with tar Progress bar tar REF: https://superuser.com/questions/168749/is-there-a-way-to-see-any-tar-progress-per-file
-  # Compress tar cvfj big-files.tar.bz2 folder-with-big-files
-  # Compress tar cf - ${DOWNLOADFOLDER}/${CODENAME}.tar.gz --directory=${DOWNLOADFOLDER} -P | pv -s $(du -sb ${DOWNLOADFOLDER}/${CODENAME}.tar.gz | awk '{print $1}') | gzip > big-files.tar.gz
-  # Extract tar Progress bar REF: https://coderwall.com/p/l_m2yg/tar-untar-on-osx-linux-with-progress-bars
-  # Extract tar sample pv file.tgz | tar xzf - -C target_directory
-  # Working simplme tar:  tar xvzf ${DOWNLOADFOLDER}/${CODENAME}.tar.gz --directory=${DOWNLOADFOLDER}
-  pv "${DOWNLOADFOLDER}/${CODENAME}"  | tar xzf - -C "${DOWNLOADFOLDER}"
-  #local msg=$(_try "tar xvzf  \"${DOWNLOADFOLDER}/${CODENAME}.tar.gz\" --directory=${DOWNLOADFOLDER} " )
-  #  tar xvzf file.tar.gz
-  # Where,
-  # x: This option tells tar to extract the files.
-  # v: The “v” stands for “verbose.” This option will list all of the files one by one in the archive.
-  # z: The z option is very important and tells the tar command to uncompress the file (gzip).
-  # f: This options tells tar that you are going to give it a file name to work with.
-  local msg
-  local folder_date
-  local ret=$?
-  if [ $ret -gt 0 ] ; then
-  {
-    failed "${ret}:${msg}"
-    # add error handling knowledge while learning.
-  }
-  else
-  {
-    passed Install with Untar Unzip success!
-  }
-  fi
-
-  local NEWDIRCODENAME=$(ls -1tr "${DOWNLOADFOLDER}/"  | tail  -1)
-  local FROMUZIPPED="${DOWNLOADFOLDER}/${NEWDIRCODENAME}"
-  directory_exists_with_spaces  "${FROMUZIPPED}"
-  # directory_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
-
-} # end _unzip
-_backup_current_target_and_remove_if_exists(){
-  # Sample use
-  #
-  #     _backup_current_target_and_remove_if_exists "${TARGETFOLDER}"
-  #     _backup_current_target_and_remove_if_exists "${TARGETFOLDER}"
-  #
-  local TARGETFOLDER="${1}"
-  enforce_variable_with_value TARGETFOLDER "${TARGETFOLDER}"
-
-  if  it_exists_with_spaces "${TARGETFOLDER}/rubymine" ; then
-  {
-     local folder_date=$(date +"%Y%m%d")
-     if  it_exists_with_spaces "${TARGETFOLDER}/rubymine_${folder_date}" ; then
-     {
-       warning A backup already exists for today "${ret}:${msg} \n ... adding time"
-       folder_date=$(date +"%Y%m%d%H%M")
-     }
-     fi
-     local msg=$(mv "${TARGETFOLDER}/rubymine" "${TARGETFOLDER}/rubymine_${folder_date}")
-     local ret=$?
-     if [ $ret -gt 0 ] ; then
-     {
-       warning failed to move backup "${ret}:${msg} \n"
-     }
-     fi
-     directory_exists_with_spaces "${TARGETFOLDER}/rubymine_${folder_date}"
-     file_does_not_exist_with_spaces "${TARGETFOLDER}/rubymine"
-  }
-  fi
-} # end _backup_current_target_and_remove_if_exists
-_install_to_target(){
-  # Sample use
-  #
-  #     _install_to_target "${TARGETFOLDER}" "${FROM_DOWNLOADEDFOLDER_UNZIPPED}"
-  #
-  local TARGETFOLDER="${1}"
-  enforce_variable_with_value TARGETFOLDER "${TARGETFOLDER}"
-
-  local FROM_DOWNLOADEDFOLDER_UNZIPPED="${2}"
-  enforce_variable_with_value FROM_DOWNLOADEDFOLDER_UNZIPPED "${FROM_DOWNLOADEDFOLDER_UNZIPPED}"
-
-  mkdir -p "${TARGETFOLDER}"
-  directory_exists_with_spaces "${TARGETFOLDER}"
-  directory_exists_with_spaces "${FROM_DOWNLOADEDFOLDER_UNZIPPED}"
-
-  mv "${FROM_DOWNLOADEDFOLDER_UNZIPPED}" "${TARGETFOLDER}/rubymine"
-  _err=$?
-  if [ $ret -gt 0 ] ; then
-   {
-     failed to move "${FROM_DOWNLOADEDFOLDER_UNZIPPED}" to "${TARGETFOLDER}/rubymine"  "${ret}:${msg} \n"
-   }
-   fi
-  directory_exists_with_spaces "${TARGETFOLDER}/rubymine"
-  directory_exists_with_spaces "${TARGETFOLDER}/rubymine/bin"
-} # end _install_to_target
 _add_mine_associacions_and_browser_click_to_open (){
   # Sample use
   #
@@ -649,8 +536,8 @@ EOF
 } # end _add_mine_associacions_and_browser_click_to_open
 
 _fedora__64() {
-  _linux_prepare
- local CODENAME=$(_version "linux" "*.*")
+  # _linux_prepare
+  local CODENAME=$(_version "linux" "*.*")
   echo "${CODENAME}";
   local TARGET_URL="$(echo "${CODENAME}" | tail -1)"
   CODENAME="$(basename "${TARGET_URL}" )"
@@ -664,8 +551,10 @@ _fedora__64() {
   enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
   local TARGETFOLDER="${USER_HOME}/_/software"
   enforce_variable_with_value TARGETFOLDER "${TARGETFOLDER}"
+  local _target_dir_install="${TARGETFOLDER}/rubymine"
+  enforce_variable_with_value _target_dir_install "${_target_dir_install}"
 
-  # _remove_if_corrypted_zipfile_folder?
+  # _remove_if_corrupted_zipfile_folder?
   if it_exists_with_spaces /tmp/corrupted.tar.gzeraseit ; then
   {
     if it_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"; then
@@ -678,14 +567,22 @@ _fedora__64() {
     fi
   }
   fi
-  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
-  _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
-  _backup_current_target_and_remove_if_exists "${TARGETFOLDER}"
-  _install_to_target "${TARGETFOLDER}" "${DOWNLOADFOLDER}/${UNZIPDIR}"
+  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}.tar.gz"
 
-  # _remove_unzipped_folder?
-  rm "${DOWNLOADFOLDER}/${UNZIPDIR}"
-  directory_does_not_exist_with_spaces "${DOWNLOADFOLDER}/${UNZIPDIR}"
+  # file_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}.tar.gz"
+  # if  it_exists_with_spaces "${DOWNLOADFOLDER}/${UNZIPDIR}" ; then
+  # {
+  #  rm -rf "${DOWNLOADFOLDER}/${UNZIPDIR}"
+  #  directory_does_not_exist_with_spaces "${DOWNLOADFOLDER}/${UNZIPDIR}"
+  # }
+  # fi
+  _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
+  _untar_gz_download "${DOWNLOADFOLDER}"  "${DOWNLOADFOLDER}/${CODENAME}.tar.gz"
+  _backup_current  "${_target_dir_install}"
+  _move_to_target_dir "${DOWNLOADFOLDER}" "${_target_dir_install}" "${TARGETFOLDER}"
+
+  [ -e "${DOWNLOADFOLDER}/${CODENAME}.tar.gz" ] && rm "${DOWNLOADFOLDER}/${CODENAME}.tar.gz"
+  directory_does_not_exist_with_spaces "${DOWNLOADFOLDER}/${CODENAME}.tar.gz"
 
   # _remove_downloaded_file?
   rm "${DOWNLOADFOLDER}/${CODENAME}"
@@ -718,7 +615,7 @@ _mingw__32() {
 
 
 
- #--------/\/\/\/\-- install_rubymine.bash -- Custom code-/\/\/\/\-------
+ #--------/\/\/\/\-- tasks_templates_sudo/rubymine …install_rubymine.bash” -- Custom code-/\/\/\/\-------
 
 
 _main() {

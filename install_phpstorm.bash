@@ -44,42 +44,48 @@ load_struct_testing(){
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
     exit 1
   }
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-    local provider="$HOME/_/clis/execute_command_intuivo_cli/struct_testing"
-    local _err=0 structsource
-    if [   -e "${provider}"  ] ; then
-      (( DEBUG )) && echo "$0: Loading locally"
-      structsource="""$(<"${provider}")"""
-      _err=$?
-      [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading struct_testing. running 'source locally' returned error did not download or is empty err:$_err  \n \n  " && exit 1
-    else
-      if ( command -v curl >/dev/null 2>&1; )  ; then
-        (( DEBUG )) && echo "$0: Loading struct_testing from the net using curl "
-        structsource="""$(curl https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing  -so -   2>/dev/null )"""  #  2>/dev/null suppress only curl download messages, but keep curl output for variable
+  function load_library(){
+    local _library="${1:struct_testing}"
+    [[ -z "${1}" ]] && echo "Must call with name of library example: struct_testing execute_command" && exit 1
+    trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+      local provider="$HOME/_/clis/execute_command_intuivo_cli/${_library}"
+      local _err=0 structsource
+      if [   -e "${provider}"  ] ; then
+        (( DEBUG )) && echo "$0: tasks_base/sudoer.bash Loading locally"
+        structsource="""$(<"${provider}")"""
         _err=$?
-        [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading struct_testing. running 'curl' returned error did not download or is empty err:$_err  \n \n  " && exit 1
-      elif ( command -v wget >/dev/null 2>&1; ) ; then
-        (( DEBUG )) && echo "$0: Loading struct_testing from the net using wget "
-        structsource="""$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing -O -   2>/dev/null )"""  #  2>/dev/null suppress only wget download messages, but keep wget output for variable
-        _err=$?
-        [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading struct_testing. running 'wget' returned error did not download or is empty err:$_err  \n \n  " && exit 1
+        [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading ${_library}. running 'source locally' returned error did not download or is empty err:$_err  \n \n  " && exit 1
       else
-        echo -e "\n \n  ERROR! Loading struct_testing could not find wget or curl to download  \n \n "
-        exit 69
+        if ( command -v curl >/dev/null 2>&1; )  ; then
+          (( DEBUG )) && echo "$0: tasks_base/sudoer.bash Loading ${_library} from the net using curl "
+          structsource="""$(curl https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/${_library}  -so -   2>/dev/null )"""  #  2>/dev/null suppress only curl download messages, but keep curl output for variable
+          _err=$?
+          [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading ${_library}. running 'curl' returned error did not download or is empty err:$_err  \n \n  " && exit 1
+        elif ( command -v wget >/dev/null 2>&1; ) ; then
+          (( DEBUG )) && echo "$0: tasks_base/sudoer.bash Loading ${_library} from the net using wget "
+          structsource="""$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/${_library} -O -   2>/dev/null )"""  #  2>/dev/null suppress only wget download messages, but keep wget output for variable
+          _err=$?
+          [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading ${_library}. running 'wget' returned error did not download or is empty err:$_err  \n \n  " && exit 1
+        else
+          echo -e "\n \n  ERROR! Loading ${_library} could not find wget or curl to download  \n \n "
+          exit 69
+        fi
       fi
-    fi
-    [[ -z "${structsource}" ]] && echo -e "\n \n  ERROR! Loading struct_testing. structsource did not download or is empty " && exit 1
-    local _temp_dir="$(mktemp -d 2>/dev/null || mktemp -d -t 'struct_testing_source')"
-    echo "${structsource}">"${_temp_dir}/struct_testing"
-    (( DEBUG )) && echo "$0: Temp location ${_temp_dir}/struct_testing"
-    source "${_temp_dir}/struct_testing"
-    _err=$?
-    [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading struct_testing. Occured while running 'source' err:$_err  \n \n  " && exit 1
-    if  ! typeset -f passed >/dev/null 2>&1; then
-      echo -e "\n \n  ERROR! Loading struct_testing. Passed was not loaded !!!  \n \n "
-      exit 69;
-    fi
-    return $_err
+      [[ -z "${structsource}" ]] && echo -e "\n \n  ERROR! Loading ${_library} into ${_library}_source did not download or is empty " && exit 1
+      local _temp_dir="$(mktemp -d 2>/dev/null || mktemp -d -t "${_library}_source")"
+      echo "${structsource}">"${_temp_dir}/${_library}"
+      (( DEBUG )) && echo "$0: tasks_base/sudoer.bash Temp location ${_temp_dir}/${_library}"
+      source "${_temp_dir}/${_library}"
+      _err=$?
+      [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading ${_library}. Occured while running 'source' err:$_err  \n \n  " && exit 1
+      if  ! typeset -f passed >/dev/null 2>&1; then
+        echo -e "\n \n  ERROR! Loading ${_library}. Passed was not loaded !!!  \n \n "
+        exit 69;
+      fi
+      return $_err
+  } # end load_library
+  load_library "struct_testing"
+  load_library "execute_command"
 } # end load_struct_testing
 load_struct_testing
 
@@ -116,13 +122,19 @@ function sudo_it() {
 export SUDO_GRP='staff'
 enforce_variable_with_value USER_HOME "${USER_HOME}"
 enforce_variable_with_value SUDO_USER "${SUDO_USER}"
-passed "Caller user identified:${SUDO_USER}"
-passed "Home identified:${USER_HOME}"
+(( DEBUG )) && passed "Caller user identified:${SUDO_USER}"
+(( DEBUG )) && passed "Home identified:${USER_HOME}"
 directory_exists_with_spaces "${USER_HOME}"
 
 
 
- #--------\/\/\/\/-- install_rubymine.bash -- Custom code -\/\/\/\/-------
+ #---------/\/\/\-- tasks_base/sudoer.bash -------------/\/\/\--------
+
+
+
+
+
+ #--------\/\/\/\/-- tasks_templates_sudo/phpstorm …install_phpstorm.bash” -- Custom code -\/\/\/\/-------
 
 
 #!/usr/bin/env bash
@@ -131,21 +143,34 @@ directory_exists_with_spaces "${USER_HOME}"
 #
 
 _version() {
+  # https://download.jetbrains.com/webide/PhpStorm-2019.3.4.tar.gz
+  # https://download-cf.jetbrains.com/webide/PhpStorm-2019.3.4.tar.gz
+  # https://download.jetbrains.com/webide/PhpStorm-2020.2.0.tar.gz
+  # https://download.jetbrains.com/webide/PhpStorm-2021.3.2.tar.gz
   local PLATFORM="${1}" # mac windows linux
   local PATTERN="${2}"
-# https://www.jetbrains.com/phpstorm/download/#section=linux
-local CODEFILE="""$(wget --quiet --no-check-certificate  https://www.jetbrains.com/php/ -O -  2>/dev/null )""" # suppress only wget download messages, but keep wget output for variable
-
+  # https://www.jetbrains.com/phpstorm/download/#section=linux
+  # local CODEFILE="""$(wget --quiet --no-check-certificate https://www.jetbrains.com/phpstorm/download/#section=linux -O -  2>/dev/null )""" # suppress only wget download messages, but keep wget output for variable
+  # local CODEFILE="""$(wget --quiet --no-check-certificate https://www.jetbrains.com/phpstorm/download/other.html -O -  2>/dev/null )""" # suppress only wget download messages, but keep wget output for variable
+  local CODEFILE="""$(wget --quiet --no-check-certificate https://www.jetbrains.com/phpstorm/whatsnew/ -O -  2>/dev/null )""" # suppress only wget download messages, but keep wget output for variable
+  # echo "PATTERN:${PATTERN}"
   # local CODEFILE=$(curl -d "zz=dl4&platform=${PLATFORM}" -H "Content-Type: application/x-www-form-urlencoded" -X POST  -sSLo -  https://www.jetbrains.com/phpstorm/download/\#section=linux  2>&1;) # suppress only wget download messages, but keep wget output for variable
+  # echo "$CODEFILE" | sed s/\</\\n\</g | sed s/\>/\>\\n/g| sed 's/:/\n/g' | grep "PhpStorm"
+  # echo "$CODEFILE" | sed s/\</\\n\</g | sed s/\>/\>\\n/g  | grep "New in PhpStorm" | grep "New" | grep "2021"
 
-  local CODELASTESTBUILD=$(echo $CODEFILE | sed s/\</\\n\</g | grep "${PATTERN}" | sed s/\"/\\n/g | grep "/" | cüt "/")
+
+  # echo "$CODEFILE" | sed s/\</\\n\</g | sed s/\>/\>\\n/g | sed 's/,/\n/g'  | grep '"version"'  | cut -d'"' -f4
+  # echo "$CODEFILE"  | phantomjs  --- crashes
+
+  # local CODELASTESTBUILD=$(echo $CODEFILE | sed s/\</\\n\</g | grep "${PATTERN}" | sed s/\"/\\n/g | grep "/" | cüt "/")
+  local CODELASTESTBUILD=$(echo "$CODEFILE" | sed s/\</\\n\</g | sed s/\>/\>\\n/g | sed 's/,/\n/g'  | grep '"version"'  | cut -d'"' -f4)
   # fedora 32 local CODELASTESTBUILD=$(echo $CODEFILE | sed s/\</\\n\</g | grep "PhpStorm*.*.*.*.i386.rpm" | sed s/\"/\\n/g | grep "/" | cüt "/")
   wait
   # [[ -z "${CODELASTESTBUILD}" ]] && failed "PhpStorm Version not found! :${CODELASTESTBUILD}:"
 
 
-  # enforce_variable_with_value USER_HOME "${USER_HOME}"
-  # enforce_variable_with_value CODELASTESTBUILD "${CODELASTESTBUILD}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  enforce_variable_with_value CODELASTESTBUILD "${CODELASTESTBUILD}"
 
   local CODENAME="${CODELASTESTBUILD}"
   echo "${CODELASTESTBUILD}"
@@ -159,7 +184,9 @@ _darwin__64() {
     local CODENAME=$(_version "mac" "PhpStormOSX*.*.*.*.zip")
     # THOUGHT        local CODENAME="PhpStormOSX-4.3.3.24545.zip"
     local URL="https://download-cf.jetbrains.com/webide/${CODENAME}"
-    cd $USER_HOME/Downloads/
+    local DOWNLOADFOLDER="$(_find_downloads_folder)"
+    enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+    cd ${DOWNLOADFOLDER}/
     _download "${URL}"
     unzip ${CODENAME}
     sudo hdiutil attach ${CODENAME}
@@ -171,7 +198,8 @@ _ubuntu__64() {
     local CODENAME=$(_version "linux" "PhpStorm-*.*.*.*amd64.deb")
     # THOUGHT          local CODENAME="PhpStorm-4.3.3.24545_amd64.deb"
     local URL="https://download-cf.jetbrains.com/webide/${CODENAME}"
-    cd $USER_HOME/Downloads/
+    enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+    cd ${DOWNLOADFOLDER}/
     _download "${URL}"
     sudo dpkg -i ${CODENAME}
 } # end _ubuntu__64
@@ -180,7 +208,9 @@ _ubuntu__32() {
     local CODENAME=$(_version "linux" "PhpStorm-*.*.*.*i386.deb")
     # THOUGHT local CODENAME="PhpStorm-4.3.3.24545_i386.deb"
     local URL="https://download-cf.jetbrains.com/webide/${CODENAME}"
-    cd $USER_HOME/Downloads/
+    local DOWNLOADFOLDER="$(_find_downloads_folder)"
+    enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+    cd ${DOWNLOADFOLDER}/
     _download "${URL}"
     sudo dpkg -i ${CODENAME}
 } # end _ubuntu__32
@@ -189,16 +219,18 @@ _fedora__32() {
   local CODENAME=$(_version "linux" "PhpStorm*.*.*.*.i386.rpm")
   # THOUGHT                          PhpStorm-4.3.3.24545.i386.rpm
   local TARGET_URL="https://download-cf.jetbrains.com/webide/${CODENAME}"
-  file_exists_with_spaces $USER_HOME/Downloads
-  cd $USER_HOME/Downloads
+  local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  file_exists_with_spaces ${DOWNLOADFOLDER}
+  cd ${DOWNLOADFOLDER}
   _download "${TARGET_URL}"
-  file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}"
+  file_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
   ensure tar or "Canceling Install. Could not find tar command to execute unzip"
 
   # provide error handling , once learned goes here. LEarn under if, once learned here.
   # Start loop while ERROR flag in case needs to try again, based on error
   _try "rpm --import https://download-cf.jetbrains.com/webide/RPM-GPG-KEY-scootersoftware"
-  local msg=$(_try "rpm -ivh \"$USER_HOME/Downloads/${CODENAME}\"" )
+  local msg=$(_try "rpm -ivh \"${DOWNLOADFOLDER}/${CODENAME}\"" )
   local ret=$?
   if [ $ret -gt 0 ] ; then
   {
@@ -211,8 +243,8 @@ _fedora__32() {
   }
   fi
   ensure PhpStorm or "Failed to install Beyond Compare"
-  rm -f "$USER_HOME/Downloads/${CODENAME}"
-  file_does_not_exist_with_spaces "$USER_HOME/Downloads/${CODENAME}"
+  rm -f "${DOWNLOADFOLDER}/${CODENAME}"
+  file_does_not_exist_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
 } # end _fedora__32
 
 _centos__64() {
@@ -220,124 +252,51 @@ _centos__64() {
 } # end _centos__64
 
 _fedora__64() {
+  local TARGETFOLDER="${USER_HOME}/_/software"
+  enforce_variable_with_value TARGETFOLDER "${TARGETFOLDER}"
+
+  local _target_dir_install="${TARGETFOLDER}/phpstorm"
+  enforce_variable_with_value _target_dir_install "${_target_dir_install}"
+  # _linux_prepare
   # Lives Samples
   # https://download.jetbrains.com/webide/PhpStorm-2019.3.4.tar.gz
   # https://download-cf.jetbrains.com/webide/PhpStorm-2019.3.4.tar.gz
   # https://download.jetbrains.com/webide/PhpStorm-2021.3.2.tar.gz
-  local CODENAME=$(_version "linux" "PhpStorm*.*.*.tar.gz")
-  echo "CODENAME:${CODENAME}"
-echo "hola" && exit 0
+  local CODENAME=$(_version "linux" "PhpStorm-*.*.*.tar.gz")
+  # echo "CODENAME:${CODENAME}"
+  enforce_variable_with_value CODENAME "${CODENAME}"
 
-  CODENAME=$(echo "PhpStorm-2020.2")
+  CODENAME="PhpStorm-${CODENAME}"
+  passed "CODENAME:${CODENAME}"
   local TARGET_URL="https://download-cf.jetbrains.com/webide/${CODENAME}.tar.gz"
-  if  it_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}.tar.gz" ; then
-  {
-    file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}.tar.gz"
-  }
-  else
-  {
-    file_exists_with_spaces $USER_HOME/Downloads
-    cd $USER_HOME/Downloads
-    _download "${TARGET_URL}" $USER_HOME/Downloads  ${CODENAME}.tar.gz
-    file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}.tar.gz"
-  }
-  fi
-  if  it_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}" ; then
-  {
-    rm -rf "$USER_HOME/Downloads/${CODENAME}"
-    directory_does_not_exist_with_spaces "$USER_HOME/Downloads/${CODENAME}"
-  }
-  fi
+  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
+  local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}.tar.gz"
+  _untar_gz_download "${DOWNLOADFOLDER}"  "${DOWNLOADFOLDER}/${CODENAME}.tar.gz"
+  _move_to_target_dir "${DOWNLOADFOLDER}" "${_target_dir_install}" "${TARGETFOLDER}"
 
-  ensure tar or "Canceling Install. Could not find tar command to execute unzip"
-  ensure awk or "Canceling Install. Could not find awk command to execute unzip"
-  ensure pv or "Canceling Install. Could not find pv command to execute unzip"
-  ensure du or "Canceling Install. Could not find du command to execute unzip"
-  ensure gzip or "Canceling Install. Could not find gzip command to execute unzip"
-  ensure gio or "Canceling Install. Could not find gio command to execute gio"
-  ensure update-mime-database or "Canceling Install. Could not find update-mime-database command to execute update-mime-database"
-  ensure update-desktop-database or "Canceling Install. Could not find update-desktop-database command to execute update"
-  ensure touch or "Canceling Install. Could not find touch command to execute touch"
-
-  # provide error handling , once learned goes here. LEarn under if, once learned here.
-  # Start loop while ERROR flag in case needs to try again, based on error
-  cd $USER_HOME/Downloads
-  #_try "tar xvzf  \"$USER_HOME/Downloads/${CODENAME}.tar.gz\"--directory=$USER_HOME/Downloads"
-  # GROw bar with tar Progress bar tar REF: https://superuser.com/questions/168749/is-there-a-way-to-see-any-tar-progress-per-file
-  # Compress tar cvfj big-files.tar.bz2 folder-with-big-files
-  # Compress tar cf - $USER_HOME/Downloads/${CODENAME}.tar.gz --directory=$USER_HOME/Downloads -P | pv -s $(du -sb $USER_HOME/Downloads/${CODENAME}.tar.gz | awk '{print $1}') | gzip > big-files.tar.gz
-  # Extract tar Progress bar REF: https://coderwall.com/p/l_m2yg/tar-untar-on-osx-linux-with-progress-bars
-  # Extract tar sample pv file.tgz | tar xzf - -C target_directory
-  # Working simplme tar:  tar xvzf $USER_HOME/Downloads/${CODENAME}.tar.gz --directory=$USER_HOME/Downloads
-  pv $USER_HOME/Downloads/${CODENAME}.tar.gz  | tar xzf - -C $USER_HOME/Downloads
-  #local msg=$(_try "tar xvzf  \"$USER_HOME/Downloads/${CODENAME}.tar.gz\" --directory=$USER_HOME/Downloads " )
-  #  tar xvzf file.tar.gz
-  # Where,
-  # x: This option tells tar to extract the files.
-  # v: The “v” stands for “verbose.” This option will list all of the files one by one in the archive.
-  # z: The z option is very important and tells the tar command to uncompress the file (gzip).
-  # f: This options tells tar that you are going to give it a file name to work with.
-  local msg
-  local folder_date
-  local ret=$?
-  if [ $ret -gt 0 ] ; then
-  {
-    failed "${ret}:${msg}"
-    # add error handling knowledge while learning.
-  }
-  else
-  {
-    passed Install with Untar Unzip success!
-  }
-  fi
-
-  local NEWDIRCODENAME=$(ls -1tr "$USER_HOME/Downloads/"  | tail  -1)
-  local FROMUZIPPED="$USER_HOME/Downloads/${NEWDIRCODENAME}"
-  directory_exists_with_spaces  "${FROMUZIPPED}"
+  [ -e "${DOWNLOADFOLDER}/${CODENAME}.tar.gz" ] && rm "${DOWNLOADFOLDER}/${CODENAME}.tar.gz"
+  directory_does_not_exist_with_spaces "${DOWNLOADFOLDER}/${CODENAME}.tar.gz"
 
 
-  if  it_exists_with_spaces "$USER_HOME/_/software/phpstorm" ; then
-  {
-     folder_date=$(date +"%Y%m%d")
-     if  it_exists_with_spaces "$USER_HOME/_/software/phpstorm_${folder_date}" ; then
-     {
-       warning A backup already exists for today "${ret}:${msg} \n ... adding time"
-       folder_date=$(date +"%Y%m%d%H%M")
-     }
-     fi
-     msg=$(mv "$USER_HOME/_/software/phpstorm" "$USER_HOME/_/software/phpstorm_${folder_date}")
-     ret=$?
-     if [ $ret -gt 0 ] ; then
-     {
-       warning failed to move backup "${ret}:${msg} \n"
-     }
-     fi
-     directory_exists_with_spaces "$USER_HOME/_/software/phpstorm_${folder_date}"
-     file_does_not_exist_with_spaces "$USER_HOME/_/software/phpstorm"
-  }
-  fi
-  mkdir -p "$USER_HOME/_/software"
-  directory_exists_with_spaces "$USER_HOME/_/software"
-  mv "${FROMUZIPPED}" "$USER_HOME/_/software/phpstorm"
-  directory_does_not_exist_with_spaces "${FROMUZIPPED}"
-  directory_exists_with_spaces "$USER_HOME/_/software/phpstorm"
-  directory_exists_with_spaces "$USER_HOME/_/software/phpstorm/bin"
+  directory_exists_with_spaces "${_target_dir_install}/bin"
   mkdir -p "$USER_HOME/.local/share/applications"
   directory_exists_with_spaces "$USER_HOME/.local/share/applications"
   mkdir -p "$USER_HOME/.local/share/mime/packages"
   directory_exists_with_spaces "$USER_HOME/.local/share/mime/packages"
-  file_exists_with_spaces "$USER_HOME/_/software/phpstorm/bin/phpstorm.sh"
+  file_exists_with_spaces "${_target_dir_install}/bin/phpstorm.sh"
 
-  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/_/software/phpstorm"
+  chown $SUDO_USER:$SUDO_USER -R "${_target_dir_install}"
 
   # Now Proceed to register REF:  https://gist.github.com/c80609a/752e566093b1489bd3aef0e56ee0426c
   ensure cat or "Failed to use cat command does not exists"
   ensure xdg-mime or "Failed to install run xdg-mime"
 
-   cat << EOF > $USER_HOME/_/software/phpstorm/bin/pstorm-open.rb
+   cat << EOF > ${_target_dir_install}/bin/pstorm-open.rb
 #!/usr/bin/env ruby
 
-# $USER_HOME/_/software/phpstorm/bin/pstorm-open.rb
+# ${_target_dir_install}/bin/pstorm-open.rb
 # script opens URL in format phpstorm://open?file=%{file}:%{line} in phpstorm
 
 require 'uri'
@@ -364,15 +323,15 @@ rescue
 end
 puts arg
 EOF
-  file_exists_with_spaces "$USER_HOME/_/software/phpstorm/bin/pstorm-open.rb"
-  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/_/software/phpstorm/bin/pstorm-open.rb"
-  chmod +x $USER_HOME/_/software/phpstorm/bin/pstorm-open.rb
+  file_exists_with_spaces "${_target_dir_install}/bin/pstorm-open.rb"
+  chown $SUDO_USER:$SUDO_USER -R "${_target_dir_install}/bin/pstorm-open.rb"
+  chmod +x ${_target_dir_install}/bin/pstorm-open.rb
 
 
-    cat << EOF > $USER_HOME/_/software/phpstorm/bin/pstorm-open.sh
+    cat << EOF > ${_target_dir_install}/bin/pstorm-open.sh
 #!/usr/bin/env bash
 #encoding: UTF-8
-# $USER_HOME/_/software/phpstorm/bin/pstorm-open.sh
+# ${_target_dir_install}/bin/pstorm-open.sh
 # script opens URL in format phpstorm://open?file=%{file}:%{line} in phpstorm
 
 echo "spaceSpace"
@@ -382,8 +341,8 @@ echo "<\${@}> <--- There should be something here between <>"
 echo "<\${*}> <--- There should be something here between <>"
 echo "\${@}" >>  $USER_HOME/_/work/requested.log
 last_line=\$(tail -1<<<\$(grep 'file='<$USER_HOME/_/work/requested.log))
-$USER_HOME/_/software/phpstorm/bin/pstorm-open.rb \${last_line}
-filetoopen=\$($USER_HOME/_/software/phpstorm/bin/pstorm-open.rb "\${last_line}")
+${_target_dir_install}/bin/pstorm-open.rb \${last_line}
+filetoopen=\$(${_target_dir_install}/bin/pstorm-open.rb "\${last_line}")
 echo filetoopen "\${filetoopen}"
 echo "\${filetoopen}" >>  $USER_HOME/_/work/requestedfiletoopen.log
 pstorm "\${filetoopen}"
@@ -395,9 +354,9 @@ EOF
   touch $USER_HOME/_/work/requestedfiletoopen.log
   file_exists_with_spaces $USER_HOME/_/work/requestedfiletoopen.log
   chown $SUDO_USER:$SUDO_USER -R $USER_HOME/_/work/requestedfiletoopen.log
-  file_exists_with_spaces "$USER_HOME/_/software/phpstorm/bin/pstorm-open.sh"
-  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/_/software/phpstorm/bin/pstorm-open.sh"
-  chmod +x $USER_HOME/_/software/phpstorm/bin/pstorm-open.sh
+  file_exists_with_spaces "${_target_dir_install}/bin/pstorm-open.sh"
+  chown $SUDO_USER:$SUDO_USER -R "${_target_dir_install}/bin/pstorm-open.sh"
+  chmod +x ${_target_dir_install}/bin/pstorm-open.sh
 
  cat << EOF > $USER_HOME/.local/share/mime/packages/application-x-pstorm.xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -421,8 +380,8 @@ Encoding=UTF-8
 Version=2020.2
 Type=Application
 Name=phpstorm
-Icon=$USER_HOME/_/software/phpstorm/bin/phpstorm.svg
-Exec=$USER_HOME/_/software/phpstorm/bin/phpstorm.sh %f
+Icon=${_target_dir_install}/bin/phpstorm.svg
+Exec=${_target_dir_install}/bin/phpstorm.sh %f
 MimeType=application/x-pstorm;text/x-pstorm;text/plain;text/x-chdr;text/x-csrc;text/x-c++hdr;text/x-c++src;text/x-java;text/x-dsrc;text/x-pascal;text/x-perl;text/x-python;application/x-php;application/x-httpd-php3;application/x-httpd-php4;application/x-httpd-php5;application/xml;text/html;text/css;text/x-sql;text/x-diff;x-directory/normal;inode/directory;
 Comment=The Most Intelligent Php IDE
 Categories=Development;IDE;
@@ -449,7 +408,7 @@ Encoding=UTF-8
 Version=1.0
 Type=Application
 Terminal=true
-Exec=$USER_HOME/_/software/phpstorm/bin/pstorm-open.sh %f
+Exec=${_target_dir_install}/bin/pstorm-open.sh %f
 MimeType=application/phpstorm;x-scheme-handler/phpstorm;
 Name=PhpStormOpen
 Comment=BetterErrors
@@ -491,7 +450,7 @@ ln -fs "$USER_HOME/.config/mimeapps.list" "$USER_HOME/.local/share/applications/
 softlink_exists_with_spaces "$USER_HOME/.local/share/applications/mimeapps.list>$USER_HOME/.config/mimeapps.list"
 chown $SUDO_USER:$SUDO_USER -R  "$USER_HOME/.local/share/applications/mimeapps.list"
 
-file_exists_with_spaces "$USER_HOME/_/software/phpstorm/bin/pstorm-open.sh"
+file_exists_with_spaces "${_target_dir_install}/bin/pstorm-open.sh"
 
   su - "${SUDO_USER}" -c "xdg-mime query default x-scheme-handler/phpstorm"
   su - "${SUDO_USER}" -c "xdg-mime query default x-scheme-handler/x-pstorm"
@@ -558,7 +517,9 @@ _mingw__64() {
     # THOUGHT        local CODENAME="PhpStorm-4.3.3.24545.exe"
     local URL="https://download-cf.jetbrains.com/webide/${CODENAME}"
     cd $HOMEDIR
-	  cd Downloads
+    local DOWNLOADFOLDER="$(_find_downloads_folder)"
+    enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+    cd "${DOWNLOADFOLDER}"
     curl -O $URL
     ${CODENAME}
 } # end _mingw__64
@@ -568,9 +529,11 @@ _mingw__32() {
     # THOUGHT        local CODENAME="PhpStorm-4.3.3.24545.exe"
     local URL="https://download-cf.jetbrains.com/webide/${CODENAME}"
     cd $HOMEDIR
-    cd Downloads
-	  curl -O $URL
-	  ${CODENAME}
+    local DOWNLOADFOLDER="$(_find_downloads_folder)"
+    enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+    cd "${DOWNLOADFOLDER}"
+    curl -O $URL
+    ${CODENAME}
 } # end
 
 
@@ -584,7 +547,7 @@ echo ":)"
 
 
 
- #--------/\/\/\/\-- install_phpstorm.bash -- Custom code-/\/\/\/\-------
+ #--------/\/\/\/\-- tasks_templates_sudo/phpstorm …install_phpstorm.bash” -- Custom code-/\/\/\/\-------
 
 
 _main() {
