@@ -6,22 +6,50 @@ TARGETPORT=3005
 PROJECTFOLDER=$(pwd)
 PROJECTROOTFOLDER=$(pwd)/public
 PROJECTNAME=$(basename $(pwd))
+PROJECTNAME=$(echo ${PROJECTNAME} | sed 's/\_//g')
 SERVERNAME=${PROJECTNAME}.test
+
+function yes_or_no() {
+    while true; do
+            read -p "$* [y/n]: " yn
+            case $yn in
+                    [Yy]*) return 0  ;;
+                    [Nn]*) echo "Aborted" ; return  1 ;;
+            esac
+    done
+} # end yes no
+
+
 # check operation systems
 if [[ "$(uname)" == "Darwin" ]] ; then
   # Do something under Mac OS X platform
-CERTIFICATECRTPATH=${HOME}/.config/valet/Certificates/${SERVERNAME}.crt;  
-CERTIFICATEKEYPATH=${HOME}/.config/valet/Certificates/${SERVERNAME}.key;
+CERTIFICATECRTPATH=${HOME}/.config/valet/LocalCertificates/${SERVERNAME}.crt;
+CERTIFICATEKEYPATH=${HOME}/.config/valet/LocalCertificates/${SERVERNAME}.key;
 elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]] ; then
   # Do something under GNU/Linux platform
-CERTIFICATECRTPATH=${HOME}/.valet/Certificates/${SERVERNAME}.crt;  
-CERTIFICATEKEYPATH=${HOME}/.valet/Certificates/${SERVERNAME}.key;
+CERTIFICATECRTPATH=${HOME}/.valet/LocalCertificates/${SERVERNAME}.crt;
+CERTIFICATEKEYPATH=${HOME}/.valet/LocalCertificates/${SERVERNAME}.key;
 elif [[ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]] ; then
   # Do something under Windows NT platform
-CERTIFICATECRTPATH=${HOME}/.valet/Certificates/${SERVERNAME}.crt;  
-CERTIFICATEKEYPATH=${HOME}/.valet/Certificates/${SERVERNAME}.key;
+CERTIFICATECRTPATH=${HOME}/.valet/LocalCertificates/${SERVERNAME}.crt;
+CERTIFICATEKEYPATH=${HOME}/.valet/LocalCertificates/${SERVERNAME}.key;
   # nothing here
 fi
+
+echo "
+TARGETPORT=${TARGETPORT}
+PROJECTFOLDER=${PROJECTFOLDER}
+PROJECTROOTFOLDER=${PROJECTROOTFOLDER}
+PROJECTNAME=${PROJECTNAME}
+SERVERNAME=${SERVERNAME}
+CERTIFICATECRTPATH=${CERTIFICATECRTPATH}
+CERTIFICATEKEYPATH=${CERTIFICATEKEYPATH}
+"
+
+echo -e "${PURPLE_BLUE} === Continue with this settings ? ${RESET}"
+yes_or_no
+_err=$?
+[ $_err -gt 0 ] && exit 0
 
 
 STATICFILES=""
@@ -62,7 +90,7 @@ ls -p1 | grep -v / | xargs -I {} echo "    location = /{} {
         access_log off; log_not_found off;
         alias $(pwd)/{};
     }"
-      
+
       .loopsubdirs "${_cwd}"  "${ACTIONS}"
     }
     fi
@@ -72,7 +100,10 @@ ls -p1 | grep -v / | xargs -I {} echo "    location = /{} {
 }
 
 CWD="${PWD}"
-CURDIR="${PWD}/public"
+if [[ -d "${PWD}/public" ]] ; then
+{
+  echo "Rails-like structure using public folder"
+  CURDIR="${PWD}/public"
 cd  "${CURDIR}"
 STATICFILES="$(ls -p1 | grep -v / | xargs -I {} echo "    location = /{} {
         access_log off; log_not_found off;
@@ -90,10 +121,19 @@ ls -p1 | grep -v / | xargs -I {} echo \"    location = /{} {
 STATICFILES="${STATICFILES}
 $(.loopsubdirs  "${CURDIR}" "${ACTIONS}")"
 
+}
+else
+{
+  echo "Wordpress-like structure using root folder"
+  CURDIR="${PWD}"
+}
+fi
+[[ ! -d  "${CURDIR}" ]] && echo "Failed to find  "${CURDIR}"" && exit 1
+
 cd "${CWD}"
 
 # echo -e ";;;;;;;\n${STATICFILES}\n;;;;;;"
-# exit 0 
+# exit 0
 
 
 echo "upstream ${PROJECTNAME} {
@@ -120,11 +160,11 @@ server {
 #         alias \$(pwd)/{};
 #     }\"
     # Place generated invidual cases here
-    # -- between here 
+    # -- between here
     # here starts
 ${STATICFILES}
-    # here ends 
-    # --- and here 
+    # here ends
+    # --- and here
     try_files \$uri/index.html \$uri @${PROJECTNAME};
 
     location @${PROJECTNAME} {
@@ -157,11 +197,11 @@ server {
     # Uncomment error pages one you place make them accesible
     # error_page 500 502 503 504 /500.html;
     # Place generated invidual cases here too
-    # -- between here 
+    # -- between here
     # here starts
 ${STATICFILES}
-    # here ends 
-    # --- and here 
+    # here ends
+    # --- and here
     try_files \$uri/index.html \$uri @${PROJECTNAME};
 
     location @${PROJECTNAME} {
@@ -174,4 +214,149 @@ ${STATICFILES}
     client_max_body_size 4G;
     keepalive_timeout 10;
 }
-" > ${SERVERNAME}.conf
+" > ${SERVERNAME}_upstream.conf
+
+
+echo "# Redirect http to https
+server {
+    listen 80;
+    listen [::]:80;
+    server_name ${SERVERNAME} www.${SERVERNAME} *.${SERVERNAME};
+    return 301 https://\$host\$request_uri;
+}
+# Redirect www to non-www
+#server {
+#    listen 443;  just writing a redirect to port 443 with no ssl info fails
+#    listen [::]:443;
+#    server_name www.${SERVERNAME};
+#
+#    return 301 https://${SERVERNAME}\$request_uri;
+#}
+# Suggestiong to redirect demo.com to www.demo.com REF: https://www.digitalocean.com/community/tutorials/how-to-configure-single-and-multiple-wordpress-site-settings-with-nginx
+# server {
+    # URL: Correct way to redirect URL's
+    # server_name demo.com;
+    # rewrite ^/(.*)\$ http://www.demo.com/\$1 permanent;
+# }
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    # multisite installation with subdomains  must add  domain with a wildcard:  *.demo2.com;
+    server_name ${SERVERNAME} www.${SERVERNAME} *.${SERVERNAME};
+    root ${PROJECTROOTFOLDER};
+    charset utf-8;
+
+    ssl_session_timeout  5m;
+
+    # Uncomment error pages one you place make them accesible
+    # error_page 500 502 503 504 /500.html;
+    # Place generated invidual cases here too
+    # -- between here
+    # here starts
+${STATICFILES}
+    # here ends
+    # --- and here
+    # try_files \$uri/index.html \$uri @${PROJECTNAME};
+
+    index index.php index.html index.htm;
+
+    #
+    # Generic restrictions for things like PHP files in uploads
+    #
+    include restrictions.conf;
+
+    #
+    # Gzip rules
+    #
+    include gzip.conf;
+
+    #
+    # WordPress Rules
+    #
+    # {{#unless site.multiSite}}
+    # include wordpress-single.conf;
+    # {{else}}
+    include wordpress-multi.conf;
+    # {{/unless}}
+
+    ssl_certificate /home/zeus/.valet/LocalCertificates/${SERVERNAME}.crt;
+    ssl_certificate_key /home/zeus/.valet/LocalCertificates/${SERVERNAME}.key;
+    # ssl_certificate ${CERTIFICATECRTPATH};
+    # ssl_certificate_key ${CERTIFICATEKEYPATH};
+
+    #
+    # TLS SSL rules
+    #
+    include ssl.conf;
+
+    # location / {
+    #    rewrite ^ /home/zeus/.config/composer/vendor/cpriego/valet-linux/server.php last;
+    # }
+
+    # location = /favicon.ico { access_log off; log_not_found off; }
+    # location = /robots.txt  { access_log off; log_not_found off; }
+
+    access_log off;
+    error_log /home/zeus/.valet/Log/nginx-error.log;
+
+    # error_page 404 /home/zeus/.config/composer/vendor/cpriego/valet-linux/server.php;
+
+    # REQUIREMENTS : Enable PHP Support
+    location ~ \.php\$ {
+        # SECURITY : Zero day Exploit Protection
+        try_files \$uri =404;
+
+        # ENABLE : Enable PHP, listen fpm sock
+        fastcgi_split_path_info ^(.+\.php)(/.+)\$;
+        fastcgi_pass unix:/home/zeus/.valet/valet.sock;
+        fastcgi_index index.php;
+        include fastcgi_params;
+    }
+
+    # PLUGINS : Enable Rewrite Rules for Yoast SEO SiteMap
+    rewrite ^/sitemap_index\.xml\$ /index.php?sitemap=1 last;
+    rewrite ^/([^/]+?)-sitemap([0-9]+)?\.xml\$ /index.php?sitemap=\$1&sitemap_n=\$2 last;
+
+    # Rewrite robots.txt
+    rewrite ^/robots.txt\$ /index.php last;
+
+    location ~ /\.ht {
+        deny all;
+    }
+}
+
+server {
+    listen 88;
+    server_name ${SERVERNAME} www.${SERVERNAME} *.${SERVERNAME};
+    root /;
+    charset utf-8;
+    client_max_body_size 128M;
+
+    location /41c270e4-5535-4daa-b23e-c269744c2f45/ {
+        internal;
+        alias /;
+        try_files \$uri \$uri/;
+    }
+
+    location / {
+        rewrite ^ /home/zeus/.config/composer/vendor/cpriego/valet-linux/server.php last;
+    }
+
+    access_log off;
+    error_log /home/zeus/.valet/Log/nginx-error.log;
+
+    error_page 404 /home/zeus/.config/composer/vendor/cpriego/valet-linux/server.php;
+
+    location ~ \.php\$ {
+        fastcgi_split_path_info ^(.+\.php)(/.+)\$;
+        fastcgi_pass unix:/home/zeus/.valet/valet.sock;
+        fastcgi_index /home/zeus/.config/composer/vendor/cpriego/valet-linux/server.php;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME /home/zeus/.config/composer/vendor/cpriego/valet-linux/server.php;
+    }
+
+    location ~ /\.ht {
+        deny all;
+    }
+}
+" > ${SERVERNAME}_nginx.conf

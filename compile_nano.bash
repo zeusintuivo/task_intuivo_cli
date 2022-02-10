@@ -337,7 +337,8 @@ _ubuntu__64() {
 _ubuntu__32() {
     local CODENAME=$(_version "linux" "nano-*.*.*.*i386.deb")
     # THOUGHT local CODENAME="nano-4.3.3.24545_i386.deb"
-    local URL="https://www.nano-editor.org/dist/v5/${CODENAME}"
+    _download_compile_install
+    #local URL="https://www.nano-editor.org/dist/v6/${CODENAME}"
     cd $USER_HOME/Downloads/
     _download "${URL}"
     sudo dpkg -i ${CODENAME}
@@ -356,10 +357,11 @@ _fedora__32() {
     wget
     tar
   "
+  _download_compile_install
 
   local CODENAME=$(_version "linux" "nano*.*.*.*.i386.rpm")
   # THOUGHT                          nano-4.3.3.24545.i386.rpm
-  local TARGET_URL="https://www.nano-editor.org/dist/v5/${CODENAME}"
+  local TARGET_URL="https://www.nano-editor.org/dist/v6/${CODENAME}"
   local DOWNLOADFOLDER="$(_find_downloads_folder)"
   enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
   directory_exists_with_spaces "${DOWNLOADFOLDER}"
@@ -371,7 +373,7 @@ _fedora__32() {
 
   # provide error handling , once learned goes here. Learn under if, once learned here.
   # Start loop while ERROR flag in case needs to try again, based on error
-  _try "rpm --import https://www.nano-editor.org/dist/v5/RPM-GPG-KEY-nano"
+  _try "rpm --import https://www.nano-editor.org/dist/v6/RPM-GPG-KEY-nano"
   local msg=$(_try "rpm -ivh \"$USER_HOME/Downloads/${CODENAME}\"" )
   local ret=$?
   if [ $ret -gt 0 ] ; then
@@ -423,9 +425,11 @@ _get_dowload_target(){
   #
   local CODELASTESTBUILD=$(_extract_version "${CODEFILE}")
   enforce_variable_with_value CODEFILE "${CODEFILE}"
+
   local TARGETNAME=$(echo -n "${CODELASTESTBUILD}" | grep "${PLATFORM}" | grep "${PLATFORM}" |  tail -1)
   enforce_variable_with_value TARGETNAME "${TARGETNAME}"
-  echo -n "${URL}${TARGETNAME}"
+  local _newURL=$(echo -n "${URL}" | sed 's/\/download.php//g')
+  echo -n "${_newURL}${TARGETNAME}"
   return 0
 } # end _get_dowload_target
 
@@ -451,11 +455,42 @@ _fedora__64() {
   _download_compile_install
   return 0
 } # end _fedora__64
+
+_contains(){
+  # Sample use
+  #   _contains ".tar.xz' $VAR
+  #   _contains "nano-' $VAR
+  local _what="${1}"
+  local _which="${2}"
+  if [[ "${_which}" == *"${_what}"* ]] ; then
+  {
+    return 0
+  }
+  fi
+  return 1
+} # end _contains
+
+enforce_contains(){
+  # Sample use
+  #   enforce_contains ".tar.xz' $VAR
+  #   enfore_contains "nano-' $VAR
+  local _what="${1}"
+  local _which="${2}"
+  local _test="expected to contain <${_what}> inside <${_which}>" 
+  if _contains "${_what}"  "${_which}"  ; then
+  {
+    return 0
+  }
+  fi
+  failed "${_test}"
+} # end enforce_contains
+
 _download_compile_install(){
   # Sample use
   #   _download_compile_install
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  local TARGET_URL=$(_get_dowload_target "https://www.nano-editor.org/dist/v5/")
+  # local TARGET_URL=$(_get_dowload_target "https://www.nano-editor.org/dist/v6/")
+  local TARGET_URL=$(_get_dowload_target "https://www.nano-editor.org/download.php")
   enforce_variable_with_value TARGET_URL "${TARGET_URL}"
   local CODENAME=$(basename "${TARGET_URL}")
   enforce_variable_with_value CODENAME "${CODENAME}"
@@ -463,8 +498,18 @@ _download_compile_install(){
   enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
   directory_exists_with_spaces "${DOWNLOADFOLDER}"
   # VERBOSE=1
-  (( VERBOSE )) && echo -n "${TARGET_URL}"
+  (( VERBOSE )) && echo "
+  DOWNLOADFOLDER:$DOWNLOADFOLDER
+  CODENAME:$CODENAME
+  TARGET_URL:$TARGET_URL
+  "
+  enforce_contains "nano-" "${CODENAME}"
+  enforce_contains ".tar.xz" "${CODENAME}"
+  enforce_contains "https://www.nano-editor.org/dist/v" "${TARGET_URL}"
+  enforce_contains "nano-" "${TARGET_URL}"
+  enforce_contains ".tar.xz" "${TARGET_URL}"
   (( VERBOSE )) && echo "DEBUG EXIT 0"
+  (( VERBOSE )) && exit 0
   enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
   (( VERBOSE )) && echo  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
   if it_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}" ; then
@@ -574,9 +619,9 @@ _build_add_nanorc(){
 _mingw__64() {
     local CODENAME=$(_version "win" "nano*.*.*.*.exe")
     # THOUGHT        local CODENAME="nano-4.3.3.24545.exe"
-    local URL="https://www.nano-editor.org/dist/v5/${CODENAME}"
+    local URL="https://www.nano-editor.org/dist/v6/${CODENAME}"
     cd $HOMEDIR
-	  cd Downloads
+    cd Downloads
     curl -O $URL
     ${CODENAME}
 } # end _mingw__64
@@ -584,11 +629,12 @@ _mingw__64() {
 _mingw__32() {
     local CODENAME=$(_version "win" "nano*.*.*.*.exe")
     # THOUGHT        local CODENAME="nano-4.3.3.24545.exe"
-    local URL="https://www.nano-editor.org/dist/v5/${CODENAME}"
+    _download_compile_install
+    local URL="https://www.nano-editor.org/dist/v6/${CODENAME}"
     cd $HOMEDIR
     cd Downloads
-	  curl -O $URL
-	  ${CODENAME}
+    curl -O $URL
+    ${CODENAME}
 } # end
 
 
