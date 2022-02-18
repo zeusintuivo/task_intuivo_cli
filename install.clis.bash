@@ -1235,9 +1235,13 @@ _install_dmg__64() {
     echo  Removing macOS gatekeeper quarantine attribute
     chown  -R "${SUDO_USER}" "/Applications/${APPDIR}"
     chgrp  -R staff "/Applications/${APPDIR}"
+    if [[ "$(xattr "/Applications/${APPDIR}")" == *"com.apple.quarantine"* ]] ; then 
+    {
     if xattr -d com.apple.quarantine  "/Applications/${APPDIR}" ; then
     {
       Comment ${ORANGE} WARNING! ${YELLOW_OVER_DARKBLUE} failed xattr -d com.apple.quarantine  "/Applications/${APPDIR}" ${YELLOW_OVER_GRAY241}"${APPDIR}"${RESET}
+    }
+    fi
     }
     fi
 } # end _install_dmg__64
@@ -1262,8 +1266,8 @@ _install_dmgs_list(){
   sketch-70.3-109109.zip|Sketch.app|https://download.sketch.com/sketch-70.3-109109.zip
   Iris-1.2.0-OSX.zip|Iris.app|https://raw.githubusercontent.com/danielng01/product-builds/master/iris/macos/Iris-1.2.0-OSX.zip
   BetterTouchTool.zip|BetterTouchTool.app|https://folivora.ai/releases/BetterTouchTool.zip
-  Options_8.36.76.zip|LogiMgr Installer 8.36.76.app|https://download01.logi.com/web/ftp/pub/techsupport/options/Options_8.36.76.zip
-  tsetup.2.5.7.dmg|Telegram Desktop/Telegram.app|https://updates.tdesktop.com/tmac/tsetup.2.5.7.dmg
+#  Options_8.36.76.zip|LogiMgr Installer 8.36.76.app|https://download01.logi.com/web/ftp/pub/techsupport/options/Options_8.36.76.zip
+  tsetup.3.5.1.dmg|Telegram Desktop/Telegram.app|https://updates.tdesktop.com/tmac/tsetup.3.5.1.dmg
   VSCode-darwin.zip|Visual Studio Code.app|https://az764295.vo.msecnd.net/stable/ea3859d4ba2f3e577a159bc91e3074c5d85c0523/VSCode-darwin.zip
   VSCode-darwin.zip|Visual Studio Code.app|https://code.visualstudio.com/sha/download?build=stable&os=darwin
   VSCode-darwin.zip|Visual Studio Code.app|https://az764295.vo.msecnd.net/insider/5a52bc29d5e9bc419077552d336ea26d904299fa/VSCode-darwin.zip
@@ -1271,7 +1275,7 @@ _install_dmgs_list(){
   BCompareOSX-4.3.7.25118.zip|Beyond Compare.app|https://www.scootersoftware.com/BCompareOSX-4.3.7.25118.zip
   dbeaver-ce-7.3.4-macos.dmg|DBeaver Community/DBeaver.app|https://download.dbeaver.com/community/7.3.4/dbeaver-ce-7.3.4-macos.dmg
   Inkscape-1.0.2.dmg|Inkscape/Inkscape.app|https://media.inkscape.org/dl/resources/file/Inkscape-1.0.2.dmg
-  LittleSnitch-4.6.dmg|Little Snitch 4.6/Little Snitch Installer.app|https://www.obdev.at/ftp/pub/Products/littlesnitch/LittleSnitch-4.6.dmg
+  LittleSnitch-5.3.2.dmg|Little Snitch 5.3.2/Little Snitch.app|https://www.obdev.at/ftp/pub/Products/littlesnitch/LittleSnitch-5.3.2.dmg
   "
   Checking dmgs apps
   while read -r one ; do
@@ -1305,15 +1309,33 @@ _install_dmgs_list(){
     }
     fi
   }
-  done <<< "${installlist}"
-  if it_exists_with_spaces "/Applications/Sublime Text.app" && is_not_installed subl  ; then
+  done <<< "$(echo "${installlist}" | grep -vE '^#' | grep -vE '^\s+#')"
+  if it_exists_with_spaces /Applications/Sublime\ Text.app && is_not_installed subl  ; then
   {
     Creating softlinks for subl, sublime
-    anounce_command ln -s "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" /usr/local/bin/sublime
-    anounce_command ln -s "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" /usr/local/bin/subl
+    [ ! -d /usr/local/bin/ ] && anounce_command mkdir -p  /usr/local/bin/
+    anounce_command sudo chown -R "${SUDO_USER}"  /usr/local/&
+    anounce_command rm -rf  /usr/local/bin/sublime
+    anounce_command rm -rf  /usr/local/bin/subl
+    anounce_command ln -s /Applications/Sublime\\ Text.app/Contents/SharedSupport/bin/subl  /usr/local/bin/sublime
+    anounce_command ln -s /Applications/Sublime\\ Text.app/Contents/SharedSupport/bin/subl /usr/local/bin/subl
+    anounce_command sudo chown -R "${SUDO_USER}"  /usr/local/bin/sublime&
+    anounce_command sudo chown -R "${SUDO_USER}"  /usr/local/bin/subl&
   }
   fi
 
+  if it_exists_with_spaces /Applications/Beyond\ Compare.app && is_not_installed bcomp  ; then
+  {
+    Creating softlinks for bcomp, bcompare, pdftotext
+    [ ! -d /usr/local/bin/ ] && anounce_command mkdir -p  /usr/local/bin/
+    anounce_command ln -s /Applications/Beyond\ Compare.app/Contents/MacOS/BCompare /usr/local/bin/bcompare
+    anounce_command ln -s /Applications/Beyond\ Compare.app/Contents/MacOS/bcomp /usr/local/bin/bcomp
+    anounce_command ln -s /Applications/Beyond\ Compare.app/Contents/MacOS/pdftotext /usr/local/bin/pdftotext
+    anounce_command sudo chown -R root  /usr/local/bin/bcomp
+    anounce_command sudo chown -R root  /usr/local/bin/bcompare
+    anounce_command sudo chown -R root  /usr/local/bin/pdftotext
+  }
+  fi
   return 0
 } # end _install_dmgs_list
 
