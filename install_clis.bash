@@ -83,21 +83,46 @@ load_struct_testing
 
 export sudo_it
 function sudo_it() {
-  raise_to_sudo_and_user_home
-  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
-  enforce_variable_with_value SUDO_USER "${SUDO_USER}"
-  enforce_variable_with_value SUDO_UID "${SUDO_UID}"
-  enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
-  # Override bigger error trap  with local
-  function _trap_on_error(){
-    echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR INT ...\033[0m"
-
+  # check operation systems
+  if [[ "$(uname)" == "Darwin" ]] ; then
+  {
+      # Do something under Mac OS X platform
+      # nothing here
+    SUDO_USER="${USER}"
+    SUDO_COMMAND="$0"
+    SUDO_UID=502
+    SUDO_GID=20
   }
-  trap _trap_on_error ERR INT
+  elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]] ; then
+  {
+      # Do something under GNU/Linux platform
+      raise_to_sudo_and_user_home
+      [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
+      enforce_variable_with_value SUDO_USER "${SUDO_USER}"
+      enforce_variable_with_value SUDO_UID "${SUDO_UID}"
+      enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
+      # Override bigger error trap  with local
+      function _trap_on_error(){
+        echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR INT ...\033[0m"
+
+      }
+      trap _trap_on_error ERR INT
+  }
+  elif [[ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]] ; then
+  {
+      # Do something under Windows NT platform
+      # nothing here
+    SUDO_USER="${USER}"
+    SUDO_COMMAND="$0"
+    SUDO_UID=502
+    SUDO_GID=20
+  }
+  fi
 } # end sudo_it
 
 #linux_prepare(){
   sudo_it
+
   [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
   export USER_HOME
   # shellcheck disable=SC2046
@@ -225,7 +250,12 @@ determine_os_and_fire_action
 ensure npm or "Canceling Install. Could not find npm"
 ensure node or "Canceling Install. Could not find node"
 ensure cf or "Canceling Install. Could not find cf"
-MTASCHECK=$(cf mtas --help >/dev/null 2>&1)
+if ! cf mtas --help >/dev/null 2>&1 ; then
+{
+  yes | cf install-plugin multiapps
+}
+fi
+MTASCHECK="$(cf mtas --help >/dev/null 2>&1)"
 if [[ -n "$MTASCHECK" ]] &&  [[ "$MTASCHECK" == *"FAILED"* ]]  ; then
 {
     yes | cf install-plugin multiapps
