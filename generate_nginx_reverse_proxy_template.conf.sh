@@ -1736,11 +1736,11 @@ if (!-e \$request_filename) {
 }
 
 location / {
-	try_files index.php\$is_args\$args \$uri\$is_args\$args \$uri/\$is_args\$args ;
+	try_files index.php\$is_args\$args \$uri;
 }
 
 # Add trailing slash to */wp-admin requests.
-rewrite /wp-admin\$ \$resolved_scheme://\$host\$uri/ permanent;
+rewrite /wp-admin\$ \$resolved_scheme://\$host\$uri permanent;
 " > "${NGINXGENERATED}/wordpress-multi.conf"
 }
 fi
