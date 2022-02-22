@@ -4,7 +4,16 @@
 TARGETSERVER=127.0.0.1
 TARGETPORT=3005
 PROJECTFOLDER=$(pwd)
-PROJECTROOTFOLDER=$(pwd)/public
+
+if [[ -d wp-content ]] ; then
+{
+  PROJECTROOTFOLDER=$(pwd)
+}
+else
+{
+  PROJECTROOTFOLDER=$(pwd)/public
+}
+fi
 PROJECTNAME=$(basename $(pwd))
 PROJECTNAME=$(echo ${PROJECTNAME} | sed 's/\_//g')
 SERVERNAME=${PROJECTNAME}.test
@@ -23,18 +32,40 @@ function yes_or_no() {
 # check operation systems
 if [[ "$(uname)" == "Darwin" ]] ; then
   # Do something under Mac OS X platform
-CERTIFICATECRTPATH=${HOME}/.config/valet/LocalCertificates/${SERVERNAME}.crt;
-CERTIFICATEKEYPATH=${HOME}/.config/valet/LocalCertificates/${SERVERNAME}.key;
+CERTIFICATECRTPATHFROM="${HOME}/.config/valet/Certificates/${SERVERNAME}.crt"
+CERTIFICATEKEYPATHFROM="${HOME}/.config/valet/Certificates/${SERVERNAME}.key"
+CERTIFICATECRTPATH="\"${HOME}/.config/valet/LocalCertificates/${SERVERNAME}.crt\""
+CERTIFICATEKEYPATH="\"${HOME}/.config/valet/LocalCertificates/${SERVERNAME}.key\""
+FROMSERVERSCRIPT="\"${HOME}/.config/valet/Nginx/${SERVERNAME}\""
+SERVERSCRIPT="\"${HOME}/.config/valet/Local/${SERVERNAME}\""
+SERVERVALET="\"${HOME}/.composer/vendor/laravel/valet/server.php\""
+FASTCGIPASS="\"unix:${HOME}/.config/valet/valet.sock\""
+ERRORLOG="\"${HOME}/.config/valet/Log/nginx-error.log\""
 elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]] ; then
   # Do something under GNU/Linux platform
-CERTIFICATECRTPATH=${HOME}/.valet/LocalCertificates/${SERVERNAME}.crt;
-CERTIFICATEKEYPATH=${HOME}/.valet/LocalCertificates/${SERVERNAME}.key;
+CERTIFICATECRTPATHFROM="\"${HOME}/.valet/Certificates/${SERVERNAME}.crt\""
+CERTIFICATEKEYPATHFROM="\"${HOME}/.valet/Certificates/${SERVERNAME}.key\""
+CERTIFICATECRTPATH="\"${HOME}/.valet/LocalCertificates/${SERVERNAME}.crt\""
+CERTIFICATEKEYPATH="\"${HOME}/.valet/LocalCertificates/${SERVERNAME}.key\""
+FROMSERVERSCRIPT="\"${HOME}/.valet/Nginx/${SERVERNAME}\""
+SERVERSCRIPT="\"${HOME}/.valet/Local/${SERVERNAME}\""
+SERVERVALET="\"${HOME}/.config/composer/vendor/cpriego/valet-linux/server.php\""
+FASTCGIPASS="\"unix:${HOME}/.valet/valet.sock\""
+ERRORLOG="\"${HOME}/.valet/Log/nginx-error.log\""
 elif [[ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]] ; then
   # Do something under Windows NT platform
-CERTIFICATECRTPATH=${HOME}/.valet/LocalCertificates/${SERVERNAME}.crt;
-CERTIFICATEKEYPATH=${HOME}/.valet/LocalCertificates/${SERVERNAME}.key;
+CERTIFICATECRTPATHFROM="\"${HOME}/.valet/Certificates/${SERVERNAME}.crt\""
+CERTIFICATEKEYPATHFROM="\"${HOME}/.valet/Certificates/${SERVERNAME}.key\""
+CERTIFICATECRTPATH="\"${HOME}/.valet/LocalCertificates/${SERVERNAME}.crt\""
+CERTIFICATEKEYPATH="\"${HOME}/.valet/LocalCertificates/${SERVERNAME}.key\""
+FROMSERVERSCRIPT="\"${HOME}/.valet/Nginx/${SERVERNAME}\""
+SERVERSCRIPT="\"${HOME}/.valet/Local/${SERVERNAME}\""
+SERVERVALET="\"${HOME}/.config/composer/vendor/cpriego/valet-linux/server.php\""
+FASTCGIPASS="\"unix:${HOME}/.valet/valet.sock\""
+ERRORLOG="\"${HOME}/.valet/Log/nginx-error.log\""
   # nothing here
 fi
+
 
 echo "
 TARGETPORT=${TARGETPORT}
@@ -44,6 +75,9 @@ PROJECTNAME=${PROJECTNAME}
 SERVERNAME=${SERVERNAME}
 CERTIFICATECRTPATH=${CERTIFICATECRTPATH}
 CERTIFICATEKEYPATH=${CERTIFICATEKEYPATH}
+ERRORLOG=${ERRORLOG}
+FASTCGIPASS=${FASTCGIPASS}
+SERVERVALET=${SERVERVALET}
 "
 
 echo -e "${PURPLE_BLUE} === Continue with this settings ? ${RESET}"
@@ -51,6 +85,17 @@ yes_or_no
 _err=$?
 [ $_err -gt 0 ] && exit 0
 
+echo "Copy Certificates from valet"
+mkdir -p "$(dirname "${CERTIFICATECRTPATH}")"
+mkdir -p "$(dirname "${SERVERSCRIPT}")"
+
+cp  "${FROMSERVERSCRIPT}" "${SERVERSCRIPT}"
+cp  "${CERTIFICATECRTPATHFROM}" "${CERTIFICATECRTPATH}"
+cp  "${CERTIFICATEKEYPATHFROM}" "${CERTIFICATEKEYPATH}"
+
+echo "Unregister valet project"
+echo "valet unlink "${PROJECTNAME}""
+valet unlink "${PROJECTNAME}"
 
 STATICFILES=""
 
@@ -279,10 +324,8 @@ ${STATICFILES}
     include wordpress-multi.conf;
     # {{/unless}}
 
-    ssl_certificate /home/zeus/.valet/LocalCertificates/${SERVERNAME}.crt;
-    ssl_certificate_key /home/zeus/.valet/LocalCertificates/${SERVERNAME}.key;
-    # ssl_certificate ${CERTIFICATECRTPATH};
-    # ssl_certificate_key ${CERTIFICATEKEYPATH};
+    ssl_certificate ${CERTIFICATECRTPATH};
+    ssl_certificate_key ${CERTIFICATEKEYPATH};
 
     #
     # TLS SSL rules
@@ -290,16 +333,16 @@ ${STATICFILES}
     include ssl.conf;
 
     # location / {
-    #    rewrite ^ /home/zeus/.config/composer/vendor/cpriego/valet-linux/server.php last;
+    #    rewrite ^ ${SERVERVALET} last;
     # }
 
     # location = /favicon.ico { access_log off; log_not_found off; }
     # location = /robots.txt  { access_log off; log_not_found off; }
 
     access_log off;
-    error_log /home/zeus/.valet/Log/nginx-error.log;
+    error_log ${ERRORLOG};
 
-    # error_page 404 /home/zeus/.config/composer/vendor/cpriego/valet-linux/server.php;
+    # error_page 404 ${SERVERVALET};
 
     # REQUIREMENTS : Enable PHP Support
     location ~ \.php\$ {
@@ -307,8 +350,8 @@ ${STATICFILES}
         try_files \$uri =404;
 
         # ENABLE : Enable PHP, listen fpm sock
-        fastcgi_split_path_info ^(.+\.php)(/.+)\$;
-        fastcgi_pass unix:/home/zeus/.valet/valet.sock;
+        fastcgi_split_path_info ^(.+\\.php)(/.+)\$;
+        fastcgi_pass ${FASTCGIPASS};
         fastcgi_index index.php;
         include fastcgi_params;
     }
@@ -339,20 +382,62 @@ server {
     }
 
     location / {
-        rewrite ^ /home/zeus/.config/composer/vendor/cpriego/valet-linux/server.php last;
+        rewrite ^ ${SERVERVALET} last;
     }
 
     access_log off;
-    error_log /home/zeus/.valet/Log/nginx-error.log;
+    error_log ${ERRORLOG};
 
-    error_page 404 /home/zeus/.config/composer/vendor/cpriego/valet-linux/server.php;
+    error_page 404 ${SERVERVALET};
 
-    location ~ \.php\$ {
-        fastcgi_split_path_info ^(.+\.php)(/.+)\$;
-        fastcgi_pass unix:/home/zeus/.valet/valet.sock;
-        fastcgi_index /home/zeus/.config/composer/vendor/cpriego/valet-linux/server.php;
+    location ~ \\.php\$ {
+        fastcgi_split_path_info ^(.+\\.php)(/.+)\$;
+        fastcgi_pass ${FASTCGIPASS};
+        fastcgi_index ${SERVERVALET};
         include fastcgi_params;
-        fastcgi_param SCRIPT_FILENAME /home/zeus/.config/composer/vendor/cpriego/valet-linux/server.php;
+        fastcgi_param SCRIPT_FILENAME ${SERVERVALET};
+    }
+
+    location ~ /\.ht {
+        deny all;
+    }
+}
+
+server {
+    listen 127.0.0.1:60;
+    #listen 127.0.0.1:60; # valet loopback
+    server_name ${SERVERNAME} www.${SERVERNAME} *.${SERVERNAME};
+    root /;
+    charset utf-8;
+    client_max_body_size 128M;
+
+    add_header X-Robots-Tag 'noindex, nofollow, nosnippet, noarchive';
+
+    location /41c270e4-5535-4daa-b23e-c269744c2f45/ {
+        internal;
+        alias /;
+        try_files \$uri \$uri/;
+    }
+
+    location / {
+        rewrite ^ ${SERVERVALET} last;
+    }
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location = /robots.txt  { access_log off; log_not_found off; }
+
+    access_log off;
+    error_log ${ERRORLOG};
+
+    error_page 404 ${SERVERVALET};
+
+    location ~ [^/]\\.php(/|\$) {
+        fastcgi_split_path_info ^(.+\\.php)(/.+)\$;
+        fastcgi_pass ${FASTCGIPASS};
+        fastcgi_index ${SERVERVALET};
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME ${SERVERVALET};
+        fastcgi_param PATH_INFO \$fastcgi_path_info;
     }
 
     location ~ /\.ht {
