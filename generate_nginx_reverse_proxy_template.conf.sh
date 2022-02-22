@@ -1,119 +1,191 @@
 #!/usr/bin/env bash
 
-# Run this to generate template
-TARGETSERVER=127.0.0.1
-TARGETPORT=3005
-PROJECTFOLDER=$(pwd)
-
-if [[ -d wp-content ]] ; then
-{
-  PROJECTROOTFOLDER=$(pwd)
-}
-else
-{
-  PROJECTROOTFOLDER=$(pwd)/public
-}
-fi
-PROJECTNAME=$(basename $(pwd))
-PROJECTNAME=$(echo ${PROJECTNAME} | sed 's/\_//g')
-SERVERNAME=${PROJECTNAME}.test
-
-function yes_or_no() {
-    while true; do
-            read -p "$* [y/n]: " yn
-            case $yn in
-                    [Yy]*) return 0  ;;
-                    [Nn]*) echo "Aborted" ; return  1 ;;
-            esac
-    done
-} # end yes no
 
 
-# check operation systems
-if [[ "$(uname)" == "Darwin" ]] ; then
-  # Do something under Mac OS X platform
-CERTIFICATECRTPATHFROM="${HOME}/.config/valet/Certificates/${SERVERNAME}.crt"
-CERTIFICATEKEYPATHFROM="${HOME}/.config/valet/Certificates/${SERVERNAME}.key"
-CERTIFICATECRTPATH="\"${HOME}/.config/valet/LocalCertificates/${SERVERNAME}.crt\""
-CERTIFICATEKEYPATH="\"${HOME}/.config/valet/LocalCertificates/${SERVERNAME}.key\""
-FROMSERVERSCRIPT="\"${HOME}/.config/valet/Nginx/${SERVERNAME}\""
-SERVERSCRIPT="\"${HOME}/.config/valet/Local/${SERVERNAME}\""
-SERVERVALET="\"${HOME}/.composer/vendor/laravel/valet/server.php\""
-FASTCGIPASS="\"unix:${HOME}/.config/valet/valet.sock\""
-ERRORLOG="\"${HOME}/.config/valet/Log/nginx-error.log\""
-NGINXTYPES="/usr/local/etc/nginx/mime.types"
-NGINXCONF="\"/usr/local/etc/nginx/nginx.conf\""
-elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]] ; then
-  # Do something under GNU/Linux platform
-CERTIFICATECRTPATHFROM="\"${HOME}/.valet/Certificates/${SERVERNAME}.crt\""
-CERTIFICATEKEYPATHFROM="\"${HOME}/.valet/Certificates/${SERVERNAME}.key\""
-CERTIFICATECRTPATH="\"${HOME}/.valet/LocalCertificates/${SERVERNAME}.crt\""
-CERTIFICATEKEYPATH="\"${HOME}/.valet/LocalCertificates/${SERVERNAME}.key\""
-FROMSERVERSCRIPT="\"${HOME}/.valet/Nginx/${SERVERNAME}\""
-SERVERSCRIPT="\"${HOME}/.valet/Local/${SERVERNAME}\""
-SERVERVALET="\"${HOME}/.config/composer/vendor/cpriego/valet-linux/server.php\""
-FASTCGIPASS="\"unix:${HOME}/.valet/valet.sock\""
-ERRORLOG="\"${HOME}/.valet/Log/nginx-error.log\""
-NGINXTYPES="/etc/nginx/mime.types"
-NGINXCONF="\"/etc/nginx/nginx.conf\""
-elif [[ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]] ; then
-  # Do something under Windows NT platform
-CERTIFICATECRTPATHFROM="\"${HOME}/.valet/Certificates/${SERVERNAME}.crt\""
-CERTIFICATEKEYPATHFROM="\"${HOME}/.valet/Certificates/${SERVERNAME}.key\""
-CERTIFICATECRTPATH="\"${HOME}/.valet/LocalCertificates/${SERVERNAME}.crt\""
-CERTIFICATEKEYPATH="\"${HOME}/.valet/LocalCertificates/${SERVERNAME}.key\""
-FROMSERVERSCRIPT="\"${HOME}/.valet/Nginx/${SERVERNAME}\""
-SERVERSCRIPT="\"${HOME}/.valet/Local/${SERVERNAME}\""
-SERVERVALET="\"${HOME}/.config/composer/vendor/cpriego/valet-linux/server.php\""
-FASTCGIPASS="\"unix:${HOME}/.valet/valet.sock\""
-ERRORLOG="\"${HOME}/.valet/Log/nginx-error.log\""
-NGINXTYPES="/etc/nginx/mime.types"
-NGINXCONF="\"/etc/nginx/nginx.conf\""
-  # nothing here
-fi
+
+function main() {
+  export  THISSCRIPTNAME
+  typeset -r THISSCRIPTNAME="$(basename "$0")"
+
+  function _trap_on_error(){
+    echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR INT ...\033[0m"
+    exit 0
+  }
+  trap _trap_on_error ERR INT
+
+  # Run this to generate template
+  TARGETSERVER=127.0.0.1
+  TARGETPORT=3005
+  PROJECTFOLDER=$(pwd)
+
+  if [[ -d wp-content ]] ; then
+  {
+    PROJECTROOTFOLDER=$(pwd)
+  }
+  else
+  {
+    PROJECTROOTFOLDER=$(pwd)/public
+  }
+  fi
+  PROJECTNAME=$(basename $(pwd))
+  PROJECTNAME=$(echo ${PROJECTNAME} | sed 's/\_//g')
+  SERVERNAME=${PROJECTNAME}.test
+
+  function yes_or_no() {
+      while true; do
+              read -p "$* [y/n]: " yn
+              case $yn in
+                      [Yy]*) return 0  ;;
+                      [Nn]*) echo "Aborted" ; return  1 ;;
+              esac
+      done
+  } # end yes no
 
 
-echo "
-TARGETPORT=${TARGETPORT}
-PROJECTFOLDER=${PROJECTFOLDER}
-PROJECTROOTFOLDER=${PROJECTROOTFOLDER}
-PROJECTNAME=${PROJECTNAME}
-SERVERNAME=${SERVERNAME}
-CERTIFICATECRTPATH=${CERTIFICATECRTPATH}
-CERTIFICATEKEYPATH=${CERTIFICATEKEYPATH}
-ERRORLOG=${ERRORLOG}
-FASTCGIPASS=${FASTCGIPASS}
-SERVERVALET=${SERVERVALET}
-"
 
-echo -e "${PURPLE_BLUE} === Continue with this settings ? ${RESET}"
-yes_or_no
-_err=$?
-[ $_err -gt 0 ] && exit 0
+  # check operation systems
+  if [[ "$(uname)" == "Darwin" ]] ; then
+  {
+    # Do something under Mac OS X platform
+    VALETHOME="${HOME}/.config/valet"
+    SERVERVALET="${HOME}/.composer/vendor/laravel/valet/server.php"
+    NGINXBASE="/usr/local/etc/nginx"
+    FPMSOCK="unix:/usr/local/var/run/php-www.sock"
+    NGINXUSERS="\"${USER}\" staff"
+    NGINXPID="/usr/local/var/run/nginx.pid"
+  }
+  elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]] || \
+       [[ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]] ; then
+  {
 
-echo "Copy Certificates from valet"
-mkdir -p "$(dirname "${CERTIFICATECRTPATH}")"
-mkdir -p "$(dirname "${SERVERSCRIPT}")"
+    # Do something under GNU/Linux platform
+    # Do something under Windows NT platform  # nothing here
+    VALETHOME="${HOME}/.valet"
+    SERVERVALET="${HOME}/.config/composer/vendor/cpriego/valet-linux/server.php"
+    NGINXBASE="/etc/nginx"
+    FPMSOCK="unix:/run/php-fpm/www.sock"
+    NGINXUSERS="\"${USER}\" wheel"
+    NGINXPID="/run/nginx.pid"
+  }
+  fi
 
-cp  "${FROMSERVERSCRIPT}" "${SERVERSCRIPT}"
-cp  "${CERTIFICATECRTPATHFROM}" "${CERTIFICATECRTPATH}"
-cp  "${CERTIFICATEKEYPATHFROM}" "${CERTIFICATEKEYPATH}"
+  CERTIFICATECRTPATHFROM="${VALETHOME}/Certificates/${SERVERNAME}.crt"
+  CERTIFICATEKEYPATHFROM="${VALETHOME}/Certificates/${SERVERNAME}.key"
+  CERTIFICATECRTPATH="${VALETHOME}/LocalCertificates/${SERVERNAME}.crt"
+  CERTIFICATEKEYPATH="${VALETHOME}/LocalCertificates/${SERVERNAME}.key"
+  FROMSERVERSCRIPT="${VALETHOME}/Nginx/${SERVERNAME}"
+  SERVERSCRIPT="${VALETHOME}/Local/${SERVERNAME}"
+  FASTCGIPASS="unix:${VALETHOME}/valet.sock"
+  ERRORLOG="${VALETHOME}/Log/nginx-error.log"
 
-if [[ "$(</etc/hosts)" != *"${SERVERNAME}"* ]] ; then
-{
-  sudo echo "
+  NGINXGENERATED="${NGINXBASE}/generated"
+  NGINXCONF="${NGINXBASE}/nginx.conf"
+
+  local _control="
+  TARGETPORT=${TARGETPORT}
+  PROJECTFOLDER=${PROJECTFOLDER}
+  PROJECTROOTFOLDER=${PROJECTROOTFOLDER}
+  PROJECTNAME=${PROJECTNAME}
+  FROMSERVERSCRIPT=${FROMSERVERSCRIPT}
+  SERVERNAME=${SERVERNAME}
+  SERVERSCRIPT=${SERVERSCRIPT}
+  CERTIFICATECRTPATH=${CERTIFICATECRTPATH}
+  CERTIFICATEKEYPATH=${CERTIFICATEKEYPATH}
+  ERRORLOG=${ERRORLOG}
+  FASTCGIPASS=${FASTCGIPASS}
+  SERVERVALET=${SERVERVALET}
+  NGINXGENERATED=${NGINXGENERATED}
+  NGINXCONF=${NGINXCONF}
+  FPMSOCK=${FPMSOCK}
+  VALETHOME=${VALETHOME}
+  VALETHOME=${VALETHOME}
+  hosts file = /etc/hosts
+  "
+  if ( command -v sift >/dev/null 2>&1; ) ; then
+  {
+    echo "${_control}" | sift "="
+  }
+  else
+  {
+    echo "${_control}"
+  }
+  fi
+  echo -e "${PURPLE_BLUE} === Continue with this settings ? ${RESET}"
+  yes_or_no
+  _err=$?
+  [ $_err -gt 0 ] && exit 0
+
+  [[ ! -d "${NGINXGENERATED}" ]] && mkdir -p "${NGINXGENERATED}"
+  [[ ! -d "${NGINXGENERATED}/sites-enabled" ]] && mkdir -p "${NGINXGENERATED}/sites-enabled"
+  [[ ! -d "${PROJECTFOLDER}/sockets" ]] && mkdir -p "${PROJECTFOLDER}/sockets"
+  [[ ! -d "${PROJECTFOLDER}/shared/sockets" ]] && mkdir -p "${PROJECTFOLDER}/shared/sockets"
+  [[ ! -d "$(dirname "${SERVERSCRIPT}")" ]] && mkdir -p "$(dirname "${SERVERSCRIPT}")"
+
+
+  if [[ ! -f "${CERTIFICATECRTPATH}" ]] ; then
+  {
+    echo "Copy Certificates from valet"
+    [[ ! -d "$(dirname "${CERTIFICATECRTPATH}")" ]] && mkdir -p "$(dirname "${CERTIFICATECRTPATH}")"
+    cp  "${FROMSERVERSCRIPT}" "${SERVERSCRIPT}_backed"
+    cp  "${FROMSERVERSCRIPT}" "${SERVERNAME}_backed"
+    cp  "${CERTIFICATECRTPATHFROM}" "${CERTIFICATECRTPATH}"
+    cp  "${CERTIFICATEKEYPATHFROM}" "${CERTIFICATEKEYPATH}"
+  }
+  fi
+
+  if [[ "$(</etc/hosts)" != *"${SERVERNAME}"* ]] ; then
+  {
+    echo "sudo echo \"${SERVERNAME}\" >> /etc/hosts"
+    if ( command -v tee >/dev/null 2>&1; ) ; then
+    {
+  echo "
 127.0.0.1   ${SERVERNAME} www.${SERVERNAME} api.${SERVERNAME};
 ::1         ${SERVERNAME} www.${SERVERNAME} api.${SERVERNAME};
-" >> "/etc/hosts"
-}
-fi
-nurindatei /etc/hosts ${SERVERNAME}
+" | sudo tee "/etc/hosts"
+    }
+    else
+    {
+  echo "Make sure to add this lines to your \"/etc/hosts\" file
+127.0.0.1   ${SERVERNAME} www.${SERVERNAME} api.${SERVERNAME};
+::1         ${SERVERNAME} www.${SERVERNAME} api.${SERVERNAME};
+"
+    }
+    fi
+  }
+  fi
 
-echo "Unregister valet project"
-echo "valet unlink "${PROJECTNAME}""
-valet unlink "${PROJECTNAME}"
+  if ( command -v nurindatei >/dev/null 2>&1; ) ; then
+  {
+    nurindatei /etc/hosts "${SERVERNAME}"
+  }
+  else
+  {
+    grep  "${SERVERNAME}" /etc/hosts
+  }
+  fi
+  #   yes_or_no
+  # _err=$?
+  # [ $_err -gt 0 ] && exit 0
+  local -i _err
+  local links="$( ls -1 "${FROMSERVERSCRIPT}"   2>&1; )"
+  _err=$?
+  if [ ${_err} -eq 0 ] && [[ "${links}" == *"${PROJECTNAME}"* ]] &&  [[ "${links}" != *"No such file"* ]]; then
+  {
+    #  yes_or_no
+    # _err=$?
+    # [ $_err -gt 0 ] && exit 0
+    echo "Unregister valet project sudo"
+    echo "valet unlink \"${PROJECTNAME}\""
+    valet unlink "${PROJECTNAME}"
+    valet restart
+  }
+  else
+  {
+    echo "Valet server not found"
+  }
+  fi
 
-STATICFILES=""
+  STATICFILES=""
 
 
 ._dirs() {
@@ -168,12 +240,12 @@ if [[ -d "${PWD}/public" ]] ; then
 cd  "${CURDIR}"
 STATICFILES="$(ls -p1 | grep -v / | xargs -I {} echo "    location = /{} {
         access_log off; log_not_found off;
-        alias $(pwd)/{};
+        alias \"$(pwd)/{}\";
     }")"
 ACTIONS="
 ls -p1 | grep -v / | xargs -I {} echo \"    location = /{} {
         access_log off; log_not_found off;
-        alias \$(pwd)/{};
+        alias \"\$(pwd)/{}\";
     }\"
   .loopsubdirs \"{#}\" \"${ACTIONS}\"
 
@@ -185,7 +257,7 @@ $(.loopsubdirs  "${CURDIR}" "${ACTIONS}")"
 }
 else
 {
-  echo "Wordpress-like structure using root folder"
+  echo "I identified a Wordpress-like structure using \"wp-root\" folder"
   CURDIR="${PWD}"
 }
 fi
@@ -197,13 +269,14 @@ cd "${CWD}"
 # exit 0
 
 
-echo "upstream ${PROJECTNAME} {
+echo "# ${SERVERNAME}_upstream.conf
+upstream ${PROJECTNAME} {
     # Path to Puma SOCK file, as defined previously
     # NodeJS Express Etc ANything with custom port localhost:8080 localhost:3000 etc
     # server ${TARGETSERVER}:${TARGETPORT} fail_timeout=0;
     # Ruby Puma Sample:
-    # server unix://${PROJECTFOLDER}/sockets/puma.sock fail_timeout=0;
-    server unix://${PROJECTFOLDER}/shared/sockets/puma.sock fail_timeout=0;
+    # server \"unix://${PROJECTFOLDER}/sockets/puma.sock\" fail_timeout=0;
+    server \"unix://${PROJECTFOLDER}/shared/sockets/puma.sock\" fail_timeout=0;
 }
 
 server {
@@ -275,10 +348,11 @@ ${STATICFILES}
     client_max_body_size 4G;
     keepalive_timeout 10;
 }
-" > ${SERVERNAME}_upstream.conf
+" > "${SERVERNAME}_upstream.conf"
 
 
-echo "# Redirect http to https
+echo "# ${NGINXGENERATED}/${SERVERNAME}
+# Redirect http to https
 server {
     listen 80;
     listen [::]:80;
@@ -293,21 +367,21 @@ server {
 #
 #    return 301 https://${SERVERNAME}\$request_uri;
 #}
-# Suggestiong to redirect demo.com to www.demo.com REF: https://www.digitalocean.com/community/tutorials/how-to-configure-single-and-multiple-wordpress-site-settings-with-nginx
+# Suggestions to redirect ${SERVERNAME} to www.${SERVERNAME} REF: https://www.digitalocean.com/community/tutorials/how-to-configure-single-and-multiple-wordpress-site-settings-with-nginx
 # server {
     # URL: Correct way to redirect URL's
-    # server_name demo.com;
-    # rewrite ^/(.*)\$ http://www.demo.com/\$1 permanent;
+    # server_name ${SERVERNAME};
+    # rewrite ^/(.*)\$ http://www.${SERVERNAME}/\$1 permanent;
 # }
 server {
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
-    # multisite installation with subdomains  must add  domain with a wildcard:  *.demo2.com;
+    # multisite installation with subdomains  must add  domain with a wildcard:  *.${SERVERNAME};
     server_name ${SERVERNAME} www.${SERVERNAME} *.${SERVERNAME};
     root ${PROJECTROOTFOLDER};
     charset utf-8;
 
-    ssl_session_timeout  5m;
+    # ssl_session_timeout  5m;  Also in ssl.conf \"${NGINXGENERATED}/ssl.conf\";
 
     # Uncomment error pages one you place make them accesible
     # error_page 500 502 503 504 /500.html;
@@ -319,46 +393,47 @@ ${STATICFILES}
     # --- and here
     # try_files \$uri/index.html \$uri @${PROJECTNAME};
 
+    # Prioritize index.php first for requests
     index index.php index.html index.htm;
 
     #
     # Generic restrictions for things like PHP files in uploads
     #
-    include restrictions.conf;
+    include \"${NGINXGENERATED}/restrictions.conf\";
 
     #
     # Gzip rules
     #
-    include gzip.conf;
+    include \"${NGINXGENERATED}/gzip.conf\";
 
     #
     # WordPress Rules
     #
     # {{#unless site.multiSite}}
-    # include wordpress-single.conf;
+    # include \"${NGINXGENERATED}/wordpress-single.conf\";
     # {{else}}
-    include wordpress-multi.conf;
+    include \"${NGINXGENERATED}/wordpress-multi.conf\";
     # {{/unless}}
 
-    ssl_certificate ${CERTIFICATECRTPATH};
-    ssl_certificate_key ${CERTIFICATEKEYPATH};
+    ssl_certificate \"${CERTIFICATECRTPATH}\";
+    ssl_certificate_key \"${CERTIFICATEKEYPATH}\";
 
     #
     # TLS SSL rules
     #
-    include ssl.conf;
+    include \"${NGINXGENERATED}/ssl.conf\";
 
     # location / {
-    #    rewrite ^ ${SERVERVALET} last;
+    #    rewrite ^ \"${SERVERVALET}\" last;
     # }
 
     # location = /favicon.ico { access_log off; log_not_found off; }
     # location = /robots.txt  { access_log off; log_not_found off; }
 
     access_log off;
-    error_log ${ERRORLOG};
+    error_log \"${ERRORLOG}\";
 
-    # error_page 404 ${SERVERVALET};
+    # error_page 404 \"${SERVERVALET}\";
 
     # REQUIREMENTS : Enable PHP Support
     location ~ \.php\$ {
@@ -367,7 +442,7 @@ ${STATICFILES}
 
         # ENABLE : Enable PHP, listen fpm sock
         fastcgi_split_path_info ^(.+\\.php)(/.+)\$;
-        fastcgi_pass ${FASTCGIPASS};
+        fastcgi_pass \"${FASTCGIPASS}\";
         fastcgi_index index.php;
         include fastcgi_params;
     }
@@ -398,20 +473,20 @@ server {
     }
 
     location / {
-        rewrite ^ ${SERVERVALET} last;
+        rewrite ^ \"${SERVERVALET}\" last;
     }
 
     access_log off;
-    error_log ${ERRORLOG};
+    error_log \"${ERRORLOG}\";
 
-    error_page 404 ${SERVERVALET};
+    error_page 404 \"${SERVERVALET}\";
 
     location ~ \\.php\$ {
         fastcgi_split_path_info ^(.+\\.php)(/.+)\$;
-        fastcgi_pass ${FASTCGIPASS};
-        fastcgi_index ${SERVERVALET};
+        fastcgi_pass \"${FASTCGIPASS}\";
+        fastcgi_index \"${SERVERVALET}\";
         include fastcgi_params;
-        fastcgi_param SCRIPT_FILENAME ${SERVERVALET};
+        fastcgi_param SCRIPT_FILENAME \"${SERVERVALET}\";
     }
 
     location ~ /\.ht {
@@ -436,23 +511,23 @@ server {
     }
 
     location / {
-        rewrite ^ ${SERVERVALET} last;
+        rewrite ^ \"${SERVERVALET}\" last;
     }
 
     location = /favicon.ico { access_log off; log_not_found off; }
     location = /robots.txt  { access_log off; log_not_found off; }
 
     access_log off;
-    error_log ${ERRORLOG};
+    error_log \"${ERRORLOG}\";
 
-    error_page 404 ${SERVERVALET};
+    error_page 404 \"${SERVERVALET}\";
 
     location ~ [^/]\\.php(/|\$) {
         fastcgi_split_path_info ^(.+\\.php)(/.+)\$;
-        fastcgi_pass ${FASTCGIPASS};
-        fastcgi_index ${SERVERVALET};
+        fastcgi_pass \"${FASTCGIPASS}\";
+        fastcgi_index \"${SERVERVALET}\";
         include fastcgi_params;
-        fastcgi_param SCRIPT_FILENAME ${SERVERVALET};
+        fastcgi_param SCRIPT_FILENAME \"${SERVERVALET}\";
         fastcgi_param PATH_INFO \$fastcgi_path_info;
     }
 
@@ -460,12 +535,13 @@ server {
         deny all;
     }
 }
-" > ${SERVERNAME}_nginx.conf
+" > "${SERVERNAME}_nginx.conf" > "${NGINXGENERATED}/${SERVERNAME}"
 
-# /etc/nginx/mime.types
-if [[ ! -e "${NGINXTYPES}" ]] ; then
+
+if [[ ! -e "${NGINXGENERATED}/mime.types" ]] ; then
 {
-echo "types {
+echo "# ${NGINXGENERATED}/mime.types
+types {
 application/A2L					a2l;
 application/AML					aml;
 application/andrew-inset			ez;
@@ -1493,23 +1569,17 @@ video/x-sgi-movie				movie;
 x-conference/x-cooltalk				ice;
 x-epoc/x-sisx-app				sisx;
 }
-" > "${NGINXTYPES}"
+" > "${NGINXGENERATED}/mime.types"
 }
 fi
 
-# /etc/nginx/gzip.conf
 
-if [[ ! -e "${NGINXGZIP}" ]] ; then
+
+if [[ ! -e "${NGINXGENERATED}/gzip.conf"  ]] ; then
 {
-echo "
-
-
-" > "${NGINXGZIP}" 
-}
-fi
-
+echo "# ${NGINXGENERATED}/gzip.conf
     gzip              on;
-    gzip_disable      "msie6";
+    gzip_disable      \"msie6\";
     gzip_comp_level   5;
     gzip_min_length   256;
     gzip_proxied      any;
@@ -1517,7 +1587,7 @@ fi
 
 
     # gzip on;
-    # gzip_disable "msie6";
+    # gzip_disable \"msie6\";
     # gzip_comp_level 5;
     # gzip_min_length 256;
     # gzip_proxied any;
@@ -1566,17 +1636,175 @@ fi
     text/x-component
     text/x-cross-domain-policy;
 
-    # /etc/nginx/conf.d/php-fpm.conf
+
+" > "${NGINXGENERATED}/gzip.conf"
+}
+fi
+
+
+if [[ ! -e "${NGINXGENERATED}/php-fpm.conf"  ]] ; then
+{
+echo "# ${NGINXGENERATED}/php-fpm.conf
+
 # PHP-FPM FastCGI server
 # network or unix domain socket configuration
 
 upstream php-fpm {
-        server unix:/run/php-fpm/www.sock;
+        server \"${FPMSOCK}\";
 }
-# /etc/nginx/nginx.conf
-user 'zeus' 'zeus';
+" > "${NGINXGENERATED}/php-fpm.conf"
+}
+fi
+
+
+
+
+
+if [[ ! -e "${NGINXGENERATED}/restrictions.conf"  ]] ; then
+{
+echo "# ${NGINXGENERATED}/restrictions.conf
+# Global restrictions configuration file.
+# Designed to be included in any server {} block.
+# ESSENTIAL : no favicon logs
+location = /favicon.ico {
+	log_not_found off;
+	access_log off;
+}
+# ESSENTIAL : robots.txt
+location = /robots.txt {
+	allow all;
+	log_not_found off;
+	access_log off;
+}
+# ESSENTIAL : Configure 404 Pages
+error_page 404 /404.html;
+# ESSENTIAL : Configure 50x Pages
+error_page 500 502 503 504 /50x.html;
+# location = /50x.html {
+    # root /usr/share/nginx/www;
+# }
+# SECURITY : Deny all attempts to access hidden files .abcde
+# Deny all attempts to access hidden files such as .htaccess, .htpasswd, .DS_Store (Mac).
+# Keep logging the requests to parse later (or to pass to firewall utilities such as fail2ban)
+location ~ /\\. {
+	deny all;
+	return 404;
+}
+# SECURITY : Deny all attempts to access PHP Files in the uploads directory
+# Deny access to any files with a .php extension in the uploads directory
+# Works in sub-directory installs and also in multisite network
+# Keep logging the requests to parse later (or to pass to firewall utilities such as fail2ban)
+# location ~* /(?:uploads)/.*\\.php\$ {
+location ~* /(?:uploads|files)/.*\\.php\$ {
+	deny all;
+}
+# PERFORMANCE : Set expires headers for static files and turn off logging.
+location ~* \^.+\\.(js|css|swf|xml|txt|ogg|ogv|svg|svgz|eot|otf|woff|mp4|ttf|rss|atom|jpg|jpeg|gif|png|ico|zip|tgz|gz|rar|bz2|doc|xls|exe|ppt|tar|mid|midi|wav|bmp|rtf)\$ {
+    access_log off; log_not_found off; expires 30d;
+}
+" > "${NGINXGENERATED}/restrictions.conf"
+}
+fi
+
+
+if [[ ! -e "${NGINXGENERATED}/wordpress-multi.conf"  ]] ; then
+{
+echo "# ${NGINXGENERATED}/wordpress-multi.conf
+# Rewrite rules for WordPress Multi-site.
+
+# Deny access to any files with a .php extension in the files directory
+# Works in sub-directory installs and also in multisite network
+# Keep logging the requests to parse later (or to pass to firewall utilities such as fail2ban)
+location ~* /(?:files)/.*\\.php\$ {
+	deny all;
+}
+
+location ~ ^/([^/]+/)?files/(.+) {
+	try_files /wp-content/blogs.dir/0/files/\$2 /wp-includes/ms-files.php?file=\$2;
+	access_log off;
+	log_not_found off;
+	expires 5m;
+}
+
+if (!-e \$request_filename) {
+	rewrite /wp-admin\$ \$resolved_scheme://\$host\$uri/ permanent;
+	# rewrite /wp-admin\$ \$scheme://\$host\$uri/ permanent;  # alternate digitalocean REF:https://www.digitalocean.com/community/tutorials/how-to-configure-single-and-multiple-wordpress-site-settings-with-nginx
+	rewrite ^(/[^/]+)?(/wp-.*) \$2 last;
+	# rewrite ^/[_0-9a-zA-Z-]+(/wp-.*) \$1 last;
+	rewrite ^(/[^/]+)?(/.*\\.php) \$2 last;
+	# rewrite ^/[_0-9a-zA-Z-]+(/.*\\.php)\$ \$1 last;
+}
+
+location / {
+	try_files index.php\$is_args\$args \$uri\$is_args\$args \$uri/\$is_args\$args ;
+}
+
+# Add trailing slash to */wp-admin requests.
+rewrite /wp-admin\$ \$resolved_scheme://\$host\$uri/ permanent;
+" > "${NGINXGENERATED}/wordpress-multi.conf"
+}
+fi
+
+if [[ ! -e "${NGINXGENERATED}/wordpress-single.conf"  ]] ; then
+{
+echo "# ${NGINXGENERATED}/wordpress-single.conf
+# WordPress single blog rules.
+# Designed to be included in any server {} block.
+
+# WORDPRESS : Rewrite rules, sends everything through index.php and keeps the appended query string intact
+# This order might seem weird - this is attempted to match last if rules below fail.
+# http://wiki.nginx.org/HttpCoreModule
+location / {
+	try_files index.php\$is_args\$args \$uri\$is_args\$args \$uri/\$is_args\$args ;
+	# try_files \$uri \$uri/ /index.php?q=\$uri&\$args;  # suggested from REF: https://www.digitalocean.com/community/tutorials/how-to-configure-single-and-multiple-wordpress-site-settings-with-nginx
+}
+
+# Add trailing slash to */wp-admin requests.
+rewrite /wp-admin\$ \$resolved_scheme://\$host\$uri/ permanent;
+
+" > "${NGINXGENERATED}/wordpress-single.conf"
+}
+fi
+
+if [[ ! -e "${NGINXGENERATED}/ssl.conf"  ]] ; then
+{
+echo "# ${NGINXGENERATED}/ssl.conf
+    # Paths to certificate files.
+    # ssl_certificate /etc/letsencrypt/live/ssl.com/fullchain.pem;
+    # ssl_certificate_key /etc/letsencrypt/live/ssl.com/privkey.pem;
+
+    # Don't use outdated SSLv3 protocol. Protects against BEAST and POODLE attacks.
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+ssl_ciphers EECDH+CHACHA20:EECDH+AES128:RSA+AES128:EECDH+AES256:RSA+AES256:EECDH+3DES:RSA+3DES:!MD5;
+#ssl_prefer_server_ciphers on;
+
+    # Use secure ciphers
+ #   ssl_ciphers EECDH+CHACHA20:EECDH+AES;
+    ssl_ecdh_curve X25519:prime256v1:secp521r1:secp384r1;
+    ssl_prefer_server_ciphers on;
+
+    # Define the size of the SSL session cache in MBs.
+    ssl_session_cache shared:SSL:1m;
+
+    # Define the time in minutes to cache SSL sessions.
+    ssl_session_timeout 90000h;
+
+    # Tell browsers the site should only be accessed via https.
+    add_header Strict-Transport-Security \"max-age=31536000; includeSubDomains\" always;
+
+
+" > "${NGINXGENERATED}/ssl.conf"
+}
+fi
+
+
+if [[ ! -e "${NGINXGENERATED}/nginx.conf"  ]] ; then
+{
+echo "# ${NGINXGENERATED}/nginx.conf
+user ${NGINXUSERS};
 worker_processes auto;
-pid /run/nginx.pid;
+pid \"${NGINXPID}\";
 
 events {
     worker_connections 1024;
@@ -1584,7 +1812,7 @@ events {
 }
 
 http {
-    include /etc/nginx/mime.types;
+    include \"${NGINXGENERATED}/mime.types\";
     default_type application/octet-stream;
     # set client body size to 2M #
     client_max_body_size 1000M;
@@ -1606,17 +1834,17 @@ http {
     fastcgi_buffer_size 32k;
     fastcgi_read_timeout 1800s;
     #
-    map $http_x_forwarded_proto $resolved_scheme {
-        default "http";
-        "https" "https";
+    map \$http_x_forwarded_proto \$resolved_scheme {
+        default \"http\";
+        \"https\" \"https\";
     }
     #
-    map $resolved_scheme $fastcgi_https {
+    map \$resolved_scheme \$fastcgi_https {
         default '';
         https on;
     }
     # gzip on;
-    # gzip_disable "msie6";
+    # gzip_disable \"msie6\";
     # gzip_comp_level 5;
     # gzip_min_length 256;
     # gzip_proxied any;
@@ -1641,122 +1869,84 @@ http {
     #
     #
     # Gzip rules
-    include gzip.conf;
-    include /etc/nginx/conf.d/*.conf;
-    include /etc/nginx/sites-enabled/*;
-    include /home/zeus/.valet/Local/*;
-    include /home/zeus/.valet/Nginx/*;
-autoindex on;
-}
-# /etc/nginx/restrictions.conf
-# Global restrictions configuration file.
-# Designed to be included in any server {} block.
-# ESSENTIAL : no favicon logs
-location = /favicon.ico {
-	log_not_found off;
-	access_log off;
-}
-# ESSENTIAL : robots.txt
-location = /robots.txt {
-	allow all;
-	log_not_found off;
-	access_log off;
-}
-# ESSENTIAL : Configure 404 Pages
-error_page 404 /404.html;
-# ESSENTIAL : Configure 50x Pages
-error_page 500 502 503 504 /50x.html;
-# location = /50x.html {
-    # root /usr/share/nginx/www;
-# }
-# SECURITY : Deny all attempts to access hidden files .abcde
-# Deny all attempts to access hidden files such as .htaccess, .htpasswd, .DS_Store (Mac).
-# Keep logging the requests to parse later (or to pass to firewall utilities such as fail2ban)
-location ~ /\. {
-	deny all;
-	return 404;
-}
-# SECURITY : Deny all attempts to access PHP Files in the uploads directory
-# Deny access to any files with a .php extension in the uploads directory
-# Works in sub-directory installs and also in multisite network
-# Keep logging the requests to parse later (or to pass to firewall utilities such as fail2ban)
-# location ~* /(?:uploads)/.*\.php$ {
-location ~* /(?:uploads|files)/.*\.php$ {
-	deny all;
-}
-# PERFORMANCE : Set expires headers for static files and turn off logging.
-location ~* ^.+\.(js|css|swf|xml|txt|ogg|ogv|svg|svgz|eot|otf|woff|mp4|ttf|rss|atom|jpg|jpeg|gif|png|ico|zip|tgz|gz|rar|bz2|doc|xls|exe|ppt|tar|mid|midi|wav|bmp|rtf)$ {
-    access_log off; log_not_found off; expires 30d;
+    include \"${NGINXGENERATED}/gzip.conf\";
+
+    # Php fpm rules
+    include \"${NGINXGENERATED}/php-fpm.conf\";
+
+    include \"${NGINXGENERATED}/sites-enabled/*\";
+    include \"${VALETHOME}/Local/*\";
+    include \"${VALETHOME}/Nginx/*\";
+    autoindex on;
 }
 
-# /etc/nginx/wordpress-multi.conf
-# Rewrite rules for WordPress Multi-site.
-
-# Deny access to any files with a .php extension in the files directory
-# Works in sub-directory installs and also in multisite network
-# Keep logging the requests to parse later (or to pass to firewall utilities such as fail2ban)
-location ~* /(?:files)/.*\.php$ {
-	deny all;
+" > "${NGINXGENERATED}/nginx.conf"
 }
+fi
 
-location ~ ^/([^/]+/)?files/(.+) {
-	try_files /wp-content/blogs.dir/0/files/$2 /wp-includes/ms-files.php?file=$2;
-	access_log off;
-	log_not_found off;
-	expires 5m;
-}
+echo "
+./:"
+ls -la \
+"${SERVERNAME}_nginx.conf" \
+"${SERVERNAME}_upstream.conf"
 
-if (!-e $request_filename) {
-	rewrite /wp-admin$ $resolved_scheme://$host$uri/ permanent;
-	# rewrite /wp-admin$ $scheme://$host$uri/ permanent;  # alternate digitalocean REF:https://www.digitalocean.com/community/tutorials/how-to-configure-single-and-multiple-wordpress-site-settings-with-nginx
-	rewrite ^(/[^/]+)?(/wp-.*) $2 last;
-	# rewrite ^/[_0-9a-zA-Z-]+(/wp-.*) $1 last;
-	rewrite ^(/[^/]+)?(/.*\.php) $2 last;
-	# rewrite ^/[_0-9a-zA-Z-]+(/.*\.php)$ $1 last;
-}
+echo "
+${NGINXGENERATED}:"
+ls -la \
+"${NGINXGENERATED}"
 
-location / {
-	try_files $uri $uri/ /index.php$is_args$args;
-}
+cp  "${NGINXGENERATED}/${SERVERNAME}" "${SERVERSCRIPT}"
+echo "
+$(dirname "${SERVERSCRIPT}"):"
+ls -la \
+"${SERVERSCRIPT}"
 
-# Add trailing slash to */wp-admin requests.
-rewrite /wp-admin$ $resolved_scheme://$host$uri/ permanent;
-# /etc/nginx/wordpress-single.conf
-# WordPress single blog rules.
-# Designed to be included in any server {} block.
 
-# WORDPRESS : Rewrite rules, sends everything through index.php and keeps the appended query string intact
-# This order might seem weird - this is attempted to match last if rules below fail.
-# http://wiki.nginx.org/HttpCoreModule
-location / {
-	try_files $uri $uri/ /index.php$is_args$args;
-	# try_files $uri $uri/ /index.php?q=$uri&$args;  # suggested from REF: https://www.digitalocean.com/community/tutorials/how-to-configure-single-and-multiple-wordpress-site-settings-with-nginx
-}
+  if ( command -v bcomp >/dev/null 2>&1; ) ; then
+  {
+    bcomp "${NGINXGENERATED}/nginx.conf" "${NGINXCONF}" &
+  }
+  elif ( command -v bcompare >/dev/null 2>&1; ) ; then
+  {
+    bcompare "${NGINXGENERATED}/nginx.conf" "${NGINXCONF}" &
+  }
+  elif ( command -v colordiff >/dev/null 2>&1; ) ; then
+  {
+    colordiff "${NGINXGENERATED}/nginx.conf" "${NGINXCONF}" &
+  }
+  elif ( command -v diff >/dev/null 2>&1; ) ; then
+  {
+    diff "${NGINXGENERATED}/nginx.conf" "${NGINXCONF}" &
+  }
+  else
+  {
+    echo "Make sure to compare to nginx conf server"
+    echo "${NGINXGENERATED}/nginx.conf" "${NGINXCONF}"
+  }
+  fi
 
-# Add trailing slash to */wp-admin requests.
-rewrite /wp-admin$ $resolved_scheme://$host$uri/ permanent;
-# /etc/nginx/ssl.conf
-    # Paths to certificate files.
-    # ssl_certificate /etc/letsencrypt/live/ssl.com/fullchain.pem;
-    # ssl_certificate_key /etc/letsencrypt/live/ssl.com/privkey.pem;
+  if ! ( command -v nodemon >/dev/null 2>&1; ) ; then
+  {
+    npm -g i nodemon
+  }
+  fi
+  echo "sudo again"
+  if ( command -v nodemon >/dev/null 2>&1; ) ; then
+  {
+    sudo  nodemon --watch "${NGINXCONF}" --exec nginx -t
+  }
+  elif ( command -v watch >/dev/null 2>&1; ) ; then
+  {
+    sudo watch  -cx nginx -t
+  }
+  else
+  {
+    echo Could not find nodemon or watch
+    echo Watch for changes until config is correct
+    echo sudo  nodemon --watch "${NGINXCONF}" --exec nginx -t
+    echo sudo watch  -cx nginx -t
+  }
+  fi
+} # end main
+main
 
-    # Don't use outdated SSLv3 protocol. Protects against BEAST and POODLE attacks.
-    ssl_protocols TLSv1.2 TLSv1.3;
-
-ssl_ciphers EECDH+CHACHA20:EECDH+AES128:RSA+AES128:EECDH+AES256:RSA+AES256:EECDH+3DES:RSA+3DES:!MD5;
-#ssl_prefer_server_ciphers on;
-
-    # Use secure ciphers
- #   ssl_ciphers EECDH+CHACHA20:EECDH+AES;
-    ssl_ecdh_curve X25519:prime256v1:secp521r1:secp384r1;
-    ssl_prefer_server_ciphers on;
-
-    # Define the size of the SSL session cache in MBs.
-    ssl_session_cache shared:SSL:1m;
-
-    # Define the time in minutes to cache SSL sessions.
-    ssl_session_timeout 24h;
-
-    # Tell browsers the site should only be accessed via https.
-    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
-# /etc/nginx/nignx.conf
