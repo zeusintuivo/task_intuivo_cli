@@ -41,6 +41,7 @@ SERVERSCRIPT="\"${HOME}/.config/valet/Local/${SERVERNAME}\""
 SERVERVALET="\"${HOME}/.composer/vendor/laravel/valet/server.php\""
 FASTCGIPASS="\"unix:${HOME}/.config/valet/valet.sock\""
 ERRORLOG="\"${HOME}/.config/valet/Log/nginx-error.log\""
+NGINXCONF="\"/usr/local/etc/nginx/nginx.conf\""
 elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]] ; then
   # Do something under GNU/Linux platform
 CERTIFICATECRTPATHFROM="\"${HOME}/.valet/Certificates/${SERVERNAME}.crt\""
@@ -52,6 +53,7 @@ SERVERSCRIPT="\"${HOME}/.valet/Local/${SERVERNAME}\""
 SERVERVALET="\"${HOME}/.config/composer/vendor/cpriego/valet-linux/server.php\""
 FASTCGIPASS="\"unix:${HOME}/.valet/valet.sock\""
 ERRORLOG="\"${HOME}/.valet/Log/nginx-error.log\""
+NGINXCONF="\"/etc/nginx/nginx.conf\""
 elif [[ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]] ; then
   # Do something under Windows NT platform
 CERTIFICATECRTPATHFROM="\"${HOME}/.valet/Certificates/${SERVERNAME}.crt\""
@@ -63,6 +65,7 @@ SERVERSCRIPT="\"${HOME}/.valet/Local/${SERVERNAME}\""
 SERVERVALET="\"${HOME}/.config/composer/vendor/cpriego/valet-linux/server.php\""
 FASTCGIPASS="\"unix:${HOME}/.valet/valet.sock\""
 ERRORLOG="\"${HOME}/.valet/Log/nginx-error.log\""
+NGINXCONF="\"/etc/nginx/nginx.conf\""
   # nothing here
 fi
 
