@@ -275,8 +275,8 @@ upstream ${PROJECTNAME} {
     # NodeJS Express Etc ANything with custom port localhost:8080 localhost:3000 etc
     # server ${TARGETSERVER}:${TARGETPORT} fail_timeout=0;
     # Ruby Puma Sample:
-    # server \"unix://${PROJECTFOLDER}/sockets/puma.sock\" fail_timeout=0;
-    server \"unix://${PROJECTFOLDER}/shared/sockets/puma.sock\" fail_timeout=0;
+    # server unix://${PROJECTFOLDER}/sockets/puma.sock fail_timeout=0;
+    server unix://${PROJECTFOLDER}/shared/sockets/puma.sock fail_timeout=0;
 }
 
 server {
@@ -442,7 +442,7 @@ ${STATICFILES}
 
         # ENABLE : Enable PHP, listen fpm sock
         fastcgi_split_path_info ^(.+\\.php)(/.+)\$;
-        fastcgi_pass \"${FASTCGIPASS}\";
+        fastcgi_pass ${FASTCGIPASS};
         fastcgi_index index.php;
         include fastcgi_params;
     }
@@ -483,7 +483,7 @@ server {
 
     location ~ \\.php\$ {
         fastcgi_split_path_info ^(.+\\.php)(/.+)\$;
-        fastcgi_pass \"${FASTCGIPASS}\";
+        fastcgi_pass ${FASTCGIPASS};
         fastcgi_index \"${SERVERVALET}\";
         include fastcgi_params;
         fastcgi_param SCRIPT_FILENAME \"${SERVERVALET}\";
@@ -524,7 +524,7 @@ server {
 
     location ~ [^/]\\.php(/|\$) {
         fastcgi_split_path_info ^(.+\\.php)(/.+)\$;
-        fastcgi_pass \"${FASTCGIPASS}\";
+        fastcgi_pass ${FASTCGIPASS};
         fastcgi_index \"${SERVERVALET}\";
         include fastcgi_params;
         fastcgi_param SCRIPT_FILENAME \"${SERVERVALET}\";
