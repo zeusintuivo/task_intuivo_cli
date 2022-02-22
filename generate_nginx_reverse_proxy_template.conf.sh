@@ -1507,3 +1507,256 @@ echo "
 " > "${NGINXGZIP}" 
 }
 fi
+
+    gzip              on;
+    gzip_disable      "msie6";
+    gzip_comp_level   5;
+    gzip_min_length   256;
+    gzip_proxied      any;
+    gzip_vary         on;
+
+
+    # gzip on;
+    # gzip_disable "msie6";
+    # gzip_comp_level 5;
+    # gzip_min_length 256;
+    # gzip_proxied any;
+    # gzip_vary on;
+
+    # gzip_types
+    # application/atom+xml
+    # application/javascript
+    # application/json
+    # application/rss+xml
+    # application/vnd.ms-fontobject
+    # application/x-font-ttf
+    # application/x-web-app-manifest+json
+    # application/xhtml+xml
+    # application/xml
+    # font/opentype
+    # image/svg+xml
+    # image/x-icon
+    # text/css
+    # text/plain
+    # text/x-component;
+
+    gzip_types
+    application/atom+xml
+    application/javascript
+    application/json
+    application/ld+json
+    application/manifest+json
+    application/rss+xml
+    application/vnd.geo+json
+    application/vnd.ms-fontobject
+    application/x-font-ttf
+    application/x-web-app-manifest+json
+    application/xhtml+xml
+    application/xml
+    font/opentype
+    image/bmp
+    image/svg+xml
+    image/x-icon
+    text/cache-manifest
+    text/css
+    text/plain
+    text/vcard
+    text/vnd.rim.location.xloc
+    text/vtt
+    text/x-component
+    text/x-cross-domain-policy;
+
+    # /etc/nginx/conf.d/php-fpm.conf
+# PHP-FPM FastCGI server
+# network or unix domain socket configuration
+
+upstream php-fpm {
+        server unix:/run/php-fpm/www.sock;
+}
+# /etc/nginx/nginx.conf
+user 'zeus' 'zeus';
+worker_processes auto;
+pid /run/nginx.pid;
+
+events {
+    worker_connections 1024;
+    # multi_accept on;
+}
+
+http {
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+    # set client body size to 2M #
+    client_max_body_size 1000M;
+    #
+    # ; Maximum allowed size for uploaded files.
+    # upload_max_filesize 512M;
+    server_names_hash_max_size 128;
+    server_names_hash_bucket_size 128;
+    # ; Must be greater than or equal to upload_max_filesize
+    # post_max_size 512M;
+    #
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+    keepalive_timeout 65;
+    types_hash_max_size 4096;
+    # server_tokens off;
+    fastcgi_buffers 32 32k;
+    fastcgi_buffer_size 32k;
+    fastcgi_read_timeout 1800s;
+    #
+    map $http_x_forwarded_proto $resolved_scheme {
+        default "http";
+        "https" "https";
+    }
+    #
+    map $resolved_scheme $fastcgi_https {
+        default '';
+        https on;
+    }
+    # gzip on;
+    # gzip_disable "msie6";
+    # gzip_comp_level 5;
+    # gzip_min_length 256;
+    # gzip_proxied any;
+    # gzip_vary on;
+    #
+    # gzip_types
+    # application/atom+xml
+    # application/javascript
+    # application/json
+    # application/rss+xml
+    # application/vnd.ms-fontobject
+    # application/x-font-ttf
+    # application/x-web-app-manifest+json
+    # application/xhtml+xml
+    # application/xml
+    # font/opentype
+    # image/svg+xml
+    # image/x-icon
+    # text/css
+    # text/plain
+    # text/x-component;
+    #
+    #
+    # Gzip rules
+    include gzip.conf;
+    include /etc/nginx/conf.d/*.conf;
+    include /etc/nginx/sites-enabled/*;
+    include /home/zeus/.valet/Local/*;
+    include /home/zeus/.valet/Nginx/*;
+autoindex on;
+}
+# /etc/nginx/restrictions.conf
+# Global restrictions configuration file.
+# Designed to be included in any server {} block.
+# ESSENTIAL : no favicon logs
+location = /favicon.ico {
+	log_not_found off;
+	access_log off;
+}
+# ESSENTIAL : robots.txt
+location = /robots.txt {
+	allow all;
+	log_not_found off;
+	access_log off;
+}
+# ESSENTIAL : Configure 404 Pages
+error_page 404 /404.html;
+# ESSENTIAL : Configure 50x Pages
+error_page 500 502 503 504 /50x.html;
+# location = /50x.html {
+    # root /usr/share/nginx/www;
+# }
+# SECURITY : Deny all attempts to access hidden files .abcde
+# Deny all attempts to access hidden files such as .htaccess, .htpasswd, .DS_Store (Mac).
+# Keep logging the requests to parse later (or to pass to firewall utilities such as fail2ban)
+location ~ /\. {
+	deny all;
+	return 404;
+}
+# SECURITY : Deny all attempts to access PHP Files in the uploads directory
+# Deny access to any files with a .php extension in the uploads directory
+# Works in sub-directory installs and also in multisite network
+# Keep logging the requests to parse later (or to pass to firewall utilities such as fail2ban)
+# location ~* /(?:uploads)/.*\.php$ {
+location ~* /(?:uploads|files)/.*\.php$ {
+	deny all;
+}
+# PERFORMANCE : Set expires headers for static files and turn off logging.
+location ~* ^.+\.(js|css|swf|xml|txt|ogg|ogv|svg|svgz|eot|otf|woff|mp4|ttf|rss|atom|jpg|jpeg|gif|png|ico|zip|tgz|gz|rar|bz2|doc|xls|exe|ppt|tar|mid|midi|wav|bmp|rtf)$ {
+    access_log off; log_not_found off; expires 30d;
+}
+
+# /etc/nginx/wordpress-multi.conf
+# Rewrite rules for WordPress Multi-site.
+
+# Deny access to any files with a .php extension in the files directory
+# Works in sub-directory installs and also in multisite network
+# Keep logging the requests to parse later (or to pass to firewall utilities such as fail2ban)
+location ~* /(?:files)/.*\.php$ {
+	deny all;
+}
+
+location ~ ^/([^/]+/)?files/(.+) {
+	try_files /wp-content/blogs.dir/0/files/$2 /wp-includes/ms-files.php?file=$2;
+	access_log off;
+	log_not_found off;
+	expires 5m;
+}
+
+if (!-e $request_filename) {
+	rewrite /wp-admin$ $resolved_scheme://$host$uri/ permanent;
+	# rewrite /wp-admin$ $scheme://$host$uri/ permanent;  # alternate digitalocean REF:https://www.digitalocean.com/community/tutorials/how-to-configure-single-and-multiple-wordpress-site-settings-with-nginx
+	rewrite ^(/[^/]+)?(/wp-.*) $2 last;
+	# rewrite ^/[_0-9a-zA-Z-]+(/wp-.*) $1 last;
+	rewrite ^(/[^/]+)?(/.*\.php) $2 last;
+	# rewrite ^/[_0-9a-zA-Z-]+(/.*\.php)$ $1 last;
+}
+
+location / {
+	try_files $uri $uri/ /index.php$is_args$args;
+}
+
+# Add trailing slash to */wp-admin requests.
+rewrite /wp-admin$ $resolved_scheme://$host$uri/ permanent;
+# /etc/nginx/wordpress-single.conf
+# WordPress single blog rules.
+# Designed to be included in any server {} block.
+
+# WORDPRESS : Rewrite rules, sends everything through index.php and keeps the appended query string intact
+# This order might seem weird - this is attempted to match last if rules below fail.
+# http://wiki.nginx.org/HttpCoreModule
+location / {
+	try_files $uri $uri/ /index.php$is_args$args;
+	# try_files $uri $uri/ /index.php?q=$uri&$args;  # suggested from REF: https://www.digitalocean.com/community/tutorials/how-to-configure-single-and-multiple-wordpress-site-settings-with-nginx
+}
+
+# Add trailing slash to */wp-admin requests.
+rewrite /wp-admin$ $resolved_scheme://$host$uri/ permanent;
+# /etc/nginx/ssl.conf
+    # Paths to certificate files.
+    # ssl_certificate /etc/letsencrypt/live/ssl.com/fullchain.pem;
+    # ssl_certificate_key /etc/letsencrypt/live/ssl.com/privkey.pem;
+
+    # Don't use outdated SSLv3 protocol. Protects against BEAST and POODLE attacks.
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+ssl_ciphers EECDH+CHACHA20:EECDH+AES128:RSA+AES128:EECDH+AES256:RSA+AES256:EECDH+3DES:RSA+3DES:!MD5;
+#ssl_prefer_server_ciphers on;
+
+    # Use secure ciphers
+ #   ssl_ciphers EECDH+CHACHA20:EECDH+AES;
+    ssl_ecdh_curve X25519:prime256v1:secp521r1:secp384r1;
+    ssl_prefer_server_ciphers on;
+
+    # Define the size of the SSL session cache in MBs.
+    ssl_session_cache shared:SSL:1m;
+
+    # Define the time in minutes to cache SSL sessions.
+    ssl_session_timeout 24h;
+
+    # Tell browsers the site should only be accessed via https.
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+# /etc/nginx/nignx.conf
