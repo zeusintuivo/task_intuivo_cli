@@ -117,6 +117,7 @@ function main() {
 
   [[ ! -d "${NGINXGENERATED}" ]] && mkdir -p "${NGINXGENERATED}"
   [[ ! -d "${NGINXGENERATED}/sites-enabled" ]] && mkdir -p "${NGINXGENERATED}/sites-enabled"
+  [[ ! -d "${NGINXGENERATED}/sites-disabled" ]] && mkdir -p "${NGINXGENERATED}/sites-disabled"
   [[ ! -d "${PROJECTFOLDER}/sockets" ]] && mkdir -p "${PROJECTFOLDER}/sockets"
   [[ ! -d "${PROJECTFOLDER}/shared/sockets" ]] && mkdir -p "${PROJECTFOLDER}/shared/sockets"
   [[ ! -d "$(dirname "${SERVERSCRIPT}")" ]] && mkdir -p "$(dirname "${SERVERSCRIPT}")"
@@ -126,10 +127,13 @@ function main() {
   {
     echo "Copy Certificates from valet"
     [[ ! -d "$(dirname "${CERTIFICATECRTPATH}")" ]] && mkdir -p "$(dirname "${CERTIFICATECRTPATH}")"
-    cp  "${FROMSERVERSCRIPT}" "${SERVERSCRIPT}_backed"
+    cp  "${FROMSERVERSCRIPT}" "${NGINXGENERATED}/sites-disabled/${SERVERNAME}_backed"
     cp  "${FROMSERVERSCRIPT}" "${SERVERNAME}_backed"
-    cp  "${CERTIFICATECRTPATHFROM}" "${CERTIFICATECRTPATH}"
-    cp  "${CERTIFICATEKEYPATHFROM}" "${CERTIFICATEKEYPATH}"
+    cp  "${VALETHOME}/Certificates/${SERVERNAME}.key"  "${VALETHOME}/LocalCertificates/"
+    cp  "${VALETHOME}/Certificates/${SERVERNAME}.crt"  "${VALETHOME}/LocalCertificates/"
+    cp  "${VALETHOME}/Certificates/${SERVERNAME}.conf"  "${VALETHOME}/LocalCertificates/"
+    cp  "${VALETHOME}/Certificates/${SERVERNAME}.csr"  "${VALETHOME}/LocalCertificates/"
+    rm "${VALETHOME}/Certificates/${SERVERNAME}.*"
   }
   fi
 
@@ -141,7 +145,7 @@ function main() {
   echo "
 127.0.0.1   ${SERVERNAME} www.${SERVERNAME} api.${SERVERNAME};
 ::1         ${SERVERNAME} www.${SERVERNAME} api.${SERVERNAME};
-" | sudo tee "/etc/hosts"
+" | sudo tee  -a "/etc/hosts"
     }
     else
     {
@@ -351,14 +355,14 @@ ${STATICFILES}
 " > "${SERVERNAME}_upstream.conf"
 
 
-echo "# ${NGINXGENERATED}/${SERVERNAME}
-# Redirect http to https
-server {
+echo "server {
     listen 80;
     listen [::]:80;
     server_name ${SERVERNAME} www.${SERVERNAME} *.${SERVERNAME};
     return 301 https://\$host\$request_uri;
 }
+# ${NGINXGENERATED}/${SERVERNAME}
+# Redirect http to https
 # Redirect www to non-www
 #server {
 #    listen 443;  just writing a redirect to port 443 with no ssl info fails
@@ -535,7 +539,8 @@ server {
         deny all;
     }
 }
-" > "${SERVERNAME}_nginx.conf" > "${NGINXGENERATED}/${SERVERNAME}"
+" > "${SERVERNAME}_nginx.conf"
+cp "${SERVERNAME}_nginx.conf"  "${NGINXGENERATED}/sites-disabled/${SERVERNAME}"
 
 
 if [[ ! -e "${NGINXGENERATED}/mime.types" ]] ; then
@@ -1699,7 +1704,7 @@ location ~* /(?:uploads|files)/.*\\.php\$ {
 	deny all;
 }
 # PERFORMANCE : Set expires headers for static files and turn off logging.
-location ~* \^.+\\.(js|css|swf|xml|txt|ogg|ogv|svg|svgz|eot|otf|woff|mp4|ttf|rss|atom|jpg|jpeg|gif|png|ico|zip|tgz|gz|rar|bz2|doc|xls|exe|ppt|tar|mid|midi|wav|bmp|rtf)\$ {
+location ~* ^.+\\.(js|css|swf|xml|txt|ogg|ogv|svg|svgz|eot|otf|woff|mp4|ttf|rss|atom|jpg|jpeg|gif|png|ico|zip|tgz|gz|rar|bz2|doc|xls|exe|ppt|tar|mid|midi|wav|bmp|rtf)\$ {
     access_log off; log_not_found off; expires 30d;
 }
 " > "${NGINXGENERATED}/restrictions.conf"
@@ -1736,11 +1741,11 @@ if (!-e \$request_filename) {
 }
 
 location / {
-	try_files index.php\$is_args\$args \$uri;
+	try_files  \$uri  \$uri/ /index.php\$is_args\$args;
 }
 
 # Add trailing slash to */wp-admin requests.
-rewrite /wp-admin\$ \$resolved_scheme://\$host\$uri permanent;
+rewrite /wp-admin\$ \$resolved_scheme://\$host\$uri/ permanent;
 " > "${NGINXGENERATED}/wordpress-multi.conf"
 }
 fi
@@ -1895,58 +1900,60 @@ ${NGINXGENERATED}:"
 ls -la \
 "${NGINXGENERATED}"
 
-cp  "${NGINXGENERATED}/${SERVERNAME}" "${SERVERSCRIPT}"
+cp  "${NGINXGENERATED}/sites-disabled/${SERVERNAME}" "${SERVERSCRIPT}"
 echo "
 $(dirname "${SERVERSCRIPT}"):"
 ls -la \
 "${SERVERSCRIPT}"
 
 
-  if ( command -v bcomp >/dev/null 2>&1; ) ; then
-  {
-    bcomp "${NGINXGENERATED}/nginx.conf" "${NGINXCONF}" &
-  }
-  elif ( command -v bcompare >/dev/null 2>&1; ) ; then
-  {
-    bcompare "${NGINXGENERATED}/nginx.conf" "${NGINXCONF}" &
-  }
-  elif ( command -v colordiff >/dev/null 2>&1; ) ; then
-  {
-    colordiff "${NGINXGENERATED}/nginx.conf" "${NGINXCONF}" &
-  }
-  elif ( command -v diff >/dev/null 2>&1; ) ; then
-  {
-    diff "${NGINXGENERATED}/nginx.conf" "${NGINXCONF}" &
-  }
-  else
-  {
-    echo "Make sure to compare to nginx conf server"
-    echo "${NGINXGENERATED}/nginx.conf" "${NGINXCONF}"
-  }
-  fi
 
-  if ! ( command -v nodemon >/dev/null 2>&1; ) ; then
-  {
-    npm -g i nodemon
-  }
-  fi
-  echo "sudo again"
-  if ( command -v nodemon >/dev/null 2>&1; ) ; then
-  {
-    sudo  nodemon --watch "${NGINXCONF}" --exec nginx -t
-  }
-  elif ( command -v watch >/dev/null 2>&1; ) ; then
-  {
-    sudo watch  -cx nginx -t
-  }
-  else
-  {
-    echo Could not find nodemon or watch
-    echo Watch for changes until config is correct
-    echo sudo  nodemon --watch "${NGINXCONF}" --exec nginx -t
-    echo sudo watch  -cx nginx -t
-  }
-  fi
+  # if ( command -v bcomp >/dev/null 2>&1; ) ; then
+  # {
+  #   bcomp "${NGINXGENERATED}/nginx.conf" "${NGINXCONF}" &
+  # }
+  # elif ( command -v bcompare >/dev/null 2>&1; ) ; then
+  # {
+  #   bcompare "${NGINXGENERATED}/nginx.conf" "${NGINXCONF}" &
+  # }
+  # elif ( command -v colordiff >/dev/null 2>&1; ) ; then
+  # {
+  #   colordiff "${NGINXGENERATED}/nginx.conf" "${NGINXCONF}" &
+  # }
+  # elif ( command -v diff >/dev/null 2>&1; ) ; then
+  # {
+  #   diff "${NGINXGENERATED}/nginx.conf" "${NGINXCONF}" &
+  # }
+  # else
+  # {
+  #   echo "Make sure to compare to nginx conf server"
+  #   echo "${NGINXGENERATED}/nginx.conf" "${NGINXCONF}"
+  # }
+  # fi
+
+  # if ! ( command -v nodemon >/dev/null 2>&1; ) ; then
+  # {
+  #   npm -g i nodemon
+  # }
+  # fi
+
+  # echo "sudo again"
+  # if ( command -v nodemon >/dev/null 2>&1; ) ; then
+  # {
+  #   sudo  nodemon --watch "${NGINXCONF}" --exec nginx -t
+  # }
+  # elif ( command -v watch >/dev/null 2>&1; ) ; then
+  # {
+  #   sudo watch  -cx nginx -t
+  # }
+  # else
+  # {
+  #   echo Could not find nodemon or watch
+  #   echo Watch for changes until config is correct
+  #   echo sudo  nodemon --watch "${NGINXCONF}" --exec nginx -t
+  #   echo sudo watch  -cx nginx -t
+  # }
+  # fi
 } # end main
 main
 
