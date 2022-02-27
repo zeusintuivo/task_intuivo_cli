@@ -27,9 +27,18 @@ function main() {
     PROJECTROOTFOLDER=$(pwd)/public
   }
   fi
+  if ! command -v valet >/dev/null 2>&1  ; then
+  {
+    echo "ERROR this script uses Laravel/Valet. Install first. https://wpbeaches.com/setting-up-valet-on-macos-for-local-wordpress-development/"
+    exit 1
+  }
+  fi
+echo "sudo for $USER"
+sudo echo ":"
+  DOMAINTARGET=$(valet domain)
   PROJECTNAME=$(basename $(pwd))
   PROJECTNAME=$(echo ${PROJECTNAME} | sed 's/\_//g')
-  SERVERNAME=${PROJECTNAME}.test
+  SERVERNAME=${PROJECTNAME}.${DOMAINTARGET}
 
   function yes_or_no() {
       while true; do
@@ -129,11 +138,11 @@ function main() {
     [[ ! -d "$(dirname "${CERTIFICATECRTPATH}")" ]] && mkdir -p "$(dirname "${CERTIFICATECRTPATH}")"
     cp  "${FROMSERVERSCRIPT}" "${NGINXGENERATED}/sites-disabled/${SERVERNAME}_backed"
     cp  "${FROMSERVERSCRIPT}" "${SERVERNAME}_backed"
-    cp  "${VALETHOME}/Certificates/${SERVERNAME}.key"  "${VALETHOME}/LocalCertificates/"
-    cp  "${VALETHOME}/Certificates/${SERVERNAME}.crt"  "${VALETHOME}/LocalCertificates/"
-    cp  "${VALETHOME}/Certificates/${SERVERNAME}.conf"  "${VALETHOME}/LocalCertificates/"
-    cp  "${VALETHOME}/Certificates/${SERVERNAME}.csr"  "${VALETHOME}/LocalCertificates/"
-    rm "${VALETHOME}/Certificates/${SERVERNAME}.*"
+    mv  "${VALETHOME}/Certificates/${SERVERNAME}.key"  "${VALETHOME}/LocalCertificates/"
+    mv  "${VALETHOME}/Certificates/${SERVERNAME}.crt"  "${VALETHOME}/LocalCertificates/"
+    mv  "${VALETHOME}/Certificates/${SERVERNAME}.conf"  "${VALETHOME}/LocalCertificates/"
+    mv  "${VALETHOME}/Certificates/${SERVERNAME}.csr"  "${VALETHOME}/LocalCertificates/"
+
   }
   fi
 
