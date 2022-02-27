@@ -461,6 +461,11 @@ ${STATICFILES}
     location ~ /\.ht {
         deny all;
     }
+
+    #
+    # W3TC Page Cache cache rules
+    #
+    include \"${NGINXGENERATED}/w3cache.conf\";
 }
 
 server {
@@ -499,7 +504,7 @@ server {
 }
 
 server {
-    listen 127.0.0.1:60;
+    listen 60;
     #listen 127.0.0.1:60; # valet loopback
     server_name ${SERVERNAME} www.${SERVERNAME} *.${SERVERNAME};
     root /;
@@ -1888,6 +1893,87 @@ http {
 " > "${NGINXGENERATED}/nginx.conf"
 }
 fi
+
+
+
+if [[ ! -e "${NGINXGENERATED}/w3cache.conf"  ]] ; then
+{
+echo "# ${NGINXGENERATED}/w3cache.conf
+# BEGIN W3TC Page Cache cache
+location ~ /wp-content/cache/page_enhanced.*gzip\$ {
+    gzip off;
+    types {}
+    default_type text/html;
+    add_header Content-Encoding gzip;
+    etag on;
+    if_modified_since exact;
+    add_header Referrer-Policy \"\";
+}
+# END W3TC Page Cache cache
+# BEGIN W3TC Browser Cache
+gzip on;
+gzip_types text/css text/x-component application/x-javascript application/javascript text/javascript text/x-js text/richtext text/plain text/xsd text/xsl text/xml image/bmp application/java application/msword application/vnd.ms-fontobject application/x-msdownload image/x-icon application/json application/vnd.ms-access video/webm application/vnd.ms-project application/x-font-otf application/vnd.ms-opentype application/vnd.oasis.opendocument.database application/vnd.oasis.opendocument.chart application/vnd.oasis.opendocument.formula application/vnd.oasis.opendocument.graphics application/vnd.oasis.opendocument.spreadsheet application/vnd.oasis.opendocument.text audio/ogg application/pdf application/vnd.ms-powerpoint image/svg+xml application/x-shockwave-flash image/tiff application/x-font-ttf audio/wav application/vnd.ms-write application/font-woff application/font-woff2 application/vnd.ms-excel;
+location ~ \\.(css|htc|less|js|js2|js3|js4)\$ {
+    expires 31536000s;
+    etag on;
+    if_modified_since exact;
+    try_files \$uri \$uri/ /index.php?\$args;
+}
+location ~ \\.(html|htm|rtf|rtx|txt|xsd|xsl|xml)\$ {
+    etag on;
+    if_modified_since exact;
+    try_files \$uri \$uri/ /index.php?\$args;
+}
+location ~ \\.(asf|asx|wax|wmv|wmx|avi|avif|avifs|bmp|class|divx|doc|docx|exe|gif|gz|gzip|ico|jpg|jpeg|jpe|webp|json|mdb|mid|midi|mov|qt|mp3|m4a|mp4|m4v|mpeg|mpg|mpe|webm|mpp|_otf|odb|odc|odf|odg|odp|ods|odt|ogg|ogv|pdf|png|pot|pps|ppt|pptx|ra|ram|svg|svgz|swf|tar|tif|tiff|_ttf|wav|wma|wri|xla|xls|xlsx|xlt|xlw|zip)\$ {
+    expires 31536000s;
+    etag on;
+    if_modified_since exact;
+    try_files \$uri \$uri/ /index.php?\$args;
+}
+add_header Referrer-Policy \"\";
+# END W3TC Browser Cache
+# BEGIN W3TC Page Cache core
+set \$w3tc_rewrite 1;
+if (\$request_method = POST) {
+    set \$w3tc_rewrite 0;
+}
+if (\$query_string != \"\") {
+    set \$w3tc_rewrite 0;
+}
+if (\$request_uri !~ \\/\$) {
+    set \$w3tc_rewrite 0;
+}
+if (\$http_cookie ~* \"(comment_author|wp\\-postpass|w3tc_logged_out|wordpress_logged_in|wptouch_switch_toggle)\") {
+    set \$w3tc_rewrite 0;
+}
+set \$w3tc_preview \"\";
+if (\$http_cookie ~* \"(w3tc_preview)\") {
+    set \$w3tc_preview _preview;
+}
+set \$w3tc_ssl \"\";
+if (\$scheme = https) {
+    set \$w3tc_ssl _ssl;
+}
+if (\$http_x_forwarded_proto = 'https') {
+    set \$w3tc_ssl _ssl;
+}
+set \$w3tc_enc \"\";
+if (\$http_accept_encoding ~ gzip) {
+    set \$w3tc_enc _gzip;
+}
+if (!-f \"\$document_root/wp-content/cache/page_enhanced/\$http_host/\$request_uri/_index\$w3tc_ssl\$w3tc_preview.html\$w3tc_enc\") {
+  set \$w3tc_rewrite 0;
+}
+if (\$w3tc_rewrite = 1) {
+    rewrite .* \"/wp-content/cache/page_enhanced/\$http_host/\$request_uri/_index\$w3tc_ssl\$w3tc_preview.html\$w3tc_enc\" last;
+}
+# END W3TC Page Cache core
+
+
+" > "${NGINXGENERATED}/w3cache.conf"
+}
+fi
+
 
 echo "
 ./:"
