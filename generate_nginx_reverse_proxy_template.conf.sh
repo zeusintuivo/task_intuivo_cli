@@ -140,7 +140,7 @@ sudo echo ":"
     cp  "${FROMSERVERSCRIPT}" "${SERVERNAME}_backed"
     mv  "${VALETHOME}/Certificates/${SERVERNAME}.key"  "${VALETHOME}/LocalCertificates/"
     mv  "${VALETHOME}/Certificates/${SERVERNAME}.crt"  "${VALETHOME}/LocalCertificates/"
-    mv  "${VALETHOME}/Certificates/${SERVERNAME}.conf"  "${VALETHOME}/LocalCertificates/"
+    mv        "${VALETHOME}/Certificates/${SERVERNAME}.conf"  "${VALETHOME}/LocalCertificates/"
     mv  "${VALETHOME}/Certificates/${SERVERNAME}.csr"  "${VALETHOME}/LocalCertificates/"
 
   }
@@ -1920,8 +1920,8 @@ location ~ /wp-content/cache/page_enhanced.*gzip\$ {
 }
 # END W3TC Page Cache cache
 # BEGIN W3TC Browser Cache
-gzip on;
-gzip_types text/css text/x-component application/x-javascript application/javascript text/javascript text/x-js text/richtext text/plain text/xsd text/xsl text/xml image/bmp application/java application/msword application/vnd.ms-fontobject application/x-msdownload image/x-icon application/json application/vnd.ms-access video/webm application/vnd.ms-project application/x-font-otf application/vnd.ms-opentype application/vnd.oasis.opendocument.database application/vnd.oasis.opendocument.chart application/vnd.oasis.opendocument.formula application/vnd.oasis.opendocument.graphics application/vnd.oasis.opendocument.spreadsheet application/vnd.oasis.opendocument.text audio/ogg application/pdf application/vnd.ms-powerpoint image/svg+xml application/x-shockwave-flash image/tiff application/x-font-ttf audio/wav application/vnd.ms-write application/font-woff application/font-woff2 application/vnd.ms-excel;
+# gzip on;
+# gzip_types text/css text/x-component application/x-javascript application/javascript text/javascript text/x-js text/richtext text/plain text/xsd text/xsl text/xml image/bmp application/java application/msword application/vnd.ms-fontobject application/x-msdownload image/x-icon application/json application/vnd.ms-access video/webm application/vnd.ms-project application/x-font-otf application/vnd.ms-opentype application/vnd.oasis.opendocument.database application/vnd.oasis.opendocument.chart application/vnd.oasis.opendocument.formula application/vnd.oasis.opendocument.graphics application/vnd.oasis.opendocument.spreadsheet application/vnd.oasis.opendocument.text audio/ogg application/pdf application/vnd.ms-powerpoint image/svg+xml application/x-shockwave-flash image/tiff application/x-font-ttf audio/wav application/vnd.ms-write application/font-woff application/font-woff2 application/vnd.ms-excel;
 location ~ \\.(css|htc|less|js|js2|js3|js4)\$ {
     expires 31536000s;
     etag on;
