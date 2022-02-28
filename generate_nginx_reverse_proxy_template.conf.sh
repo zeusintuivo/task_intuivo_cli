@@ -138,10 +138,10 @@ sudo echo ":"
     [[ ! -d "$(dirname "${CERTIFICATECRTPATH}")" ]] && mkdir -p "$(dirname "${CERTIFICATECRTPATH}")"
     cp  "${FROMSERVERSCRIPT}" "${NGINXGENERATED}/sites-disabled/${SERVERNAME}_backed"
     cp  "${FROMSERVERSCRIPT}" "${SERVERNAME}_backed"
-    mv  "${VALETHOME}/Certificates/${SERVERNAME}.key"  "${VALETHOME}/LocalCertificates/"
-    mv  "${VALETHOME}/Certificates/${SERVERNAME}.crt"  "${VALETHOME}/LocalCertificates/"
-    mv        "${VALETHOME}/Certificates/${SERVERNAME}.conf"  "${VALETHOME}/LocalCertificates/"
-    mv  "${VALETHOME}/Certificates/${SERVERNAME}.csr"  "${VALETHOME}/LocalCertificates/"
+    cp  "${VALETHOME}/Certificates/${SERVERNAME}.key"  "${VALETHOME}/LocalCertificates/"
+    cp  "${VALETHOME}/Certificates/${SERVERNAME}.crt"  "${VALETHOME}/LocalCertificates/"
+    cp  "${VALETHOME}/Certificates/${SERVERNAME}.conf"  "${VALETHOME}/LocalCertificates/"
+    cp  "${VALETHOME}/Certificates/${SERVERNAME}.csr"  "${VALETHOME}/LocalCertificates/"
 
   }
   fi
@@ -2049,6 +2049,18 @@ ls -la \
   #   echo sudo watch  -cx nginx -t
   # }
   # fi
+  DB=$(sed 's/'${DOMAINTARGET}'//g'<<<${PROJECTNAME})
+echo "
+Next steps
+DB=${DB}
+mysql -A \${DB}   --binary-mode  --default-character-set=utf8 --connect-timeout=3600 < db/init.sql
+mysql \${DB} -e \"UPDATE wp_options SET option_value='https://${PROJECTNAME}'  WHERE option_name='siteurl' OR option_name='home';\"
+mysql \${DB} -e \"UPDATE wp_options SET option_value='0' WHERE option_name='mailjet_enabled';\"
+
+mysql \${DB} -e \"SELECT * FROM wp_options WHERE option_name='siteurl' OR option_name='home' OR option_name='mailjet_enabled';\"
+
+
+"
 } # end main
 main
 
