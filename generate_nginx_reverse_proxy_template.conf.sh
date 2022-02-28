@@ -244,7 +244,7 @@ ls -p1 | grep -v / | xargs -I {} echo "    location = /{} {
   done <<< "${local_items}"
   return 0
 }
-
+local -i IS_WORDPRESS=0
 CWD="${PWD}"
 if [[ -d "${PWD}/public" ]] ; then
 {
@@ -270,8 +270,29 @@ $(.loopsubdirs  "${CURDIR}" "${ACTIONS}")"
 }
 else
 {
-  echo "I identified a Wordpress-like structure using \"wp-root\" folder"
-  CURDIR="${PWD}"
+  if [[ -d "${PWD}/wc-content" ]] ; then
+  {
+    echo "
+    - I identified a Wordpress-like-wordpress structure using \"wp-root\" folder
+    "
+    CURDIR="${PWD}"
+    IS_WORDPRESS=1
+  }
+  else
+  {
+    echo "
+    - I did not find a Wordpress-like-wordpress structure wc-content folder.
+    If you still all the setup for this as nginx. Like for wordpress. then
+    make sure remove public folder if exists
+    make sure create wc-content folder if it does not exists and run
+
+    If you continue only Rails reverse proxy sample will be created
+    "
+    yes_or_no
+    _err=$?
+    [ $_err -gt 0 ] && exit 0
+  }
+  fi
 }
 fi
 [[ ! -d  "${CURDIR}" ]] && echo "Failed to find  "${CURDIR}"" && exit 1
@@ -281,7 +302,8 @@ cd "${CWD}"
 # echo -e ";;;;;;;\n${STATICFILES}\n;;;;;;"
 # exit 0
 
-
+if [ ${IS_WORDPRESS} -eq 0 ] ; then
+{
 echo "# ${SERVERNAME}_upstream.conf
 upstream ${PROJECTNAME} {
     # Path to Puma SOCK file, as defined previously
@@ -362,8 +384,11 @@ ${STATICFILES}
     keepalive_timeout 10;
 }
 " > "${SERVERNAME}_upstream.conf"
+}
+fi
 
-
+if [ ${IS_WORDPRESS} -eq 1 ] ; then
+{
 echo "server {
     listen 80;
     listen [::]:80;
@@ -555,7 +580,8 @@ server {
 }
 " > "${SERVERNAME}_nginx.conf"
 cp "${SERVERNAME}_nginx.conf"  "${NGINXGENERATED}/sites-disabled/${SERVERNAME}"
-
+}
+fi
 
 if [[ ! -e "${NGINXGENERATED}/mime.types" ]] ; then
 {
@@ -1660,7 +1686,8 @@ echo "# ${NGINXGENERATED}/gzip.conf
 }
 fi
 
-
+if [ ${IS_WORDPRESS} -eq 1 ] ; then
+{
 if [[ ! -e "${NGINXGENERATED}/php-fpm.conf"  ]] ; then
 {
 echo "# ${NGINXGENERATED}/php-fpm.conf
@@ -1672,6 +1699,8 @@ upstream php-fpm {
         server \"${FPMSOCK}\";
 }
 " > "${NGINXGENERATED}/php-fpm.conf"
+}
+fi
 }
 fi
 
@@ -1726,6 +1755,8 @@ location ~* ^.+\\.(js|css|swf|xml|txt|ogg|ogv|svg|svgz|eot|otf|woff|mp4|ttf|rss|
 fi
 
 
+if [ ${IS_WORDPRESS} -eq 1 ] ; then
+{
 if [[ ! -e "${NGINXGENERATED}/wordpress-multi.conf"  ]] ; then
 {
 echo "# ${NGINXGENERATED}/wordpress-multi.conf
@@ -1763,7 +1794,11 @@ rewrite /wp-admin\$ \$resolved_scheme://\$host\$uri/ permanent;
 " > "${NGINXGENERATED}/wordpress-multi.conf"
 }
 fi
+}
+fi
 
+if [ ${IS_WORDPRESS} -eq 1 ] ; then
+{
 if [[ ! -e "${NGINXGENERATED}/wordpress-single.conf"  ]] ; then
 {
 echo "# ${NGINXGENERATED}/wordpress-single.conf
@@ -1784,6 +1819,9 @@ rewrite /wp-admin\$ \$resolved_scheme://\$host\$uri/ permanent;
 " > "${NGINXGENERATED}/wordpress-single.conf"
 }
 fi
+}
+fi
+
 
 if [[ ! -e "${NGINXGENERATED}/ssl.conf"  ]] ; then
 {
@@ -1818,6 +1856,17 @@ ssl_ciphers EECDH+CHACHA20:EECDH+AES128:RSA+AES128:EECDH+AES256:RSA+AES256:EECDH
 fi
 
 
+local PHP_NGINX_RULES="";
+if [ ${IS_WORDPRESS} -eq 1 ] ; then
+{
+  local PHP_NGINX_RULES="
+    # Php fpm rules
+    include valet/valet.conf;
+    include \"${NGINXGENERATED}/php-fpm.conf\";
+  "
+}
+fi
+
 if [[ ! -e "${NGINXGENERATED}/nginx.conf"  ]] ; then
 {
 echo "# ${NGINXGENERATED}/nginx.conf
@@ -1835,6 +1884,9 @@ http {
     default_type application/octet-stream;
     # set client body size to 2M #
     client_max_body_size 1000M;
+           log_format  main  '\$remote_addr - \$remote_user [\$time_local] \"\$request\" '
+                      '\$status \$body_bytes_sent \"\$http_referer\" '
+                      '\"\$http_user_agent\" \"\$http_x_forwarded_for\"';
     #
     # ; Maximum allowed size for uploaded files.
     # upload_max_filesize 512M;
@@ -1890,8 +1942,9 @@ http {
     # Gzip rules
     include \"${NGINXGENERATED}/gzip.conf\";
 
-    # Php fpm rules
-    include \"${NGINXGENERATED}/php-fpm.conf\";
+    include servers/*;
+
+    ${PHP_NGINX_RULES}
 
     include \"${NGINXGENERATED}/sites-enabled/*\";
     include \"${VALETHOME}/Local/*\";
@@ -1904,7 +1957,8 @@ http {
 fi
 
 
-
+if [ ${IS_WORDPRESS} -eq 1 ] ; then
+{
 if [[ ! -e "${NGINXGENERATED}/w3cache.conf"  ]] ; then
 {
 echo "# ${NGINXGENERATED}/w3cache.conf
@@ -1982,6 +2036,9 @@ if (\$w3tc_rewrite = 1) {
 " > "${NGINXGENERATED}/w3cache.conf"
 }
 fi
+}
+fi
+
 
 
 echo "
@@ -2049,6 +2106,10 @@ ls -la \
   #   echo sudo watch  -cx nginx -t
   # }
   # fi
+
+
+if [ ${IS_WORDPRESS} -eq 1 ] ; then
+{
   DB=$(sed 's/'${DOMAINTARGET}'//g'<<<${PROJECTNAME})
 echo "
 Next steps
@@ -2061,6 +2122,10 @@ mysql \${DB} -e \"SELECT * FROM wp_options WHERE option_name='siteurl' OR option
 
 
 "
+}
+fi
+
+
 } # end main
 main
 
