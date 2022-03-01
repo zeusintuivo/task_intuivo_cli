@@ -152,15 +152,15 @@ sudo echo ":"
     if ( command -v tee >/dev/null 2>&1; ) ; then
     {
   echo "
-127.0.0.1   ${SERVERNAME} www.${SERVERNAME} api.${SERVERNAME};
-::1         ${SERVERNAME} www.${SERVERNAME} api.${SERVERNAME};
+127.0.0.1   ${SERVERNAME} www.${SERVERNAME} api.${SERVERNAME}
+::1         ${SERVERNAME} www.${SERVERNAME} api.${SERVERNAME}
 " | sudo tee  -a "/etc/hosts"
     }
     else
     {
   echo "Make sure to add this lines to your \"/etc/hosts\" file
-127.0.0.1   ${SERVERNAME} www.${SERVERNAME} api.${SERVERNAME};
-::1         ${SERVERNAME} www.${SERVERNAME} api.${SERVERNAME};
+127.0.0.1   ${SERVERNAME} www.${SERVERNAME} api.${SERVERNAME}
+::1         ${SERVERNAME} www.${SERVERNAME} api.${SERVERNAME}
 "
     }
     fi
@@ -270,7 +270,7 @@ $(.loopsubdirs  "${CURDIR}" "${ACTIONS}")"
 }
 else
 {
-  if [[ -d "${PWD}/wc-content" ]] ; then
+  if [[ -d "${PWD}/wp-content" ]] ; then
   {
     echo "
     - I identified a Wordpress-like-wordpress structure using \"wp-root\" folder
@@ -2045,7 +2045,13 @@ echo "
 ./:"
 ls -la \
 "${SERVERNAME}_nginx.conf" \
+
+if [ ${IS_WORDPRESS} -eq 0 ] ; then
+{
+ls -la \
 "${SERVERNAME}_upstream.conf"
+}
+fi
 
 echo "
 ${NGINXGENERATED}:"
