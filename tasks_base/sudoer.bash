@@ -15,13 +15,28 @@ typeset -r THISSCRIPTNAME="$(basename "$0")"
 
 export _err
 typeset -i _err=0
+
   function _trap_on_error(){
-    echo -e "\\n \033[01;7m*** ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR ...\033[0m"
+    #echo -e "\\n \033[01;7m*** ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR ...\033[0m"
+    local cero="$0"
+    local file1="$(paeth ${BASH_SOURCE})"
+    local file2="$(paeth ${cero})"
+    echo -e "ERROR TRAP $THISSCRIPTNAME
+${file1}:${BASH_LINENO[-0]}     \t ${FUNCNAME[-0]}()
+$file2:${BASH_LINENO[1]}    \t ${FUNCNAME[1]}()
+ERR ..."
     exit 1
   }
   trap _trap_on_error ERR
   function _trap_on_int(){
-    echo -e "\\n \033[01;7m*** INTERRUPT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n  INT ...\033[0m"
+    # echo -e "\\n \033[01;7m*** INTERRUPT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n  INT ...\033[0m"
+    local cero="$0"
+    local file1="$(paeth ${BASH_SOURCE})"
+    local file2="$(paeth ${cero})"
+    echo -e "INTERRUPT TRAP $THISSCRIPTNAME
+${file1}:${BASH_LINENO[-0]}     \t ${FUNCNAME[-0]}()
+$file2:${BASH_LINENO[1]}    \t ${FUNCNAME[1]}()
+INT ..."
     exit 0
   }
 
@@ -100,10 +115,18 @@ function sudo_it() {
   enforce_variable_with_value SUDO_UID "${SUDO_UID}"
   enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
   # Override bigger error trap  with local
-  function _trap_on_error(){
-    echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR INT ...\033[0m"
+  function _trap_on_err_int(){
+    # echo -e "\033[01;7m*** ERROR OR INTERRUPT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR INT ...\033[0m"
+    local cero="$0"
+    local file1="$(paeth ${BASH_SOURCE})"
+    local file2="$(paeth ${cero})"
+    echo -e " ERROR OR INTERRUPT  TRAP $THISSCRIPTNAME
+${file1}:${BASH_LINENO[-0]}     \t ${FUNCNAME[-0]}()
+$file2:${BASH_LINENO[1]}    \t ${FUNCNAME[1]}()
+ERR INT ..."
+    exit 1
   }
-  trap _trap_on_error ERR INT
+  trap _trap_on_err_int ERR INT
 } # end sudo_it
 
 # _linux_prepare(){

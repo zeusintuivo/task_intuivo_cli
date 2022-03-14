@@ -18,7 +18,7 @@ function generate_installer(){
   echo -e "\n\n\n #--------/\/\/\/\-- tasks_templates_sudo/${1} …install_${1}.bash” -- Custom code-/\/\/\/\-------\n\n" >> "install_${1}.bash"
   echo "${_main}" >> "install_${1}.bash"
   chmod a+x "install_${1}.bash"
-  subl "install_${1}.bash:${_sudoer_lines}"
+#  subl "install_${1}.bash:${_sudoer_lines}"
 } # end loader_installer
 
 [[ -z "${1}" ]] && echo -e "ERROR $0 requires one argument. \n A file name inside tasks_templates_sudo   like    \n $0 brew    to generate install_brew.bash from tasks_templates_sudo/brew " && exit 1

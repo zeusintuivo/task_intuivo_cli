@@ -408,7 +408,7 @@ _centos__64() {
   return 0
 } # end _centos__64
 
-_get_dowload_target(){
+_get_dowload_target() {
   # Sample call:
   #
   #  _get_dowload_target https://linux.dropbox.com/packages/fedora/
@@ -433,7 +433,7 @@ _get_dowload_target(){
   return 0
 } # end _get_dowload_target
 
-_extract_version(){
+_extract_version() {
   echo "${*}" |  sed s/\>/\>\\n/g | sed "s/&apos;/\'/g" | sed 's/&nbsp;/ /g'  | grep "<a" | grep ".xz" | grep -v "xz.asc" | cut -d'"' -f2| sort | uniq | tail -1
 } # end _extract_version
 
@@ -456,36 +456,7 @@ _fedora__64() {
   return 0
 } # end _fedora__64
 
-_contains(){
-  # Sample use
-  #   _contains ".tar.xz' $VAR
-  #   _contains "nano-' $VAR
-  local _what="${1}"
-  local _which="${2}"
-  if [[ "${_which}" == *"${_what}"* ]] ; then
-  {
-    return 0
-  }
-  fi
-  return 1
-} # end _contains
-
-enforce_contains(){
-  # Sample use
-  #   enforce_contains ".tar.xz' $VAR
-  #   enfore_contains "nano-' $VAR
-  local _what="${1}"
-  local _which="${2}"
-  local _test="expected to contain <${_what}> inside <${_which}>" 
-  if _contains "${_what}"  "${_which}"  ; then
-  {
-    return 0
-  }
-  fi
-  failed "${_test}"
-} # end enforce_contains
-
-_download_compile_install(){
+_download_compile_install() {
   # Sample use
   #   _download_compile_install
   enforce_variable_with_value USER_HOME "${USER_HOME}"
