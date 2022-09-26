@@ -100,7 +100,12 @@ load_struct_testing
 export sudo_it
 function sudo_it() {
   raise_to_sudo_and_user_home
-  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
+  if [ $? -gt 0 ] ; then
+  {
+    failed to sudo_it raise_to_sudo_and_user_home
+    exit 1
+  }
+  fi
   enforce_variable_with_value SUDO_USER "${SUDO_USER}"
   enforce_variable_with_value SUDO_UID "${SUDO_UID}"
   enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
@@ -113,7 +118,12 @@ function sudo_it() {
 
 # _linux_prepare(){
   sudo_it
-  [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
+  if [ $? -gt 0 ] ; then
+  {
+    failed to sudo_it raise_to_sudo_and_user_home
+    exit 1
+  }
+  fi
   export USER_HOME
   # shellcheck disable=SC2046
   # shellcheck disable=SC2031
@@ -1609,6 +1619,7 @@ _fedora__64() {
   is_not_installed ag && $COMANDDER the_silver_searcher          # In Fedora
 cd
   git clone https://github.com/astrand/xclip.git
+cd xclip
 ./bootstrap
 ./configure
 make
