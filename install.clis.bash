@@ -1619,6 +1619,7 @@ _fedora__64() {
   is_not_installed ag && $COMANDDER the_silver_searcher          # In Fedora
 cd
   git clone https://github.com/astrand/xclip.git
+cd xclip
 ./bootstrap
 ./configure
 make
