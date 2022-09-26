@@ -61,38 +61,76 @@ load_struct_testing(){
   }
   function load_library(){
     local _library="${1:struct_testing}"
-    [[ -z "${1}" ]] && echo "Must call with name of library example: struct_testing execute_command" && exit 1
+    if [[ -z "${1}" ]] ; then
+    {
+       echo "Must call with name of library example: struct_testing execute_command"
+       exit 1
+    }
+    fi
     trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
       local provider="$HOME/_/clis/execute_command_intuivo_cli/${_library}"
       local _err=0 structsource
       if [   -e "${provider}"  ] ; then
-        (( DEBUG )) && echo "$0: tasks_base/sudoer.bash Loading locally"
+        if (( DEBUG )) ; then
+          echo "$0: tasks_base/sudoer.bash Loading locally"
+        fi
         structsource="""$(<"${provider}")"""
         _err=$?
-        [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading ${_library}. running 'source locally' returned error did not download or is empty err:$_err  \n \n  " && exit 1
+        if [ $_err -gt 0 ] ; then
+        {
+           echo -e "\n \n  ERROR! Loading ${_library}. running 'source locally' returned error did not download or is empty err:$_err  \n \n  " 
+           exit 1
+        }
+        fi
       else
         if ( command -v curl >/dev/null 2>&1; )  ; then
-          (( DEBUG )) && echo "$0: tasks_base/sudoer.bash Loading ${_library} from the net using curl "
+          if (( DEBUG )) ; then
+            echo "$0: tasks_base/sudoer.bash Loading ${_library} from the net using curl "
+          fi
           structsource="""$(curl https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/${_library}  -so -   2>/dev/null )"""  #  2>/dev/null suppress only curl download messages, but keep curl output for variable
           _err=$?
-          [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading ${_library}. running 'curl' returned error did not download or is empty err:$_err  \n \n  " && exit 1
+          if [ $_err -gt 0 ] ; then
+          {
+            echo -e "\n \n  ERROR! Loading ${_library}. running 'curl' returned error did not download or is empty err:$_err  \n \n  "
+            exit 1
+          }
+          fi
         elif ( command -v wget >/dev/null 2>&1; ) ; then
-          (( DEBUG )) && echo "$0: tasks_base/sudoer.bash Loading ${_library} from the net using wget "
+          if (( DEBUG )) ; then
+            echo "$0: tasks_base/sudoer.bash Loading ${_library} from the net using wget "
+          fi
           structsource="""$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/${_library} -O -   2>/dev/null )"""  #  2>/dev/null suppress only wget download messages, but keep wget output for variable
           _err=$?
-          [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading ${_library}. running 'wget' returned error did not download or is empty err:$_err  \n \n  " && exit 1
+          if [ $_err -gt 0 ] ; then
+          {
+            echo -e "\n \n  ERROR! Loading ${_library}. running 'wget' returned error did not download or is empty err:$_err  \n \n  "
+            exit 1
+          }
+          fi
         else
           echo -e "\n \n  ERROR! Loading ${_library} could not find wget or curl to download  \n \n "
           exit 69
         fi
       fi
-      [[ -z "${structsource}" ]] && echo -e "\n \n  ERROR! Loading ${_library} into ${_library}_source did not download or is empty " && exit 1
+      if [[ -z "${structsource}" ]] ; then
+      {
+        echo -e "\n \n  ERROR! Loading ${_library} into ${_library}_source did not download or is empty " 
+        exit 1
+      }
+      fi
       local _temp_dir="$(mktemp -d 2>/dev/null || mktemp -d -t "${_library}_source")"
       echo "${structsource}">"${_temp_dir}/${_library}"
-      (( DEBUG )) && echo "$0: tasks_base/sudoer.bash Temp location ${_temp_dir}/${_library}"
+      if (( DEBUG )) ; then
+        echo "$0: tasks_base/sudoer.bash Temp location ${_temp_dir}/${_library}"
+      fi
       source "${_temp_dir}/${_library}"
       _err=$?
-      [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading ${_library}. Occured while running 'source' err:$_err  \n \n  " && exit 1
+      if [ $_err -gt 0 ] ; then
+      {
+        echo -e "\n \n  ERROR! Loading ${_library}. Occured while running 'source' err:$_err  \n \n  "
+        exit 1
+      }
+      fi
       if  ! typeset -f passed >/dev/null 2>&1; then
         echo -e "\n \n  ERROR! Loading ${_library}. Passed was not loaded !!!  \n \n "
         exit 69;
@@ -105,12 +143,27 @@ load_struct_testing(){
 load_struct_testing
 
  _err=$?
-[ $_err -ne 0 ]  && echo -e "\n \n  ERROR FATAL! load_struct_testing_wget !!! returned:<$_err> \n \n  " && exit 69;
+if [ $_err -ne 0 ] ; then
+{
+  echo -e "\n \n  ERROR FATAL! load_struct_testing_wget !!! returned:<$_err> \n \n  "
+  exit 69;
+}
+fi
 
 export sudo_it
 function sudo_it() {
   raise_to_sudo_and_user_home
-  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
+  local _err=$?
+  Comment _err:${_err}
+  if [ $_err -gt 0 ] ; then
+  {
+    failed to sudo_it raise_to_sudo_and_user_home
+    exit 1
+  }
+  fi
+  # [ $_err -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
+  _err=$?
+  Comment _err:${_err}
   enforce_variable_with_value SUDO_USER "${SUDO_USER}"
   enforce_variable_with_value SUDO_UID "${SUDO_UID}"
   enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
@@ -131,7 +184,18 @@ ERR INT ..."
 
 # _linux_prepare(){
   sudo_it
-  [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
+  _err=$?
+  Comment _err:${_err}
+  if [ $_err -gt 0 ] ; then
+  {
+    failed to sudo_it raise_to_sudo_and_user_home
+    exit 1
+  }
+  fi
+  # [ $_err -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
+  _err=$?
+  Comment _err:${_err}
+  # [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
   export USER_HOME
   # shellcheck disable=SC2046
   # shellcheck disable=SC2031
@@ -145,6 +209,12 @@ ERR INT ..."
 export SUDO_GRP='staff'
 enforce_variable_with_value USER_HOME "${USER_HOME}"
 enforce_variable_with_value SUDO_USER "${SUDO_USER}"
-(( DEBUG )) && passed "Caller user identified:${SUDO_USER}"
-(( DEBUG )) && passed "Home identified:${USER_HOME}"
+if (( DEBUG )) ; then
+  passed "Caller user identified:${SUDO_USER}"
+fi
+  Comment DEBUG_err?:${?}
+if (( DEBUG )) ; then
+  passed "Home identified:${USER_HOME}"
+fi
+  Comment DEBUG_err?:${?}
 directory_exists_with_spaces "${USER_HOME}"
