@@ -327,10 +327,13 @@ _redhat_flavor_install() {
 _git_clone_pyenv() {
  cd "${USER_HOME}"
  git clone https://github.com/pyenv/pyenv.git "${USER_HOME}/.pyenv"
- local PYENV_SH_CONTENT='
+ git clone https://github.com/pyenv/pyenv-update.git "${USER_HOME}/.pyenv/plugins/pyenv-update"
+
 } # _git_clone_pyenv
 
 _add_variables_to_bashrc_zshrc(){
+ local PYENV_SH_CONTENT='
+
 # PYENV
 export PYENV_ROOT="'${USER_HOME}'/.pyenv"
 export PATH="'${USER_HOME}'/.pyenv/bin:${PATH}"
