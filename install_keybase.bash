@@ -170,8 +170,9 @@ directory_exists_with_spaces "${USER_HOME}"
 _linux_prepare(){
   sudo_it
   [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
-  export USER_HOME="/home/${SUDO_USER}"
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  export USER_HOME
+  # USER_HOME="/home/${SUDO_USER}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}" 
 }  # end _linux_prepare
 
 _debian__64(){
