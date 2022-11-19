@@ -1627,7 +1627,7 @@ make install
   dnf groupinstall 'development tools' -y
 
   install_requirements "linux" "
-  epel-release
+  # epel-release
   # python3-paramiko
 "
   install_requirements "linux" "
@@ -1640,11 +1640,11 @@ make install
     nano
     pv
     python2
-    python2-devel
+    # python2-devel
     python3
     python3-devel
-    twisted
-    zsh
+    # twisted
+     zsh
     "
    systemctl enable --now snapd.socket
    sudo snap install tree

@@ -247,18 +247,18 @@ _darwin__64() {
 
 determine_os_and_fire_action
 
-ensure npm or "Canceling Install. Could not find npm"
-ensure node or "Canceling Install. Could not find node"
-ensure cf or "Canceling Install. Could not find cf"
+su - $SUDO_USER -c 'ensure npm or "Canceling Install. Could not find npm"'
+su - $SUDO_USER -c 'ensure node or "Canceling Install. Could not find node"'
+su - $SUDO_USER -c 'ensure cf or "Canceling Install. Could not find cf"'
 if ! cf mtas --help >/dev/null 2>&1 ; then
 {
-  yes | cf install-plugin multiapps
+  yes | su - $SUDO_USER -c 'yes | cf install-plugin multiapps'
 }
 fi
 MTASCHECK="$(cf mtas --help >/dev/null 2>&1)"
 if [[ -n "$MTASCHECK" ]] &&  [[ "$MTASCHECK" == *"FAILED"* ]]  ; then
 {
-    yes | cf install-plugin multiapps
+    yes | su - $SUDO_USER -c 'yes | cf install-plugin multiapps'
 }
 fi
 
@@ -267,7 +267,7 @@ if [[ -n "$MTASCHECK" ]] &&  [[ "$MTASCHECK" != *"FAILED"* ]]  ; then
     passed Installed cf mtas plugin
 }
 fi
-ensure git or "Canceling Install. Could not find git"
+su - $SUDO_USER -c 'ensure git or "Canceling Install. Could not find git"'
 echo "SUDO_USER:$SUDO_USER"
 
 CURRENTGITUSER=""
