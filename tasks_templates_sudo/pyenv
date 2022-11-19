@@ -133,7 +133,7 @@ eval "$(pyenv virtualenv-init -)"
  _if_not_contains "${USER_HOME}/.zshrc"  "# PYENV" &&  echo "${PYENV_SH_CONTENT}" >> "${USER_HOME}/.zshrc"
  _if_not_contains "${USER_HOME}/.zshrc"  "PYENV_ROOT" &&  echo "${PYENV_SH_CONTENT}" >> "${USER_HOME}/.zshrc"
  _if_not_contains "${USER_HOME}/.zshrc"  "pyenv init" &&  echo "${PYENV_SH_CONTENT}" >> "${USER_HOME}/.zshrc"
- "${USER_HOME}/.pyenv" doctor
+ "${USER_HOME}/.pyenv/bin/pyenv" doctor
 
 } # _add_variables_to_bashrc_zshrc
 
