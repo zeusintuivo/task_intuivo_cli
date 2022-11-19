@@ -48,6 +48,7 @@ _redhat_flavor_install() {
     openssl-devel
     xz
     xz-devel
+    libffi
     libffi-devel
     findutils
   "
