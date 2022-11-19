@@ -154,7 +154,9 @@ export sudo_it
 function sudo_it() {
   raise_to_sudo_and_user_home
   local _err=$?
-  Comment _err:${_err}
+  if (( DEBUG )) ; then
+    Comment _err:${_err}
+  fi
   if [ $_err -gt 0 ] ; then
   {
     failed to sudo_it raise_to_sudo_and_user_home
@@ -163,7 +165,9 @@ function sudo_it() {
   fi
   # [ $_err -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
   _err=$?
-  Comment _err:${_err}
+  if (( DEBUG )) ; then
+    Comment _err:${_err}
+  fi
   enforce_variable_with_value SUDO_USER "${SUDO_USER}"
   enforce_variable_with_value SUDO_UID "${SUDO_UID}"
   enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
@@ -185,7 +189,9 @@ ERR INT ..."
 # _linux_prepare(){
   sudo_it
   _err=$?
-  Comment _err:${_err}
+  if (( DEBUG )) ; then
+    Comment _err:${_err}
+  fi
   if [ $_err -gt 0 ] ; then
   {
     failed to sudo_it raise_to_sudo_and_user_home
@@ -194,7 +200,9 @@ ERR INT ..."
   fi
   # [ $_err -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
   _err=$?
-  Comment _err:${_err}
+  if (( DEBUG )) ; then
+    Comment _err:${_err}
+  fi
   # [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
   export USER_HOME
   # shellcheck disable=SC2046
@@ -212,9 +220,13 @@ enforce_variable_with_value SUDO_USER "${SUDO_USER}"
 if (( DEBUG )) ; then
   passed "Caller user identified:${SUDO_USER}"
 fi
-  Comment DEBUG_err?:${?}
+  if (( DEBUG )) ; then
+    Comment DEBUG_err?:${?}
+  fi
 if (( DEBUG )) ; then
   passed "Home identified:${USER_HOME}"
 fi
-  Comment DEBUG_err?:${?}
+  if (( DEBUG )) ; then
+    Comment DEBUG_err?:${?}
+  fi
 directory_exists_with_spaces "${USER_HOME}"

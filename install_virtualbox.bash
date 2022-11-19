@@ -95,7 +95,7 @@ _fedora__64() {
   }
   fi
    install_requirements "linux" "
-    # ReadHat Flavor only
+    # RedHat Flavor only
     binutils
     gcc
     make
@@ -147,7 +147,7 @@ _fedora__64() {
   "
   echo sudo dnf install VirtualBox-6.1 -y
   install_requirements "linux" "
-    # ReadHat Flavor only
+    # RedHat Flavor only
     VirtualBox-6.1
   "
   verify_is_installed "
