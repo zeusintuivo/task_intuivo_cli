@@ -355,6 +355,7 @@ _git_clone_pyenv() {
    # cd "${USER_HOME}"
    git clone https://github.com/pyenv/pyenv.git "${USER_HOME}/.pyenv"
    git clone https://github.com/pyenv/pyenv-update.git "${USER_HOME}/.pyenv/plugins/pyenv-update"
+   git clone https://github.com/pyenv/pyenv-doctor.git "${USER_HOME}/.pyenv/plugins/pyenv-doctor"
   }
   fi
 
