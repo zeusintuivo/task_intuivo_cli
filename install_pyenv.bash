@@ -154,7 +154,9 @@ export sudo_it
 function sudo_it() {
   raise_to_sudo_and_user_home
   local _err=$?
-  Comment _err:${_err}
+  if (( DEBUG )) ; then
+    Comment _err:${_err}
+  fi
   if [ $_err -gt 0 ] ; then
   {
     failed to sudo_it raise_to_sudo_and_user_home
@@ -163,7 +165,9 @@ function sudo_it() {
   fi
   # [ $_err -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
   _err=$?
-  Comment _err:${_err}
+  if (( DEBUG )) ; then
+    Comment _err:${_err}
+  fi
   enforce_variable_with_value SUDO_USER "${SUDO_USER}"
   enforce_variable_with_value SUDO_UID "${SUDO_UID}"
   enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
@@ -185,7 +189,9 @@ ERR INT ..."
 # _linux_prepare(){
   sudo_it
   _err=$?
-  Comment _err:${_err}
+  if (( DEBUG )) ; then
+    Comment _err:${_err}
+  fi
   if [ $_err -gt 0 ] ; then
   {
     failed to sudo_it raise_to_sudo_and_user_home
@@ -194,7 +200,9 @@ ERR INT ..."
   fi
   # [ $_err -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
   _err=$?
-  Comment _err:${_err}
+  if (( DEBUG )) ; then
+    Comment _err:${_err}
+  fi
   # [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
   export USER_HOME
   # shellcheck disable=SC2046
@@ -212,11 +220,15 @@ enforce_variable_with_value SUDO_USER "${SUDO_USER}"
 if (( DEBUG )) ; then
   passed "Caller user identified:${SUDO_USER}"
 fi
-  Comment DEBUG_err?:${?}
+  if (( DEBUG )) ; then
+    Comment DEBUG_err?:${?}
+  fi
 if (( DEBUG )) ; then
   passed "Home identified:${USER_HOME}"
 fi
-  Comment DEBUG_err?:${?}
+  if (( DEBUG )) ; then
+    Comment DEBUG_err?:${?}
+  fi
 directory_exists_with_spaces "${USER_HOME}"
 
 
@@ -243,14 +255,17 @@ _debian_flavor_install() {
     libreadline-dev
     libbz2-dev
     libsqlite3-dev
+    python-tk
+    python3-tk
+    tk-dev
     git
   "
-  verify_is_installed "
-    libreadline-dev
-    libbz2-dev
-    libsqlite3-dev
-    git
- "
+#  verify_is_installed "
+#    libreadline-dev
+#    libbz2-dev
+#    libsqlite3-dev
+#    git
+# "
  _git_clone_pyenv
  _add_variables_to_bashrc_zshrc
 
@@ -258,10 +273,10 @@ _debian_flavor_install() {
 
 _redhat_flavor_install() {
   sudo_it
-  export USER_HOME="/home/${SUDO_USER}"
+  # export USER_HOME="/home/${SUDO_USER}"
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   install_requirements "linux" "
-    # ReadHat Flavor only
+    # RedHat Flavor only
     readline-devel
     bzip2-devel
     sqlite
@@ -280,7 +295,11 @@ _redhat_flavor_install() {
     openssl-devel
     xz
     xz-devel
+    libffi
     libffi-devel
+    python-tkinter
+    python3-tkinter
+    tk-devel
     findutils
   "
   # is_not_installed pygmentize &&   dnf  -y install pygmentize
@@ -297,37 +316,47 @@ _redhat_flavor_install() {
     dnf groupinstall 'Development Tools' -y
   }
   fi
-  verify_is_installed "
-    # ReadHat Flavor only
-    readline-devel
-    bzip2-devel
-    # sqlite
-    sqlite-devel
-    # sqlite-tcl
-    # sqlite-jdbc
-    # sqlitebrowser
-    make
-    automake
-    cmake
-    gcc
-    libtool-ltdl-devel
-    git
-    zlib-devel
-    bzip2
-    openssl-devel
-    xz
-    xz-devel
-    libffi-devel
-    findutils
- "
+#  verify_is_installed "
+#    # RedHat Flavor only
+#    readline-devel
+#    bzip2-devel
+#    # sqlite
+#    sqlite-devel
+#    # sqlite-tcl
+#    # sqlite-jdbc
+#    # sqlitebrowser
+#    make
+#    automake
+#    cmake
+#    gcc
+#    libtool-ltdl-devel
+#    git
+#    zlib-devel
+#    bzip2
+#    openssl-devel
+#    xz
+#    xz-devel
+#    libffi-devel
+#    findutils
+# "
  _git_clone_pyenv
  _add_variables_to_bashrc_zshrc
 } # end _redhat_flavor_install
 
 _git_clone_pyenv() {
- cd "${USER_HOME}"
- git clone https://github.com/pyenv/pyenv.git "${USER_HOME}/.pyenv"
- git clone https://github.com/pyenv/pyenv-update.git "${USER_HOME}/.pyenv/plugins/pyenv-update"
+  if  it_exists_with_spaces "${USER_HOME}/.pyenv" ; then
+  {
+    cd "${USER_HOME}/.pyenv"
+    git fetch
+    git pull
+  }
+  else
+  {
+   # cd "${USER_HOME}"
+   git clone https://github.com/pyenv/pyenv.git "${USER_HOME}/.pyenv"
+   git clone https://github.com/pyenv/pyenv-update.git "${USER_HOME}/.pyenv/plugins/pyenv-update"
+  }
+  fi
 
 } # _git_clone_pyenv
 
@@ -347,11 +376,12 @@ eval "$(pyenv virtualenv-init -)"
  _if_not_contains "${USER_HOME}/.zshrc"  "# PYENV" &&  echo "${PYENV_SH_CONTENT}" >> "${USER_HOME}/.zshrc"
  _if_not_contains "${USER_HOME}/.zshrc"  "PYENV_ROOT" &&  echo "${PYENV_SH_CONTENT}" >> "${USER_HOME}/.zshrc"
  _if_not_contains "${USER_HOME}/.zshrc"  "pyenv init" &&  echo "${PYENV_SH_CONTENT}" >> "${USER_HOME}/.zshrc"
- pyenv doctor
+ "${USER_HOME}/.pyenv" doctor
 
 } # _add_variables_to_bashrc_zshrc
 
 _arch_flavor_install() {
+  sudo pacman -S tk
   echo "Procedure not yet implemented. I don't know what to do."
 } # end _readhat_flavor_install
 
@@ -372,6 +402,7 @@ _centos__64() {
 } # end _centos__64
 
 _debian__32() {
+   sudo aptitude install libreadline-dev
   _debian_flavor_install
 } # end _debian__32
 
@@ -420,6 +451,7 @@ _ubuntu__64() {
 } # end _ubuntu__64
 
 _darwin__64() {
+  brew install python-tk
   echo "Procedure not yet implemented. I don't know what to do."
 } # end _darwin__64
 
