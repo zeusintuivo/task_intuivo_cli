@@ -27,7 +27,7 @@ $file2:${BASH_LINENO[1]}    \t ${FUNCNAME[1]}()
 ERR ..."
     exit 1
   }
-  trap _trap_on_error ERR
+  # trap _trap_on_error ERR
   function _trap_on_int(){
     # echo -e "\\n \033[01;7m*** INTERRUPT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n  INT ...\033[0m"
     local cero="$0"
@@ -40,7 +40,7 @@ INT ..."
     exit 0
   }
 
-  trap _trap_on_int INT
+  # trap _trap_on_int INT
 
 load_struct_testing(){
   function _trap_on_error(){
@@ -67,7 +67,7 @@ load_struct_testing(){
        exit 1
     }
     fi
-    trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+    # trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
       local provider="$HOME/_/clis/execute_command_intuivo_cli/${_library}"
       local _err=0 structsource
       if [   -e "${provider}"  ] ; then
@@ -183,7 +183,7 @@ $file2:${BASH_LINENO[1]}    \t ${FUNCNAME[1]}()
 ERR INT ..."
     exit 1
   }
-  trap _trap_on_err_int ERR INT
+  # trap _trap_on_err_int ERR INT
 } # end sudo_it
 
 # _linux_prepare(){
@@ -233,13 +233,189 @@ directory_exists_with_spaces "${USER_HOME}"
 
 
 
- #--------\/\/\/\/-- Work here below \/, test, and transfer to tasks_templates/whatsapp having a working version -\/\/\/\/-------
+ #---------/\/\/\-- tasks_base/sudoer.bash -------------/\/\/\--------
 
 
 
 
 
- #--------/\/\/\/\-- Work here above /\, test, and transfer to tasks_templates/whatsapp having a working version -/\/\/\/\-------
+ #--------\/\/\/\/-- tasks_templates_sudo/whatsapp …install_whatsapp.bash” -- Custom code -\/\/\/\/-------
+
+
+#!/usr/bin/env bash
+#
+# @author Zeus Intuivo <zeus@intuivo.com>
+#
+
+_debian_flavor_install() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _debian_flavor_install
+
+_redhat_flavor_install() {
+  sudo_it
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  install_requirements "linux" "
+    # RedHat Flavor only
+    make
+    automake
+    cmake
+    gcc
+    git
+    intltool
+    gtkmm3.0
+    gtkmm3.0-devel
+    webkit2gtk4.0
+    webkit2gtk4.0-devel
+    gnome-shell-extension-appindicator
+    libappindicator
+    libappindicator-devel
+    libappindicator-gtk3
+    libappindicator-gtk3-devel
+    libindicator
+    libindicator-devel
+    libindicator-gtk3-tools
+    libindicator-gtk3-tools-devel
+    libindicator-tools
+    libindicator-tools-devel
+  "
+  # is_not_installed pygmentize &&   dnf  -y install pygmentize
+  # if ( ! command -v pygmentize >/dev/null 2>&1; ) ;  then
+  #   pip3 install pygments
+  # fi
+  local groupsinstalled=$(dnf group list --installed)
+  if [[ "${groupsinstalled}" = *"Development Tools"* ]] ; then
+  {
+    passed installed 'Development Tools'
+  }
+  else
+  {
+    dnf groupinstall 'Development Tools' -y
+  }
+  fi
+  _git_clone "https://github.com/eneshecan/whatsapp-for-linux.git" "${USER_HOME}/whatsapp-for-linux"
+  _build_compile "${USER_HOME}/whatsapp-for-linux"
+} # end _redhat_flavor_install
+
+_build_compile() {
+  local _target="${1}"
+  cd "${_target}"
+  # Create a debug build directory and go into it
+  mkdir -p cd "${_target}/build/debug" && cd cd "${_target}/build/debug"
+
+  # Build the project
+  cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/usr ../..
+  make -j4
+
+  # Optionally, to update the default translation file
+  make update-translation
+
+  # Run
+  ./whatsapp-for-linux
+} # end _build_compile
+
+_git_clone() {
+  local _source="${1}"
+  local _target="${2}"
+  if  it_exists_with_spaces "${_target}" ; then
+  {
+    cd "${_target}"
+    git fetch
+    git pull
+  }
+  else
+  {
+   git clone "${_source}" "${_target}"
+  }
+  fi
+} # _git_clone
+
+_arch_flavor_install() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _readhat_flavor_install
+
+_arch__32() {
+  _arch_flavor_install
+} # end _arch__32
+
+_arch__64() {
+  _arch_flavor_install
+} # end _arch__64
+
+_centos__32() {
+  _redhat_flavor_install
+} # end _centos__32
+
+_centos__64() {
+  _redhat_flavor_install
+} # end _centos__64
+
+_debian__32() {
+  _debian_flavor_install
+} # end _debian__32
+
+_debian__64() {
+  _debian_flavor_install
+} # end _debian__64
+
+_fedora__32() {
+  _redhat_flavor_install
+} # end _fedora__32
+
+_fedora__64() {
+  _redhat_flavor_install
+} # end _fedora__64
+
+_gentoo__32() {
+  _redhat_flavor_install
+} # end _gentoo__32
+
+_gentoo__64() {
+  _redhat_flavor_install
+} # end _gentoo__64
+
+_madriva__32() {
+  _redhat_flavor_install
+} # end _madriva__32
+
+_madriva__64() {
+  _redhat_flavor_install
+} # end _madriva__64
+
+_suse__32() {
+  _redhat_flavor_install
+} # end _suse__32
+
+_suse__64() {
+  _redhat_flavor_install
+} # end _suse__64
+
+_ubuntu__32() {
+  _debian_flavor_install
+} # end _ubuntu__32
+
+_ubuntu__64() {
+  _debian_flavor_install
+} # end _ubuntu__64
+
+_darwin__64() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _darwin__64
+
+_tar() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end tar
+
+_windows__64() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _windows__64
+
+_windows__32() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _windows__32
+
+
+
+ #--------/\/\/\/\-- tasks_templates_sudo/whatsapp …install_whatsapp.bash” -- Custom code-/\/\/\/\-------
 
 
 _main() {

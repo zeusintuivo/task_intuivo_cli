@@ -162,4 +162,4 @@ function _trap_on_error() {
 
 set -E -o functrace
 #                      1   2       3      4          5       6            7          8            9         10
-trap '_trap_on_error  $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND' ERR
+# trap '_trap_on_error  $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND' ERR
