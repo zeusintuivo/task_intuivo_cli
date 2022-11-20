@@ -112,6 +112,7 @@ _git_clone_pyenv() {
    git clone https://github.com/pyenv/pyenv.git "${USER_HOME}/.pyenv"
    git clone https://github.com/pyenv/pyenv-update.git "${USER_HOME}/.pyenv/plugins/pyenv-update"
    git clone https://github.com/pyenv/pyenv-doctor.git "${USER_HOME}/.pyenv/plugins/pyenv-doctor"
+   git clone https://github.com/pyenv/pyenv-virtualenv.git "${USER_HOME}/.pyenv/plugins/pyenv-virtualenv"
   }
   fi
 
@@ -208,8 +209,33 @@ _ubuntu__64() {
 } # end _ubuntu__64
 
 _darwin__64() {
-  brew install python-tk
-  echo "Procedure not yet implemented. I don't know what to do."
+    sudo_it
+  # export USER_HOME="/home/${SUDO_USER}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  install_requirements "darwin" "
+    readline
+    bzip2
+    sqlite
+    make
+    automake
+    cmake
+    gcc
+    libtool
+    git
+    zlib
+    bzip2
+    openssl
+    xz
+    libffi
+    python-tk
+    python-tkinter
+    python3-tkinter
+    tk
+    findutils
+  "
+  _git_clone_pyenv
+  _add_variables_to_bashrc_zshrc
+
 } # end _darwin__64
 
 _tar() {

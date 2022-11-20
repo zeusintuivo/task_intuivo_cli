@@ -452,8 +452,39 @@ _ubuntu__64() {
 } # end _ubuntu__64
 
 _darwin__64() {
-  brew install python-tk
-  echo "Procedure not yet implemented. I don't know what to do."
+    sudo_it
+  # export USER_HOME="/home/${SUDO_USER}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  install_requirements "darwin" "
+    readline
+    bzip2
+    sqlite
+    sqlite
+    # sqlite-tcl
+    # sqlite-jdbc
+    # sqlitebrowser
+    make
+    automake
+    cmake
+    gcc
+    libtool-ltdl
+    git
+    zlib
+    bzip2
+    openssl
+    xz
+    xz
+    libffi
+    libffi
+    python-tk
+    python-tkinter
+    python3-tkinter
+    tk
+    findutils
+  "
+  _git_clone_pyenv
+  _add_variables_to_bashrc_zshrc
+
 } # end _darwin__64
 
 _tar() {
