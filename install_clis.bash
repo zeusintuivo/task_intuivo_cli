@@ -2,6 +2,21 @@
 # 20200414 Compatible with Fedora, Mac, Ubuntu "sudo_up" "load_struct" "#
 set -E -o functrace
 export THISSCRIPTCOMPLETEPATH
+
+
+echo "Checking realpath  "
+if ! ( command -v realpath >/dev/null 2>&1; )  ; then
+  echo "... realpath not found. Downloading REF:https://github.com/swarmbox/realpath.git "
+  cd $HOME
+  git clone https://github.com/swarmbox/realpath.git
+  cd realpath
+  make
+  sudo make install
+  _err=$?
+  [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Builing realpath. returned error did not download or is installed err:$_err  \n \n  " && exit 1
+else
+  echo "... realpath exists .. check!"
+fi
 typeset -r THISSCRIPTCOMPLETEPATH="$(realpath "$(basename "$0")")"  # updated realpath macos 20210902  # § This goe$
 
 export BASH_VERSION_NUMBER
@@ -240,34 +255,34 @@ _fedora__64() {
 _darwin__64() {
     COMANDDER="brew"
     echo mac?
-    $COMANDDER install nodejs
+    # $COMANDDER install nodejs
     # version 6 brew install cloudfoundry/tap/cf-cli
-    $COMANDDER install cloudfoundry/tap/cf-cli@7
+    # $COMANDDER install cloudfoundry/tap/cf-cli@7
 }
 
 determine_os_and_fire_action
 
-su - $SUDO_USER -c 'ensure npm or "Canceling Install. Could not find npm"'
-su - $SUDO_USER -c 'ensure node or "Canceling Install. Could not find node"'
-su - $SUDO_USER -c 'ensure cf or "Canceling Install. Could not find cf"'
-if ! cf mtas --help >/dev/null 2>&1 ; then
-{
-  yes | su - $SUDO_USER -c 'yes | cf install-plugin multiapps'
-}
-fi
-MTASCHECK="$(cf mtas --help >/dev/null 2>&1)"
-if [[ -n "$MTASCHECK" ]] &&  [[ "$MTASCHECK" == *"FAILED"* ]]  ; then
-{
-    yes | su - $SUDO_USER -c 'yes | cf install-plugin multiapps'
-}
-fi
+# ensure npm or "Canceling Install. Could not find npm"
+# ensure node or "Canceling Install. Could not find node"
+# ensure cf or "Canceling Install. Could not find cf"
+# if ! cf mtas --help >/dev/null 2>&1 ; then
+# {
+#  yes | cf install-plugin multiapps
+# }
+# fi
+# MTASCHECK="$(cf mtas --help >/dev/null 2>&1)"
+# if [[ -n "$MTASCHECK" ]] &&  [[ "$MTASCHECK" == *"FAILED"* ]]  ; then
+# {
+#    yes | cf install-plugin multiapps
+# }
+# fi
 
-if [[ -n "$MTASCHECK" ]] &&  [[ "$MTASCHECK" != *"FAILED"* ]]  ; then
-{
-    passed Installed cf mtas plugin
-}
-fi
-su - $SUDO_USER -c 'ensure git or "Canceling Install. Could not find git"'
+# if [[ -n "$MTASCHECK" ]] &&  [[ "$MTASCHECK" != *"FAILED"* ]]  ; then
+# {
+#     passed Installed cf mtas plugin
+# }
+# fi
+ensure git or "Canceling Install. Could not find git"
 echo "SUDO_USER:$SUDO_USER"
 
 CURRENTGITUSER=""
@@ -625,13 +640,13 @@ _if_not_contains "$USER_HOME/.bashrc" "colorls" && echo "alias ls='colorls --gro
 
 
 _setup_clis(){
-	local -i ret
-        local msg
-        ret=0
+  local -i ret
+  local msg
+  ret=0
 
-	Installing Clis
-   if  it_does_not_exist_with_spaces "$USER_HOME/_/clis" ; then
-    {
+  Installing Clis
+  if  it_does_not_exist_with_spaces "$USER_HOME/_/clis" ; then
+  {
         mkdir -p $USER_HOME/_/clis
         chown $SUDO_USER:$SUDO_USER -R $USER_HOME/_
         cd $USER_HOME/_/clis
