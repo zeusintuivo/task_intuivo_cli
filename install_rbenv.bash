@@ -252,6 +252,7 @@ _git_clone() {
   if  it_exists_with_spaces "${_target}" ; then
   {
     cd "${_target}"
+    git config pull.rebase false
     git fetch
     git pull
   }
@@ -260,6 +261,8 @@ _git_clone() {
    git clone "${_source}" "${_target}"
   }
   fi
+  chown -R "${SUDO_USER}" "${_target}"
+
 } # _git_clone
 
 _add_variables_to_bashrc_zshrc(){

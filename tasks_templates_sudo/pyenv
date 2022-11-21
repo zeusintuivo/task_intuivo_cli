@@ -32,6 +32,7 @@ _redhat_flavor_install() {
   sudo_it
   # export USER_HOME="/home/${SUDO_USER}"
   enforce_variable_with_value USER_HOME "${USER_HOME}"
+  enforce_variable_with_value SUDO_USER "${SUDO_USER}"
   install_requirements "linux" "
     # RedHat Flavor only
     readline-devel
@@ -102,9 +103,12 @@ _redhat_flavor_install() {
 } # end _redhat_flavor_install
 
 _git_clone_pyenv() {
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _git_clone_pyenv pyenv" && echo -e "${RESET}" && return 0' ERR
+
   if  it_exists_with_spaces "${USER_HOME}/.pyenv" ; then
   {
     cd "${USER_HOME}/.pyenv"
+    git config pull.rebase false
     git fetch
     git pull
   }
@@ -117,6 +121,7 @@ _git_clone_pyenv() {
    git clone https://github.com/pyenv/pyenv-virtualenv.git "${USER_HOME}/.pyenv/plugins/pyenv-virtualenv"
   }
   fi
+  chown -R "${SUDO_USER}" "${USER_HOME}/.pyenv"
 
 } # _git_clone_pyenv
 
