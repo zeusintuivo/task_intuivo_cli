@@ -27,7 +27,7 @@ $file2:${BASH_LINENO[1]}    \t ${FUNCNAME[1]}()
 ERR ..."
     exit 1
   }
-  trap _trap_on_error ERR
+  # trap _trap_on_error ERR
   function _trap_on_int(){
     # echo -e "\\n \033[01;7m*** INTERRUPT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n  INT ...\033[0m"
     local cero="$0"
@@ -40,7 +40,7 @@ INT ..."
     exit 0
   }
 
-  trap _trap_on_int INT
+  # trap _trap_on_int INT
 
 load_struct_testing(){
   function _trap_on_error(){
@@ -67,7 +67,7 @@ load_struct_testing(){
        exit 1
     }
     fi
-    trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+    # trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
       local provider="$HOME/_/clis/execute_command_intuivo_cli/${_library}"
       local _err=0 structsource
       if [   -e "${provider}"  ] ; then
@@ -154,7 +154,9 @@ export sudo_it
 function sudo_it() {
   raise_to_sudo_and_user_home
   local _err=$?
-  Comment _err:${_err}
+  if (( DEBUG )) ; then
+    Comment _err:${_err}
+  fi
   if [ $_err -gt 0 ] ; then
   {
     failed to sudo_it raise_to_sudo_and_user_home
@@ -163,7 +165,9 @@ function sudo_it() {
   fi
   # [ $_err -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
   _err=$?
-  Comment _err:${_err}
+  if (( DEBUG )) ; then
+    Comment _err:${_err}
+  fi
   enforce_variable_with_value SUDO_USER "${SUDO_USER}"
   enforce_variable_with_value SUDO_UID "${SUDO_UID}"
   enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
@@ -179,13 +183,15 @@ $file2:${BASH_LINENO[1]}    \t ${FUNCNAME[1]}()
 ERR INT ..."
     exit 1
   }
-  trap _trap_on_err_int ERR INT
+  # trap _trap_on_err_int ERR INT
 } # end sudo_it
 
 # _linux_prepare(){
   sudo_it
   _err=$?
-  Comment _err:${_err}
+  if (( DEBUG )) ; then
+    Comment _err:${_err}
+  fi
   if [ $_err -gt 0 ] ; then
   {
     failed to sudo_it raise_to_sudo_and_user_home
@@ -194,7 +200,9 @@ ERR INT ..."
   fi
   # [ $_err -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
   _err=$?
-  Comment _err:${_err}
+  if (( DEBUG )) ; then
+    Comment _err:${_err}
+  fi
   # [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
   export USER_HOME
   # shellcheck disable=SC2046
@@ -212,11 +220,15 @@ enforce_variable_with_value SUDO_USER "${SUDO_USER}"
 if (( DEBUG )) ; then
   passed "Caller user identified:${SUDO_USER}"
 fi
-  Comment DEBUG_err?:${?}
+  if (( DEBUG )) ; then
+    Comment DEBUG_err?:${?}
+  fi
 if (( DEBUG )) ; then
   passed "Home identified:${USER_HOME}"
 fi
-  Comment DEBUG_err?:${?}
+  if (( DEBUG )) ; then
+    Comment DEBUG_err?:${?}
+  fi
 directory_exists_with_spaces "${USER_HOME}"
 
 
@@ -227,118 +239,183 @@ directory_exists_with_spaces "${USER_HOME}"
 
 
 
- #--------\/\/\/\/-- tasks_templates_sudo/dropbox …install_dropbox.bash” -- Custom code -\/\/\/\/-------
+ #--------\/\/\/\/-- tasks_templates_sudo/whatsapp …install_whatsapp.bash” -- Custom code -\/\/\/\/-------
 
 
-#!/bin/bash
+#!/usr/bin/env bash
+#
+# @author Zeus Intuivo <zeus@intuivo.com>
+#
 
-_get_download_target(){
-  # Sample call:
-  #
-  #  _get_download_target "https://linux.dropbox.com/packages/fedora/" rpm 64
-  #  _get_download_target "https://linux.dropbox.com/packages/fedora/" rpm 32
-  #  _get_download_target "https://linux.dropbox.com/packages/debian/" deb 32
-  #
-  # DEBUG=1
-  local URL="${1}"   #           param order    varname    varvalue     sample_value
-  enforce_parameter_with_value           1        URL      "${URL}"     "https://linux.dropbox.com/packages/fedora/"
-  #
-  #
-  local PLATFORM="${2}"  #       param order    varname     varvalue        valid_options
-  (( DEBUG )) && Message "${2}"
-  enforce_parameter_with_options         2      PLATFORM   "${PLATFORM}"    "rpm   deb"
-  #
-  #
-  local BITS="${3}"      #       param order    varname     varvalue        valid_options
-  (( DEBUG )) && Message "${3}"
-  enforce_parameter_with_options         3       BITS       "${BITS}"        "64   32"
-  #
-  #
-  if (( DEBUG )) ; then
+_debian_flavor_install() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _debian_flavor_install
+
+_redhat_flavor_install() {
+  sudo_it
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  install_requirements "linux" "
+    # RedHat Flavor only
+    make
+    automake
+    cmake
+    gcc
+    git
+    intltool
+    gtkmm3.0
+    gtkmm3.0-devel
+    webkit2gtk4.0
+    webkit2gtk4.0-devel
+    gnome-shell-extension-appindicator
+    libappindicator
+    libappindicator-devel
+    libappindicator-gtk3
+    libappindicator-gtk3-devel
+    libindicator
+    libindicator-devel
+    libindicator-gtk3-tools
+    libindicator-gtk3-tools-devel
+    libindicator-tools
+    libindicator-tools-devel
+  "
+  # is_not_installed pygmentize &&   dnf  -y install pygmentize
+  # if ( ! command -v pygmentize >/dev/null 2>&1; ) ;  then
+  #   pip3 install pygments
+  # fi
+  local groupsinstalled=$(dnf group list --installed)
+  if [[ "${groupsinstalled}" = *"Development Tools"* ]] ; then
   {
-    Comment "CODEFILE=\"\"\"\$(wget --quiet --no-check-certificate  \"${URL}\" -O -  2>/dev/null)\"\"\""
-    local CODEFILE="<html>
-<head><title>Index of /packages/fedora/</title></head>
-<body>
-<h1>Index of /packages/fedora/</h1><hr><pre><a href="../">../</a>
-<a href="nautilus-dropbox-1.4.0-1.fedora.i386.rpm">nautilus-dropbox-1.4.0-1.fedora.i386.rpm</a>           09-Sep-2001 01:46               98849
-<a href="nautilus-dropbox-1.4.0-1.fedora.x86_64.rpm">nautilus-dropbox-1.4.0-1.fedora.x86_64.rpm</a>         09-Sep-2001 01:46               98739
-<a href="nautilus-dropbox-1.6.0-1.fedora.i386.rpm">nautilus-dropbox-1.6.0-1.fedora.i386.rpm</a>           09-Sep-2001 01:46               98966
-<a href="nautilus-dropbox-1.6.0-1.fedora.x86_64.rpm">nautilus-dropbox-1.6.0-1.fedora.x86_64.rpm</a>         09-Sep-2001 01:46               98873
-<a href="nautilus-dropbox-1.6.1-1.fedora.i386.rpm">nautilus-dropbox-1.6.1-1.fedora.i386.rpm</a>           09-Sep-2001 01:46               98960
-<a href="nautilus-dropbox-1.6.1-1.fedora.x86_64.rpm">nautilus-dropbox-1.6.1-1.fedora.x86_64.rpm</a>         09-Sep-2001 01:46               98877
-<a href="nautilus-dropbox-1.6.2-1.fedora.i386.rpm">nautilus-dropbox-1.6.2-1.fedora.i386.rpm</a>           09-Sep-2001 01:46               98980
-<a href="nautilus-dropbox-1.6.2-1.fedora.x86_64.rpm">nautilus-dropbox-1.6.2-1.fedora.x86_64.rpm</a>         09-Sep-2001 01:46               98881
-<a href="nautilus-dropbox-2.10.0-1.fedora.i386.rpm">nautilus-dropbox-2.10.0-1.fedora.i386.rpm</a>          09-Sep-2001 01:46               98894
-<a href="nautilus-dropbox-2.10.0-1.fedora.x86_64.rpm">nautilus-dropbox-2.10.0-1.fedora.x86_64.rpm</a>        09-Sep-2001 01:46               98788
-<a href="nautilus-dropbox-2015.02.12-1.fedora.i386.rpm">nautilus-dropbox-2015.02.12-1.fedora.i386.rpm</a>      09-Sep-2001 01:46               98969
-<a href="nautilus-dropbox-2015.02.12-1.fedora.x86_64.rpm">nautilus-dropbox-2015.02.12-1.fedora.x86_64.rpm</a>    09-Sep-2001 01:46               98868
-<a href="nautilus-dropbox-2015.10.28-1.fedora.i386.rpm">nautilus-dropbox-2015.10.28-1.fedora.i386.rpm</a>      09-Sep-2001 01:46              100108
-<a href="nautilus-dropbox-2015.10.28-1.fedora.x86_64.rpm">nautilus-dropbox-2015.10.28-1.fedora.x86_64.rpm</a>    09-Sep-2001 01:46              100023
-<a href="nautilus-dropbox-2018.11.08-1.fedora.i386.rpm">nautilus-dropbox-2018.11.08-1.fedora.i386.rpm</a>      09-Sep-2001 01:46               84552
-<a href="nautilus-dropbox-2018.11.08-1.fedora.x86_64.rpm">nautilus-dropbox-2018.11.08-1.fedora.x86_64.rpm</a>    09-Sep-2001 01:46               82652
-<a href="nautilus-dropbox-2018.11.28-1.fedora.i386.rpm">nautilus-dropbox-2018.11.28-1.fedora.i386.rpm</a>      09-Sep-2001 01:46               84548
-<a href="nautilus-dropbox-2018.11.28-1.fedora.x86_64.rpm">nautilus-dropbox-2018.11.28-1.fedora.x86_64.rpm</a>    09-Sep-2001 01:46               82640
-<a href="nautilus-dropbox-2019.01.31-1.fedora.i386.rpm">nautilus-dropbox-2019.01.31-1.fedora.i386.rpm</a>      09-Sep-2001 01:46               84128
-<a href="nautilus-dropbox-2019.01.31-1.fedora.x86_64.rpm">nautilus-dropbox-2019.01.31-1.fedora.x86_64.rpm</a>    09-Sep-2001 01:46               82208
-<a href="nautilus-dropbox-2019.02.14-1.fedora.i386.rpm">nautilus-dropbox-2019.02.14-1.fedora.i386.rpm</a>      09-Sep-2001 01:46               84496
-<a href="nautilus-dropbox-2019.02.14-1.fedora.x86_64.rpm">nautilus-dropbox-2019.02.14-1.fedora.x86_64.rpm</a>    09-Sep-2001 01:46               82576
-<a href="nautilus-dropbox-2020.03.04-1.fedora.i386.rpm">nautilus-dropbox-2020.03.04-1.fedora.i386.rpm</a>      09-Sep-2001 01:46               84648
-<a href="nautilus-dropbox-2020.03.04-1.fedora.x86_64.rpm">nautilus-dropbox-2020.03.04-1.fedora.x86_64.rpm</a>    09-Sep-2001 01:46               82736
-</pre><hr></body>"    
+    passed installed 'Development Tools'
   }
   else
   {
-    local CODEFILE="""$(wget --quiet --no-check-certificate  "${URL}" -O -  2>/dev/null )""" # suppress only wget download messages, but keep wget output for variable
-  }
-  fi 
-  enforce_variable_with_value CODEFILE "${CODEFILE}"
-  #
-  #
-  local CODELASTESTBUILD=$(_extract_version "${CODEFILE}")
-  enforce_variable_with_value CODELASTESTBUILD "${CODELASTESTBUILD}"
-  local JUSTSORT=$(echo -n "${CODELASTESTBUILD}" | grep "${BITS}" | grep "${PLATFORM}$" |  sed 's/nautilus-dropbox-//g' | sort )
-  enforce_variable_with_value JUSTSORT "${JUSTSORT}"
-  local SORTDATE=$(echo -n "${JUSTSORT}" | cut -d\. -f1  | sort | tail -1)
-  enforce_variable_with_value SORTDATE "${SORTDATE}"
-  local TARGETNAME=$(echo -n "${CODELASTESTBUILD}"  | grep "${SORTDATE}" | grep "${BITS}" | grep "${PLATFORM}$" | tail -1)
-  enforce_variable_with_value TARGETNAME "${TARGETNAME}"
-  echo -n "${URL}/${TARGETNAME}"
-  return 0
-} # end _get_download_target
-
-_extract_version(){
-  echo "${*}" | sed s/\>/\>\\n/g | sed "s/&apos;/\'/g" | sed 's/&nbsp;/ /g'  | grep -v "<a" | sort | sed s/\</\\n\</g | grep -v "</a"
-} # end _extract_version
-
-_centos__64() {
-  _fedora__64
-}
-_fedora__64() {
-#  _linux_prepare
-  local TARGET_URL=$(_get_download_target "https://linux.dropbox.com/packages/fedora/" "rpm" "64")
-  # DEBUG=1
-  if (( DEBUG )) ; then
-  {
-    echo -n """${TARGET_URL}""" > .tmp.html
-    echo -n "${TARGET_URL}"
-    echo "DEBUG EXIT 0"
-    exit 0
+    dnf groupinstall 'Development Tools' -y
   }
   fi
-  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
-  local CODENAME=$(basename "${TARGET_URL}")
-  enforce_variable_with_value CODENAME "${CODENAME}"
-  local DOWNLOADFOLDER="$(_find_downloads_folder)"
-  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-  Comment DOWNLOADFOLDER:„${DOWNLOADFOLDER}”
-  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
-  _install_rpm "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
+  _git_clone "https://github.com/eneshecan/whatsapp-for-linux.git" "${USER_HOME}/whatsapp-for-linux"
+  _build_compile "${USER_HOME}/whatsapp-for-linux"
+} # end _redhat_flavor_install
+
+_build_compile() {
+  local _target="${1}"
+  cd "${_target}"
+  # Create a debug build directory and go into it
+  mkdir -p cd "${_target}/build/debug" && cd cd "${_target}/build/debug"
+
+  # Build the project
+  cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/usr ../..
+  make -j4
+
+  # Optionally, to update the default translation file
+  make update-translation
+
+  # Run
+  ./whatsapp-for-linux
+} # end _build_compile
+
+_git_clone() {
+  local _source="${1}"
+  local _target="${2}"
+  if  it_exists_with_spaces "${_target}" ; then
+  {
+    cd "${_target}"
+    git fetch
+    git pull
+  }
+  else
+  {
+   git clone "${_source}" "${_target}"
+  }
+  fi
+} # _git_clone
+
+_arch_flavor_install() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _readhat_flavor_install
+
+_arch__32() {
+  _arch_flavor_install
+} # end _arch__32
+
+_arch__64() {
+  _arch_flavor_install
+} # end _arch__64
+
+_centos__32() {
+  _redhat_flavor_install
+} # end _centos__32
+
+_centos__64() {
+  _redhat_flavor_install
+} # end _centos__64
+
+_debian__32() {
+  _debian_flavor_install
+} # end _debian__32
+
+_debian__64() {
+  _debian_flavor_install
+} # end _debian__64
+
+_fedora__32() {
+  _redhat_flavor_install
+} # end _fedora__32
+
+_fedora__64() {
+  _redhat_flavor_install
 } # end _fedora__64
 
+_gentoo__32() {
+  _redhat_flavor_install
+} # end _gentoo__32
+
+_gentoo__64() {
+  _redhat_flavor_install
+} # end _gentoo__64
+
+_madriva__32() {
+  _redhat_flavor_install
+} # end _madriva__32
+
+_madriva__64() {
+  _redhat_flavor_install
+} # end _madriva__64
+
+_suse__32() {
+  _redhat_flavor_install
+} # end _suse__32
+
+_suse__64() {
+  _redhat_flavor_install
+} # end _suse__64
+
+_ubuntu__32() {
+  _debian_flavor_install
+} # end _ubuntu__32
+
+_ubuntu__64() {
+  _debian_flavor_install
+} # end _ubuntu__64
+
+_darwin__64() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _darwin__64
+
+_tar() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end tar
+
+_windows__64() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _windows__64
+
+_windows__32() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _windows__32
 
 
- #--------/\/\/\/\-- tasks_templates_sudo/dropbox …install_dropbox.bash” -- Custom code-/\/\/\/\-------
+
+ #--------/\/\/\/\-- tasks_templates_sudo/whatsapp …install_whatsapp.bash” -- Custom code-/\/\/\/\-------
 
 
 _main() {

@@ -1,0 +1,251 @@
+#!/usr/bin/env bash
+#
+# @author Zeus Intuivo <zeus@intuivo.com>
+#
+
+_debian_flavor_install() {
+  sudo_it
+  export USER_HOME="/home/${SUDO_USER}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  install_requirements "linux" "
+    libreadline-dev
+    libbz2-dev
+    libsqlite3-dev
+    python-tk
+    python3-tk
+    tk-dev
+    git
+  "
+#  verify_is_installed "
+#    libreadline-dev
+#    libbz2-dev
+#    libsqlite3-dev
+#    git
+# "
+ _git_clone_pyenv
+ _add_variables_to_bashrc_zshrc
+
+} # end _debian_flavor_install
+
+_redhat_flavor_install() {
+  sudo_it
+  # export USER_HOME="/home/${SUDO_USER}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  install_requirements "linux" "
+    # RedHat Flavor only
+    readline-devel
+    bzip2-devel
+    sqlite
+    sqlite-devel
+    # sqlite-tcl
+    # sqlite-jdbc
+    # sqlitebrowser
+    make
+    automake
+    cmake
+    gcc
+    libtool-ltdl-devel
+    git
+    zlib-devel
+    bzip2
+    openssl-devel
+    xz
+    xz-devel
+    libffi
+    libffi-devel
+    python-tkinter
+    python3-tkinter
+    tk-devel
+    findutils
+  "
+  # is_not_installed pygmentize &&   dnf  -y install pygmentize
+  # if ( ! command -v pygmentize >/dev/null 2>&1; ) ;  then
+  #   pip3 install pygments
+  # fi
+  local groupsinstalled=$(dnf group list --installed)
+  if [[ "${groupsinstalled}" = *"Development Tools"* ]] ; then
+  {
+    passed installed 'Development Tools'
+  }
+  else
+  {
+    dnf groupinstall 'Development Tools' -y
+  }
+  fi
+#  verify_is_installed "
+#    # RedHat Flavor only
+#    readline-devel
+#    bzip2-devel
+#    # sqlite
+#    sqlite-devel
+#    # sqlite-tcl
+#    # sqlite-jdbc
+#    # sqlitebrowser
+#    make
+#    automake
+#    cmake
+#    gcc
+#    libtool-ltdl-devel
+#    git
+#    zlib-devel
+#    bzip2
+#    openssl-devel
+#    xz
+#    xz-devel
+#    libffi-devel
+#    findutils
+# "
+ _git_clone_pyenv
+ _add_variables_to_bashrc_zshrc
+} # end _redhat_flavor_install
+
+_git_clone_pyenv() {
+  if  it_exists_with_spaces "${USER_HOME}/.pyenv" ; then
+  {
+    cd "${USER_HOME}/.pyenv"
+    git fetch
+    git pull
+  }
+  else
+  {
+   # cd "${USER_HOME}"
+   git clone https://github.com/pyenv/pyenv.git "${USER_HOME}/.pyenv"
+   git clone https://github.com/pyenv/pyenv-update.git "${USER_HOME}/.pyenv/plugins/pyenv-update"
+   git clone https://github.com/pyenv/pyenv-doctor.git "${USER_HOME}/.pyenv/plugins/pyenv-doctor"
+   git clone https://github.com/pyenv/pyenv-virtualenv.git "${USER_HOME}/.pyenv/plugins/pyenv-virtualenv"
+  }
+  fi
+
+} # _git_clone_pyenv
+
+_add_variables_to_bashrc_zshrc(){
+ local PYENV_SH_CONTENT='
+
+# PYENV
+export PYENV_ROOT="'${USER_HOME}'/.pyenv"
+export PATH="'${USER_HOME}'/.pyenv/bin:${PATH}"
+eval "$(pyenv init -)"
+eval "$(pyenv virtualenv-init -)"
+
+'
+ _if_not_contains "${USER_HOME}/.bashrc"  "# PYENV" &&  echo "${PYENV_SH_CONTENT}" >> "${USER_HOME}/.bashrc"
+ _if_not_contains "${USER_HOME}/.bashrc"  "PYENV_ROOT" &&  echo "${PYENV_SH_CONTENT}" >> "${USER_HOME}/.bashrc"
+ _if_not_contains "${USER_HOME}/.bashrc"  "pyenv init" &&  echo "${PYENV_SH_CONTENT}" >> "${USER_HOME}/.bashrc"
+ _if_not_contains "${USER_HOME}/.zshrc"  "# PYENV" &&  echo "${PYENV_SH_CONTENT}" >> "${USER_HOME}/.zshrc"
+ _if_not_contains "${USER_HOME}/.zshrc"  "PYENV_ROOT" &&  echo "${PYENV_SH_CONTENT}" >> "${USER_HOME}/.zshrc"
+ _if_not_contains "${USER_HOME}/.zshrc"  "pyenv init" &&  echo "${PYENV_SH_CONTENT}" >> "${USER_HOME}/.zshrc"
+ "${USER_HOME}/.pyenv/bin/pyenv" doctor
+
+} # _add_variables_to_bashrc_zshrc
+
+_arch_flavor_install() {
+  sudo pacman -S tk
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _readhat_flavor_install
+
+_arch__32() {
+  _arch_flavor_install
+} # end _arch__32
+
+_arch__64() {
+  _arch_flavor_install
+} # end _arch__64
+
+_centos__32() {
+  _redhat_flavor_install
+} # end _centos__32
+
+_centos__64() {
+  _redhat_flavor_install
+} # end _centos__64
+
+_debian__32() {
+   sudo aptitude install libreadline-dev
+  _debian_flavor_install
+} # end _debian__32
+
+_debian__64() {
+  _debian_flavor_install
+} # end _debian__64
+
+_fedora__32() {
+  _redhat_flavor_install
+} # end _fedora__32
+
+_fedora__64() {
+  _redhat_flavor_install
+} # end _fedora__64
+
+_gentoo__32() {
+  _redhat_flavor_install
+} # end _gentoo__32
+
+_gentoo__64() {
+  _redhat_flavor_install
+} # end _gentoo__64
+
+_madriva__32() {
+  _redhat_flavor_install
+} # end _madriva__32
+
+_madriva__64() {
+  _redhat_flavor_install
+} # end _madriva__64
+
+_suse__32() {
+  _redhat_flavor_install
+} # end _suse__32
+
+_suse__64() {
+  _redhat_flavor_install
+} # end _suse__64
+
+_ubuntu__32() {
+  _debian_flavor_install
+} # end _ubuntu__32
+
+_ubuntu__64() {
+  _debian_flavor_install
+} # end _ubuntu__64
+
+_darwin__64() {
+    sudo_it
+  # export USER_HOME="/home/${SUDO_USER}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  install_requirements "darwin" "
+    readline
+    bzip2
+    sqlite
+    make
+    automake
+    cmake
+    gcc
+    libtool
+    git
+    zlib
+    bzip2
+    openssl
+    xz
+    libffi
+    python-tk
+    python-tkinter
+    python3-tkinter
+    tk
+    findutils
+  "
+  _git_clone_pyenv
+  _add_variables_to_bashrc_zshrc
+
+} # end _darwin__64
+
+_tar() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end tar
+
+_windows__64() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _windows__64
+
+_windows__32() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _windows__32

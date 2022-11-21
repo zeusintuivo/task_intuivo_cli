@@ -154,7 +154,9 @@ export sudo_it
 function sudo_it() {
   raise_to_sudo_and_user_home
   local _err=$?
-  Comment _err:${_err}
+  if (( DEBUG )) ; then
+    Comment _err:${_err}
+  fi
   if [ $_err -gt 0 ] ; then
   {
     failed to sudo_it raise_to_sudo_and_user_home
@@ -163,7 +165,9 @@ function sudo_it() {
   fi
   # [ $_err -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
   _err=$?
-  Comment _err:${_err}
+  if (( DEBUG )) ; then
+    Comment _err:${_err}
+  fi
   enforce_variable_with_value SUDO_USER "${SUDO_USER}"
   enforce_variable_with_value SUDO_UID "${SUDO_UID}"
   enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
@@ -185,7 +189,9 @@ ERR INT ..."
 # _linux_prepare(){
   sudo_it
   _err=$?
-  Comment _err:${_err}
+  if (( DEBUG )) ; then
+    Comment _err:${_err}
+  fi
   if [ $_err -gt 0 ] ; then
   {
     failed to sudo_it raise_to_sudo_and_user_home
@@ -194,7 +200,9 @@ ERR INT ..."
   fi
   # [ $_err -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
   _err=$?
-  Comment _err:${_err}
+  if (( DEBUG )) ; then
+    Comment _err:${_err}
+  fi
   # [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
   export USER_HOME
   # shellcheck disable=SC2046
@@ -212,11 +220,15 @@ enforce_variable_with_value SUDO_USER "${SUDO_USER}"
 if (( DEBUG )) ; then
   passed "Caller user identified:${SUDO_USER}"
 fi
-  Comment DEBUG_err?:${?}
+  if (( DEBUG )) ; then
+    Comment DEBUG_err?:${?}
+  fi
 if (( DEBUG )) ; then
   passed "Home identified:${USER_HOME}"
 fi
-  Comment DEBUG_err?:${?}
+  if (( DEBUG )) ; then
+    Comment DEBUG_err?:${?}
+  fi
 directory_exists_with_spaces "${USER_HOME}"
 
 
@@ -227,118 +239,269 @@ directory_exists_with_spaces "${USER_HOME}"
 
 
 
- #--------\/\/\/\/-- tasks_templates_sudo/dropbox …install_dropbox.bash” -- Custom code -\/\/\/\/-------
+ #--------\/\/\/\/-- tasks_templates_sudo/pyenv …install_pyenv.bash” -- Custom code -\/\/\/\/-------
 
 
-#!/bin/bash
+#!/usr/bin/env bash
+#
+# @author Zeus Intuivo <zeus@intuivo.com>
+#
 
-_get_download_target(){
-  # Sample call:
-  #
-  #  _get_download_target "https://linux.dropbox.com/packages/fedora/" rpm 64
-  #  _get_download_target "https://linux.dropbox.com/packages/fedora/" rpm 32
-  #  _get_download_target "https://linux.dropbox.com/packages/debian/" deb 32
-  #
-  # DEBUG=1
-  local URL="${1}"   #           param order    varname    varvalue     sample_value
-  enforce_parameter_with_value           1        URL      "${URL}"     "https://linux.dropbox.com/packages/fedora/"
-  #
-  #
-  local PLATFORM="${2}"  #       param order    varname     varvalue        valid_options
-  (( DEBUG )) && Message "${2}"
-  enforce_parameter_with_options         2      PLATFORM   "${PLATFORM}"    "rpm   deb"
-  #
-  #
-  local BITS="${3}"      #       param order    varname     varvalue        valid_options
-  (( DEBUG )) && Message "${3}"
-  enforce_parameter_with_options         3       BITS       "${BITS}"        "64   32"
-  #
-  #
-  if (( DEBUG )) ; then
+_debian_flavor_install() {
+  sudo_it
+  export USER_HOME="/home/${SUDO_USER}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  install_requirements "linux" "
+    libreadline-dev
+    libbz2-dev
+    libsqlite3-dev
+    python-tk
+    python3-tk
+    tk-dev
+    git
+  "
+#  verify_is_installed "
+#    libreadline-dev
+#    libbz2-dev
+#    libsqlite3-dev
+#    git
+# "
+ _git_clone_pyenv
+ _add_variables_to_bashrc_zshrc
+
+} # end _debian_flavor_install
+
+_redhat_flavor_install() {
+  sudo_it
+  # export USER_HOME="/home/${SUDO_USER}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  install_requirements "linux" "
+    # RedHat Flavor only
+    readline-devel
+    bzip2-devel
+    sqlite
+    sqlite-devel
+    # sqlite-tcl
+    # sqlite-jdbc
+    # sqlitebrowser
+    make
+    automake
+    cmake
+    gcc
+    libtool-ltdl-devel
+    git
+    zlib-devel
+    bzip2
+    openssl-devel
+    xz
+    xz-devel
+    libffi
+    libffi-devel
+    python-tkinter
+    python3-tkinter
+    tk-devel
+    findutils
+  "
+  # is_not_installed pygmentize &&   dnf  -y install pygmentize
+  # if ( ! command -v pygmentize >/dev/null 2>&1; ) ;  then
+  #   pip3 install pygments
+  # fi
+  local groupsinstalled=$(dnf group list --installed)
+  if [[ "${groupsinstalled}" = *"Development Tools"* ]] ; then
   {
-    Comment "CODEFILE=\"\"\"\$(wget --quiet --no-check-certificate  \"${URL}\" -O -  2>/dev/null)\"\"\""
-    local CODEFILE="<html>
-<head><title>Index of /packages/fedora/</title></head>
-<body>
-<h1>Index of /packages/fedora/</h1><hr><pre><a href="../">../</a>
-<a href="nautilus-dropbox-1.4.0-1.fedora.i386.rpm">nautilus-dropbox-1.4.0-1.fedora.i386.rpm</a>           09-Sep-2001 01:46               98849
-<a href="nautilus-dropbox-1.4.0-1.fedora.x86_64.rpm">nautilus-dropbox-1.4.0-1.fedora.x86_64.rpm</a>         09-Sep-2001 01:46               98739
-<a href="nautilus-dropbox-1.6.0-1.fedora.i386.rpm">nautilus-dropbox-1.6.0-1.fedora.i386.rpm</a>           09-Sep-2001 01:46               98966
-<a href="nautilus-dropbox-1.6.0-1.fedora.x86_64.rpm">nautilus-dropbox-1.6.0-1.fedora.x86_64.rpm</a>         09-Sep-2001 01:46               98873
-<a href="nautilus-dropbox-1.6.1-1.fedora.i386.rpm">nautilus-dropbox-1.6.1-1.fedora.i386.rpm</a>           09-Sep-2001 01:46               98960
-<a href="nautilus-dropbox-1.6.1-1.fedora.x86_64.rpm">nautilus-dropbox-1.6.1-1.fedora.x86_64.rpm</a>         09-Sep-2001 01:46               98877
-<a href="nautilus-dropbox-1.6.2-1.fedora.i386.rpm">nautilus-dropbox-1.6.2-1.fedora.i386.rpm</a>           09-Sep-2001 01:46               98980
-<a href="nautilus-dropbox-1.6.2-1.fedora.x86_64.rpm">nautilus-dropbox-1.6.2-1.fedora.x86_64.rpm</a>         09-Sep-2001 01:46               98881
-<a href="nautilus-dropbox-2.10.0-1.fedora.i386.rpm">nautilus-dropbox-2.10.0-1.fedora.i386.rpm</a>          09-Sep-2001 01:46               98894
-<a href="nautilus-dropbox-2.10.0-1.fedora.x86_64.rpm">nautilus-dropbox-2.10.0-1.fedora.x86_64.rpm</a>        09-Sep-2001 01:46               98788
-<a href="nautilus-dropbox-2015.02.12-1.fedora.i386.rpm">nautilus-dropbox-2015.02.12-1.fedora.i386.rpm</a>      09-Sep-2001 01:46               98969
-<a href="nautilus-dropbox-2015.02.12-1.fedora.x86_64.rpm">nautilus-dropbox-2015.02.12-1.fedora.x86_64.rpm</a>    09-Sep-2001 01:46               98868
-<a href="nautilus-dropbox-2015.10.28-1.fedora.i386.rpm">nautilus-dropbox-2015.10.28-1.fedora.i386.rpm</a>      09-Sep-2001 01:46              100108
-<a href="nautilus-dropbox-2015.10.28-1.fedora.x86_64.rpm">nautilus-dropbox-2015.10.28-1.fedora.x86_64.rpm</a>    09-Sep-2001 01:46              100023
-<a href="nautilus-dropbox-2018.11.08-1.fedora.i386.rpm">nautilus-dropbox-2018.11.08-1.fedora.i386.rpm</a>      09-Sep-2001 01:46               84552
-<a href="nautilus-dropbox-2018.11.08-1.fedora.x86_64.rpm">nautilus-dropbox-2018.11.08-1.fedora.x86_64.rpm</a>    09-Sep-2001 01:46               82652
-<a href="nautilus-dropbox-2018.11.28-1.fedora.i386.rpm">nautilus-dropbox-2018.11.28-1.fedora.i386.rpm</a>      09-Sep-2001 01:46               84548
-<a href="nautilus-dropbox-2018.11.28-1.fedora.x86_64.rpm">nautilus-dropbox-2018.11.28-1.fedora.x86_64.rpm</a>    09-Sep-2001 01:46               82640
-<a href="nautilus-dropbox-2019.01.31-1.fedora.i386.rpm">nautilus-dropbox-2019.01.31-1.fedora.i386.rpm</a>      09-Sep-2001 01:46               84128
-<a href="nautilus-dropbox-2019.01.31-1.fedora.x86_64.rpm">nautilus-dropbox-2019.01.31-1.fedora.x86_64.rpm</a>    09-Sep-2001 01:46               82208
-<a href="nautilus-dropbox-2019.02.14-1.fedora.i386.rpm">nautilus-dropbox-2019.02.14-1.fedora.i386.rpm</a>      09-Sep-2001 01:46               84496
-<a href="nautilus-dropbox-2019.02.14-1.fedora.x86_64.rpm">nautilus-dropbox-2019.02.14-1.fedora.x86_64.rpm</a>    09-Sep-2001 01:46               82576
-<a href="nautilus-dropbox-2020.03.04-1.fedora.i386.rpm">nautilus-dropbox-2020.03.04-1.fedora.i386.rpm</a>      09-Sep-2001 01:46               84648
-<a href="nautilus-dropbox-2020.03.04-1.fedora.x86_64.rpm">nautilus-dropbox-2020.03.04-1.fedora.x86_64.rpm</a>    09-Sep-2001 01:46               82736
-</pre><hr></body>"    
+    passed installed 'Development Tools'
   }
   else
   {
-    local CODEFILE="""$(wget --quiet --no-check-certificate  "${URL}" -O -  2>/dev/null )""" # suppress only wget download messages, but keep wget output for variable
-  }
-  fi 
-  enforce_variable_with_value CODEFILE "${CODEFILE}"
-  #
-  #
-  local CODELASTESTBUILD=$(_extract_version "${CODEFILE}")
-  enforce_variable_with_value CODELASTESTBUILD "${CODELASTESTBUILD}"
-  local JUSTSORT=$(echo -n "${CODELASTESTBUILD}" | grep "${BITS}" | grep "${PLATFORM}$" |  sed 's/nautilus-dropbox-//g' | sort )
-  enforce_variable_with_value JUSTSORT "${JUSTSORT}"
-  local SORTDATE=$(echo -n "${JUSTSORT}" | cut -d\. -f1  | sort | tail -1)
-  enforce_variable_with_value SORTDATE "${SORTDATE}"
-  local TARGETNAME=$(echo -n "${CODELASTESTBUILD}"  | grep "${SORTDATE}" | grep "${BITS}" | grep "${PLATFORM}$" | tail -1)
-  enforce_variable_with_value TARGETNAME "${TARGETNAME}"
-  echo -n "${URL}/${TARGETNAME}"
-  return 0
-} # end _get_download_target
-
-_extract_version(){
-  echo "${*}" | sed s/\>/\>\\n/g | sed "s/&apos;/\'/g" | sed 's/&nbsp;/ /g'  | grep -v "<a" | sort | sed s/\</\\n\</g | grep -v "</a"
-} # end _extract_version
-
-_centos__64() {
-  _fedora__64
-}
-_fedora__64() {
-#  _linux_prepare
-  local TARGET_URL=$(_get_download_target "https://linux.dropbox.com/packages/fedora/" "rpm" "64")
-  # DEBUG=1
-  if (( DEBUG )) ; then
-  {
-    echo -n """${TARGET_URL}""" > .tmp.html
-    echo -n "${TARGET_URL}"
-    echo "DEBUG EXIT 0"
-    exit 0
+    dnf groupinstall 'Development Tools' -y
   }
   fi
-  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
-  local CODENAME=$(basename "${TARGET_URL}")
-  enforce_variable_with_value CODENAME "${CODENAME}"
-  local DOWNLOADFOLDER="$(_find_downloads_folder)"
-  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-  Comment DOWNLOADFOLDER:„${DOWNLOADFOLDER}”
-  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
-  _install_rpm "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
+#  verify_is_installed "
+#    # RedHat Flavor only
+#    readline-devel
+#    bzip2-devel
+#    # sqlite
+#    sqlite-devel
+#    # sqlite-tcl
+#    # sqlite-jdbc
+#    # sqlitebrowser
+#    make
+#    automake
+#    cmake
+#    gcc
+#    libtool-ltdl-devel
+#    git
+#    zlib-devel
+#    bzip2
+#    openssl-devel
+#    xz
+#    xz-devel
+#    libffi-devel
+#    findutils
+# "
+ _git_clone_pyenv
+ _add_variables_to_bashrc_zshrc
+} # end _redhat_flavor_install
+
+_git_clone_pyenv() {
+  if  it_exists_with_spaces "${USER_HOME}/.pyenv" ; then
+  {
+    cd "${USER_HOME}/.pyenv"
+    git fetch
+    git pull
+  }
+  else
+  {
+   # cd "${USER_HOME}"
+   git clone https://github.com/pyenv/pyenv.git "${USER_HOME}/.pyenv"
+   git clone https://github.com/pyenv/pyenv-update.git "${USER_HOME}/.pyenv/plugins/pyenv-update"
+   git clone https://github.com/pyenv/pyenv-doctor.git "${USER_HOME}/.pyenv/plugins/pyenv-doctor"
+  }
+  fi
+
+} # _git_clone_pyenv
+
+_add_variables_to_bashrc_zshrc(){
+ local PYENV_SH_CONTENT='
+
+# PYENV
+export PYENV_ROOT="'${USER_HOME}'/.pyenv"
+export PATH="'${USER_HOME}'/.pyenv/bin:${PATH}"
+eval "$(pyenv init -)"
+eval "$(pyenv virtualenv-init -)"
+
+'
+ _if_not_contains "${USER_HOME}/.bashrc"  "# PYENV" &&  echo "${PYENV_SH_CONTENT}" >> "${USER_HOME}/.bashrc"
+ _if_not_contains "${USER_HOME}/.bashrc"  "PYENV_ROOT" &&  echo "${PYENV_SH_CONTENT}" >> "${USER_HOME}/.bashrc"
+ _if_not_contains "${USER_HOME}/.bashrc"  "pyenv init" &&  echo "${PYENV_SH_CONTENT}" >> "${USER_HOME}/.bashrc"
+ _if_not_contains "${USER_HOME}/.zshrc"  "# PYENV" &&  echo "${PYENV_SH_CONTENT}" >> "${USER_HOME}/.zshrc"
+ _if_not_contains "${USER_HOME}/.zshrc"  "PYENV_ROOT" &&  echo "${PYENV_SH_CONTENT}" >> "${USER_HOME}/.zshrc"
+ _if_not_contains "${USER_HOME}/.zshrc"  "pyenv init" &&  echo "${PYENV_SH_CONTENT}" >> "${USER_HOME}/.zshrc"
+ "${USER_HOME}/.pyenv/bin/pyenv" doctor
+
+} # _add_variables_to_bashrc_zshrc
+
+_arch_flavor_install() {
+  sudo pacman -S tk
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _readhat_flavor_install
+
+_arch__32() {
+  _arch_flavor_install
+} # end _arch__32
+
+_arch__64() {
+  _arch_flavor_install
+} # end _arch__64
+
+_centos__32() {
+  _redhat_flavor_install
+} # end _centos__32
+
+_centos__64() {
+  _redhat_flavor_install
+} # end _centos__64
+
+_debian__32() {
+   sudo aptitude install libreadline-dev
+  _debian_flavor_install
+} # end _debian__32
+
+_debian__64() {
+  _debian_flavor_install
+} # end _debian__64
+
+_fedora__32() {
+  _redhat_flavor_install
+} # end _fedora__32
+
+_fedora__64() {
+  _redhat_flavor_install
 } # end _fedora__64
 
+_gentoo__32() {
+  _redhat_flavor_install
+} # end _gentoo__32
+
+_gentoo__64() {
+  _redhat_flavor_install
+} # end _gentoo__64
+
+_madriva__32() {
+  _redhat_flavor_install
+} # end _madriva__32
+
+_madriva__64() {
+  _redhat_flavor_install
+} # end _madriva__64
+
+_suse__32() {
+  _redhat_flavor_install
+} # end _suse__32
+
+_suse__64() {
+  _redhat_flavor_install
+} # end _suse__64
+
+_ubuntu__32() {
+  _debian_flavor_install
+} # end _ubuntu__32
+
+_ubuntu__64() {
+  _debian_flavor_install
+} # end _ubuntu__64
+
+_darwin__64() {
+    sudo_it
+  # export USER_HOME="/home/${SUDO_USER}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  install_requirements "darwin" "
+    readline
+    bzip2
+    sqlite
+    sqlite
+    # sqlite-tcl
+    # sqlite-jdbc
+    # sqlitebrowser
+    make
+    automake
+    cmake
+    gcc
+    libtool-ltdl
+    git
+    zlib
+    bzip2
+    openssl
+    xz
+    xz
+    libffi
+    libffi
+    python-tk
+    python-tkinter
+    python3-tkinter
+    tk
+    findutils
+  "
+  _git_clone_pyenv
+  _add_variables_to_bashrc_zshrc
+
+} # end _darwin__64
+
+_tar() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end tar
+
+_windows__64() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _windows__64
+
+_windows__32() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _windows__32
 
 
- #--------/\/\/\/\-- tasks_templates_sudo/dropbox …install_dropbox.bash” -- Custom code-/\/\/\/\-------
+
+ #--------/\/\/\/\-- tasks_templates_sudo/pyenv …install_pyenv.bash” -- Custom code-/\/\/\/\-------
 
 
 _main() {

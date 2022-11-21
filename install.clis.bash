@@ -5,6 +5,22 @@
 # 20200415 Compatible with Fedora, Mac, Ubuntu "sudo_up" "load_struct" "#
 set -E -o functrace
 export THISSCRIPTCOMPLETEPATH
+
+
+echo "Checking realpath  "
+if ! ( command -v realpath >/dev/null 2>&1; )  ; then
+  echo "... realpath not found. Downloading REF:https://github.com/swarmbox/realpath.git "
+  cd $HOME
+  git clone https://github.com/swarmbox/realpath.git
+  cd realpath
+  make
+  sudo make install
+  _err=$?
+  [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Builing realpath. returned error did not download or is installed err:$_err  \n \n  " && exit 1
+else
+  echo "... realpath exists .. check!"
+fi
+
 typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")" # updated realpath macos 20210924
 export BASH_VERSION_NUMBER
 typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
@@ -12,6 +28,10 @@ typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
 export  THISSCRIPTNAME
 typeset -r THISSCRIPTNAME="$(basename "$0")"
 
+
+#function pip () {
+#  echo "pip was called to install: $*"
+#}
 export _err
 typeset -i _err=0
   # function _trap_on_error(){
@@ -96,7 +116,12 @@ load_struct_testing
 export sudo_it
 function sudo_it() {
   raise_to_sudo_and_user_home
-  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
+  if [ $? -gt 0 ] ; then
+  {
+    failed to sudo_it raise_to_sudo_and_user_home
+    exit 1
+  }
+  fi
   enforce_variable_with_value SUDO_USER "${SUDO_USER}"
   enforce_variable_with_value SUDO_UID "${SUDO_UID}"
   enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
@@ -109,7 +134,12 @@ function sudo_it() {
 
 # _linux_prepare(){
   sudo_it
-  [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
+  if [ $? -gt 0 ] ; then
+  {
+    failed to sudo_it raise_to_sudo_and_user_home
+    exit 1
+  }
+  fi
   export USER_HOME
   # shellcheck disable=SC2046
   # shellcheck disable=SC2031
@@ -171,7 +201,22 @@ _checka_tools_commander(){
     pip
     sed
     "
-    is_not_installed pygmentize &&    pip install pygments
+  if ( ! command -v pygmentize >/dev/null 2>&1; ) ;  then
+    if ( command -v pip >/dev/null 2>&1; ) ; then # MAC
+    {
+       su - "${SUDO_USER}" -c 'pip install pygments'
+       #pip install pygments
+    }
+    fi
+    if ( command -v pip3 >/dev/null 2>&1; ) ; then # MAC
+    {
+       su - "${SUDO_USER}" -c 'pip3 install pygments'
+       #pip3 install pygments
+    }
+    fi
+  fi
+
+   # is_not_installed pygmentize &&    pip install pygments
     verify_is_installed pygmentize
   ensure pygmentize or "Canceling Install. Could not find pygmentize.  pip install pygments"
   # ensure npm or "Canceling Install. Could not find npm"
@@ -190,126 +235,6 @@ _checka_tools_commander(){
   #}
   #fi
 } # end _checka_tools_commander
-function _if_not_contains(){
-            # Sample use:
-            #       _if_not_contains  || run_this
-            #       (_if_not_contains  "${cronallowfile}" "root") || echo 'root' >> "${cronallowfile}"
-            #       (_if_not_contains  "${cronallowfile}" "${SUDO_USER}") ||  echo "${SUDO_USER}" >> "${cronallowfile}"
-            #
-            # discouraged use ---confusing using && and
-            #    _if_not_contains  && run_this
-            #
-            # or
-            #
-            # echo "${policies}" > temp.xml
-            # if ! _if_not_contains temp.xml "{1,}" ; then
-            # {
-            #   run this
-            # } else {
-            #    passed "passwords policy already set to {1,}"
-            # }
-            # fi
-                    local -i ret
-                    local msg
-                    ret=0
-                    (( DEBUG )) && echo "1if"
-                    [ ! -e "$1" ] && return 1
-                    (( DEBUG )) && (cat -n "$1" )
-                    msg=$(cat "$1" 2>&1)
-                    ret=$?
-                    (( DEBUG )) && echo "2if"
-                    (( DEBUG )) && echo "${msg}"
-                    [ $ret -gt 0 ] && return 1
-                    (( DEBUG )) && echo "3if"
-                    [[ "$msg" == *"No such"* ]] && return 1
-                    (( DEBUG )) && echo "4if"
-                    [[ "$msg" == *"nicht gefunden"* ]] && return 1
-                    (( DEBUG )) && echo "5if"
-                    [[ "$msg" == *"Permission denied"* ]] && return 1
-                    (( DEBUG )) && echo "6if"
-                    ret=0
-                    (( DEBUG )) && echo 'echo "$msg" | grep "$2"'
-                    (( DEBUG )) && echo 'echo '"$msg"' | grep '"$2"
-                    (( DEBUG )) && ([[ -n "$msg" ]] ||  echo "6.5if file is empty")
-                    [[ -n "$msg" ]] || return 1    # Not found
-                    msg=$(echo "$msg" | grep "$2" 2>&1)
-                    ret=$?
-                    (( DEBUG )) && echo "7if $ret"
-                    [ $ret -eq 0 ] && return 0     # Found
-                    [ $ret -gt 0 ] && return 1    # Not Found
-                    (( DEBUG )) && echo "8if"
-                    [[ "$msg" == *"No such"* ]] && return 1
-                    (( DEBUG )) && echo "9 if"
-                    [[ "$msg" == *"nicht gefunden"* ]] && return 1
-                    [[ "$msg" == *"Permission denied"* ]] && return 1
-                    return 0  # Found
-        } # end _if_not_contains
-
-function _if_contains(){
-  # Sample use
-  # _if_contains && run_this
-  # echo "${policies}" > temp.xml
-  # if _if_contains temp.xml "{1,}" ; then
-  # {
-  #   passed "passwords policy already set to {1,}"
-  # } else {
-  #   run this
-  # }
-  # fi
-  # if
-  if ! ( _if_not_contains  "$1" "$2" ) ; then
-  {
-    return 1
-  }
-  fi
-  return 0
-} # end _if_contains
-
-Checking selftest _if_contains
-if it_exists_with_spaces "${USER_HOME}/.bashrc" ; then
-{
-  if _if_contains  "${USER_HOME}/.bashrc" "PETERPIZZA" ; then
-  {
-    failed "bad .bashrc should not have PETERPIZZA word"
-  }
-  else
-  {
-    passed " good .bashrc should not have PETERPIZZA"
-  }
-  fi
-  if _if_contains  "${USER_HOME}/.bashrc" "then" ; then
-  {
-    passed " good .bashrc should have the then word"
-  }
-  else
-  {
-    failed ".bashrc should have the then word"
-  }
-  fi
-  # echo hola
-  # exit 0
-}
-fi
-
-function _ensure_touch_dir_and_file() {
-  local launchdir_default="${1}"
-  local launchfile_default="${2}"
-
-  enforce_variable_with_value launchdir_default "${launchdir_default}"
-  enforce_variable_with_value launchfile_default "${launchfile_default}"
-  enforce_variable_with_value SUDO_USER "${SUDO_USER}"
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
-
-  if it_does_not_exist_with_spaces "${launchfile_default}" ; then
-  {
-    mkdir -p "${launchdir_default}"
-    directory_exists_with_spaces "${launchdir_default}"
-    touch "${launchfile_default}"
-    chown -R "${SUDO_USER}" "${launchdir_default}"
-  }
-  fi
-  file_exists_with_spaces "${launchfile_default}"
-} # end _ensure_touch_dir_and_file
 
 _add_self_cron_update() {
   # Make a cron REF: https://www.golinuxcloud.com/create-schedule-cron-job-shell-script-linux/
@@ -394,7 +319,7 @@ _add_self_cron_update() {
   }
   fi
   # how to install crontab automatically REF: https://stackoverflow.com/questions/878600/how-to-create-a-cron-job-using-bash-automatically-without-the-interactive-editor/878647#878647
-  passed Installing cron with clis_autoupdate
+  passed passed - installed cron with clis_autoupdate
 } # end _add  _self_cron_update
 
 _add_launchd(){
@@ -548,6 +473,8 @@ _configure_git(){
 } # end _configure_git
 
 _install_npm_utils() {
+    mkdir -p "${USER_HOME}/.npm"
+    mkdir -p "${USER_HOME}/.nvm"
     chown -R "${SUDO_USER}" "${USER_HOME}/.npm"
     chown -R "${SUDO_USER}" "${USER_HOME}/.nvm"
     # Global node utils
@@ -561,14 +488,16 @@ _install_npm_utils() {
     verify_is_installed nodemon
     # is_not_installed jest &&  npm i -g jest
     # verify_is_installed jest
-    CHAINSTALLED=$(su - "${SUDO_USER}" -c 'npm -g info chai >/dev/null 2>&1')
+    #CHAINSTALLED=$(su - "${SUDO_USER}" -c 'npm -g info chai >/dev/null 2>&1')
+    CHAINSTALLED=$(npm -g info chai >/dev/null 2>&1)
     if [[ -n "$CHAINSTALLED" ]] &&  [[ "$CHAINSTALLED" == *"npm ERR"* ]]  ; then
     {
         Installing npm chai
         npm i -g chai
     }
     fi
-    MOCHAINSTALLED=$(su - "${SUDO_USER}" -c 'npm -g info mocha >/dev/null 2>&1')
+    #MOCHAINSTALLED=$(su - "${SUDO_USER}" -c 'npm -g info mocha >/dev/null 2>&1')
+    MOCHAINSTALLED=$(npm -g info mocha >/dev/null 2>&1)
     if [[ -n "$MOCHAINSTALLED" ]] &&  [[ "$MOCHAINSTALLED" == *"npm ERR"* ]]  ; then
     {
         npm i -g mocha
@@ -868,14 +797,68 @@ if ( gem list colorls | grep -q "^colorls" ) ; then
 }
 else
 {
+  if [[ "$(uname)" == "Darwin" ]] ; then
+  {
+    verify_is_installed xcodebuild
+    # Do something under Mac OS X platform
+    local xcodeversion=$(xcodebuild -version | head -1)
+    if  ! version_installed_is "${xcodeversion}"  "11.3.1" ;   then # is like version installed is  11.3.1 ?
+    {
+      Comment xcodebuild \-version Xcode 11.3.1 is ruby broken fix here \-\> REF: https://stackoverflow.com/questions/20559255/error-while-installing-json-gem-mkmf-rb-cant-find-header-files-for-ruby
+      local non_existent_path=$(ruby -rrbconfig -e 'puts RbConfig::CONFIG["rubyhdrdir"]')
+      if  ! it_exists_with_spaces  "${non_existent_path}"  ; then 
+      {
+        if  it_exists_with_spaces /Applications/Xcode.app  ; then 
+        {
+        
+          Comment "see ! filepath \"${non_existent_path}\" does not exists !!!  "
+          Comment "changing to  xcode-select --switch /Library/Developer/CommandLineTools"
+          xcode-select --switch /Library/Developer/CommandLineTools
+          touch "${USER_HOME}/.install.clis.step_xcode_ruby_change.lock" 
+          Comment "checking again .."
+          non_existent_path=$(ruby -rrbconfig -e 'puts RbConfig::CONFIG["rubyhdrdir"]')
+          if  ! it_exists_with_spaces  "${non_existent_path}"  ; then 
+          {
+              Comment "ok even afer doing patch from REF: https://stackoverflow.com/questions/20559255/error-while-installing-json-gem-mkmf-rb-cant-find-header-files-for-ruby "
+              Comment "it still does not work "
+              Comment  "${non_existent_path}"
+              rm "${USER_HOME}/.install.clis.step_xcode_ruby_change.lock"
+              warning nah "cannot install colorls To add ruby path to compile colorls install it manually and try again"
+          }
+          else 
+          {
   Installing colorls
-  yes | gem install colorls
-  yes | gem update colorls
+  yes | DEVELOPER_DIR=/Library/Developer/CommandLineTools/  gem install colorls
+  yes | DEVELOPER_DIR=/Library/Developer/CommandLineTools/  gem update colorls
   chown -R "${SUDO_USER}" /Library/Ruby
   _if_not_contains "${USER_HOME}/.zshrc" "colorls" || echo "alias ll='colorls -lA --sd --gs --group-directories-first'" >> "${USER_HOME}/.zshrc"
   _if_not_contains "${USER_HOME}/.zshrc" "colorls" || echo "alias ls='colorls --group-directories-first'" >> "${USER_HOME}/.zshrc"
   _if_not_contains "${USER_HOME}/.bashrc" "colorls" || echo "alias ll='colorls -lA --sd --gs --group-directories-first'" >> "${USER_HOME}/.bashrc"
   _if_not_contains "${USER_HOME}/.bashrc" "colorls" || echo "alias ls='colorls --group-directories-first'" >> "${USER_HOME}/.bashrc"
+               passed "Found new rubyfilepath !!!  \<${non_existent_path}\> " 
+          }
+          fi        
+        }
+        fi
+      } 
+      else 
+      {
+        Comment "Never mind filepath does exists  \<${non_existent_path}\> " 
+      }
+      fi
+    }
+    fi
+  }
+  fi
+
+  if ( it_exists_with_spaces   "${USER_HOME}/.install.clis.step_xcode_ruby_change.lock"  ) ; then
+  {
+    Comment "Removing patch for ruby build "
+    xcode-select --switch /Applications/Xcode.app
+    rm "${USER_HOME}/.install.clis.step_xcode_ruby_change.lock"
+  }
+  fi
+
 }
 fi
 return 0
@@ -1343,9 +1326,9 @@ _install_dmgs_list(){
   {
     Creating softlinks for bcomp, bcompare, pdftotext
     [ ! -d /usr/local/bin/ ] && anounce_command mkdir -p  /usr/local/bin/
-    anounce_command ln -s /Applications/Beyond\ Compare.app/Contents/MacOS/BCompare /usr/local/bin/bcompare
-    anounce_command ln -s /Applications/Beyond\ Compare.app/Contents/MacOS/bcomp /usr/local/bin/bcomp
-    anounce_command ln -s /Applications/Beyond\ Compare.app/Contents/MacOS/pdftotext /usr/local/bin/pdftotext
+    anounce_command ln -s /Applications/Beyond\\ Compare.app/Contents/MacOS/BCompare /usr/local/bin/bcompare
+    anounce_command ln -s /Applications/Beyond\\ Compare.app/Contents/MacOS/bcomp /usr/local/bin/bcomp
+    anounce_command ln -s /Applications/Beyond\\ Compare.app/Contents/MacOS/pdftotext /usr/local/bin/pdftotext
     anounce_command sudo chown -R root  /usr/local/bin/bcomp
     anounce_command sudo chown -R root  /usr/local/bin/bcompare
     anounce_command sudo chown -R root  /usr/local/bin/pdftotext
@@ -1470,14 +1453,7 @@ fi
 return 0
 } # end password_simple2
 
-export is_not_installed
-function is_not_installed (){
-  if ( command -v $1 >/dev/null 2>&1; ) ; then
-    return 1
-  else
-    return 0
-  fi
-} # end is_not_installed
+
 _debian__32() {
   COMANDDER="apt install -y"
   is_not_installed ag && $COMANDDER silversearcher-ag         # In Ubuntu
@@ -1492,8 +1468,16 @@ _debian__32() {
     python-pip
     zsh
     "
-  pip install pygments
-
+    if ( command -v pip >/dev/null 2>&1; ) ; then # MAC
+    {
+       pip install pygments
+    }
+    fi
+    if ( command -v pip3 >/dev/null 2>&1; ) ; then # MAC
+    {
+       pip3 install pygments
+    }
+    fi
   _checka_tools_commander
   _configure_git
   _install_nvm
@@ -1539,7 +1523,16 @@ _debian__64() {
     python-pip
     zsh
     "
-  pip install pygments
+    if ( command -v pip >/dev/null 2>&1; ) ; then # MAC
+    {
+       pip install pygments
+    }
+    fi
+    if ( command -v pip3 >/dev/null 2>&1; ) ; then # MAC
+    {
+       pip3 install pygments
+    }
+    fi
 
   _checka_tools_commander
   _configure_git
@@ -1591,8 +1584,16 @@ _ubuntu__64() {
     python3-pip
     zsh
     "
-  pip install pygments
-
+    if ( command -v pip >/dev/null 2>&1; ) ; then # MAC
+    {
+       pip install pygments
+    }
+    fi
+    if ( command -v pip3 >/dev/null 2>&1; ) ; then # MAC
+    {
+       pip3 install pygments
+    }
+    fi
   _checka_tools_commander
   _configure_git
   _install_nvm
@@ -1634,6 +1635,7 @@ _fedora__64() {
   is_not_installed ag && $COMANDDER the_silver_searcher          # In Fedora
 cd
   git clone https://github.com/astrand/xclip.git
+cd xclip
 ./bootstrap
 ./configure
 make
@@ -1641,7 +1643,7 @@ make install
   dnf groupinstall 'development tools' -y
 
   install_requirements "linux" "
-  epel-release
+  # epel-release
   # python3-paramiko
 "
   install_requirements "linux" "
@@ -1654,11 +1656,11 @@ make install
     nano
     pv
     python2
-    python2-devel
+    # python2-devel
     python3
     python3-devel
-    twisted
-    zsh
+    # twisted
+     zsh
     "
    systemctl enable --now snapd.socket
    sudo snap install tree
@@ -1717,13 +1719,14 @@ _darwin__64() {
   # version 6 brew install cloudfoundry/tap/cf-cli
   if anounce_command sudo chown -R "${SUDO_USER}" "${USER_HOME}/Library/Caches/" ; then
   {
+    mkdir -p "${USER_HOME}/Library/Caches/"
     Comment ${ORANGE} WARNING! ${YELLOW_OVER_DARKBLUE} failed chown -R "${SUDO_USER}" "${USER_HOME}/Library/Caches/" ${YELLOW_OVER_GRAY241}"${APPDIR}"${RESET}
   }
   fi
-  su - "${SUDO_USER}" -c 'brew install the_silver_searcher'
+  # su - "${SUDO_USER}" -c 'brew install the_silver_searcher'
   install_requirements "darwin" "
     tree
-    # the_silver_searcher
+    the_silver_searcher
     ag@the_silver_searcher
     pt@the_platinum_searcher
     wget
@@ -1740,17 +1743,29 @@ _darwin__64() {
     powerline-go
     zsh
   "
-  su - "${SUDO_USER}" -c 'pip install --upgrade pip'
-  su - "${SUDO_USER}" -c 'pip3 install --upgrade pip'
-  verify_is_installed pip3
+  #su - "${SUDO_USER}" -c 'pip install --upgrade pip'
+  #su - "${SUDO_USER}" -c 'pip3 install --upgrade pip'
+  #verify_is_installed pip3
   if ( ! command -v pygmentize >/dev/null 2>&1; ) ;  then
-    su - "${SUDO_USER}" -c 'pip3 install pygments'
-    su - "${SUDO_USER}" -c 'pip install pygments'
+    if ( command -v pip >/dev/null 2>&1; ) ; then # MAC
+    {
+       su - "${SUDO_USER}" -c 'pip install pygments'
+       #pip install pygments
+    }
+    fi
+    if ( command -v pip3 >/dev/null 2>&1; ) ; then # MAC
+    {
+       su - "${SUDO_USER}" -c 'pip3 install pygments'
+       #pip3 install pygments
+    }
+    fi
   fi
-  is_not_installed pygmentize &&   pip3 install pygments
-  is_not_installed pygmentize &&   pip install pygments
-  su - "${SUDO_USER}" -c 'pip3 install pygments'
-  su - "${SUDO_USER}" -c 'pip install pygments'
+  #is_not_installed pygmentize &&   pip3 install pygments
+  #is_not_installed pygmentize &&   pip install pygments
+  #su - "${SUDO_USER}" -c 'pip3 install pygments'
+  #su - "${SUDO_USER}" -c 'pip install pygments'
+  Comment "relink ag"
+  brew unlink the_silver_searcher && brew link the_silver_searcher
 
   verify_is_installed "
     wget
@@ -1766,6 +1781,20 @@ _darwin__64() {
     gawk
     pygmentize
     "
+  if  ! command -v pygmentize >/dev/null 2>&1;   then
+    if  command -v pip >/dev/null 2>&1;   then # MAC
+    {
+       #su - "${SUDO_USER}" -c 'pip install pygments'
+       pip install pygments
+    }
+    fi
+    if  command -v pip3 >/dev/null 2>&1;  then # MAC
+    {
+       #su - "${SUDO_USER}" -c 'pip3 install pygments'
+       pip3 install pygments
+    }
+    fi
+  fi
 
   _configure_git
   # _install_nvm
@@ -1799,7 +1828,34 @@ _darwin__64() {
 
   _add_self_cron_update /usr/lib/cron/  /usr/lib/cron/cron.allow
   # _add_launchd "${USER_HOME}/Library/LaunchAgents" "${USER_HOME}/Library/LaunchAgents/com.intuivo.clis_pull_all.plist"
+  Installing composer global require laravel/valet 
+  local php_version="$(major_minor_version "$(php --version  |  head -1 | extract_version )")"
+  if version_lt "$php_version" "7.2.5"; then 
+  {
+    Warning PHP Vesion is too old 
+    Comment trying to install version 7.4 
+    if [[ "$(uname)" == "Darwin" ]] ; then
+    {
+      #brew install php@7.4
+      su - "${SUDO_USER}" -c 'brew install  php@7.4'
+      su - "${SUDO_USER}" -c 'brew link  php@7.4'
+       (_if_not_contains   "${USER_HOME}/.bashrc" "php@7.4") ||  echo "$(cat <<EOINSERT
+export PATH="/usr/local/opt/php@7.4/bin:$PATH"
+export PATH="/usr/local/opt/php@7.4/sbin:$PATH"
+EOINSERT
+)" >> "${USER_HOME}/.bashrc"
+        (_if_not_contains   "${USER_HOME}/.zshrc" "php@7.4") ||  echo "$(cat <<EOINSERT
+export PATH="/usr/local/opt/php@7.4/bin:$PATH"
+export PATH="/usr/local/opt/php@7.4/sbin:$PATH"
+EOINSERT
+)" >> "${USER_HOME}/.zshrc"
+        export PATH="/usr/local/opt/php@7.4/bin:$PATH"
+        export PATH="/usr/local/opt/php@7.4/sbin:$PATH"
+    }
+    fi
 
+  }
+  fi
   su - "${SUDO_USER}" -c 'composer global require laravel/valet'
   Updating _password_simple
   _password_simple
