@@ -100,6 +100,7 @@ _redhat_flavor_install() {
     warning "installing requirements. ${CYAN} attempting to install one by one"
     while read package; do
     {
+      [ -z ${package} ] && continue
       install_requirements "linux" "${package}"
       _err=$?
       if [ ${_err} -gt 0 ] ; then

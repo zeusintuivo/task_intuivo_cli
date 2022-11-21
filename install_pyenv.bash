@@ -391,6 +391,7 @@ eval "$(pyenv virtualenv-init -)"
   "
   while read INITFILE; do
   {
+    [ -z ${INITFILE} ] && continue
     _if_not_contains "${USER_HOME}/${INITFILE}"  "# PYENV" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
     _if_not_contains "${USER_HOME}/${INITFILE}"  "PYENV_ROOT" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
     _if_not_contains "${USER_HOME}/${INITFILE}"  "pyenv init" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
