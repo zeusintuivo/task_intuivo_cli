@@ -272,7 +272,6 @@ _add_variables_to_bashrc_zshrc(){
 export RBENV_ROOT="'${USER_HOME}'/.rbenv"
 export PATH="'${USER_HOME}'/.rbenv/bin:${PATH}"
 eval "$(rbenv init -)"
-eval "$(rbenv virtualenv-init -)"
 
 ' 
   trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _add_variables_to_bashrc_zshrc rbenv" && echo -e "${RESET}" && return 0' ERR
