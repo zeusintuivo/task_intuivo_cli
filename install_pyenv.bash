@@ -249,7 +249,7 @@ directory_exists_with_spaces "${USER_HOME}"
 
 _debian_flavor_install() {
   sudo_it
-  export USER_HOME="/home/${SUDO_USER}"
+  # export USER_HOME="/home/${SUDO_USER}"
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   install_requirements "linux" "
     libreadline-dev
@@ -260,14 +260,15 @@ _debian_flavor_install() {
     tk-dev
     git
   "
-#  verify_is_installed "
-#    libreadline-dev
-#    libbz2-dev
-#    libsqlite3-dev
-#    git
-# "
- _git_clone_pyenv
- _add_variables_to_bashrc_zshrc
+  #  verify_is_installed "
+  #    libreadline-dev
+  #    libbz2-dev
+  #    libsqlite3-dev
+  #    git
+  # "
+  _git_clone_pyenv
+  local MSG=$(_add_variables_to_bashrc_zshrc)
+  echo "${MSG}"
 
 } # end _debian_flavor_install
 
@@ -316,31 +317,32 @@ _redhat_flavor_install() {
     dnf groupinstall 'Development Tools' -y
   }
   fi
-#  verify_is_installed "
-#    # RedHat Flavor only
-#    readline-devel
-#    bzip2-devel
-#    # sqlite
-#    sqlite-devel
-#    # sqlite-tcl
-#    # sqlite-jdbc
-#    # sqlitebrowser
-#    make
-#    automake
-#    cmake
-#    gcc
-#    libtool-ltdl-devel
-#    git
-#    zlib-devel
-#    bzip2
-#    openssl-devel
-#    xz
-#    xz-devel
-#    libffi-devel
-#    findutils
-# "
- _git_clone_pyenv
- _add_variables_to_bashrc_zshrc
+  #  verify_is_installed "
+  #    # RedHat Flavor only
+  #    readline-devel
+  #    bzip2-devel
+  #    # sqlite
+  #    sqlite-devel
+  #    # sqlite-tcl
+  #    # sqlite-jdbc
+  #    # sqlitebrowser
+  #    make
+  #    automake
+  #    cmake
+  #    gcc
+  #    libtool-ltdl-devel
+  #    git
+  #    zlib-devel
+  #    bzip2
+  #    openssl-devel
+  #    xz
+  #    xz-devel
+  #    libffi-devel
+  #    findutils
+  # "
+  _git_clone_pyenv
+  local MSG=$(_add_variables_to_bashrc_zshrc)
+  echo "${MSG}"
 } # end _redhat_flavor_install
 
 _git_clone_pyenv() {
@@ -356,13 +358,14 @@ _git_clone_pyenv() {
    git clone https://github.com/pyenv/pyenv.git "${USER_HOME}/.pyenv"
    git clone https://github.com/pyenv/pyenv-update.git "${USER_HOME}/.pyenv/plugins/pyenv-update"
    git clone https://github.com/pyenv/pyenv-doctor.git "${USER_HOME}/.pyenv/plugins/pyenv-doctor"
+   git clone https://github.com/pyenv/pyenv-virtualenv.git "${USER_HOME}/.pyenv/plugins/pyenv-virtualenv"
   }
   fi
 
 } # _git_clone_pyenv
 
 _add_variables_to_bashrc_zshrc(){
- local PYENV_SH_CONTENT='
+  local PYENV_SH_CONTENT='
 
 # PYENV
 export PYENV_ROOT="'${USER_HOME}'/.pyenv"
@@ -371,19 +374,32 @@ eval "$(pyenv init -)"
 eval "$(pyenv virtualenv-init -)"
 
 '
- _if_not_contains "${USER_HOME}/.bashrc"  "# PYENV" &&  echo "${PYENV_SH_CONTENT}" >> "${USER_HOME}/.bashrc"
- _if_not_contains "${USER_HOME}/.bashrc"  "PYENV_ROOT" &&  echo "${PYENV_SH_CONTENT}" >> "${USER_HOME}/.bashrc"
- _if_not_contains "${USER_HOME}/.bashrc"  "pyenv init" &&  echo "${PYENV_SH_CONTENT}" >> "${USER_HOME}/.bashrc"
- _if_not_contains "${USER_HOME}/.zshrc"  "# PYENV" &&  echo "${PYENV_SH_CONTENT}" >> "${USER_HOME}/.zshrc"
- _if_not_contains "${USER_HOME}/.zshrc"  "PYENV_ROOT" &&  echo "${PYENV_SH_CONTENT}" >> "${USER_HOME}/.zshrc"
- _if_not_contains "${USER_HOME}/.zshrc"  "pyenv init" &&  echo "${PYENV_SH_CONTENT}" >> "${USER_HOME}/.zshrc"
- "${USER_HOME}/.pyenv/bin/pyenv" doctor
-
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _add_variables_to_bashrc_zshrc pyenv" && echo -e "${RESET}" && return 0' ERR
+  echo "${PYENV_SH_CONTENT}"
+  local INITFILE INITFILES="
+   .bashrc
+   .zshrc
+   .bash_profile
+   .profile
+   .zshenv
+   .zprofile
+  "
+  while read INITFILE; do
+  {
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "# PYENV" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "PYENV_ROOT" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "pyenv init" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+  }
+  done <<< "${INITFILES}"
+  "${USER_HOME}/.pyenv/bin/pyenv" doctor
 } # _add_variables_to_bashrc_zshrc
 
 _arch_flavor_install() {
-  sudo pacman -S tk
-  echo "Procedure not yet implemented. I don't know what to do."
+  pacman -S tk -y
+  _git_clone_pyenv
+  local MSG=$(_add_variables_to_bashrc_zshrc)
+  echo "${MSG}"
+
 } # end _readhat_flavor_install
 
 _arch__32() {
@@ -459,22 +475,16 @@ _darwin__64() {
     readline
     bzip2
     sqlite
-    sqlite
-    # sqlite-tcl
-    # sqlite-jdbc
-    # sqlitebrowser
     make
     automake
     cmake
     gcc
-    libtool-ltdl
+    libtool
     git
     zlib
     bzip2
     openssl
     xz
-    xz
-    libffi
     libffi
     python-tk
     python-tkinter

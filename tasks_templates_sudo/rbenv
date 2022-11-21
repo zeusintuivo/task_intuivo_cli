@@ -1,31 +1,110 @@
+#!/usr/bin/env bash
+#
+# @author Zeus Intuivo <zeus@intuivo.com>
+#
+_git_clone() {
+  local _source="${1}"
+  local _target="${2}"
+  if  it_exists_with_spaces "${_target}" ; then
+  {
+    cd "${_target}"
+    git fetch
+    git pull
+  }
+  else
+  {
+   git clone "${_source}" "${_target}"
+  }
+  fi
+} # _git_clone
 
-_debian_flavor_install() {
-  # 18.04
-  sudo apt update -y
-  sudo apt install autoconf bison build-essential libssl-dev libyaml-dev libreadline6-dev zlib1g-dev libncurses5-dev libffi-dev libgdbm5 libgdbm-dev -y
-  # 20.04
-  sudo apt update -y
-  sudo apt install autoconf bison build-essential libssl-dev libyaml-dev libreadline6-dev zlib1g-dev libncurses5-dev libffi-dev libgdbm6 libgdbm-dev -y
+_add_variables_to_bashrc_zshrc(){
+  local RBENV_SH_CONTENT='
 
-  git clone https://github.com/rbenv/rbenv.git ~/.rbenv
-  echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bashrc
-  echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bash_profile
-  echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.profile
-  echo 'eval "$(rbenv init -)"' >> ~/.bashrc
-  echo 'eval "$(rbenv init -)"' >> ~/.zshrc
-  type rbenv
-  export PATH="$HOME/.rbenv/bin:$PATH"
+# RBENV
+export RBENV_ROOT="'${USER_HOME}'/.rbenv"
+export PATH="'${USER_HOME}'/.rbenv/bin:${PATH}"
+eval "$(rbenv init -)"
+eval "$(rbenv virtualenv-init -)"
+
+' 
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _add_variables_to_bashrc_zshrc rbenv" && echo -e "${RESET}" && return 0' ERR
+  echo "${RBENV_SH_CONTENT}"
+  local INITFILE INITFILES="
+   .bashrc
+   .zshrc
+   .bash_profile
+   .profile
+   .zshenv
+   .zprofile
+  "
+  while read INITFILE; do
+  { 
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "# RBENV" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "RBENV_ROOT" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "rbenv init" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+  }
+  done <<< "${INITFILES}"
+  # type rbenv
+  export PATH="${USER_HOME}/.rbenv/bin:${PATH}"
+  cd "${USER_HOME}/.rbenv/bin"
   eval "$(rbenv init -)"
-  git clone https://github.com/rbenv/ruby-build.git ~/.rbenv/plugins/ruby-build
+
+  rbenv doctor
   rbenv install -l
   rbenv install 2.6.5
   rbenv global 2.6.5
   rbenv rehash
   ruby -v
+
+} # _add_variables_to_bashrc_zshrc
+
+_debian_flavor_install() {
+  apt update -y
+  install_requirements "linux" "
+    # Batch 1 18.04
+    autoconf
+    bison
+    build-essential
+    libssl-dev
+    libyaml-dev
+    libreadline6-dev
+    zlib1g-dev
+    libncurses5-dev
+    libffi-dev
+    libgdbm5
+    libgdbm-dev
+  "
+  install_requirements "linux" "
+    # Batch 2 20.04
+    autoconf
+    bison
+    build-essential
+    libssl-dev
+    libyaml-dev
+    libreadline6-dev
+    zlib1g-dev
+    libncurses5-dev
+    libffi-dev
+    libgdbm6
+    libgdbm-dev
+  "
+  _git_clone "https://github.com/rbenv/rbenv.git" "${USER_HOME}/.rbenv"
+  _git_clone "https://github.com/rbenv/ruby-build.git" "${USER_HOME}/.rbenv/plugins/ruby-build"
+  local MSG=$(_add_variables_to_bashrc_zshrc)
+  echo "${MSG}"
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  dnf build-dep rbenv -vy
+  _git_clone "https://github.com/rbenv/rbenv.git" "${USER_HOME}/.rbenv"
+  _git_clone "https://github.com/rbenv/ruby-build.git" "${USER_HOME}/.rbenv/plugins/ruby-build"
+  _add_variables_to_bashrc_zshrc
+  rbenv install -l
+  rbenv install 2.6.5
+  rbenv global 2.6.5
+  rbenv rehash
+  ruby -v
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
