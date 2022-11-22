@@ -170,8 +170,8 @@ _checka_node_commander() {
     is_not_installed npm &&  $COMANDDER install -y npm             # Ubuntu only
     is_not_installed node && $COMANDDER install -y nodejs          # In Fedora installs npm and node
     is_not_installed node && $COMANDDER install -y nodejs-legacy   # Ubuntu only
-    verify_is_installed npm
-    verify_is_installed node
+    #verify_is_installed npm
+    #verify_is_installed node
 } # end _checka_node_commander
 
 _checka_tools_commander(){
@@ -190,17 +190,17 @@ _checka_tools_commander(){
     # # Ubuntu only
     # python-pip
     # "
-    verify_is_installed "
-    xclip
-    tree
-    ag
-    ack
-    pv
-    nano
-    vim
-    pip
-    sed
-    "
+    #verify_is_installed "
+    #xclip
+    #tree
+    #ag
+    #ack
+    #pv
+    #nano
+    #vim
+    #pip
+    #sed
+    #"
   if ( ! command -v pygmentize >/dev/null 2>&1; ) ;  then
     if ( command -v pip >/dev/null 2>&1; ) ; then # MAC
     {
@@ -217,7 +217,7 @@ _checka_tools_commander(){
   fi
 
    # is_not_installed pygmentize &&    pip install pygments
-    verify_is_installed pygmentize
+   # verify_is_installed pygmentize
   ensure pygmentize or "Canceling Install. Could not find pygmentize.  pip install pygments"
   # ensure npm or "Canceling Install. Could not find npm"
   # ensure node or "Canceling Install. Could not find node"
@@ -484,8 +484,8 @@ _install_npm_utils() {
         npm i -g live-server
     }
     fi
-    verify_is_installed live-server
-    verify_is_installed nodemon
+   # verify_is_installed live-server
+   # verify_is_installed nodemon
     # is_not_installed jest &&  npm i -g jest
     # verify_is_installed jest
     #CHAINSTALLED=$(su - "${SUDO_USER}" -c 'npm -g info chai >/dev/null 2>&1')
@@ -799,7 +799,7 @@ else
 {
   if [[ "$(uname)" == "Darwin" ]] ; then
   {
-    verify_is_installed xcodebuild
+   # verify_is_installed xcodebuild
     # Do something under Mac OS X platform
     local xcodeversion=$(xcodebuild -version | head -1)
     if  ! version_installed_is "${xcodeversion}"  "11.3.1" ;   then # is like version installed is  11.3.1 ?
@@ -1506,7 +1506,7 @@ _debian__32() {
   }
   fi
   chown -R "${SUDO_USER}" "${USER_HOME}/.cf"
-  verify_is_installed cf
+ # verify_is_installed cf
 
 } # end _debian__32
 _debian__64() {
@@ -1562,7 +1562,7 @@ _debian__64() {
   }
   fi
   chown -R "${SUDO_USER}" "${USER_HOME}/.cf"
-  verify_is_installed cf
+ # verify_is_installed cf
 
 } # end _debian__64
 _ubuntu__64() {
@@ -1633,36 +1633,43 @@ _centos__64() {
 _fedora__64() {
   COMANDDER="dnf install -y"
   is_not_installed ag && $COMANDDER the_silver_searcher          # In Fedora
-cd
-  git clone https://github.com/astrand/xclip.git
-cd xclip
-./bootstrap
-./configure
-make
-make install
   dnf groupinstall 'development tools' -y
 
-  install_requirements "linux" "
+  install_requirements "linux" "xclip"
   # epel-release
   # python3-paramiko
-"
-  install_requirements "linux" "
+
+  install_requirements "linux" 
   # epel-release
-  snap
+  install_requirements "linux"  snap
     # xclip
     # tree
-    ack
-    vim
-    nano
-    pv
-    python2
+  install_requirements "linux"  ack
+  install_requirements "linux"  vim
+  install_requirements  "linux"  nano
+  install_requirements  "linux"  pv
+  install_requirements  "linux"  python2
     # python2-devel
-    python3
-    python3-devel
+  install_requirements  "linux"   python3
+  install_requirements  "linux"  python3-devel
     # twisted
-     zsh
-    "
-   systemctl enable --now snapd.socket
+  install_requirements  "linux"   zsh
+  install_requirements  "linux"  xclip
+  install_requirements  "linux"  autoconf
+  install_requirements  "linux"  automake
+  install_requirements  "linux"  libtool
+  install_requirements  "linux"  libXmu-devel
+  # autoreconf ubuntu
+
+   cd
+   git clone https://github.com/astrand/xclip.git
+   cd xclip
+    ./bootstrap
+    ./configure
+    make
+    make install
+
+   #systemctl enable --now snapd.socket
    sudo snap install tree
   _checka_tools_commander
   _configure_git
@@ -1687,7 +1694,7 @@ make install
     $COMANDDER cf7-cli
   }
   fi
-  verify_is_installed cf
+ # verify_is_installed cf
 
 } # end _fedora__64
 
@@ -1767,20 +1774,20 @@ _darwin__64() {
   Comment "relink ag"
   brew unlink the_silver_searcher && brew link the_silver_searcher
 
-  verify_is_installed "
-    wget
-    tree
-    ag
-    pt
-    cf
-    node
-    ack
-    pv
-    nano
-    vim
-    gawk
-    pygmentize
-    "
+  # verify_is_installed "
+  #  wget
+  #  tree
+  #  ag
+  #  pt
+  #  cf
+  #  node
+  #  ack
+  #  pv
+  #  nano
+  #  vim
+  #  gawk
+  #  pygmentize
+  #  "
   if  ! command -v pygmentize >/dev/null 2>&1;   then
     if  command -v pip >/dev/null 2>&1;   then # MAC
     {
