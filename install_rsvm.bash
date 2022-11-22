@@ -239,42 +239,11 @@ directory_exists_with_spaces "${USER_HOME}"
 
 
 
- #--------\/\/\/\/-- tasks_templates_sudo/rbenv …install_rbenv.bash” -- Custom code -\/\/\/\/-------
+ #--------\/\/\/\/-- tasks_templates_sudo/rsvm …install_rsvm.bash” -- Custom code -\/\/\/\/-------
 
 
 #!/usr/bin/env bash
 #
-# @author Zeus Intuivo <zeus@intuivo.com>
-#
-
-_package_list_installer() {
-  local package packages="${@}"
-  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer rbenv" && echo -e "${RESET}" && return 0' ERR
-
-  if ! install_requirements "linux" "${packages}" ; then
-  {
-    warning "installing requirements. ${CYAN} attempting to install one by one"
-    while read package; do
-    {
-      [ -z ${package} ] && continue
-      if ! install_requirements "linux" "${package}" ; then
-      {
-        _err=$?
-        if [ ${_err} -gt 0 ] ; then
-        {
-          echo -e "${RED}" 
-          echo failed to install requirements "${package}"
-          echo -e "${RESET}"
-        }
-        fi
-      }
-      fi
-    }
-    done <<< "${packages}"
-  }
-  fi
-} # end _package_list_installer
-
 _git_clone() {
   local _source="${1}"
   local _target="${2}"
@@ -284,6 +253,7 @@ _git_clone() {
     git config pull.rebase false
     git fetch
     git pull
+    git fetch --tags origin
   }
   else
   {
@@ -291,20 +261,21 @@ _git_clone() {
   }
   fi
   chown -R "${SUDO_USER}" "${_target}"
-
 } # _git_clone
-
 _add_variables_to_bashrc_zshrc(){
-  local RBENV_SH_CONTENT='
+  local RSVM_SH_CONTENT='
 
-# RBENV
-export RBENV_ROOT="'${USER_HOME}'/.rbenv"
-export PATH="'${USER_HOME}'/.rbenv/bin:${PATH}"
-eval "$(rbenv init -)"
+# RSVM
+export RSVM_DIR="'${USER_HOME}'/.rsvm"
+export RSVM_TARGET="'${USER_HOME}'/.rsvm"
+[ -s "${RSVM_DIR}/rsvm.sh" ] && . "${RSVM_DIR}/rsvm.sh"  # This loads rsvm
 
-' 
-  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _add_variables_to_bashrc_zshrc rbenv" && echo -e "${RESET}" && return 0' ERR
-  echo "${RBENV_SH_CONTENT}"
+'
+  local _target="${USER_HOME}/.rsvm"
+  local _executable="${_target}/rsvm.sh"
+
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _add_variables_to_bashrc_zshrc rsvm" && echo -e "${RESET}" && return 0' ERR
+  echo "${RSVM_SH_CONTENT}"
   local INITFILE INITFILES="
    .bashrc
    .zshrc
@@ -314,76 +285,37 @@ eval "$(rbenv init -)"
    .zprofile
   "
   while read INITFILE; do
-  { 
+  {
     [ -z ${INITFILE} ] && continue
-    _if_not_contains "${USER_HOME}/${INITFILE}"  "# RBENV" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
-    _if_not_contains "${USER_HOME}/${INITFILE}"  "RBENV_ROOT" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
-    _if_not_contains "${USER_HOME}/${INITFILE}"  "rbenv init" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "# RSVM" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "rsvm.sh" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
   }
   done <<< "${INITFILES}"
-  # type rbenv
-  export PATH="${USER_HOME}/.rbenv/bin:${PATH}"
-  cd "${USER_HOME}/.rbenv/bin"
-  eval "$(rbenv init -)"
-
-  rbenv doctor
-  rbenv install -l
-  rbenv install 2.6.5
-  rbenv global 2.6.5
-  rbenv rehash
-  ruby -v
 
 } # _add_variables_to_bashrc_zshrc
 
 _debian_flavor_install() {
-  apt update -y
-  trap 'echo -e "${RED}" && echo "ERROR err:$_err failed $0:$LINENO _debian_flavor_install rbenv" && echo -e "${RESET}" && return 0' ERR
-  # Batch 1 18.04
-  local package packages="
-    autoconf
-    bison
-    build-essential
-    libssl-dev
-    libyaml-dev
-    libreadline6-dev
-    zlib1g-dev
-    libncurses5-dev
-    libffi-dev
-    libgdbm5
-    libgdbm-dev
-  "
-  _package_list_installer "${packages}"
-  # Batch 2 20.04
-  local package packages="
-    autoconf
-    bison
-    build-essential
-    libssl-dev
-    libyaml-dev
-    libreadline6-dev
-    zlib1g-dev
-    libncurses5-dev
-    libffi-dev
-    libgdbm6
-    libgdbm-dev
-  "
-  _package_list_installer "${packages}"
-  _git_clone "https://github.com/rbenv/rbenv.git" "${USER_HOME}/.rbenv"
-  _git_clone "https://github.com/rbenv/ruby-build.git" "${USER_HOME}/.rbenv/plugins/ruby-build"
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _debian_flavor_install rsvm" && echo -e "${RESET}" && return 0' ERR
+  local _target="${USER_HOME}/.rsvm"
+  local _executable="${_target}/rsvm.sh" 
+
+  _git_clone "https://github.com/sdepold/rsvm.git" "${_target}"
+  cd "${_target}"
+  \. "${_executable}"
   local MSG=$(_add_variables_to_bashrc_zshrc)
   echo "${MSG}"
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
-  dnf build-dep rbenv -vy
-  _git_clone "https://github.com/rbenv/rbenv.git" "${USER_HOME}/.rbenv"
-  _git_clone "https://github.com/rbenv/ruby-build.git" "${USER_HOME}/.rbenv/plugins/ruby-build"
-  _add_variables_to_bashrc_zshrc
-  rbenv install -l
-  rbenv install 2.6.5
-  rbenv global 2.6.5
-  rbenv rehash
-  ruby -v
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _redhat_flavor_instal rsvm" && echo -e "${RESET}" && return 0' ERR
+  local _target="${USER_HOME}/.rsvm"
+  local _executable="${_target}/rsvm.sh" 
+
+  _git_clone "https://github.com/sdepold/rsvm.git" "${_target}"
+  cd "${_target}"
+  \. "${_executable}"
+  local MSG=$(_add_variables_to_bashrc_zshrc)
+  echo "${MSG}"
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
@@ -472,7 +404,7 @@ _windows__32() {
 
 
 
- #--------/\/\/\/\-- tasks_templates_sudo/rbenv …install_rbenv.bash” -- Custom code-/\/\/\/\-------
+ #--------/\/\/\/\-- tasks_templates_sudo/rsvm …install_rsvm.bash” -- Custom code-/\/\/\/\-------
 
 
 _main() {

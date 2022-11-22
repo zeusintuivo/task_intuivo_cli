@@ -8,17 +8,21 @@
 _linux_prepare(){
   sudo_it
   [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
-  export USER_HOME="/home/${SUDO_USER}"
+  # export USER_HOME="/home/${SUDO_USER}"
+  Checking USER_HOME "${USER_HOME}"
   enforce_variable_with_value USER_HOME "${USER_HOME}"
 }  # end _linux_prepare
 
 _debian__64(){
   _linux_prepare
   local TARGET_URL=https://prerelease.keybase.io/keybase_amd64.deb
+  Comment TARGET_URL "${TARGET_URL}"
   enforce_variable_with_value TARGET_URL "${TARGET_URL}"
   local CODENAME=$(basename "${TARGET_URL}")
+  Comment CODENAME "${CODENAME}"
   enforce_variable_with_value CODENAME "${CODENAME}"
-   local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  Comment DOWNLOADFOLDER "${DOWNLOADFOLDER}"
   enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
   _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
   _install_apt "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
@@ -28,13 +32,20 @@ _debian__64(){
   return  $_err
 } # end __debian__64
 
+_ubuntu__64(){
+  _debian__64
+} # end _ubuntu__64
+
 _debian__32(){
   _linux_prepare
   local TARGET_URL=https://prerelease.keybase.io/keybase_i386.deb
+  Comment TARGET_URL "${TARGET_URL}"
   enforce_variable_with_value TARGET_URL "${TARGET_URL}"
   local CODENAME=$(basename "${TARGET_URL}")
+  Comment CODENAME "${CODENAME}"
   enforce_variable_with_value CODENAME "${CODENAME}"
   local DOWNLOADFOLDER="${USER_HOME}/Downloads"
+  Comment DOWNLOADFOLDER "${DOWNLOADFOLDER}"
   enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
   _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
   _install_apt "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
@@ -47,10 +58,13 @@ _debian__32(){
 _fedora__32() {
   _linux_prepare
   local TARGET_URL=https://prerelease.keybase.io/keybase_i386.rpm
+  Comment TARGET_URL "${TARGET_URL}"
   enforce_variable_with_value TARGET_URL "${TARGET_URL}"
   local CODENAME=$(basename "${TARGET_URL}")
+  Comment CODENAME "${CODENAME}"
   enforce_variable_with_value CODENAME "${CODENAME}"
-   local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  Comment DOWNLOADFOLDER "${DOWNLOADFOLDER}"
   enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
   _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
   _install_rpm "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
@@ -65,10 +79,13 @@ _centos__64(){
 _fedora__64() {
   _linux_prepare
   local TARGET_URL=https://prerelease.keybase.io/keybase_amd64.rpm
+  Comment TARGET_URL "${TARGET_URL}"
   enforce_variable_with_value TARGET_URL "${TARGET_URL}"
   local CODENAME=$(basename "${TARGET_URL}")
+  Comment CODENAME "${CODENAME}"
   enforce_variable_with_value CODENAME "${CODENAME}"
-   local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  Comment DOWNLOADFOLDER "${DOWNLOADFOLDER}"
   enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
   _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
   _install_rpm "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
