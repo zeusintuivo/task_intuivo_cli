@@ -131,6 +131,7 @@ _darwin__64() {
   # tar xof /Users/benutzer/Library/Caches/Homebrew/downloads/91845ed41d14ccff1a66f16db7c7ec93f7d7958bb08be637dae24d2aa70a214d--nano-5.4.catalina.bottle.tar.gz -C /var/folders/8x/9phrghz97g38v9m8m6r59_0w0000gn/T/d20201221-96141-1fi6gd9
   # cp -pR /var/folders/8x/9phrghz97g38v9m8m6r59_0w0000gn/T/d20201221-96141-1fi6gd9/nano/. /usr/local/Cellar/nano
   # chmod -Rf +w /var/folders/8x/9phrghz97g38v9m8m6r59_0w0000gn/T/d20201221-96141-1fi6gd9
+  export HOMEBREW_NO_AUTO_UPDATE=1
   if ! (su - "${SUDO_USER}" -c "brew install nano") ; then
   {
     local _orr=$?
