@@ -80,5 +80,5 @@ _fedora__64() {
 
 _darwin__64(){
   su - "${SUDO_USER}" -c 'brew install keybase --force'
-}
+} # end _darwin__64
 
