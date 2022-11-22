@@ -32,6 +32,10 @@ _debian__64(){
   return  $_err
 } # end __debian__64
 
+_ubuntu__64(){
+  _debian__64
+} # end _ubuntu__64
+
 _debian__32(){
   _linux_prepare
   local TARGET_URL=https://prerelease.keybase.io/keybase_i386.deb
