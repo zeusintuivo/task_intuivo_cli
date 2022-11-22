@@ -298,7 +298,7 @@ _install_and_add_variables_to_bashrc_zshrc(){
   trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _install_and_add_variables_to_bashrc_zshrc EVM" && echo -e "${RESET}" && return 0' ERR
   
   local dir DIRS="erlang_tars erlang_versions evm_config scripts"
-  local EVM_HOME="'${USER_HOME}'/.evm"
+  local EVM_HOME="${USER_HOME}/.evm"
   # For each dir, check whether it's already exists or not
   for dir in $DIRS
   do
