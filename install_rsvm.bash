@@ -239,109 +239,172 @@ directory_exists_with_spaces "${USER_HOME}"
 
 
 
- #--------\/\/\/\/-- tasks_templates_sudo/keybase …install_keybase.bash” -- Custom code -\/\/\/\/-------
+ #--------\/\/\/\/-- tasks_templates_sudo/rsvm …install_rsvm.bash” -- Custom code -\/\/\/\/-------
 
 
-#!/bin/bash
+#!/usr/bin/env bash
 #
-# @author Zeus Intuivo <zeus@intuivo.com>
-#
-#
+_git_clone() {
+  local _source="${1}"
+  local _target="${2}"
+  if  it_exists_with_spaces "${_target}" ; then
+  {
+    cd "${_target}"
+    git config pull.rebase false
+    git fetch
+    git pull
+    git fetch --tags origin
+  }
+  else
+  {
+   git clone "${_source}" "${_target}"
+  }
+  fi
+  chown -R "${SUDO_USER}" "${_target}"
+} # _git_clone
+_add_variables_to_bashrc_zshrc(){
+  local RSVM_SH_CONTENT='
 
+# RSVM
+export RSVM_DIR="'${USER_HOME}'/.rsvm"
+export RSVM_TARGET="'${USER_HOME}'/.rsvm"
+[ -s "${RSVM_DIR}/rsvm.sh" ] && . "${RSVM_DIR}/rsvm.sh"  # This loads rsvm
 
-_linux_prepare(){
-  sudo_it
-  [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
-  # export USER_HOME="/home/${SUDO_USER}"
-  Checking USER_HOME "${USER_HOME}"
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
-}  # end _linux_prepare
+'
+  local _target="${USER_HOME}/.rsvm"
+  local _executable="${_target}/rsvm.sh"
 
-_debian__64(){
-  _linux_prepare
-  local TARGET_URL=https://prerelease.keybase.io/keybase_amd64.deb
-  Comment TARGET_URL "${TARGET_URL}"
-  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
-  local CODENAME=$(basename "${TARGET_URL}")
-  Comment CODENAME "${CODENAME}"
-  enforce_variable_with_value CODENAME "${CODENAME}"
-  local DOWNLOADFOLDER="$(_find_downloads_folder)"
-  Comment DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
-  _install_apt "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
-  _err=$?
-  _remove_downloaded_codename_or_err  $_err "${DOWNLOADFOLDER}/${CODENAME}"
-  _err=$?
-  return  $_err
-} # end __debian__64
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _add_variables_to_bashrc_zshrc rsvm" && echo -e "${RESET}" && return 0' ERR
+  echo "${RSVM_SH_CONTENT}"
+  local INITFILE INITFILES="
+   .bashrc
+   .zshrc
+   .bash_profile
+   .profile
+   .zshenv
+   .zprofile
+  "
+  while read INITFILE; do
+  {
+    [ -z ${INITFILE} ] && continue
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "# RSVM" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "rsvm.sh" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+  }
+  done <<< "${INITFILES}"
 
-_debian__32(){
-  _linux_prepare
-  local TARGET_URL=https://prerelease.keybase.io/keybase_i386.deb
-  Comment TARGET_URL "${TARGET_URL}"
-  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
-  local CODENAME=$(basename "${TARGET_URL}")
-  Comment CODENAME "${CODENAME}"
-  enforce_variable_with_value CODENAME "${CODENAME}"
-  local DOWNLOADFOLDER="${USER_HOME}/Downloads"
-  Comment DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
-  _install_apt "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
-  _err=$?
-  _remove_downloaded_codename_or_err  $_err "${DOWNLOADFOLDER}/${CODENAME}"
-  _err=$?
-  return  $_err
-} # end __debian__64
+} # _add_variables_to_bashrc_zshrc
+
+_debian_flavor_install() {
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _debian_flavor_install rsvm" && echo -e "${RESET}" && return 0' ERR
+  local _target="${USER_HOME}/.rsvm"
+  local _executable="${_target}/rsvm.sh" 
+
+  _git_clone "https://github.com/sdepold/rsvm.git" "${_target}"
+  cd "${_target}"
+  \. "${_executable}"
+  local MSG=$(_add_variables_to_bashrc_zshrc)
+  echo "${MSG}"
+} # end _debian_flavor_install
+
+_redhat_flavor_install() {
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _redhat_flavor_instal rsvm" && echo -e "${RESET}" && return 0' ERR
+  local _target="${USER_HOME}/.rsvm"
+  local _executable="${_target}/rsvm.sh" 
+
+  _git_clone "https://github.com/sdepold/rsvm.git" "${_target}"
+  cd "${_target}"
+  \. "${_executable}"
+  local MSG=$(_add_variables_to_bashrc_zshrc)
+  echo "${MSG}"
+} # end _redhat_flavor_install
+
+_arch_flavor_install() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _readhat_flavor_install
+
+_arch__32() {
+  _arch_flavor_install
+} # end _arch__32
+
+_arch__64() {
+  _arch_flavor_install
+} # end _arch__64
+
+_centos__32() {
+  _redhat_flavor_install
+} # end _centos__32
+
+_centos__64() {
+  _redhat_flavor_install
+} # end _centos__64
+
+_debian__32() {
+  _debian_flavor_install
+} # end _debian__32
+
+_debian__64() {
+  _debian_flavor_install
+} # end _debian__64
 
 _fedora__32() {
-  _linux_prepare
-  local TARGET_URL=https://prerelease.keybase.io/keybase_i386.rpm
-  Comment TARGET_URL "${TARGET_URL}"
-  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
-  local CODENAME=$(basename "${TARGET_URL}")
-  Comment CODENAME "${CODENAME}"
-  enforce_variable_with_value CODENAME "${CODENAME}"
-  local DOWNLOADFOLDER="$(_find_downloads_folder)"
-  Comment DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
-  _install_rpm "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
-  _err=$?
-  _remove_downloaded_codename_or_err  $_err "${DOWNLOADFOLDER}/${CODENAME}"
-  _err=$?
-  return  $_err
+  _redhat_flavor_install
 } # end _fedora__32
-_centos__64(){
-  _fedora__64
-} # end _centos__64
+
 _fedora__64() {
-  _linux_prepare
-  local TARGET_URL=https://prerelease.keybase.io/keybase_amd64.rpm
-  Comment TARGET_URL "${TARGET_URL}"
-  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
-  local CODENAME=$(basename "${TARGET_URL}")
-  Comment CODENAME "${CODENAME}"
-  enforce_variable_with_value CODENAME "${CODENAME}"
-  local DOWNLOADFOLDER="$(_find_downloads_folder)"
-  Comment DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
-  _install_rpm "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
-  _err=$?
-  _remove_downloaded_codename_or_err  $_err "${DOWNLOADFOLDER}/${CODENAME}"
-  _err=$?
-  return  $_err
+  _redhat_flavor_install
 } # end _fedora__64
 
-_darwin__64(){
-  su - "${SUDO_USER}" -c 'brew install keybase --force'
-}
+_gentoo__32() {
+  _redhat_flavor_install
+} # end _gentoo__32
+
+_gentoo__64() {
+  _redhat_flavor_install
+} # end _gentoo__64
+
+_madriva__32() {
+  _redhat_flavor_install
+} # end _madriva__32
+
+_madriva__64() {
+  _redhat_flavor_install
+} # end _madriva__64
+
+_suse__32() {
+  _redhat_flavor_install
+} # end _suse__32
+
+_suse__64() {
+  _redhat_flavor_install
+} # end _suse__64
+
+_ubuntu__32() {
+  _debian_flavor_install
+} # end _ubuntu__32
+
+_ubuntu__64() {
+  _debian_flavor_install
+} # end _ubuntu__64
+
+_darwin__64() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _darwin__64
+
+_tar() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end tar
+
+_windows__64() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _windows__64
+
+_windows__32() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _windows__32
 
 
 
- #--------/\/\/\/\-- tasks_templates_sudo/keybase …install_keybase.bash” -- Custom code-/\/\/\/\-------
+ #--------/\/\/\/\-- tasks_templates_sudo/rsvm …install_rsvm.bash” -- Custom code-/\/\/\/\-------
 
 
 _main() {

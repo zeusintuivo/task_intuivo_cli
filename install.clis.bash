@@ -545,7 +545,7 @@ _if_not_is_installed(){
 _install_nvm() {
     local -i ret
     local msg
-    [[  ! -e "${USER_HOME}/.config" ]] && touch "${USER_HOME}/.config"
+    [[  ! -e "${USER_HOME}/.config" ]] && mkdir -p "${USER_HOME}/.config"
     chown  -R "${SUDO_USER}" "${USER_HOME}/.config"
     [ -s "${USER_HOME}/.nvm/nvm.sh" ] && . "${USER_HOME}/.nvm/nvm.sh" # This loads nvm
 
@@ -747,6 +747,8 @@ _setup_ohmy(){
         # install ohmyzsh
         su - "${SUDO_USER}" -c 'sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"'
         chown -R "${SUDO_USER}" "${USER_HOME}/.oh-my-zsh"
+	chsh -s /usr/bin/zsh "${SUDO_USER}"
+	su - "${SUDO_USER}" -c 'chsh -s /usr/bin/zsh "'${SUDO_USER}'"'
         Testing ohmyzsh
         directory_exists_with_spaces "${USER_HOME}/.oh-my-zsh"
     }
