@@ -122,7 +122,10 @@ _ubuntu__64() {
 } # end _ubuntu__64
 
 _ubuntu__32() {
-	_linux_prepare
+  sudo_it
+  # export USER_HOME="/Users/${SUDO_USER}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  # _linux_prepare
   # THOUGHT local CODENAME="bcompare-4.3.3.24545_i386.deb"
   local CODENAME=$(_version "linux" "bcompare-*.*.*.*i386.deb")
   enforce_variable_with_value CODENAME "${CODENAME}"
@@ -137,7 +140,10 @@ _ubuntu__32() {
 } # end _ubuntu__32
 
 _fedora__32() {
-	_linux_prepare
+  sudo_it
+  # export USER_HOME="/Users/${SUDO_USER}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  # _linux_prepare
   local CODENAME=$(_version "linux" "bcompare*.*.*.*.i386.rpm")
   enforce_variable_with_value CODENAME "${CODENAME}"
   # THOUGHT                          bcompare-4.3.3.24545.i386.rpm
@@ -174,7 +180,10 @@ _centos__64() {
 } # end _centos__64
 
 _fedora__64() {
-	_linux_prepare
+  sudo_it
+  # export USER_HOME="/Users/${SUDO_USER}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  # _linux_prepare
   local CODENAME=$(_version "linux" "bcompare*.*.*.*.x86_64.rpm")
   enforce_variable_with_value CODENAME "${CODENAME}"
   # THOUGHT  https://www.scootersoftware.com/bcompare-4.3.3.24545.x86_64.rpm
@@ -192,7 +201,10 @@ _fedora__64() {
 } # end _fedora__64
 
 _mingw__64() {
-	_linux_prepare
+  sudo_it
+  export USER_HOME="/Users/${SUDO_USER}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  # _linux_prepare
     local CODENAME=$(_version "win" "BCompare*.*.*.*.exe")
     # THOUGHT        local CODENAME="BCompare-4.3.3.24545.exe"
     local URL="https://www.scootersoftware.com/${CODENAME}"
