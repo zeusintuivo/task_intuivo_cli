@@ -299,7 +299,7 @@ _redhat_flavor_install() {
     xz-devel
     libffi
     libffi-devel
-    python-tkinter
+    # python-tkinter
     python3-tkinter
     tk-devel
     findutils

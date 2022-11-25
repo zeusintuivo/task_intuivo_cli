@@ -41,6 +41,7 @@ export NVM_DIR="'${USER_HOME}'/.nvm"
   "
   while read INITFILE; do
   {
+    [ -z ${INITFILE} ] && continue    
     _if_not_contains "${USER_HOME}/${INITFILE}"  "# NVM" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
     _if_not_contains "${USER_HOME}/${INITFILE}"  "nvm.sh" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
   }
