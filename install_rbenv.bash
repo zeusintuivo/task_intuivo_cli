@@ -246,6 +246,35 @@ directory_exists_with_spaces "${USER_HOME}"
 #
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
+
+_package_list_installer() {
+  local package packages="${@}"
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer rbenv" && echo -e "${RESET}" && return 0' ERR
+
+  if ! install_requirements "linux" "${packages}" ; then
+  {
+    warning "installing requirements. ${CYAN} attempting to install one by one"
+    while read package; do
+    {
+      [ -z ${package} ] && continue
+      if ! install_requirements "linux" "${package}" ; then
+      {
+        _err=$?
+        if [ ${_err} -gt 0 ] ; then
+        {
+          echo -e "${RED}" 
+          echo failed to install requirements "${package}"
+          echo -e "${RESET}"
+        }
+        fi
+      }
+      fi
+    }
+    done <<< "${packages}"
+  }
+  fi
+} # end _package_list_installer
+
 _git_clone() {
   local _source="${1}"
   local _target="${2}"
@@ -286,6 +315,7 @@ eval "$(rbenv init -)"
   "
   while read INITFILE; do
   { 
+    [ -z ${INITFILE} ] && continue
     _if_not_contains "${USER_HOME}/${INITFILE}"  "# RBENV" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
     _if_not_contains "${USER_HOME}/${INITFILE}"  "RBENV_ROOT" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
     _if_not_contains "${USER_HOME}/${INITFILE}"  "rbenv init" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
@@ -307,8 +337,9 @@ eval "$(rbenv init -)"
 
 _debian_flavor_install() {
   apt update -y
-  install_requirements "linux" "
-    # Batch 1 18.04
+  trap 'echo -e "${RED}" && echo "ERROR err:$_err failed $0:$LINENO _debian_flavor_install rbenv" && echo -e "${RESET}" && return 0' ERR
+  # Batch 1 18.04
+  local package packages="
     autoconf
     bison
     build-essential
@@ -321,8 +352,9 @@ _debian_flavor_install() {
     libgdbm5
     libgdbm-dev
   "
-  install_requirements "linux" "
-    # Batch 2 20.04
+  _package_list_installer "${packages}"
+  # Batch 2 20.04
+  local package packages="
     autoconf
     bison
     build-essential
@@ -335,6 +367,7 @@ _debian_flavor_install() {
     libgdbm6
     libgdbm-dev
   "
+  _package_list_installer "${packages}"
   _git_clone "https://github.com/rbenv/rbenv.git" "${USER_HOME}/.rbenv"
   _git_clone "https://github.com/rbenv/ruby-build.git" "${USER_HOME}/.rbenv/plugins/ruby-build"
   local MSG=$(_add_variables_to_bashrc_zshrc)

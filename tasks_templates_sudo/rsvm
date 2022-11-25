@@ -24,7 +24,7 @@ _add_variables_to_bashrc_zshrc(){
 # RSVM
 export RSVM_DIR="'${USER_HOME}'/.rsvm"
 export RSVM_TARGET="'${USER_HOME}'/.rsvm"
-[ -s "${RSVM_DIR}/rsvm.sh" ] && . "${NVM_DIR}/rsvm.sh"  # This loads rsvm
+[ -s "${RSVM_DIR}/rsvm.sh" ] && . "${RSVM_DIR}/rsvm.sh"  # This loads rsvm
 
 '
   local _target="${USER_HOME}/.rsvm"
@@ -42,6 +42,7 @@ export RSVM_TARGET="'${USER_HOME}'/.rsvm"
   "
   while read INITFILE; do
   {
+    [ -z ${INITFILE} ] && continue
     _if_not_contains "${USER_HOME}/${INITFILE}"  "# RSVM" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
     _if_not_contains "${USER_HOME}/${INITFILE}"  "rsvm.sh" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
   }

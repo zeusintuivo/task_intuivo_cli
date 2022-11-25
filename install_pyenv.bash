@@ -246,12 +246,34 @@ directory_exists_with_spaces "${USER_HOME}"
 #
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
+_package_list_installer() {
+  local package packages="${@}"
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer rbenv" && echo -e "${RESET}" && return 0' ERR
+
+  if ! install_requirements "linux" "${packages}" ; then
+  {
+    warning "installing requirements. ${CYAN} attempting to install one by one"
+    while read package; do
+    {
+      [ -z ${package} ] && continue
+      install_requirements "linux" "${package}"
+      _err=$?
+      if [ ${_err} -gt 0 ] ; then
+      {
+        failed to install requirements "${package}"
+      }
+      fi
+    }
+    done <<< "${packages}"
+  }
+  fi
+} # end _package_list_installer
 
 _debian_flavor_install() {
   sudo_it
   # export USER_HOME="/home/${SUDO_USER}"
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  install_requirements "linux" "
+  local package packages="
     libreadline-dev
     libbz2-dev
     libsqlite3-dev
@@ -260,6 +282,7 @@ _debian_flavor_install() {
     tk-dev
     git
   "
+  _package_list_installer "${packages}"
   #  verify_is_installed "
   #    libreadline-dev
   #    libbz2-dev
@@ -277,15 +300,10 @@ _redhat_flavor_install() {
   # export USER_HOME="/home/${SUDO_USER}"
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   enforce_variable_with_value SUDO_USER "${SUDO_USER}"
-  install_requirements "linux" "
-    # RedHat Flavor only
-    readline-devel
-    bzip2-devel
+  # RedHat Flavor only
+  local package packages="
     sqlite
     sqlite-devel
-    # sqlite-tcl
-    # sqlite-jdbc
-    # sqlitebrowser
     make
     automake
     cmake
@@ -304,6 +322,7 @@ _redhat_flavor_install() {
     tk-devel
     findutils
   "
+  _package_list_installer "${packages}"
   # is_not_installed pygmentize &&   dnf  -y install pygmentize
   # if ( ! command -v pygmentize >/dev/null 2>&1; ) ;  then
   #   pip3 install pygments
@@ -391,6 +410,7 @@ eval "$(pyenv virtualenv-init -)"
   "
   while read INITFILE; do
   {
+    [ -z ${INITFILE} ] && continue
     _if_not_contains "${USER_HOME}/${INITFILE}"  "# PYENV" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
     _if_not_contains "${USER_HOME}/${INITFILE}"  "PYENV_ROOT" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
     _if_not_contains "${USER_HOME}/${INITFILE}"  "pyenv init" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
