@@ -246,6 +246,8 @@ directory_exists_with_spaces "${USER_HOME}"
 #
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
+
+
 _package_list_installer() {
   local package packages="${@}"
   trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer evm" && echo -e "${RESET}" && return 0' ERR
@@ -453,7 +455,7 @@ _ubuntu__64() {
   _debian_flavor_install
 } # end _ubuntu__64
 
-_darwin__64() { 
+_darwin__64() {
   export HOMEBREW_NO_AUTO_UPDATE=1
   trap 'echo -e "${RED}" && echo "ERROR err:$_err failed $0:$LINENO _darwin__64 evm" && echo -e "${RESET}" && return 0' ERR
   local package packages="
