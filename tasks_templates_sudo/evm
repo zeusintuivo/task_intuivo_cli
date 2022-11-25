@@ -1,10 +1,146 @@
+#!/usr/bin/env bash
+#
+# @author Zeus Intuivo <zeus@intuivo.com>
+#
+
+
+_package_list_installer() {
+  local package packages="${@}"
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer evm" && echo -e "${RESET}" && return 0' ERR
+
+  if ! install_requirements "linux" "${packages}" ; then
+  {
+    warning "installing requirements. ${CYAN} attempting to install one by one"
+    while read package; do
+    {
+      [ -z ${package} ] && continue
+      if ! install_requirements "linux" "${package}" ; then
+      {
+        _err=$?
+        if [ ${_err} -gt 0 ] ; then
+        {
+          echo -e "${RED}" 
+          echo failed to install requirements "${package}"
+          echo -e "${RESET}"
+        }
+        fi
+      }
+      fi
+    }
+    done <<< "${packages}"
+  }
+  fi
+} # end _package_list_installer
+
+_git_clone() {
+  local _source="${1}"
+  local _target="${2}"
+  if  it_exists_with_spaces "${_target}" ; then
+  {
+    cd "${_target}"
+    git config pull.rebase false
+    git fetch
+    git pull
+  }
+  else
+  {
+   git clone "${_source}" "${_target}"
+  }
+  fi
+  chown -R "${SUDO_USER}" "${_target}"
+
+} # _git_clone
+
+
+_install_and_add_variables_to_bashrc_zshrc(){
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _install_and_add_variables_to_bashrc_zshrc EVM" && echo -e "${RESET}" && return 0' ERR
+  
+  local dir DIRS="erlang_tars erlang_versions evm_config scripts"
+  local EVM_HOME="${USER_HOME}/.evm"
+  # For each dir, check whether it's already exists or not
+  for dir in $DIRS
+  do
+    if [[ ! -d "$EVM_HOME/$dir" ]]
+    then
+      mkdir -p "$EVM_HOME/$dir"
+      echo "$EVM_HOME/$dir successfully created"
+    else
+      echo "$EVM_HOME/$dir already exists and will not be replaced"
+    fi
+  done
+  # Create the config file
+  if [[ ! -f "$EVM_HOME/evm_config/erlang_default" ]]
+  then 
+    touch "$EVM_HOME/evm_config/erlang_default"
+    echo "$EVM_HOME/evm_config/erlang_default succesfully created"
+  else
+    echo "$EVM_HOME/evm_config/erlang_default already exists and will not be replaced"
+  fi
+
+  # Copy the script
+  cp "evm" "$EVM_HOME/scripts"
+
+  local EVM_SH_CONTENT='
+
+# EVM
+export EVM_HOME="'${USER_HOME}'/.evm"
+export PATH="'${USER_HOME}'/.evm/scripts:${PATH}"
+source "'${USER_HOME}'/.evm/scripts/evm
+
+' 
+  echo "${EVM_SH_CONTENT}"
+  local INITFILE INITFILES="
+   .bashrc
+   .zshrc
+   .bash_profile
+   .profile
+   .zshenv
+   .zprofile
+  "
+  while read INITFILE; do
+  { 
+    [ -z ${INITFILE} ] && continue
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "# EVM" ||  echo "${EVM_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "EVM_HOME" ||  echo "${EVM_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "evm/scripts" ||  echo "${EVM_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+  }
+  done <<< "${INITFILES}"
+  # type EVM
+  source "${USER_HOME}/.evm/scripts/evm"
+  _finale_message
+
+} # _add_variables_to_bashrc_zshrc
 
 _debian_flavor_install() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  apt update -y
+  trap 'echo -e "${RED}" && echo "ERROR err:$_err failed $0:$LINENO _debian_flavor_install evm" && echo -e "${RESET}" && return 0' ERR
+  local package packages="
+    wget
+    openssl
+    libssl-dev
+    fop
+    xsltproc
+    unixodbc-dev
+    libxml2-utils
+    libqt5opengl5-dev
+    libncurses-dev
+    libwxgtk-media3.0-gtk3-0v5
+    libwxgtk-media3.0-gtk3-dev
+    libwxgtk-webview3.0-gtk3-0v5
+    libwxgtk-webview3.0-gtk3-dev
+    libwxgtk3.0-gtk3-0v5
+    libwxgtk3.0-gtk3-dev
+    wx-common
+   "
+  _package_list_installer "${packages}"
+  _git_clone "https://github.com/robisonsantos/evm.git" "${USER_HOME}/.evm"
+  local MSG=$(_install_and_add_variables_to_bashrc_zshrc)
+  echo "${MSG}"
+  _finale_message
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
-  echo "Procedure not yet implemented. I don't know what to do."
+    echo "Procedure not yet implemented. I don't know what to do."
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
@@ -76,7 +212,17 @@ _ubuntu__64() {
 } # end _ubuntu__64
 
 _darwin__64() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  export HOMEBREW_NO_AUTO_UPDATE=1
+  trap 'echo -e "${RED}" && echo "ERROR err:$_err failed $0:$LINENO _darwin__64 evm" && echo -e "${RESET}" && return 0' ERR
+  local package packages="
+    wget
+    openssl
+  "
+  _package_list_installer "${packages}"
+  _git_clone "https://github.com/robisonsantos/evm.git" "${USER_HOME}/.evm"
+  local MSG=$(_install_and_add_variables_to_bashrc_zshrc)
+  echo "${MSG}" 
+  _finale_message
 } # end _darwin__64
 
 _tar() {
@@ -90,3 +236,34 @@ _windows__64() {
 _windows__32() {
   echo "Procedure not yet implemented. I don't know what to do."
 } # end _windows__32
+
+_finale_message(){
+  echo
+  echo "
+             _______________   ____ _____                    
+             \_   _____/\   \ /   //     \                   
+     ______   |    __)_  \   Y   //  \ /  \    ______        
+    /_____/   |        \  \     //    Y    \  /_____/        
+             /_______  /   \___/ \____|__  /                 
+                     \/                  \/                  
+   ___________        .__                                    
+   \_   _____/_______ |  |  _____     ____    ____           
+    |    __)_ \_  __ \|  |  \__  \   /    \  / ___\          
+    |        \ |  | \/|  |__ / __ \_|   |  \/ /_/  >         
+   /_______  / |__|   |____/(____  /|___|  /\___  /          
+           \/                    \/      \//_____/           
+   ____   ____                     .__                       
+   \   \ /   / ____ _______  ______|__|  ____    ____        
+    \   Y   /_/ __ \\\\_  __ \/  ___/|  | /  _ \  /    \\       
+     \     / \  ___/ |  | \/\___ \ |  |(  <_> )|   |  \      
+      \___/   \___  >|__|  /____  >|__| \____/ |___|  /      
+                  \/            \/                  \/       
+      _____                                                  
+     /     \  _____     ____  _____     ____    ____ _______ 
+    /  \ /  \ \__  \   /    \ \__  \   / ___\ _/ __ \\\\_  __ \\
+   /    Y    \ / __ \_|   |  \ / __ \_/ /_/  >\  ___/ |  | \/
+   \____|__  /(____  /|___|  /(____  /\___  /  \___  >|__|   
+           \/      \/      \/      \//_____/       \/       
+  "
+} # end _finale_message
+

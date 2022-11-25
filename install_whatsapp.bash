@@ -282,6 +282,29 @@ _git_clone() {
   fi
 } # _git_clone
 
+_package_list_installer() {
+  local package packages="${@}"
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer whatsapp" && echo -e "${RESET}" && return 0' ERR
+
+  if ! install_requirements "linux" "${packages}" ; then
+  {
+    warning "installing requirements. ${CYAN} attempting to install one by one"
+    while read package; do
+    {
+      [ -z ${package} ] && continue
+      install_requirements "linux" "${package}"
+      _err=$?
+      if [ ${_err} -gt 0 ] ; then
+      {
+        failed to install requirements "${package}"
+      }
+      fi
+    }
+    done <<< "${packages}"
+  }
+  fi
+} # end _package_list_installer
+
 _debian_flavor_install() {
   echo "Procedure not yet implemented. I don't know what to do."
 } # end _debian_flavor_install
@@ -339,23 +362,7 @@ _redhat_flavor_install() {
   sudo dnf install -vy  https://ftp.lysator.liu.se/pub/opensuse/tumbleweed/repo/oss/x86_64/libayatana-appindicator3-1-0.5.91-1.2.x86_64.rpm
   sudo dnf install -vy  https://ftp.lysator.liu.se/pub/opensuse/tumbleweed/repo/oss/x86_64/libayatana-appindicator3-devel-0.5.91-1.2.x86_64.rpm
   "
-  if ! install_requirements "linux" "${packages}" ; then
-  {
-    warning "installing requirements. ${CYAN} attempting to install one by one"
-    while read package; do
-    {
-      [ -z ${package} ] && continue
-      install_requirements "linux" "${package}"
-      _err=$?
-      if [ ${_err} -gt 0 ] ; then
-      {
-        failed to install requirements "${package}"
-      }
-      fi
-    }
-    done <<< "${packages}"
-  }
-  fi
+  _package_list_installer "${packages}"
 
   # is_not_installed pygmentize &&   dnf  -y install pygmentize
   # if ( ! command -v pygmentize >/dev/null 2>&1; ) ;  then
