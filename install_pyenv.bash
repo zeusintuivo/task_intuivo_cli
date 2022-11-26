@@ -239,14 +239,13 @@ directory_exists_with_spaces "${USER_HOME}"
 
 
 
- #--------\/\/\/\/-- tasks_templates_sudo/rbenv …install_rbenv.bash” -- Custom code -\/\/\/\/-------
+ #--------\/\/\/\/-- tasks_templates_sudo/pyenv …install_pyenv.bash” -- Custom code -\/\/\/\/-------
 
 
 #!/usr/bin/env bash
 #
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
-
 _package_list_installer() {
   local package packages="${@}"
   trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer rbenv" && echo -e "${RESET}" && return 0' ERR
@@ -257,16 +256,11 @@ _package_list_installer() {
     while read package; do
     {
       [ -z ${package} ] && continue
-      if ! install_requirements "linux" "${package}" ; then
+      install_requirements "linux" "${package}"
+      _err=$?
+      if [ ${_err} -gt 0 ] ; then
       {
-        _err=$?
-        if [ ${_err} -gt 0 ] ; then
-        {
-          echo -e "${RED}" 
-          echo failed to install requirements "${package}"
-          echo -e "${RESET}"
-        }
-        fi
+        failed to install requirements "${package}"
       }
       fi
     }
@@ -275,36 +269,137 @@ _package_list_installer() {
   fi
 } # end _package_list_installer
 
-_git_clone() {
-  local _source="${1}"
-  local _target="${2}"
-  if  it_exists_with_spaces "${_target}" ; then
+_debian_flavor_install() {
+  sudo_it
+  # export USER_HOME="/home/${SUDO_USER}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  local package packages="
+    libreadline-dev
+    libbz2-dev
+    libsqlite3-dev
+    python-tk
+    python3-tk
+    tk-dev
+    git
+  "
+  _package_list_installer "${packages}"
+  #  verify_is_installed "
+  #    libreadline-dev
+  #    libbz2-dev
+  #    libsqlite3-dev
+  #    git
+  # "
+  _git_clone_pyenv
+  local MSG=$(_add_variables_to_bashrc_zshrc)
+  echo "${MSG}"
+
+} # end _debian_flavor_install
+
+_redhat_flavor_install() {
+  sudo_it
+  # export USER_HOME="/home/${SUDO_USER}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  enforce_variable_with_value SUDO_USER "${SUDO_USER}"
+  # RedHat Flavor only
+  local package packages="
+    sqlite
+    sqlite-devel
+    make
+    automake
+    cmake
+    gcc
+    libtool-ltdl-devel
+    git
+    zlib-devel
+    bzip2
+    openssl-devel
+    xz
+    xz-devel
+    libffi
+    libffi-devel
+    # python-tkinter
+    python3-tkinter
+    tk-devel
+    findutils
+  "
+  _package_list_installer "${packages}"
+  # is_not_installed pygmentize &&   dnf  -y install pygmentize
+  # if ( ! command -v pygmentize >/dev/null 2>&1; ) ;  then
+  #   pip3 install pygments
+  # fi
+  local groupsinstalled=$(dnf group list --installed)
+  if [[ "${groupsinstalled}" = *"Development Tools"* ]] ; then
   {
-    cd "${_target}"
+    passed installed 'Development Tools'
+  }
+  else
+  {
+    dnf groupinstall 'Development Tools' -y
+  }
+  fi
+  #  verify_is_installed "
+  #    # RedHat Flavor only
+  #    readline-devel
+  #    bzip2-devel
+  #    # sqlite
+  #    sqlite-devel
+  #    # sqlite-tcl
+  #    # sqlite-jdbc
+  #    # sqlitebrowser
+  #    make
+  #    automake
+  #    cmake
+  #    gcc
+  #    libtool-ltdl-devel
+  #    git
+  #    zlib-devel
+  #    bzip2
+  #    openssl-devel
+  #    xz
+  #    xz-devel
+  #    libffi-devel
+  #    findutils
+  # "
+  _git_clone_pyenv
+  local MSG=$(_add_variables_to_bashrc_zshrc)
+  echo "${MSG}"
+} # end _redhat_flavor_install
+
+_git_clone_pyenv() {
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _git_clone_pyenv pyenv" && echo -e "${RESET}" && return 0' ERR
+
+  if  it_exists_with_spaces "${USER_HOME}/.pyenv" ; then
+  {
+    cd "${USER_HOME}/.pyenv"
     git config pull.rebase false
     git fetch
     git pull
   }
   else
   {
-   git clone "${_source}" "${_target}"
+   # cd "${USER_HOME}"
+   git clone https://github.com/pyenv/pyenv.git "${USER_HOME}/.pyenv"
+   git clone https://github.com/pyenv/pyenv-update.git "${USER_HOME}/.pyenv/plugins/pyenv-update"
+   git clone https://github.com/pyenv/pyenv-doctor.git "${USER_HOME}/.pyenv/plugins/pyenv-doctor"
+   git clone https://github.com/pyenv/pyenv-virtualenv.git "${USER_HOME}/.pyenv/plugins/pyenv-virtualenv"
   }
   fi
-  chown -R "${SUDO_USER}" "${_target}"
+  chown -R "${SUDO_USER}" "${USER_HOME}/.pyenv"
 
-} # _git_clone
+} # _git_clone_pyenv
 
 _add_variables_to_bashrc_zshrc(){
-  local RBENV_SH_CONTENT='
+  local PYENV_SH_CONTENT='
 
-# RBENV
-export RBENV_ROOT="'${USER_HOME}'/.rbenv"
-export PATH="'${USER_HOME}'/.rbenv/bin:${PATH}"
-eval "$(rbenv init -)"
+# PYENV
+export PYENV_ROOT="'${USER_HOME}'/.pyenv"
+export PATH="'${USER_HOME}'/.pyenv/bin:${PATH}"
+eval "$(pyenv init -)"
+eval "$(pyenv virtualenv-init -)"
 
-' 
-  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _add_variables_to_bashrc_zshrc rbenv" && echo -e "${RESET}" && return 0' ERR
-  echo "${RBENV_SH_CONTENT}"
+'
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _add_variables_to_bashrc_zshrc pyenv" && echo -e "${RESET}" && return 0' ERR
+  echo "${PYENV_SH_CONTENT}"
   local INITFILE INITFILES="
    .bashrc
    .zshrc
@@ -314,80 +409,22 @@ eval "$(rbenv init -)"
    .zprofile
   "
   while read INITFILE; do
-  { 
+  {
     [ -z ${INITFILE} ] && continue
-    _if_not_contains "${USER_HOME}/${INITFILE}"  "# RBENV" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
-    _if_not_contains "${USER_HOME}/${INITFILE}"  "RBENV_ROOT" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
-    _if_not_contains "${USER_HOME}/${INITFILE}"  "rbenv init" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "# PYENV" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "PYENV_ROOT" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "pyenv init" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
   }
   done <<< "${INITFILES}"
-  # type rbenv
-  export PATH="${USER_HOME}/.rbenv/bin:${PATH}"
-  cd "${USER_HOME}/.rbenv/bin"
-  eval "$(rbenv init -)"
-
-  rbenv doctor
-  rbenv install -l
-  rbenv install 2.6.5
-  rbenv global 2.6.5
-  rbenv rehash
-  ruby -v
-
+  "${USER_HOME}/.pyenv/bin/pyenv" doctor
 } # _add_variables_to_bashrc_zshrc
 
-_debian_flavor_install() {
-  apt update -y
-  trap 'echo -e "${RED}" && echo "ERROR err:$_err failed $0:$LINENO _debian_flavor_install rbenv" && echo -e "${RESET}" && return 0' ERR
-  # Batch 1 18.04
-  local package packages="
-    autoconf
-    bison
-    build-essential
-    libssl-dev
-    libyaml-dev
-    libreadline6-dev
-    zlib1g-dev
-    libncurses5-dev
-    libffi-dev
-    libgdbm5
-    libgdbm-dev
-  "
-  _package_list_installer "${packages}"
-  # Batch 2 20.04
-  local package packages="
-    autoconf
-    bison
-    build-essential
-    libssl-dev
-    libyaml-dev
-    libreadline6-dev
-    zlib1g-dev
-    libncurses5-dev
-    libffi-dev
-    libgdbm6
-    libgdbm-dev
-  "
-  _package_list_installer "${packages}"
-  _git_clone "https://github.com/rbenv/rbenv.git" "${USER_HOME}/.rbenv"
-  _git_clone "https://github.com/rbenv/ruby-build.git" "${USER_HOME}/.rbenv/plugins/ruby-build"
+_arch_flavor_install() {
+  pacman -S tk -y
+  _git_clone_pyenv
   local MSG=$(_add_variables_to_bashrc_zshrc)
   echo "${MSG}"
-} # end _debian_flavor_install
 
-_redhat_flavor_install() {
-  dnf build-dep rbenv -vy
-  _git_clone "https://github.com/rbenv/rbenv.git" "${USER_HOME}/.rbenv"
-  _git_clone "https://github.com/rbenv/ruby-build.git" "${USER_HOME}/.rbenv/plugins/ruby-build"
-  _add_variables_to_bashrc_zshrc
-  rbenv install -l
-  rbenv install 2.6.5
-  rbenv global 2.6.5
-  rbenv rehash
-  ruby -v
-} # end _redhat_flavor_install
-
-_arch_flavor_install() {
-  echo "Procedure not yet implemented. I don't know what to do."
 } # end _readhat_flavor_install
 
 _arch__32() {
@@ -407,6 +444,7 @@ _centos__64() {
 } # end _centos__64
 
 _debian__32() {
+   sudo aptitude install libreadline-dev
   _debian_flavor_install
 } # end _debian__32
 
@@ -455,7 +493,33 @@ _ubuntu__64() {
 } # end _ubuntu__64
 
 _darwin__64() {
-  echo "Procedure not yet implemented. I don't know what to do."
+    sudo_it
+  # export USER_HOME="/home/${SUDO_USER}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  install_requirements "darwin" "
+    readline
+    bzip2
+    sqlite
+    make
+    automake
+    cmake
+    gcc
+    libtool
+    git
+    zlib
+    bzip2
+    openssl
+    xz
+    libffi
+    python-tk
+    python-tkinter
+    python3-tkinter
+    tk
+    findutils
+  "
+  _git_clone_pyenv
+  _add_variables_to_bashrc_zshrc
+
 } # end _darwin__64
 
 _tar() {
@@ -472,7 +536,7 @@ _windows__32() {
 
 
 
- #--------/\/\/\/\-- tasks_templates_sudo/rbenv …install_rbenv.bash” -- Custom code-/\/\/\/\-------
+ #--------/\/\/\/\-- tasks_templates_sudo/pyenv …install_pyenv.bash” -- Custom code-/\/\/\/\-------
 
 
 _main() {

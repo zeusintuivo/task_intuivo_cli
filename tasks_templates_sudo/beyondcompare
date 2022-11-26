@@ -3,52 +3,6 @@
 #
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
-#
-# Compatible start with low version bash, like mac before zsh change and after
-export USER_HOME
-export THISSCRIPTCOMPLETEPATH
-typeset -r THISSCRIPTCOMPLETEPATH="$(realpath $(which $(basename "$0")))"  # updated realpath macos 20210902 # § This goes in the FATHER-MOTHER script
-
-export BASH_VERSION_NUMBER
-typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
-
-export  THISSCRIPTNAME
-typeset -r THISSCRIPTNAME="$(realpath $(which $(basename "$0")))"   # updated realpath macos 20210902
-
-export _err
-typeset -i _err=0
-
-load_struct_testing_wget(){
-    local provider="$HOME/_/clis/execute_command_intuivo_cli/struct_testing"
-    [   -e "${provider}"  ] && source "${provider}" && echo "Loaded locally"
-    [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
-    ( ( ! command -v passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
-} # end load_struct_testing_wget
-load_struct_testing_wget
-
-export sudo_it
-function sudo_it() {
-  raise_to_sudo_and_user_home
-  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
-  enforce_variable_with_value SUDO_USER "${SUDO_USER}"
-  enforce_variable_with_value SUDO_UID "${SUDO_UID}"
-  enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
-  # Override bigger error trap  with local
-  function _trap_on_error(){
-    echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}\(\) \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}\(\) \\n ERR INT ...\033[0m"
-
-  }
-  trap _trap_on_error ERR INT
-} # end sudo_it
-
-
-_linux_prepare(){
-  sudo_it
-  [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
-  export USER_HOME="/home/${SUDO_USER}"
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
-}  # end _linux_prepare
-
 _version() {
   # fedora_32 https://www.scootersoftware.com/bcompare-4.3.3.24545.i386.rpm
   # https://www.scootersoftware.com/bcompare-4.3.3.24545.x86_64.rpm
@@ -65,6 +19,7 @@ _version() {
   [[ -z "${CODELASTESTBUILD}" ]] && failed "Beyond Compare Version not found! :${CODELASTESTBUILD}:"
 
 
+
   # enforce_variable_with_value USER_HOME "${USER_HOME}"
   # enforce_variable_with_value CODELASTESTBUILD "${CODELASTESTBUILD}"
 
@@ -75,6 +30,7 @@ _version() {
   unset CODEFILE
   unset CODELASTESTBUILD
 } # end _version
+
 
 
 _darwin__64() {
@@ -113,23 +69,63 @@ _darwin__64() {
     # sudo hdiutil detach /Volumes/Beyond \ Compare
 } # end _darwin__64
 
-_ubuntu__64() {
-	_linux_prepare
+_debian_flavor_install() {
+  sudo_it
+  trap 'echo -e "${RED}" && echo -e "ERROR failed \n$0:$LINENO _debian_flavor_install beyondcomapre" && echo -e "${RESET}" && return 0' ERR
+
+  # export USER_HOME="/home/${SUDO_USER}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  enforce_variable_with_value SUDO_USER "${SUDO_USER}"
   # THOUGHT          local CODENAME="bcompare-4.3.3.24545_amd64.deb"
   local CODENAME=$(_version "linux" "bcompare-*.*.*.*amd64.deb")
   enforce_variable_with_value CODENAME "${CODENAME}"
   local TARGET_URL="https://www.scootersoftware.com/${CODENAME}"
   enforce_variable_with_value TARGET_URL "${TARGET_URL}"
-
   local DOWNLOADFOLDER="$(_find_downloads_folder)"
   enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
   cd "${DOWNLOADFOLDER}"
   _download_mac "${TARGET_URL}" "${DOWNLOADFOLDER}"
-  sudo dpkg -i ${CODENAME}
+  dpkg -i ${CODENAME}
+} # end _debian_flavor_install
+
+_package_list_installer() {
+  local package packages="${@}"
+  trap 'echo -e "${RED}" && echo -e "ERROR failed \n$0:$LINENO _package_list_installer rbenv" && echo -e "${RESET}" && return 0' ERR
+
+  if ! install_requirements "linux" "${packages}" ; then
+  {
+    warning "installing requirements. ${CYAN} attempting to install one by one"
+    while read package; do
+    {
+      [ -z ${package} ] && continue
+      install_requirements "linux" "${package}"
+      _err=$?
+      if [ ${_err} -gt 0 ] ; then
+      {
+        failed to install requirements "${package}"
+      }
+      fi
+    }
+    done <<< "${packages}"
+  }
+  fi
+} # end _package_list_installer
+
+_ubuntu__64() {
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _ubuntu__64 beyondcomapre" && echo -e "${RESET}" && return 0' ERR
+
+  local package packages="
+    poppler-utils
+  "
+  _package_list_installer "${packages}"
+  _debian_flavor_install
 } # end _ubuntu__64
 
 _ubuntu__32() {
-	_linux_prepare
+  sudo_it
+  # export USER_HOME="/Users/${SUDO_USER}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  # _linux_prepare
   # THOUGHT local CODENAME="bcompare-4.3.3.24545_i386.deb"
   local CODENAME=$(_version "linux" "bcompare-*.*.*.*i386.deb")
   enforce_variable_with_value CODENAME "${CODENAME}"
@@ -144,7 +140,10 @@ _ubuntu__32() {
 } # end _ubuntu__32
 
 _fedora__32() {
-	_linux_prepare
+  sudo_it
+  # export USER_HOME="/Users/${SUDO_USER}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  # _linux_prepare
   local CODENAME=$(_version "linux" "bcompare*.*.*.*.i386.rpm")
   enforce_variable_with_value CODENAME "${CODENAME}"
   # THOUGHT                          bcompare-4.3.3.24545.i386.rpm
@@ -181,7 +180,10 @@ _centos__64() {
 } # end _centos__64
 
 _fedora__64() {
-	_linux_prepare
+  sudo_it
+  # export USER_HOME="/Users/${SUDO_USER}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  # _linux_prepare
   local CODENAME=$(_version "linux" "bcompare*.*.*.*.x86_64.rpm")
   enforce_variable_with_value CODENAME "${CODENAME}"
   # THOUGHT  https://www.scootersoftware.com/bcompare-4.3.3.24545.x86_64.rpm
@@ -199,7 +201,10 @@ _fedora__64() {
 } # end _fedora__64
 
 _mingw__64() {
-	_linux_prepare
+  sudo_it
+  export USER_HOME="/Users/${SUDO_USER}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  # _linux_prepare
     local CODENAME=$(_version "win" "BCompare*.*.*.*.exe")
     # THOUGHT        local CODENAME="BCompare-4.3.3.24545.exe"
     local URL="https://www.scootersoftware.com/${CODENAME}"

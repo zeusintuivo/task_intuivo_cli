@@ -5,6 +5,22 @@
 # 20200415 Compatible with Fedora, Mac, Ubuntu "sudo_up" "load_struct" "#
 set -E -o functrace
 export THISSCRIPTCOMPLETEPATH
+
+
+echo "Checking realpath  "
+if ! ( command -v realpath >/dev/null 2>&1; )  ; then
+  echo "... realpath not found. Downloading REF:https://github.com/swarmbox/realpath.git "
+  cd $HOME
+  git clone https://github.com/swarmbox/realpath.git
+  cd realpath
+  make
+  sudo make install
+  _err=$?
+  [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Builing realpath. returned error did not download or is installed err:$_err  \n \n  " && exit 1
+else
+  echo "... realpath exists .. check!"
+fi
+
 typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")" # updated realpath macos 20210924
 export BASH_VERSION_NUMBER
 typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
@@ -12,6 +28,10 @@ typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
 export  THISSCRIPTNAME
 typeset -r THISSCRIPTNAME="$(basename "$0")"
 
+
+#function pip () {
+#  echo "pip was called to install: $*"
+#}
 export _err
 typeset -i _err=0
   # function _trap_on_error(){
@@ -96,7 +116,12 @@ load_struct_testing
 export sudo_it
 function sudo_it() {
   raise_to_sudo_and_user_home
-  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
+  if [ $? -gt 0 ] ; then
+  {
+    failed to sudo_it raise_to_sudo_and_user_home
+    exit 1
+  }
+  fi
   enforce_variable_with_value SUDO_USER "${SUDO_USER}"
   enforce_variable_with_value SUDO_UID "${SUDO_UID}"
   enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
@@ -109,7 +134,12 @@ function sudo_it() {
 
 # _linux_prepare(){
   sudo_it
-  [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
+  if [ $? -gt 0 ] ; then
+  {
+    failed to sudo_it raise_to_sudo_and_user_home
+    exit 1
+  }
+  fi
   export USER_HOME
   # shellcheck disable=SC2046
   # shellcheck disable=SC2031
@@ -140,8 +170,8 @@ _checka_node_commander() {
     is_not_installed npm &&  $COMANDDER install -y npm             # Ubuntu only
     is_not_installed node && $COMANDDER install -y nodejs          # In Fedora installs npm and node
     is_not_installed node && $COMANDDER install -y nodejs-legacy   # Ubuntu only
-    verify_is_installed npm
-    verify_is_installed node
+    #verify_is_installed npm
+    #verify_is_installed node
 } # end _checka_node_commander
 
 _checka_tools_commander(){
@@ -160,19 +190,34 @@ _checka_tools_commander(){
     # # Ubuntu only
     # python-pip
     # "
-    verify_is_installed "
-    xclip
-    tree
-    ag
-    ack
-    pv
-    nano
-    vim
-    pip
-    sed
-    "
-    is_not_installed pygmentize &&    pip install pygments
-    verify_is_installed pygmentize
+    #verify_is_installed "
+    #xclip
+    #tree
+    #ag
+    #ack
+    #pv
+    #nano
+    #vim
+    #pip
+    #sed
+    #"
+  if ( ! command -v pygmentize >/dev/null 2>&1; ) ;  then
+    if ( command -v pip >/dev/null 2>&1; ) ; then # MAC
+    {
+       su - "${SUDO_USER}" -c 'pip install pygments'
+       #pip install pygments
+    }
+    fi
+    if ( command -v pip3 >/dev/null 2>&1; ) ; then # MAC
+    {
+       su - "${SUDO_USER}" -c 'pip3 install pygments'
+       #pip3 install pygments
+    }
+    fi
+  fi
+
+   # is_not_installed pygmentize &&    pip install pygments
+   # verify_is_installed pygmentize
   ensure pygmentize or "Canceling Install. Could not find pygmentize.  pip install pygments"
   # ensure npm or "Canceling Install. Could not find npm"
   # ensure node or "Canceling Install. Could not find node"
@@ -190,126 +235,6 @@ _checka_tools_commander(){
   #}
   #fi
 } # end _checka_tools_commander
-function _if_not_contains(){
-            # Sample use:
-            #       _if_not_contains  || run_this
-            #       (_if_not_contains  "${cronallowfile}" "root") || echo 'root' >> "${cronallowfile}"
-            #       (_if_not_contains  "${cronallowfile}" "${SUDO_USER}") ||  echo "${SUDO_USER}" >> "${cronallowfile}"
-            #
-            # discouraged use ---confusing using && and
-            #    _if_not_contains  && run_this
-            #
-            # or
-            #
-            # echo "${policies}" > temp.xml
-            # if ! _if_not_contains temp.xml "{1,}" ; then
-            # {
-            #   run this
-            # } else {
-            #    passed "passwords policy already set to {1,}"
-            # }
-            # fi
-                    local -i ret
-                    local msg
-                    ret=0
-                    (( DEBUG )) && echo "1if"
-                    [ ! -e "$1" ] && return 1
-                    (( DEBUG )) && (cat -n "$1" )
-                    msg=$(cat "$1" 2>&1)
-                    ret=$?
-                    (( DEBUG )) && echo "2if"
-                    (( DEBUG )) && echo "${msg}"
-                    [ $ret -gt 0 ] && return 1
-                    (( DEBUG )) && echo "3if"
-                    [[ "$msg" == *"No such"* ]] && return 1
-                    (( DEBUG )) && echo "4if"
-                    [[ "$msg" == *"nicht gefunden"* ]] && return 1
-                    (( DEBUG )) && echo "5if"
-                    [[ "$msg" == *"Permission denied"* ]] && return 1
-                    (( DEBUG )) && echo "6if"
-                    ret=0
-                    (( DEBUG )) && echo 'echo "$msg" | grep "$2"'
-                    (( DEBUG )) && echo 'echo '"$msg"' | grep '"$2"
-                    (( DEBUG )) && ([[ -n "$msg" ]] ||  echo "6.5if file is empty")
-                    [[ -n "$msg" ]] || return 1    # Not found
-                    msg=$(echo "$msg" | grep "$2" 2>&1)
-                    ret=$?
-                    (( DEBUG )) && echo "7if $ret"
-                    [ $ret -eq 0 ] && return 0     # Found
-                    [ $ret -gt 0 ] && return 1    # Not Found
-                    (( DEBUG )) && echo "8if"
-                    [[ "$msg" == *"No such"* ]] && return 1
-                    (( DEBUG )) && echo "9 if"
-                    [[ "$msg" == *"nicht gefunden"* ]] && return 1
-                    [[ "$msg" == *"Permission denied"* ]] && return 1
-                    return 0  # Found
-        } # end _if_not_contains
-
-function _if_contains(){
-  # Sample use
-  # _if_contains && run_this
-  # echo "${policies}" > temp.xml
-  # if _if_contains temp.xml "{1,}" ; then
-  # {
-  #   passed "passwords policy already set to {1,}"
-  # } else {
-  #   run this
-  # }
-  # fi
-  # if
-  if ! ( _if_not_contains  "$1" "$2" ) ; then
-  {
-    return 1
-  }
-  fi
-  return 0
-} # end _if_contains
-
-Checking selftest _if_contains
-if it_exists_with_spaces "${USER_HOME}/.bashrc" ; then
-{
-  if _if_contains  "${USER_HOME}/.bashrc" "PETERPIZZA" ; then
-  {
-    failed "bad .bashrc should not have PETERPIZZA word"
-  }
-  else
-  {
-    passed " good .bashrc should not have PETERPIZZA"
-  }
-  fi
-  if _if_contains  "${USER_HOME}/.bashrc" "then" ; then
-  {
-    passed " good .bashrc should have the then word"
-  }
-  else
-  {
-    failed ".bashrc should have the then word"
-  }
-  fi
-  # echo hola
-  # exit 0
-}
-fi
-
-function _ensure_touch_dir_and_file() {
-  local launchdir_default="${1}"
-  local launchfile_default="${2}"
-
-  enforce_variable_with_value launchdir_default "${launchdir_default}"
-  enforce_variable_with_value launchfile_default "${launchfile_default}"
-  enforce_variable_with_value SUDO_USER "${SUDO_USER}"
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
-
-  if it_does_not_exist_with_spaces "${launchfile_default}" ; then
-  {
-    mkdir -p "${launchdir_default}"
-    directory_exists_with_spaces "${launchdir_default}"
-    touch "${launchfile_default}"
-    chown -R "${SUDO_USER}" "${launchdir_default}"
-  }
-  fi
-  file_exists_with_spaces "${launchfile_default}"
-} # end _ensure_touch_dir_and_file
 
 _add_self_cron_update() {
   # Make a cron REF: https://www.golinuxcloud.com/create-schedule-cron-job-shell-script-linux/
@@ -394,7 +319,7 @@ _add_self_cron_update() {
   }
   fi
   # how to install crontab automatically REF: https://stackoverflow.com/questions/878600/how-to-create-a-cron-job-using-bash-automatically-without-the-interactive-editor/878647#878647
-  passed Installing cron with clis_autoupdate
+  passed passed - installed cron with clis_autoupdate
 } # end _add  _self_cron_update
 
 _add_launchd(){
@@ -548,6 +473,8 @@ _configure_git(){
 } # end _configure_git
 
 _install_npm_utils() {
+    mkdir -p "${USER_HOME}/.npm"
+    mkdir -p "${USER_HOME}/.nvm"
     chown -R "${SUDO_USER}" "${USER_HOME}/.npm"
     chown -R "${SUDO_USER}" "${USER_HOME}/.nvm"
     # Global node utils
@@ -557,18 +484,20 @@ _install_npm_utils() {
         npm i -g live-server
     }
     fi
-    verify_is_installed live-server
-    verify_is_installed nodemon
+   # verify_is_installed live-server
+   # verify_is_installed nodemon
     # is_not_installed jest &&  npm i -g jest
     # verify_is_installed jest
-    CHAINSTALLED=$(su - "${SUDO_USER}" -c 'npm -g info chai >/dev/null 2>&1')
+    #CHAINSTALLED=$(su - "${SUDO_USER}" -c 'npm -g info chai >/dev/null 2>&1')
+    CHAINSTALLED=$(npm -g info chai >/dev/null 2>&1)
     if [[ -n "$CHAINSTALLED" ]] &&  [[ "$CHAINSTALLED" == *"npm ERR"* ]]  ; then
     {
         Installing npm chai
         npm i -g chai
     }
     fi
-    MOCHAINSTALLED=$(su - "${SUDO_USER}" -c 'npm -g info mocha >/dev/null 2>&1')
+    #MOCHAINSTALLED=$(su - "${SUDO_USER}" -c 'npm -g info mocha >/dev/null 2>&1')
+    MOCHAINSTALLED=$(npm -g info mocha >/dev/null 2>&1)
     if [[ -n "$MOCHAINSTALLED" ]] &&  [[ "$MOCHAINSTALLED" == *"npm ERR"* ]]  ; then
     {
         npm i -g mocha
@@ -616,7 +545,7 @@ _if_not_is_installed(){
 _install_nvm() {
     local -i ret
     local msg
-    [[  ! -e "${USER_HOME}/.config" ]] && touch "${USER_HOME}/.config"
+    [[  ! -e "${USER_HOME}/.config" ]] && mkdir -p "${USER_HOME}/.config"
     chown  -R "${SUDO_USER}" "${USER_HOME}/.config"
     [ -s "${USER_HOME}/.nvm/nvm.sh" ] && . "${USER_HOME}/.nvm/nvm.sh" # This loads nvm
 
@@ -818,6 +747,8 @@ _setup_ohmy(){
         # install ohmyzsh
         su - "${SUDO_USER}" -c 'sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"'
         chown -R "${SUDO_USER}" "${USER_HOME}/.oh-my-zsh"
+	chsh -s /usr/bin/zsh "${SUDO_USER}"
+	su - "${SUDO_USER}" -c 'chsh -s /usr/bin/zsh "'${SUDO_USER}'"'
         Testing ohmyzsh
         directory_exists_with_spaces "${USER_HOME}/.oh-my-zsh"
     }
@@ -868,14 +799,68 @@ if ( gem list colorls | grep -q "^colorls" ) ; then
 }
 else
 {
+  if [[ "$(uname)" == "Darwin" ]] ; then
+  {
+   # verify_is_installed xcodebuild
+    # Do something under Mac OS X platform
+    local xcodeversion=$(xcodebuild -version | head -1)
+    if  ! version_installed_is "${xcodeversion}"  "11.3.1" ;   then # is like version installed is  11.3.1 ?
+    {
+      Comment xcodebuild \-version Xcode 11.3.1 is ruby broken fix here \-\> REF: https://stackoverflow.com/questions/20559255/error-while-installing-json-gem-mkmf-rb-cant-find-header-files-for-ruby
+      local non_existent_path=$(ruby -rrbconfig -e 'puts RbConfig::CONFIG["rubyhdrdir"]')
+      if  ! it_exists_with_spaces  "${non_existent_path}"  ; then 
+      {
+        if  it_exists_with_spaces /Applications/Xcode.app  ; then 
+        {
+        
+          Comment "see ! filepath \"${non_existent_path}\" does not exists !!!  "
+          Comment "changing to  xcode-select --switch /Library/Developer/CommandLineTools"
+          xcode-select --switch /Library/Developer/CommandLineTools
+          touch "${USER_HOME}/.install.clis.step_xcode_ruby_change.lock" 
+          Comment "checking again .."
+          non_existent_path=$(ruby -rrbconfig -e 'puts RbConfig::CONFIG["rubyhdrdir"]')
+          if  ! it_exists_with_spaces  "${non_existent_path}"  ; then 
+          {
+              Comment "ok even afer doing patch from REF: https://stackoverflow.com/questions/20559255/error-while-installing-json-gem-mkmf-rb-cant-find-header-files-for-ruby "
+              Comment "it still does not work "
+              Comment  "${non_existent_path}"
+              rm "${USER_HOME}/.install.clis.step_xcode_ruby_change.lock"
+              warning nah "cannot install colorls To add ruby path to compile colorls install it manually and try again"
+          }
+          else 
+          {
   Installing colorls
-  yes | gem install colorls
-  yes | gem update colorls
+  yes | DEVELOPER_DIR=/Library/Developer/CommandLineTools/  gem install colorls
+  yes | DEVELOPER_DIR=/Library/Developer/CommandLineTools/  gem update colorls
   chown -R "${SUDO_USER}" /Library/Ruby
   _if_not_contains "${USER_HOME}/.zshrc" "colorls" || echo "alias ll='colorls -lA --sd --gs --group-directories-first'" >> "${USER_HOME}/.zshrc"
   _if_not_contains "${USER_HOME}/.zshrc" "colorls" || echo "alias ls='colorls --group-directories-first'" >> "${USER_HOME}/.zshrc"
   _if_not_contains "${USER_HOME}/.bashrc" "colorls" || echo "alias ll='colorls -lA --sd --gs --group-directories-first'" >> "${USER_HOME}/.bashrc"
   _if_not_contains "${USER_HOME}/.bashrc" "colorls" || echo "alias ls='colorls --group-directories-first'" >> "${USER_HOME}/.bashrc"
+               passed "Found new rubyfilepath !!!  \<${non_existent_path}\> " 
+          }
+          fi        
+        }
+        fi
+      } 
+      else 
+      {
+        Comment "Never mind filepath does exists  \<${non_existent_path}\> " 
+      }
+      fi
+    }
+    fi
+  }
+  fi
+
+  if ( it_exists_with_spaces   "${USER_HOME}/.install.clis.step_xcode_ruby_change.lock"  ) ; then
+  {
+    Comment "Removing patch for ruby build "
+    xcode-select --switch /Applications/Xcode.app
+    rm "${USER_HOME}/.install.clis.step_xcode_ruby_change.lock"
+  }
+  fi
+
 }
 fi
 return 0
@@ -884,6 +869,7 @@ return 0
 _setup_clis(){
   local -i ret
   local msg
+  Comment start _setup_clis
   ret=0
   if  it_exists_with_spaces "${USER_HOME}/_/clis" ; then
   {
@@ -1084,10 +1070,12 @@ else
 fi
 
 chown -R "${SUDO_USER}" "${USER_HOME}/_/clis"
+Comment ended _setup_clis
 return 0
 } # end _setup_clis
 
 _setup_mycd(){
+  Comment start $0$1 _setup_mycd
   if it_does_not_exist_with_spaces "${USER_HOME}/.mycd"  ; then
   {
     # My CD
@@ -1166,7 +1154,8 @@ _setup_mycd(){
     fi
   }
   fi
-  return 0
+  Comment end $0$1 _setup_mycd 
+  # return 0
 } # end _setup_mycd
 
 _install_dmg__64() {
@@ -1174,6 +1163,7 @@ _install_dmg__64() {
   local extension="$(echo "${CODENAME}" | rev | cut -d'.' -f 1 | rev)"
   local APPDIR="${2}"
   local TARGET_URL="${3}"
+  Comment start $0$1 _install_dmg__64
   # CODENAME="$(basename "${TARGET_URL}" )"
   echo "${CODENAME}";
   echo "Extension:${extension}"
@@ -1256,9 +1246,11 @@ _install_dmg__64() {
    #   fi
    # }
    # fi
+  Comment end $0$1 _install_dmg__64
 } # end _install_dmg__64
 
-_install_dmgs_list(){
+_install_dmgs_list() {
+  Comment start $0$1 _install_dmgs_list
   # Iris.dmg|
   # 1Password.pkg|https://c.1password.com/dist/1P/mac7/1Password-7.7.pkg
   # Keka-1.2.16.dmg|Keka/Keka.app|https://github-releases.githubusercontent.com/73220421/eec2e3d8-ba82-4d01-ac25-b266ad0bcf64?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIWNJYAX4CSVEH53A%2F20210809%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20210809T155416Z&X-Amz-Expires=300&X-Amz-Signature=9f60b0ef230cff82eaebd6673579693211968bc6451c539af92d8b5cccec03f7&X-Amz-SignedHeaders=host&actor_id=0&key_id=0&repo_id=73220421&response-content-disposition=attachment%3B%20filename%3DKeka-1.2.16.dmg&response-content-type=application%2Foctet-stream
@@ -1325,6 +1317,31 @@ _install_dmgs_list(){
     fi
   }
   done <<< "$(echo "${installlist}" | grep -vE '^#' | grep -vE '^\s+#')"
+  _sublime_softlink_command_line "/Applications/Sublime\\ Text.app"
+  _bcompare_softlink_command_line "/Applications/Beyond\\ Compare.app"
+
+  Comment end $0$1 _install_dmgs_list
+  return 0
+} # end _install_dmgs_list
+
+_bcompare_softlink_command_line() {
+  local _target="${1}"
+  if it_exists_with_spaces /Applications/Beyond\ Compare.app && is_not_installed bcomp  ; then
+  {
+    Creating softlinks for bcomp, bcompare, pdftotext
+    [ ! -d /usr/local/bin/ ] && anounce_command mkdir -p  /usr/local/bin/
+    anounce_command ln -s /Applications/Beyond\\ Compare.app/Contents/MacOS/BCompare /usr/local/bin/bcompare
+    anounce_command ln -s /Applications/Beyond\\ Compare.app/Contents/MacOS/bcomp /usr/local/bin/bcomp
+    anounce_command ln -s /Applications/Beyond\\ Compare.app/Contents/MacOS/pdftotext /usr/local/bin/pdftotext
+    anounce_command sudo chown -R root  /usr/local/bin/bcomp
+    anounce_command sudo chown -R root  /usr/local/bin/bcompare
+    anounce_command sudo chown -R root  /usr/local/bin/pdftotext
+  }
+  fi
+} # end _bcompare_link_command_line
+
+_sublime_softlink_command_line() {
+  local _target="${1}"
   if it_exists_with_spaces /Applications/Sublime\ Text.app && is_not_installed subl  ; then
   {
     Creating softlinks for subl, sublime
@@ -1332,29 +1349,15 @@ _install_dmgs_list(){
     anounce_command sudo chown -R "${SUDO_USER}"  /usr/local/&
     anounce_command rm -rf  /usr/local/bin/sublime
     anounce_command rm -rf  /usr/local/bin/subl
-    anounce_command ln -s /Applications/Sublime\\ Text.app/Contents/SharedSupport/bin/subl  /usr/local/bin/sublime
-    anounce_command ln -s /Applications/Sublime\\ Text.app/Contents/SharedSupport/bin/subl /usr/local/bin/subl
+    anounce_command ln -s  /Applications/Sublime\\ Text.app/Contents/SharedSupport/bin/subl /usr/local/bin>
+    anounce_command ln -s  /Applications/Sublime\\ Text.app/Contents/SharedSupport/bin/subl /usr/local/bin>
     anounce_command sudo chown -R "${SUDO_USER}"  /usr/local/bin/sublime&
     anounce_command sudo chown -R "${SUDO_USER}"  /usr/local/bin/subl&
   }
   fi
+} # end _sublime_link_command_line
 
-  if it_exists_with_spaces /Applications/Beyond\ Compare.app && is_not_installed bcomp  ; then
-  {
-    Creating softlinks for bcomp, bcompare, pdftotext
-    [ ! -d /usr/local/bin/ ] && anounce_command mkdir -p  /usr/local/bin/
-    anounce_command ln -s /Applications/Beyond\ Compare.app/Contents/MacOS/BCompare /usr/local/bin/bcompare
-    anounce_command ln -s /Applications/Beyond\ Compare.app/Contents/MacOS/bcomp /usr/local/bin/bcomp
-    anounce_command ln -s /Applications/Beyond\ Compare.app/Contents/MacOS/pdftotext /usr/local/bin/pdftotext
-    anounce_command sudo chown -R root  /usr/local/bin/bcomp
-    anounce_command sudo chown -R root  /usr/local/bin/bcompare
-    anounce_command sudo chown -R root  /usr/local/bin/pdftotext
-  }
-  fi
-  return 0
-} # end _install_dmgs_list
-
-_password_simple(){
+_password_simple() {
   Installing password change
   local Answer
   read -p 'Change Passwords? [Y/n] (Enter Defaults - No/N/n )' Answer
@@ -1470,14 +1473,7 @@ fi
 return 0
 } # end password_simple2
 
-export is_not_installed
-function is_not_installed (){
-  if ( command -v $1 >/dev/null 2>&1; ) ; then
-    return 1
-  else
-    return 0
-  fi
-} # end is_not_installed
+
 _debian__32() {
   COMANDDER="apt install -y"
   is_not_installed ag && $COMANDDER silversearcher-ag         # In Ubuntu
@@ -1492,8 +1488,16 @@ _debian__32() {
     python-pip
     zsh
     "
-  pip install pygments
-
+    if ( command -v pip >/dev/null 2>&1; ) ; then # MAC
+    {
+       pip install pygments
+    }
+    fi
+    if ( command -v pip3 >/dev/null 2>&1; ) ; then # MAC
+    {
+       pip3 install pygments
+    }
+    fi
   _checka_tools_commander
   _configure_git
   _install_nvm
@@ -1503,11 +1507,11 @@ _debian__32() {
   _setup_ohmy
   _install_colorls
   _setup_clis
-  _setup_mycd
+  # _setup_mycd
 
 
 
-  # _password_simple
+  _password_simple
   # _password_simple2
 
   if it_does_not_exist_with_spaces /etc/apt/sources.list.d/cloudfoundry-cli.list ; then
@@ -1519,11 +1523,11 @@ _debian__32() {
     apt update -y
     $COMANDDER cf-cli
     snap install cf-cli
+    chown -R "${SUDO_USER}" "${USER_HOME}/.cf"
   }
   fi
-  chown -R "${SUDO_USER}" "${USER_HOME}/.cf"
-  verify_is_installed cf
-
+ # verify_is_installed cf
+  _setup_mycd
 } # end _debian__32
 _debian__64() {
   COMANDDER="apt install -y"
@@ -1539,7 +1543,16 @@ _debian__64() {
     python-pip
     zsh
     "
-  pip install pygments
+    if ( command -v pip >/dev/null 2>&1; ) ; then # MAC
+    {
+       pip install pygments
+    }
+    fi
+    if ( command -v pip3 >/dev/null 2>&1; ) ; then # MAC
+    {
+       pip3 install pygments
+    }
+    fi
 
   _checka_tools_commander
   _configure_git
@@ -1550,11 +1563,11 @@ _debian__64() {
   _setup_ohmy
   _install_colorls
   _setup_clis
-  _setup_mycd
+  # _setup_mycd
 
 
 
-  # _password_simple
+  _password_simple
   # _password_simple2
 
   if it_does_not_exist_with_spaces /etc/apt/sources.list.d/cloudfoundry-cli.list ; then
@@ -1566,13 +1579,14 @@ _debian__64() {
     apt update -y
     $COMANDDER cf-cli
     snap install cf-cli
+    chown -R "${SUDO_USER}" "${USER_HOME}/.cf"
   }
   fi
-  chown -R "${SUDO_USER}" "${USER_HOME}/.cf"
-  verify_is_installed cf
-
+ # verify_is_installed cf
+  _setup_mycd
 } # end _debian__64
 _ubuntu__64() {
+  Comment start $0$1 _ubuntu__64
   # debian sudo usermod -aG sudo "${SUDO_USER}"
   # chown "${SUDO_USER}" /home
   # chgrp -R "${SUDO_GRP}" /home
@@ -1591,8 +1605,16 @@ _ubuntu__64() {
     python3-pip
     zsh
     "
-  pip install pygments
-
+    if ( command -v pip >/dev/null 2>&1; ) ; then # MAC
+    {
+       pip install pygments
+    }
+    fi
+    if ( command -v pip3 >/dev/null 2>&1; ) ; then # MAC
+    {
+       pip3 install pygments
+    }
+    fi
   _checka_tools_commander
   _configure_git
   _install_nvm
@@ -1606,7 +1628,7 @@ _ubuntu__64() {
 
 
 
-  # _password_simple
+  _password_simple
   # _password_simple2
 
   if it_does_not_exist_with_spaces /etc/apt/sources.list.d/cloudfoundry-cli.list ; then
@@ -1618,11 +1640,12 @@ _ubuntu__64() {
     apt update -y
     $COMANDDER cf-cli
     snap install cf-cli
+    chown -R "${SUDO_USER}" "${USER_HOME}/.cf"
   }
   fi
-  chown -R "${SUDO_USER}" "${USER_HOME}/.cf"
   # verify_is_installed cf
-
+  _setup_mycd
+  Comment end $0$1 _ubuntu__64
 } # end _ubuntu__64
 
 _centos__64() {
@@ -1632,35 +1655,43 @@ _centos__64() {
 _fedora__64() {
   COMANDDER="dnf install -y"
   is_not_installed ag && $COMANDDER the_silver_searcher          # In Fedora
-cd
-  git clone https://github.com/astrand/xclip.git
-./bootstrap
-./configure
-make
-make install
   dnf groupinstall 'development tools' -y
 
-  install_requirements "linux" "
-  epel-release
-  # python3-paramiko
-"
-  install_requirements "linux" "
+  install_requirements "linux" "xclip"
   # epel-release
-  snap
+  # python3-paramiko
+
+  install_requirements "linux" 
+  # epel-release
+  install_requirements "linux"  snap
     # xclip
     # tree
-    ack
-    vim
-    nano
-    pv
-    python2
-    python2-devel
-    python3
-    python3-devel
-    twisted
-    zsh
-    "
-   systemctl enable --now snapd.socket
+  install_requirements "linux"  ack
+  install_requirements "linux"  vim
+  install_requirements  "linux"  nano
+  install_requirements  "linux"  pv
+  install_requirements  "linux"  python2
+    # python2-devel
+  install_requirements  "linux"   python3
+  install_requirements  "linux"  python3-devel
+    # twisted
+  install_requirements  "linux"   zsh
+  install_requirements  "linux"  xclip
+  install_requirements  "linux"  autoconf
+  install_requirements  "linux"  automake
+  install_requirements  "linux"  libtool
+  install_requirements  "linux"  libXmu-devel
+  # autoreconf ubuntu
+
+   cd
+   git clone https://github.com/astrand/xclip.git
+   cd xclip
+    ./bootstrap
+    ./configure
+    make
+    make install
+
+   #systemctl enable --now snapd.socket
    sudo snap install tree
   _checka_tools_commander
   _configure_git
@@ -1671,11 +1702,11 @@ make install
   _setup_ohmy
   _install_colorls
   _setup_clis
-  _setup_mycd
+  # _setup_mycd
 
 
 
-  # _password_simple
+  _password_simple
   # _password_simple2
   if  it_does_not_exist_with_spaces /etc/yum.repos.d/cloudfoundry-cli.repo ; then
   {
@@ -1685,8 +1716,8 @@ make install
     $COMANDDER cf7-cli
   }
   fi
-  verify_is_installed cf
-
+ # verify_is_installed cf
+  _setup_mycd
 } # end _fedora__64
 
 _darwin__64() {
@@ -1717,13 +1748,14 @@ _darwin__64() {
   # version 6 brew install cloudfoundry/tap/cf-cli
   if anounce_command sudo chown -R "${SUDO_USER}" "${USER_HOME}/Library/Caches/" ; then
   {
+    mkdir -p "${USER_HOME}/Library/Caches/"
     Comment ${ORANGE} WARNING! ${YELLOW_OVER_DARKBLUE} failed chown -R "${SUDO_USER}" "${USER_HOME}/Library/Caches/" ${YELLOW_OVER_GRAY241}"${APPDIR}"${RESET}
   }
   fi
-  su - "${SUDO_USER}" -c 'brew install the_silver_searcher'
+  # su - "${SUDO_USER}" -c 'brew install the_silver_searcher'
   install_requirements "darwin" "
     tree
-    # the_silver_searcher
+    the_silver_searcher
     ag@the_silver_searcher
     pt@the_platinum_searcher
     wget
@@ -1740,32 +1772,58 @@ _darwin__64() {
     powerline-go
     zsh
   "
-  su - "${SUDO_USER}" -c 'pip install --upgrade pip'
-  su - "${SUDO_USER}" -c 'pip3 install --upgrade pip'
-  verify_is_installed pip3
+  #su - "${SUDO_USER}" -c 'pip install --upgrade pip'
+  #su - "${SUDO_USER}" -c 'pip3 install --upgrade pip'
+  #verify_is_installed pip3
   if ( ! command -v pygmentize >/dev/null 2>&1; ) ;  then
-    su - "${SUDO_USER}" -c 'pip3 install pygments'
-    su - "${SUDO_USER}" -c 'pip install pygments'
+    if ( command -v pip >/dev/null 2>&1; ) ; then # MAC
+    {
+       su - "${SUDO_USER}" -c 'pip install pygments'
+       #pip install pygments
+    }
+    fi
+    if ( command -v pip3 >/dev/null 2>&1; ) ; then # MAC
+    {
+       su - "${SUDO_USER}" -c 'pip3 install pygments'
+       #pip3 install pygments
+    }
+    fi
   fi
-  is_not_installed pygmentize &&   pip3 install pygments
-  is_not_installed pygmentize &&   pip install pygments
-  su - "${SUDO_USER}" -c 'pip3 install pygments'
-  su - "${SUDO_USER}" -c 'pip install pygments'
+  #is_not_installed pygmentize &&   pip3 install pygments
+  #is_not_installed pygmentize &&   pip install pygments
+  #su - "${SUDO_USER}" -c 'pip3 install pygments'
+  #su - "${SUDO_USER}" -c 'pip install pygments'
+  Comment "relink ag"
+  brew unlink the_silver_searcher && brew link the_silver_searcher
 
-  verify_is_installed "
-    wget
-    tree
-    ag
-    pt
-    cf
-    node
-    ack
-    pv
-    nano
-    vim
-    gawk
-    pygmentize
-    "
+  # verify_is_installed "
+  #  wget
+  #  tree
+  #  ag
+  #  pt
+  #  cf
+  #  node
+  #  ack
+  #  pv
+  #  nano
+  #  vim
+  #  gawk
+  #  pygmentize
+  #  "
+  if  ! command -v pygmentize >/dev/null 2>&1;   then
+    if  command -v pip >/dev/null 2>&1;   then # MAC
+    {
+       #su - "${SUDO_USER}" -c 'pip install pygments'
+       pip install pygments
+    }
+    fi
+    if  command -v pip3 >/dev/null 2>&1;  then # MAC
+    {
+       #su - "${SUDO_USER}" -c 'pip3 install pygments'
+       pip3 install pygments
+    }
+    fi
+  fi
 
   _configure_git
   # _install_nvm
@@ -1791,7 +1849,7 @@ _darwin__64() {
   chown -R "${SUDO_USER}" "/Library/Ruby"
   _install_colorls
   _setup_clis
-  _setup_mycd
+  # _setup_mycd
   [[  -e "${USER_HOME}/.bash_profile" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.bash_profile"
   [[  -e "${USER_HOME}/.bashrc" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.bashrc"
   [[  -e "${USER_HOME}/.zshrc" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.zshrc"
@@ -1799,7 +1857,34 @@ _darwin__64() {
 
   _add_self_cron_update /usr/lib/cron/  /usr/lib/cron/cron.allow
   # _add_launchd "${USER_HOME}/Library/LaunchAgents" "${USER_HOME}/Library/LaunchAgents/com.intuivo.clis_pull_all.plist"
+  Installing composer global require laravel/valet 
+  local php_version="$(major_minor_version "$(php --version  |  head -1 | extract_version )")"
+  if version_lt "$php_version" "7.2.5"; then 
+  {
+    Warning PHP Vesion is too old 
+    Comment trying to install version 7.4 
+    if [[ "$(uname)" == "Darwin" ]] ; then
+    {
+      #brew install php@7.4
+      su - "${SUDO_USER}" -c 'brew install  php@7.4'
+      su - "${SUDO_USER}" -c 'brew link  php@7.4'
+       (_if_not_contains   "${USER_HOME}/.bashrc" "php@7.4") ||  echo "$(cat <<EOINSERT
+export PATH="/usr/local/opt/php@7.4/bin:$PATH"
+export PATH="/usr/local/opt/php@7.4/sbin:$PATH"
+EOINSERT
+)" >> "${USER_HOME}/.bashrc"
+        (_if_not_contains   "${USER_HOME}/.zshrc" "php@7.4") ||  echo "$(cat <<EOINSERT
+export PATH="/usr/local/opt/php@7.4/bin:$PATH"
+export PATH="/usr/local/opt/php@7.4/sbin:$PATH"
+EOINSERT
+)" >> "${USER_HOME}/.zshrc"
+        export PATH="/usr/local/opt/php@7.4/bin:$PATH"
+        export PATH="/usr/local/opt/php@7.4/sbin:$PATH"
+    }
+    fi
 
+  }
+  fi
   su - "${SUDO_USER}" -c 'composer global require laravel/valet'
   Updating _password_simple
   _password_simple
@@ -1815,6 +1900,7 @@ _darwin__64() {
   Message then run this file  disable.spotlight.bash
   chmod +x  disable.spotlight.bash
   chown -R "${SUDO_USER}"   disable.spotlight.bash
+  _setup_mycd
   return 0
   # _password_simple2
 } # end _darwin__64

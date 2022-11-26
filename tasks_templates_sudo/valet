@@ -84,7 +84,7 @@ _darwin__64() {
 _readhat_flavor_install(){
   sudo_it
   install_requirements "linux" "
-    # ReadHat Flavor only
+    # RedHat Flavor only
     nss-tools
     jq
     xsel

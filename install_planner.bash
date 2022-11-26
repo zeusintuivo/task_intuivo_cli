@@ -154,9 +154,7 @@ export sudo_it
 function sudo_it() {
   raise_to_sudo_and_user_home
   local _err=$?
-  if (( DEBUG )) ; then
-    Comment _err:${_err}
-  fi
+  Comment _err:${_err}
   if [ $_err -gt 0 ] ; then
   {
     failed to sudo_it raise_to_sudo_and_user_home
@@ -165,9 +163,7 @@ function sudo_it() {
   fi
   # [ $_err -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
   _err=$?
-  if (( DEBUG )) ; then
-    Comment _err:${_err}
-  fi
+  Comment _err:${_err}
   enforce_variable_with_value SUDO_USER "${SUDO_USER}"
   enforce_variable_with_value SUDO_UID "${SUDO_UID}"
   enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
@@ -189,9 +185,7 @@ ERR INT ..."
 # _linux_prepare(){
   sudo_it
   _err=$?
-  if (( DEBUG )) ; then
-    Comment _err:${_err}
-  fi
+  Comment _err:${_err}
   if [ $_err -gt 0 ] ; then
   {
     failed to sudo_it raise_to_sudo_and_user_home
@@ -200,9 +194,7 @@ ERR INT ..."
   fi
   # [ $_err -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
   _err=$?
-  if (( DEBUG )) ; then
-    Comment _err:${_err}
-  fi
+  Comment _err:${_err}
   # [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
   export USER_HOME
   # shellcheck disable=SC2046
@@ -220,259 +212,22 @@ enforce_variable_with_value SUDO_USER "${SUDO_USER}"
 if (( DEBUG )) ; then
   passed "Caller user identified:${SUDO_USER}"
 fi
-  if (( DEBUG )) ; then
-    Comment DEBUG_err?:${?}
-  fi
+  Comment DEBUG_err?:${?}
 if (( DEBUG )) ; then
   passed "Home identified:${USER_HOME}"
 fi
-  if (( DEBUG )) ; then
-    Comment DEBUG_err?:${?}
-  fi
+  Comment DEBUG_err?:${?}
 directory_exists_with_spaces "${USER_HOME}"
 
 
 
- #---------/\/\/\-- tasks_base/sudoer.bash -------------/\/\/\--------
+ #--------\/\/\/\/-- Work here below \/, test, and transfer to tasks_templates/planner having a working version -\/\/\/\/-------
 
 
 
 
 
- #--------\/\/\/\/-- tasks_templates_sudo/rbenv …install_rbenv.bash” -- Custom code -\/\/\/\/-------
-
-
-#!/usr/bin/env bash
-#
-# @author Zeus Intuivo <zeus@intuivo.com>
-#
-
-_package_list_installer() {
-  local package packages="${@}"
-  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer rbenv" && echo -e "${RESET}" && return 0' ERR
-
-  if ! install_requirements "linux" "${packages}" ; then
-  {
-    warning "installing requirements. ${CYAN} attempting to install one by one"
-    while read package; do
-    {
-      [ -z ${package} ] && continue
-      if ! install_requirements "linux" "${package}" ; then
-      {
-        _err=$?
-        if [ ${_err} -gt 0 ] ; then
-        {
-          echo -e "${RED}" 
-          echo failed to install requirements "${package}"
-          echo -e "${RESET}"
-        }
-        fi
-      }
-      fi
-    }
-    done <<< "${packages}"
-  }
-  fi
-} # end _package_list_installer
-
-_git_clone() {
-  local _source="${1}"
-  local _target="${2}"
-  if  it_exists_with_spaces "${_target}" ; then
-  {
-    cd "${_target}"
-    git config pull.rebase false
-    git fetch
-    git pull
-  }
-  else
-  {
-   git clone "${_source}" "${_target}"
-  }
-  fi
-  chown -R "${SUDO_USER}" "${_target}"
-
-} # _git_clone
-
-_add_variables_to_bashrc_zshrc(){
-  local RBENV_SH_CONTENT='
-
-# RBENV
-export RBENV_ROOT="'${USER_HOME}'/.rbenv"
-export PATH="'${USER_HOME}'/.rbenv/bin:${PATH}"
-eval "$(rbenv init -)"
-
-' 
-  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _add_variables_to_bashrc_zshrc rbenv" && echo -e "${RESET}" && return 0' ERR
-  echo "${RBENV_SH_CONTENT}"
-  local INITFILE INITFILES="
-   .bashrc
-   .zshrc
-   .bash_profile
-   .profile
-   .zshenv
-   .zprofile
-  "
-  while read INITFILE; do
-  { 
-    [ -z ${INITFILE} ] && continue
-    _if_not_contains "${USER_HOME}/${INITFILE}"  "# RBENV" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
-    _if_not_contains "${USER_HOME}/${INITFILE}"  "RBENV_ROOT" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
-    _if_not_contains "${USER_HOME}/${INITFILE}"  "rbenv init" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
-  }
-  done <<< "${INITFILES}"
-  # type rbenv
-  export PATH="${USER_HOME}/.rbenv/bin:${PATH}"
-  cd "${USER_HOME}/.rbenv/bin"
-  eval "$(rbenv init -)"
-
-  rbenv doctor
-  rbenv install -l
-  rbenv install 2.6.5
-  rbenv global 2.6.5
-  rbenv rehash
-  ruby -v
-
-} # _add_variables_to_bashrc_zshrc
-
-_debian_flavor_install() {
-  apt update -y
-  trap 'echo -e "${RED}" && echo "ERROR err:$_err failed $0:$LINENO _debian_flavor_install rbenv" && echo -e "${RESET}" && return 0' ERR
-  # Batch 1 18.04
-  local package packages="
-    autoconf
-    bison
-    build-essential
-    libssl-dev
-    libyaml-dev
-    libreadline6-dev
-    zlib1g-dev
-    libncurses5-dev
-    libffi-dev
-    libgdbm5
-    libgdbm-dev
-  "
-  _package_list_installer "${packages}"
-  # Batch 2 20.04
-  local package packages="
-    autoconf
-    bison
-    build-essential
-    libssl-dev
-    libyaml-dev
-    libreadline6-dev
-    zlib1g-dev
-    libncurses5-dev
-    libffi-dev
-    libgdbm6
-    libgdbm-dev
-  "
-  _package_list_installer "${packages}"
-  _git_clone "https://github.com/rbenv/rbenv.git" "${USER_HOME}/.rbenv"
-  _git_clone "https://github.com/rbenv/ruby-build.git" "${USER_HOME}/.rbenv/plugins/ruby-build"
-  local MSG=$(_add_variables_to_bashrc_zshrc)
-  echo "${MSG}"
-} # end _debian_flavor_install
-
-_redhat_flavor_install() {
-  dnf build-dep rbenv -vy
-  _git_clone "https://github.com/rbenv/rbenv.git" "${USER_HOME}/.rbenv"
-  _git_clone "https://github.com/rbenv/ruby-build.git" "${USER_HOME}/.rbenv/plugins/ruby-build"
-  _add_variables_to_bashrc_zshrc
-  rbenv install -l
-  rbenv install 2.6.5
-  rbenv global 2.6.5
-  rbenv rehash
-  ruby -v
-} # end _redhat_flavor_install
-
-_arch_flavor_install() {
-  echo "Procedure not yet implemented. I don't know what to do."
-} # end _readhat_flavor_install
-
-_arch__32() {
-  _arch_flavor_install
-} # end _arch__32
-
-_arch__64() {
-  _arch_flavor_install
-} # end _arch__64
-
-_centos__32() {
-  _redhat_flavor_install
-} # end _centos__32
-
-_centos__64() {
-  _redhat_flavor_install
-} # end _centos__64
-
-_debian__32() {
-  _debian_flavor_install
-} # end _debian__32
-
-_debian__64() {
-  _debian_flavor_install
-} # end _debian__64
-
-_fedora__32() {
-  _redhat_flavor_install
-} # end _fedora__32
-
-_fedora__64() {
-  _redhat_flavor_install
-} # end _fedora__64
-
-_gentoo__32() {
-  _redhat_flavor_install
-} # end _gentoo__32
-
-_gentoo__64() {
-  _redhat_flavor_install
-} # end _gentoo__64
-
-_madriva__32() {
-  _redhat_flavor_install
-} # end _madriva__32
-
-_madriva__64() {
-  _redhat_flavor_install
-} # end _madriva__64
-
-_suse__32() {
-  _redhat_flavor_install
-} # end _suse__32
-
-_suse__64() {
-  _redhat_flavor_install
-} # end _suse__64
-
-_ubuntu__32() {
-  _debian_flavor_install
-} # end _ubuntu__32
-
-_ubuntu__64() {
-  _debian_flavor_install
-} # end _ubuntu__64
-
-_darwin__64() {
-  echo "Procedure not yet implemented. I don't know what to do."
-} # end _darwin__64
-
-_tar() {
-  echo "Procedure not yet implemented. I don't know what to do."
-} # end tar
-
-_windows__64() {
-  echo "Procedure not yet implemented. I don't know what to do."
-} # end _windows__64
-
-_windows__32() {
-  echo "Procedure not yet implemented. I don't know what to do."
-} # end _windows__32
-
-
-
- #--------/\/\/\/\-- tasks_templates_sudo/rbenv …install_rbenv.bash” -- Custom code-/\/\/\/\-------
+ #--------/\/\/\/\-- Work here above /\, test, and transfer to tasks_templates/planner having a working version -/\/\/\/\-------
 
 
 _main() {

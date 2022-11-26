@@ -239,41 +239,32 @@ directory_exists_with_spaces "${USER_HOME}"
 
 
 
- #--------\/\/\/\/-- tasks_templates_sudo/rbenv …install_rbenv.bash” -- Custom code -\/\/\/\/-------
+ #--------\/\/\/\/-- tasks_templates_sudo/whatsapp …install_whatsapp.bash” -- Custom code -\/\/\/\/-------
 
 
 #!/usr/bin/env bash
 #
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
+_build_compile() {
+  local _target="${1}"
+  cd "${_target}"
+  # Create a debug build directory and go into it
+  #
+  mkdir -p "${_target}/build/debug"
+  #
+  cd "${_target}/build/debug"
+  #
+  # Build the project
+  cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/usr ../..
+  make -j4
 
-_package_list_installer() {
-  local package packages="${@}"
-  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer rbenv" && echo -e "${RESET}" && return 0' ERR
+  # Optionally, to update the default translation file
+  make update-translation
 
-  if ! install_requirements "linux" "${packages}" ; then
-  {
-    warning "installing requirements. ${CYAN} attempting to install one by one"
-    while read package; do
-    {
-      [ -z ${package} ] && continue
-      if ! install_requirements "linux" "${package}" ; then
-      {
-        _err=$?
-        if [ ${_err} -gt 0 ] ; then
-        {
-          echo -e "${RED}" 
-          echo failed to install requirements "${package}"
-          echo -e "${RESET}"
-        }
-        fi
-      }
-      fi
-    }
-    done <<< "${packages}"
-  }
-  fi
-} # end _package_list_installer
+  # Run
+  ./whatsapp-for-linux
+} # end _build_compile
 
 _git_clone() {
   local _source="${1}"
@@ -281,7 +272,6 @@ _git_clone() {
   if  it_exists_with_spaces "${_target}" ; then
   {
     cd "${_target}"
-    git config pull.rebase false
     git fetch
     git pull
   }
@@ -290,100 +280,106 @@ _git_clone() {
    git clone "${_source}" "${_target}"
   }
   fi
-  chown -R "${SUDO_USER}" "${_target}"
-
 } # _git_clone
 
-_add_variables_to_bashrc_zshrc(){
-  local RBENV_SH_CONTENT='
+_package_list_installer() {
+  local package packages="${@}"
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer whatsapp" && echo -e "${RESET}" && return 0' ERR
 
-# RBENV
-export RBENV_ROOT="'${USER_HOME}'/.rbenv"
-export PATH="'${USER_HOME}'/.rbenv/bin:${PATH}"
-eval "$(rbenv init -)"
-
-' 
-  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _add_variables_to_bashrc_zshrc rbenv" && echo -e "${RESET}" && return 0' ERR
-  echo "${RBENV_SH_CONTENT}"
-  local INITFILE INITFILES="
-   .bashrc
-   .zshrc
-   .bash_profile
-   .profile
-   .zshenv
-   .zprofile
-  "
-  while read INITFILE; do
-  { 
-    [ -z ${INITFILE} ] && continue
-    _if_not_contains "${USER_HOME}/${INITFILE}"  "# RBENV" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
-    _if_not_contains "${USER_HOME}/${INITFILE}"  "RBENV_ROOT" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
-    _if_not_contains "${USER_HOME}/${INITFILE}"  "rbenv init" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+  if ! install_requirements "linux" "${packages}" ; then
+  {
+    warning "installing requirements. ${CYAN} attempting to install one by one"
+    while read package; do
+    {
+      [ -z ${package} ] && continue
+      install_requirements "linux" "${package}"
+      _err=$?
+      if [ ${_err} -gt 0 ] ; then
+      {
+        failed to install requirements "${package}"
+      }
+      fi
+    }
+    done <<< "${packages}"
   }
-  done <<< "${INITFILES}"
-  # type rbenv
-  export PATH="${USER_HOME}/.rbenv/bin:${PATH}"
-  cd "${USER_HOME}/.rbenv/bin"
-  eval "$(rbenv init -)"
-
-  rbenv doctor
-  rbenv install -l
-  rbenv install 2.6.5
-  rbenv global 2.6.5
-  rbenv rehash
-  ruby -v
-
-} # _add_variables_to_bashrc_zshrc
+  fi
+} # end _package_list_installer
 
 _debian_flavor_install() {
-  apt update -y
-  trap 'echo -e "${RED}" && echo "ERROR err:$_err failed $0:$LINENO _debian_flavor_install rbenv" && echo -e "${RESET}" && return 0' ERR
-  # Batch 1 18.04
-  local package packages="
-    autoconf
-    bison
-    build-essential
-    libssl-dev
-    libyaml-dev
-    libreadline6-dev
-    zlib1g-dev
-    libncurses5-dev
-    libffi-dev
-    libgdbm5
-    libgdbm-dev
-  "
-  _package_list_installer "${packages}"
-  # Batch 2 20.04
-  local package packages="
-    autoconf
-    bison
-    build-essential
-    libssl-dev
-    libyaml-dev
-    libreadline6-dev
-    zlib1g-dev
-    libncurses5-dev
-    libffi-dev
-    libgdbm6
-    libgdbm-dev
-  "
-  _package_list_installer "${packages}"
-  _git_clone "https://github.com/rbenv/rbenv.git" "${USER_HOME}/.rbenv"
-  _git_clone "https://github.com/rbenv/ruby-build.git" "${USER_HOME}/.rbenv/plugins/ruby-build"
-  local MSG=$(_add_variables_to_bashrc_zshrc)
-  echo "${MSG}"
+  echo "Procedure not yet implemented. I don't know what to do."
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
-  dnf build-dep rbenv -vy
-  _git_clone "https://github.com/rbenv/rbenv.git" "${USER_HOME}/.rbenv"
-  _git_clone "https://github.com/rbenv/ruby-build.git" "${USER_HOME}/.rbenv/plugins/ruby-build"
-  _add_variables_to_bashrc_zshrc
-  rbenv install -l
-  rbenv install 2.6.5
-  rbenv global 2.6.5
-  rbenv rehash
-  ruby -v
+  sudo_it
+  local -i _err
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  trap 'echo -e "${RED}" && echo "ERROR err:$_err failed $0:$LINENO _build_compile whatsapp" && echo -e "${RESET}" && return 0' ERR
+  local package packages="
+    make
+    automake
+    cmake
+    gcc
+    git
+    intltool
+    gtkmm30
+    gtkmm30-devel
+    webkit2gtk4.0
+    rust-webkit2gtk+default-devel
+    rust-webkit2gtk+v2_4-devel
+    webkit2gtk3-devel
+    webkit2gtk3-jsc-devel
+    webkit2gtk3
+    webkit2gtk3-jsc
+    rust-webkit2gtk-sys+v2_8-devel
+    rust-webkit2gtk+v2_8-devel
+    rust-webkit2gtk+v2_18-devel
+    rust-webkit2gtk-sys+v2_32-devel
+    rust-webkit2gtk+v2_30-devel
+    rust-webkit2gtk-sys+default-devel
+    rust-webkit2gtk-devel
+    webkit2gtk3
+    rubygem-webkit2-gtk
+    webkit2gtk4.0-devel
+    gnome-shell-extension-appindicator
+    libappindicator
+    libappindicator-devel
+    libappindicator-gtk3
+    libappindicator-gtk3-devel
+    libindicator-devel
+    libindicator      
+    libindicator-devel
+    libindicator-gtk3-tools
+    libindicator-gtk3
+    libindicator-gtk3-devel
+    libindicator-tools
+  "
+  echo "
+  if fails try this 
+  sudo dnf install -vy  https://ftp.lysator.liu.se/pub/opensuse/tumbleweed/repo/oss/x86_64/libayatana-ido3-0_4-0-0.9.2-1.2.x86_64.rpm
+  sudo dnf install -vy  https://ftp.lysator.liu.se/pub/opensuse/tumbleweed/repo/oss/x86_64/libayatana-indicator3-7-0.9.0-1.9.x86_64.rpm 
+  sudo dnf install -vy  https://ftp.lysator.liu.se/pub/opensuse/tumbleweed/repo/oss/x86_64/libayatana-appindicator-devel-0.5.91-1.2.x86_64.rpm
+  sudo dnf install -vy  https://ftp.lysator.liu.se/pub/opensuse/tumbleweed/repo/oss/x86_64/libayatana-appindicator1-0.5.91-1.2.x86_64.rpm
+  sudo dnf install -vy  https://ftp.lysator.liu.se/pub/opensuse/tumbleweed/repo/oss/x86_64/libayatana-appindicator3-1-0.5.91-1.2.x86_64.rpm
+  sudo dnf install -vy  https://ftp.lysator.liu.se/pub/opensuse/tumbleweed/repo/oss/x86_64/libayatana-appindicator3-devel-0.5.91-1.2.x86_64.rpm
+  "
+  _package_list_installer "${packages}"
+
+  # is_not_installed pygmentize &&   dnf  -y install pygmentize
+  # if ( ! command -v pygmentize >/dev/null 2>&1; ) ;  then
+  #   pip3 install pygments
+  # fi
+  local groupsinstalled=$(dnf group list --installed)
+  if [[ "${groupsinstalled}" = *"Development Tools"* ]] ; then
+  {
+    passed installed 'Development Tools'
+  }
+  else
+  {
+    dnf groupinstall 'Development Tools' -y
+  }
+  fi
+  _git_clone "https://github.com/eneshecan/whatsapp-for-linux.git" "${USER_HOME}/whatsapp-for-linux"
+  _build_compile "${USER_HOME}/whatsapp-for-linux"
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
@@ -472,7 +468,7 @@ _windows__32() {
 
 
 
- #--------/\/\/\/\-- tasks_templates_sudo/rbenv …install_rbenv.bash” -- Custom code-/\/\/\/\-------
+ #--------/\/\/\/\-- tasks_templates_sudo/whatsapp …install_whatsapp.bash” -- Custom code-/\/\/\/\-------
 
 
 _main() {

@@ -2,6 +2,21 @@
 # 20200414 Compatible with Fedora, Mac, Ubuntu "sudo_up" "load_struct" "#
 set -E -o functrace
 export THISSCRIPTCOMPLETEPATH
+
+
+echo "Checking realpath  "
+if ! ( command -v realpath >/dev/null 2>&1; )  ; then
+  echo "... realpath not found. Downloading REF:https://github.com/swarmbox/realpath.git "
+  cd $HOME
+  git clone https://github.com/swarmbox/realpath.git
+  cd realpath
+  make
+  sudo make install
+  _err=$?
+  [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Builing realpath. returned error did not download or is installed err:$_err  \n \n  " && exit 1
+else
+  echo "... realpath exists .. check!"
+fi
 typeset -r THISSCRIPTCOMPLETEPATH="$(realpath "$(basename "$0")")"  # updated realpath macos 20210902  # § This goe$
 
 export BASH_VERSION_NUMBER
@@ -240,38 +255,53 @@ _fedora__64() {
 _darwin__64() {
     COMANDDER="brew"
     echo mac?
-    $COMANDDER install nodejs
+    # $COMANDDER install nodejs
     # version 6 brew install cloudfoundry/tap/cf-cli
-    $COMANDDER install cloudfoundry/tap/cf-cli@7
+    # $COMANDDER install cloudfoundry/tap/cf-cli@7
 }
 
 determine_os_and_fire_action
 
-ensure npm or "Canceling Install. Could not find npm"
-ensure node or "Canceling Install. Could not find node"
-ensure cf or "Canceling Install. Could not find cf"
-if ! cf mtas --help >/dev/null 2>&1 ; then
-{
-  yes | cf install-plugin multiapps
-}
-fi
-MTASCHECK="$(cf mtas --help >/dev/null 2>&1)"
-if [[ -n "$MTASCHECK" ]] &&  [[ "$MTASCHECK" == *"FAILED"* ]]  ; then
-{
-    yes | cf install-plugin multiapps
-}
-fi
+# ensure npm or "Canceling Install. Could not find npm"
+# ensure node or "Canceling Install. Could not find node"
+# ensure cf or "Canceling Install. Could not find cf"
+# if ! cf mtas --help >/dev/null 2>&1 ; then
+# {
+#  yes | cf install-plugin multiapps
+# }
+# fi
+# MTASCHECK="$(cf mtas --help >/dev/null 2>&1)"
+# if [[ -n "$MTASCHECK" ]] &&  [[ "$MTASCHECK" == *"FAILED"* ]]  ; then
+# {
+#    yes | cf install-plugin multiapps
+# }
+# fi
 
-if [[ -n "$MTASCHECK" ]] &&  [[ "$MTASCHECK" != *"FAILED"* ]]  ; then
-{
-    passed Installed cf mtas plugin
-}
-fi
-
+# if [[ -n "$MTASCHECK" ]] &&  [[ "$MTASCHECK" != *"FAILED"* ]]  ; then
+# {
+#     passed Installed cf mtas plugin
+# }
+# fi
 ensure git or "Canceling Install. Could not find git"
-CURRENTGITUSER=$(su - $SUDO_USER -c 'git config --global --get user.name')
-CURRENTGITEMAIL=$(su - $SUDO_USER -c 'git config --global --get user.email')
+echo "SUDO_USER:$SUDO_USER"
 
+CURRENTGITUSER=""
+if  /usr/bin/git config --global --get user.name ; then
+{
+  echo "Empty git name"
+  #CURRENTGITUSER=$(su - $SUDO_USER -c 'git config --global --get user.name')
+  CURRENTGITUSER=$(/usr/bin/git config --global --get user.name)
+}
+fi
+CURRENTGITEMAIL=""
+if  /usr/bin/git config --global --get user.email ; then
+{
+  echo "Empty git email"
+  #CURRENTGITEMAIL=$(su - $SUDO_USER -c 'git config --global --get user.email')
+  CURRENTGITEMAIL=$(/usr/bin/git config --global --get user.email)
+}
+fi
+echo "LINE:$LINENO"
 if [[ -z "$CURRENTGITEMAIL" ]] ; then
 {
     Configuring git user.email with  $SUDO_USER@$(hostname)
@@ -594,7 +624,7 @@ _if_not_contains "$USER_HOME/.zshrc" "powerlevel10k" && echo "ZSH_THEME=powerlev
 it_does_not_exist_with_spaces ${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting &&  git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
 it_does_not_exist_with_spaces ${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions &&  git clone https://github.com/zsh-users/zsh-autosuggestions ${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions
 
-_if_not_contains "$USER_HOME/.zshrc" "zsh-syntax-highlighting" echo "plugins=(git zsh-syntax-highlighting zsh-autosuggestions)"   >> $USER_HOME/.zshrc
+_if_not_contains "$USER_HOME/.zshrc" "zsh-syntax-highlighting" && echo "plugins=\(git zsh-syntax-highlighting zsh-autosuggestions\)"   >> $USER_HOME/.zshrc
 
 } # end _setup_ohmy
 #_setup_ohmy
@@ -610,13 +640,13 @@ _if_not_contains "$USER_HOME/.bashrc" "colorls" && echo "alias ls='colorls --gro
 
 
 _setup_clis(){
-	local -i ret
-        local msg
-        ret=0
+  local -i ret
+  local msg
+  ret=0
 
-	Installing Clis
-   if  it_does_not_exist_with_spaces "$USER_HOME/_/clis" ; then
-    {
+  Installing Clis
+  if  it_does_not_exist_with_spaces "$USER_HOME/_/clis" ; then
+  {
         mkdir -p $USER_HOME/_/clis
         chown $SUDO_USER:$SUDO_USER -R $USER_HOME/_
         cd $USER_HOME/_/clis
@@ -628,8 +658,13 @@ _setup_clis(){
     {
         cd $USER_HOME/_/clis
         Installing Clis pre work  bash_intuivo_cli  for link_folder_scripts
-        yes | git clone git@github.com:zeusintuivo/bash_intuivo_cli.git
-        it_does_not_exist_with_spaces ${USER_HOME}/_/clis/bash_intuivo_cli && yes | git clone https://github.com/zeusintuivo/bash_intuivo_cli.git
+        if [ ! -d $USER_HOME/_/clis/bash_intuivo_cli ] ; then
+        {
+          yes | git clone git@github.com:zeusintuivo/bash_intuivo_cli.git
+          # echo try again
+          it_does_not_exist_with_spaces ${USER_HOME}/_/clis/bash_intuivo_cli && yes | git clone https://github.com/zeusintuivo/bash_intuivo_cli.git
+        }
+        fi
         cd $USER_HOME/_/clis/bash_intuivo_cli
         git remote remove origin
         git remote add origin git@github.com:zeusintuivo/bash_intuivo_cli.git
@@ -642,9 +677,13 @@ _setup_clis(){
     {
         cd $USER_HOME/_/clis
         Installing No. 2 Clis pre work  bash_intuivo_cli  for link_folder_scripts
-        yes | git clone git@github.com:zeusintuivo/bash_intuivo_cli.git
-        it_does_not_exist_with_spaces ${USER_HOME}/_/clis/bash_intuivo_cli && yes | git clone https://github.com/zeusintuivo/bash_intuivo_cli.git
-        chown -R $SUDO_USER:$SUDO_USER $USER_HOME/_/clis/bash_intuivo_cli
+        if [ ! -d $USER_HOME/_/clis/bash_intuivo_cli ] ; then
+        {
+          yes | git clone git@github.com:zeusintuivo/bash_intuivo_cli.git
+          it_does_not_exist_with_spaces ${USER_HOME}/_/clis/bash_intuivo_cli && yes | git clone https://github.com/zeusintuivo/bash_intuivo_cli.git
+        }
+        fi
+        chown -R $SUDO_USER  $USER_HOME/_/clis/bash_intuivo_cli
         cd $USER_HOME/_/clis/bash_intuivo_cli
         git remote remove origin
         git remote add origin git@github.com:zeusintuivo/bash_intuivo_cli.git
@@ -657,14 +696,19 @@ _setup_clis(){
     {
         cd $USER_HOME/_/clis
         Installing No. 3 Clis pre work ssh_intuivo_cli  for link_folder_scripts
-        yes | git clone git@github.com:zeusintuivo/ssh_intuivo_cli.git
-        it_does_not_exist_with_spaces ${USER_HOME}/_/clis/ssh_intuivo_cli && yes | git clone https://github.com/zeusintuivo/ssh_intuivo_cli.git
+        if [ ! -d $USER_HOME/_/clis/ssh_intuivo_cli ] ; then
+        {
+          # yes | 
+          git clone https://github.com/zeusintuivo/ssh_intuivo_cli.git
+          # it_does_not_exist_with_spaces ${USER_HOME}/_/clis/ssh_intuivo_cli && yes | git clone https://github.com/zeusintuivo/ssh_intuivo_cli.git
+        }
+        fi
         cd $USER_HOME/_/clis/ssh_intuivo_cli
-        chown -R $SUDO_USER:$SUDO_USER $USER_HOME/_/clis/ssh_intuivo_cli
-        chown -R $SUDO_USER:$SUDO_USER $USER_HOME/.ssh
+        chown -R $SUDO_USER $USER_HOME/_/clis/ssh_intuivo_cli
+        chown -R $SUDO_USER $USER_HOME/.ssh
         git remote remove origin
         git remote add origin git@github.com:zeusintuivo/ssh_intuivo_cli.git
-        link_folder_scripts
+        $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts
         ./sshswitchkey zeus
     } else {
         passed clis: ssh_intuivo_cli folder exists
@@ -693,32 +737,75 @@ while read -r ONE ; do
         Installing "$ONE"
         if  it_does_not_exist_with_spaces "$USER_HOME/_/clis/${ONE}" ; then
         {
-            cd $USER_HOME/_/clis
-            yes | git clone git@github.com:zeusintuivo/${ONE}.git
-            it_does_not_exist_with_spaces ${USER_HOME}/_/clis/${ONE} && yes | git clone https://github.com/zeusintuivo/${ONE}.git
-            cd $USER_HOME/_/clis/${ONE}
-            chown -R $SUDO_USER:$SUDO_USER $USER_HOME/_/clis/${ONE}
+            cd "$USER_HOME/_/clis"
+            if [[ ! -d "$USER_HOME/_/clis/${ONE}" ]] ; then
+            {
+              yes | git clone https://github.com/zeusintuivo/${ONE}.git
+              it_does_not_exist_with_spaces ${USER_HOME}/_/clis/${ONE} && yes | git clone https://github.com/zeusintuivo/${ONE}.git
+            }
+            fi
+            cd "$USER_HOME/_/clis/${ONE}"
+            chown -R "$SUDO_USER" "$USER_HOME/_/clis/${ONE}"
 	    git remote remove origin
             git remote add origin git@github.com:zeusintuivo/${ONE}.git
-            directory_exists_with_spaces $USER_HOME/_/clis/${ONE}
-            link_folder_scripts
+            directory_exists_with_spaces "$USER_HOME/_/clis/${ONE}"
+            echo "UserHome:$USER_HOME"
+if [[ -x "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ]] ; then
+{
+  if    "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ; then 
+  {
+     Comment failed to run link_folder_scripts
+  }
+  fi 
+}
+fi
+            # link_folder_scripts
 	    if [[ "$ONE" == "git_intuivo_cli" ]] ; then  # is not empty
     	    {
-      	      cd $USER_HOME/_/clis/${ONE}/en
-              link_folder_scripts
+      	      cd "$USER_HOME/_/clis/${ONE}/en"
+if [[ -x "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ]] ; then
+{
+  if    "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ; then 
+  {
+     Comment failed to run link_folder_scripts
+  }
+  fi 
+}
+fi
+              # link_folder_scripts
 	    }
             fi
         } else {
             Installing else $ONE
             passed clis: ${ONE} folder exists
-	    cd $USER_HOME/_/clis/${ONE}
-	    chown -R $SUDO_USER:$SUDO_USER $USER_HOME/_/clis/${ONE}
+	    cd "$USER_HOME/_/clis/${ONE}"
+	    chown -R "$SUDO_USER" "$USER_HOME/_/clis/${ONE}"
             pwd
-            link_folder_scripts
+            echo "UserHome:$USER_HOME"
+            echo "One:$ONE"
+if [[ -x "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ]] ; then
+{
+  if    "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ; then 
+  {
+     Comment failed to run link_folder_scripts
+  }
+  fi 
+}
+fi
+            # link_folder_scripts
 	    if [[ "$ONE" == "git_intuivo_cli" ]] ; then  # is not empty
     	    {
-      	      cd $USER_HOME/_/clis/${ONE}/en
-              link_folder_scripts
+      	      cd "$USER_HOME/_/clis/${ONE}/en"
+              # link_folder_scripts
+if [[ -x "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ]] ; then
+{
+  if    "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ; then 
+  {
+     Comment failed to run link_folder_scripts
+  }
+  fi 
+}
+fi
 	    }
             fi
             # msg=$(link_folder_scripts)
@@ -733,7 +820,11 @@ while read -r ONE ; do
     fi
 }
 done <<< "${clis}"
+if [ -f /usr/local/bin/ag ] ; then 
+{
 unlink /usr/local/bin/ag # Bug path we need to do something abot this
+}
+fi
 
 if  softlink_exists_with_spaces "/usr/local/bin/added>$USER_HOME/_/clis/git_intuivo_cli/en/added" ; then
 {
@@ -746,18 +837,19 @@ if  softlink_exists_with_spaces "/usr/local/bin/added>$USER_HOME/_/clis/git_intu
 }
 fi
 
-chown -R $SUDO_USER:$SUDO_USER $USER_HOME/_/clis
+chown -R $SUDO_USER $USER_HOME/_/clis
 
 }
 _setup_clis
 
 _setup_mycd(){
-    if it_does_not_exist_with_spaces $USER_HOME/.mycd  ; then
+    if it_does_not_exist_with_spaces $USER_HOME/.mycd 
+    then
     {
         # My CD
         cd $USER_HOME
         yes | git clone https://gist.github.com/jesusalc/b14a57ec9024ff1a3889be6b2c968bb7 .mycd
-        chown $SUDO_USER:$SUDO_USER -R   $USER_HOME/.mycd
+        chown -R $SUDO_USER   $USER_HOME/.mycd
         chmod +x  $USER_HOME/.mycd/mycd.sh
 
         # Add to MAC Bash:
@@ -772,7 +864,7 @@ _setup_mycd(){
 
         # OR - Add .dir_bash_history to the GLOBAL env .gitignore, ignore:
         mkdir -p   $USER_HOME/.config/git
-        chown $SUDO_USER:$SUDO_USER -R $USER_HOME/.config/git
+        chown -R $SUDO_USER  $USER_HOME/.config/git
         touch  $USER_HOME/.config/git/ignore
         _if_not_contains $USER_HOME/.config/git/ignore  ".dir_bash_history" &&  echo '.dir_bash_history' >> $USER_HOME/.config/git/ignore
     } else {
