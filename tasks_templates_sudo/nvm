@@ -3,12 +3,297 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 
+_git_clone() {
+  local _source="${1}"
+  local _target="${2}"
+  if  it_exists_with_spaces "${_target}" ; then
+  {
+    cd "${_target}"
+    git config pull.rebase false    
+    git fetch
+    git pull
+    git fetch --tags origin
+  }
+  else
+  {
+   git clone "${_source}" "${_target}"
+  }
+  fi
+  chown -R "${SUDO_USER}" "${_target}"
+
+} # _git_clone
+
+_add_variables_to_bashrc_zshrc(){
+  local NVM_SH_CONTENT='
+
+# NVM
+export NVM_DIR="'${USER_HOME}'/.nvm"
+[ -s "${NVM_DIR}/nvm.sh" ] && . "${NVM_DIR}/nvm.sh"  # This loads nvm
+[ -s "${NVM_DIR}/bash_completion" ] && . "${NVM_DIR}/bash_completion"  # This loads nvm bash_completion
+
+'
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _add_variables_to_bashrc_zshrc nvm" && echo -e "${RESET}" && return 0' ERR
+  echo "${NVM_SH_CONTENT}"
+  local INITFILE INITFILES="
+   .bashrc
+   .zshrc
+   .bash_profile
+   .profile
+   .zshenv
+   .zprofile
+  "
+  while read INITFILE; do
+  {
+    [ -z ${INITFILE} ] && continue    
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "# NVM" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "nvm.sh" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+  }
+  done <<< "${INITFILES}"
+
+} # _add_variables_to_bashrc_zshrc
+
+
+_install_nvm() {
+    local -i ret
+    local msg
+    trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _install_nvm nvm" && echo -e "${RESET}" && return 0' ERR
+
+    [[  ! -e "${USER_HOME}/.config" ]] && mkdir -p "${USER_HOME}/.config"
+    chown  -R "${SUDO_USER}" "${USER_HOME}/.config"
+    [ -s "${USER_HOME}/.nvm/nvm.sh" ] && . "${USER_HOME}/.nvm/nvm.sh" # This loads nvm
+    msg=$(nvm >/dev/null 2>&1)
+    ret=$?
+
+    if is_not_installed nvm ; then  # [ $ret -gt 0 ] ; then
+    {
+        Installing nvm Node Version Manager
+        Installing  nvm setup
+        su - "${SUDO_USER}" -c 'HOME='${USER_HOME}' curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash'
+
+        export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${USER_HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
+        [ -s "${USER_HOME}/.nvm/nvm.sh" ] && \. "${USER_HOME}/.nvm/nvm.sh" # This loads nvm
+
+        Configuring  nvm setup
+
+        _if_not_contains "${USER_HOME}/.bash_profile" "NVM_DIR/nvm.sh" || echo '
+export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+'  >> "${USER_HOME}/.bash_profile"
+        file_exists_with_spaces "${USER_HOME}/.bash_profile"
+
+        _if_not_contains "${USER_HOME}/.bashrc" "NVM_DIR/nvm.sh" ||  echo '
+export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+'  >> "${USER_HOME}/.bashrc"
+
+        file_exists_with_spaces "${USER_HOME}/.bashrc"
+
+        _if_not_contains "${USER_HOME}/.zshrc" "NVM_DIR/nvm.sh" ||  echo '
+export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+'  >> "${USER_HOME}/.zshrc"
+
+        file_exists_with_spaces "${USER_HOME}/.zshrc"
+
+        msg=$(su - "${SUDO_USER}" -c 'nvm' >/dev/null 2>&1)
+        ret=$?
+        if [ $ret -gt 0 ] ; then
+        {
+            echo nvm second check failed "${ret}:${msg}"
+
+        }
+        else
+        {
+            passed that: nvm got installed
+        }
+        fi
+
+    }
+    else
+    {
+        passed that: nvm is installed
+    }
+    fi
+} # end _install_nvm
+
+_install_nvm_version(){
+  local TARGETVERSION="${1}"
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _install_nvm_version nvm" && echo -e "${RESET}" && return 0' ERR
+
+    # chown -R $SUDO_USER:$(id -gn $SUDO_USER) "${USER_HOME}/.config"
+    Configuring nvm node "${TARGETVERSION}"
+    [ -s "${USER_HOME}/.nvm/nvm.sh" ] && . "${USER_HOME}/.nvm/nvm.sh" # This loads nvm
+
+
+    local VERSION12=$(nvm ls | grep "v${TARGETVERSION}" |tail -1 >/dev/null 2>&1 )
+    if [[ -n "${VERSION12}" ]] ; then
+    {
+        if [[ "${VERSION12}" == *"not found"* ]] || [[ "${VERSION12}" == *"nvm help"* ]]  ; then
+        {
+            failed "Nvm command not found or failed! It should have been installed by this point."
+        }
+        fi
+        if [[ "${VERSION12}" == *"v${TARGETVERSION}"* ]]  ; then
+        {
+            passed that: node "${TARGETVERSION}" installed. Version Found "${VERSION12}"
+        }
+        else
+        {
+            Installing node using nvm install  "${TARGETVERSION}"
+          VERSION12=$(nvm ls | grep "v${TARGETVERSION}" |tail -1 >/dev/null 2>&1 )
+            if [[ -n "${VERSION12}" ]] ; then
+            {
+                if [[ "${VERSION12}" == *"not found"* ]] || [[ "${VERSION12}" == *"nvm help"* ]]  ; then
+                {
+                    failed "Nvm command not found or failed! It should have been installed by this point."
+                }
+                fi
+                if [[ "${VERSION12}" == *"v${TARGETVERSION}"* ]]  ; then
+                {
+                    passed that: node "${TARGETVERSION}" installed. Version Found "${VERSION12}"
+                }
+                else
+                {
+                    failed to install node using nvm for version "${TARGETVERSION}"
+                }
+                fi
+            }
+            fi
+        }
+        fi
+    }
+    fi
+    if [[ "${VERSION12}" == *"v${TARGETVERSION}"* ]]  ; then
+    {
+        passed that: node "${TARGETVERSION}" installed. Version Found "${VERSION12}"
+    }
+    else
+    {
+        Installing node using nvm install  "${TARGETVERSION}"
+          VERSION12=$(nvm ls | grep "v${TARGETVERSION}" |tail -1 >/dev/null 2>&1 )
+            if [[ -n "${VERSION12}" ]] ; then
+            {
+                if [[ "${VERSION12}" == *"not found"* ]] || [[ "${VERSION12}" == *"nvm help"* ]]  ; then
+                {
+                    failed "Nvm command not found or failed! It should have been installed by this point."
+                }
+                fi
+                if [[ "${VERSION12}" == *"v${TARGETVERSION}"* ]]  ; then
+                {
+                    passed that: node "${TARGETVERSION}" installed. Version Found "${VERSION12}"
+                }
+                else
+                {
+                    failed to install node using nvm for version "${TARGETVERSION}"
+                }
+                fi
+            }
+            fi
+        }
+    fi
+    Setting . nvm use "${TARGETVERSION}"
+    # su - "${SUDO_USER}" -c '. "${USER_HOME}/.nvm/nvm.sh && "${USER_HOME}/.nvm/nvm.sh use "${TARGETVERSION}"'
+    chown -R "${SUDO_USER}"  "${USER_HOME}/.nvm"
+    chgrp -R "${SUDO_GRP}" "${USER_HOME}/.nvm"
+    nvm install "${TARGETVERSION}"
+    # su - "${SUDO_USER}" -c ''${USER_HOME}'/.nvm/nvm.sh && . '${USER_HOME}'/.nvm/nvm.sh && nvm use "${TARGETVERSION}"'
+    # node --version
+    #nvm use "${TARGETVERSION}"
+} # end _install_nvm_version
+
+_install_npm_utils() {
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _install_nvm_version nvm" && echo -e "${RESET}" && return 0' ERR
+  mkdir -p "${USER_HOME}/.npm"
+  mkdir -p "${USER_HOME}/.nvm"
+  chown -R "${SUDO_USER}" "${USER_HOME}/.npm"
+  chown -R "${SUDO_USER}" "${USER_HOME}/.nvm"
+  # Global node utils
+  is_not_installed nodemon  && npm i -g nodemon
+  if  is_not_installed live-server  ; then
+  {
+    npm i -g live-server
+  }
+  fi
+  # verify_is_installed live-server
+  # verify_is_installed nodemon
+  # is_not_installed jest &&  npm i -g jest
+  # verify_is_installed jest
+  # CHAINSTALLED=$(su - "${SUDO_USER}" -c 'npm -g info chai >/dev/null 2>&1')
+  CHAINSTALLED=$(npm -g info chai >/dev/null 2>&1)
+  if [[ -n "$CHAINSTALLED" ]] &&  [[ "$CHAINSTALLED" == *"npm ERR"* ]]  ; then
+  {
+    Installing npm chai
+    npm i -g chai
+  }
+  fi
+  # MOCHAINSTALLED=$(su - "${SUDO_USER}" -c 'npm -g info mocha >/dev/null 2>&1')
+  MOCHAINSTALLED=$(npm -g info mocha >/dev/null 2>&1)
+  if [[ -n "$MOCHAINSTALLED" ]] &&  [[ "$MOCHAINSTALLED" == *"npm ERR"* ]]  ; then
+  {
+    npm i -g mocha
+  }
+  fi
+  local ret msg
+  # msg=$(su - "${SUDO_USER}" -c 'cds >/dev/null 2>&1')
+  # ret=$?
+  # if [ $ret -gt 0 ] ; then
+  # {
+   Installing --skipped npm cds
+  #    npm i -g @sap/cds-dk
+  #    msg=$(su - "${SUDO_USER}" -c 'cds')
+  #    ret=$?
+  #    if [ $ret -gt 0 ] ; then
+  #    {
+  #        echo failed "${ret}:${msg}"
+  #    }
+  #    else
+  #    {
+  #        passed that: cds got installed
+  #    }
+  #    fi
+  # }
+  # else
+  # {
+  #    passed that: cds is installed
+  # }
+  # fi
+} # end _install_npm_utils
+
+
 _debian_flavor_install() {
+  _git_clone "https://github.com/nvm-sh/nvm.git" "${USER_HOME}/.nvm"
+  cd "${USER_HOME}/.nvm"
+  git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" $(git rev-list --tags --max-count=1)`
+  \. "${USER_HOME}/.nvm/nvm.sh"
+  local MSG=$(_add_variables_to_bashrc_zshrc)
+  echo "${MSG}"
+
+  #_checka_tools_commander
+  _install_nvm
+  _install_nvm_version 14.16.1
+  _install_npm_utils
+  if ( ! command -v cf >/dev/null 2>&1; ) ;  then
+    su - "${SUDO_USER}" -c 'npm i -g cloudfoundry/tap/cf-cli@7'
+  fi
+
   echo "Procedure not yet implemented. I don't know what to do."
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  _git_clone "https://github.com/nvm-sh/nvm.git" "${USER_HOME}/.nvm"
+  cd "${USER_HOME}/.nvm"
+  git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" $(git rev-list --tags --max-count=1)`
+  \. "${USER_HOME}/.nvm/nvm.sh"
+  local MSG=$(_add_variables_to_bashrc_zshrc)
+  echo "${MSG}"
+  # _checka_tools_commander
+  _install_nvm
+  _install_nvm_version 14.16.1
+  _install_npm_utils
+  if ( ! command -v cf >/dev/null 2>&1; ) ;  then
+    su - "${SUDO_USER}" -c 'npm i -g cloudfoundry/tap/cf-cli@7'
+  fi
+
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {

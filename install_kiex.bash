@@ -239,147 +239,16 @@ directory_exists_with_spaces "${USER_HOME}"
 
 
 
- #--------\/\/\/\/-- tasks_templates_sudo/whatsapp …install_whatsapp.bash” -- Custom code -\/\/\/\/-------
+ #--------\/\/\/\/-- tasks_templates_sudo/kiex …install_kiex.bash” -- Custom code -\/\/\/\/-------
 
 
-#!/usr/bin/env bash
-#
-# @author Zeus Intuivo <zeus@intuivo.com>
-#
-_build_compile() {
-  local _target="${1}"
-  cd "${_target}"
-  # Create a debug build directory and go into it
-  #
-  mkdir -p "${_target}/build/debug"
-  #
-  cd "${_target}/build/debug"
-  #
-  # Build the project
-  cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/usr ../..
-  make -j4
-
-  # Optionally, to update the default translation file
-  make update-translation
-
-  # Run
-  ./whatsapp-for-linux
-} # end _build_compile
-
-_git_clone() {
-  local _source="${1}"
-  local _target="${2}"
-  if  it_exists_with_spaces "${_target}" ; then
-  {
-    cd "${_target}"
-    git fetch
-    git pull
-  }
-  else
-  {
-   git clone "${_source}" "${_target}"
-  }
-  fi
-} # _git_clone
-
-_package_list_installer() {
-  local package packages="${@}"
-  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer whatsapp" && echo -e "${RESET}" && return 0' ERR
-
-  if ! install_requirements "linux" "${packages}" ; then
-  {
-    warning "installing requirements. ${CYAN} attempting to install one by one"
-    while read package; do
-    {
-      [ -z ${package} ] && continue
-      install_requirements "linux" "${package}"
-      _err=$?
-      if [ ${_err} -gt 0 ] ; then
-      {
-        failed to install requirements "${package}"
-      }
-      fi
-    }
-    done <<< "${packages}"
-  }
-  fi
-} # end _package_list_installer
 
 _debian_flavor_install() {
   echo "Procedure not yet implemented. I don't know what to do."
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
-  sudo_it
-  local -i _err
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
-  trap 'echo -e "${RED}" && echo "ERROR err:$_err failed $0:$LINENO _build_compile whatsapp" && echo -e "${RESET}" && return 0' ERR
-  local package packages="
-    make
-    automake
-    cmake
-    gcc
-    git
-    intltool
-    gtkmm30
-    gtkmm30-devel
-    webkit2gtk4.0
-    rust-webkit2gtk+default-devel
-    rust-webkit2gtk+v2_4-devel
-    webkit2gtk3-devel
-    webkit2gtk3-jsc-devel
-    webkit2gtk3
-    webkit2gtk3-jsc
-    rust-webkit2gtk-sys+v2_8-devel
-    rust-webkit2gtk+v2_8-devel
-    rust-webkit2gtk+v2_18-devel
-    rust-webkit2gtk-sys+v2_32-devel
-    rust-webkit2gtk+v2_30-devel
-    rust-webkit2gtk-sys+default-devel
-    rust-webkit2gtk-devel
-    webkit2gtk3
-    rubygem-webkit2-gtk
-    webkit2gtk4.0-devel
-    gnome-shell-extension-appindicator
-    libappindicator
-    libappindicator-devel
-    libappindicator-gtk3
-    libappindicator-gtk3-devel
-    libindicator-devel
-    libindicator      
-    libindicator-devel
-    libindicator-gtk3-tools
-    libindicator-gtk3
-    libindicator-gtk3-devel
-    libindicator-tools
-  "
-  echo "
-  if fails try this 
-  sudo dnf install -vy  https://ftp.lysator.liu.se/pub/opensuse/tumbleweed/repo/oss/x86_64/libayatana-ido3-0_4-0-0.9.2-1.2.x86_64.rpm
-  sudo dnf install -vy  https://ftp.lysator.liu.se/pub/opensuse/tumbleweed/repo/oss/x86_64/libayatana-indicator3-7-0.9.0-1.9.x86_64.rpm 
-  sudo dnf install -vy  https://ftp.lysator.liu.se/pub/opensuse/tumbleweed/repo/oss/x86_64/libayatana-appindicator-devel-0.5.91-1.2.x86_64.rpm
-  sudo dnf install -vy  https://ftp.lysator.liu.se/pub/opensuse/tumbleweed/repo/oss/x86_64/libayatana-appindicator1-0.5.91-1.2.x86_64.rpm
-  sudo dnf install -vy  https://ftp.lysator.liu.se/pub/opensuse/tumbleweed/repo/oss/x86_64/libayatana-appindicator3-1-0.5.91-1.2.x86_64.rpm
-  sudo dnf install -vy  https://ftp.lysator.liu.se/pub/opensuse/tumbleweed/repo/oss/x86_64/libayatana-appindicator3-devel-0.5.91-1.2.x86_64.rpm
-  "
-  _package_list_installer "${packages}"
-
-  # is_not_installed pygmentize &&   dnf  -y install pygmentize
-  # if ( ! command -v pygmentize >/dev/null 2>&1; ) ;  then
-  #   pip3 install pygments
-  # fi
-  local groupsinstalled=$(dnf group list --installed)
-  if [[ "${groupsinstalled}" = *"Development Tools"* ]] ; then
-  {
-    passed installed 'Development Tools'
-  }
-  else
-  {
-    dnf groupinstall 'Development Tools' -y
-  }
-  fi
-  _git_clone "https://github.com/eneshecan/whatsapp-for-linux.git" "${USER_HOME}/whatsapp-for-linux"
-  _build_compile "${USER_HOME}/whatsapp-for-linux"
+  echo "Procedure not yet implemented. I don't know what to do."
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
@@ -468,7 +337,7 @@ _windows__32() {
 
 
 
- #--------/\/\/\/\-- tasks_templates_sudo/whatsapp …install_whatsapp.bash” -- Custom code-/\/\/\/\-------
+ #--------/\/\/\/\-- tasks_templates_sudo/kiex …install_kiex.bash” -- Custom code-/\/\/\/\-------
 
 
 _main() {

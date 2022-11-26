@@ -239,52 +239,18 @@ directory_exists_with_spaces "${USER_HOME}"
 
 
 
- #--------\/\/\/\/-- tasks_templates_sudo/whatsapp …install_whatsapp.bash” -- Custom code -\/\/\/\/-------
+ #--------\/\/\/\/-- tasks_templates_sudo/evm …install_evm.bash” -- Custom code -\/\/\/\/-------
 
 
 #!/usr/bin/env bash
 #
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
-_build_compile() {
-  local _target="${1}"
-  cd "${_target}"
-  # Create a debug build directory and go into it
-  #
-  mkdir -p "${_target}/build/debug"
-  #
-  cd "${_target}/build/debug"
-  #
-  # Build the project
-  cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/usr ../..
-  make -j4
 
-  # Optionally, to update the default translation file
-  make update-translation
-
-  # Run
-  ./whatsapp-for-linux
-} # end _build_compile
-
-_git_clone() {
-  local _source="${1}"
-  local _target="${2}"
-  if  it_exists_with_spaces "${_target}" ; then
-  {
-    cd "${_target}"
-    git fetch
-    git pull
-  }
-  else
-  {
-   git clone "${_source}" "${_target}"
-  }
-  fi
-} # _git_clone
 
 _package_list_installer() {
   local package packages="${@}"
-  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer whatsapp" && echo -e "${RESET}" && return 0' ERR
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer evm" && echo -e "${RESET}" && return 0' ERR
 
   if ! install_requirements "linux" "${packages}" ; then
   {
@@ -292,11 +258,16 @@ _package_list_installer() {
     while read package; do
     {
       [ -z ${package} ] && continue
-      install_requirements "linux" "${package}"
-      _err=$?
-      if [ ${_err} -gt 0 ] ; then
+      if ! install_requirements "linux" "${package}" ; then
       {
-        failed to install requirements "${package}"
+        _err=$?
+        if [ ${_err} -gt 0 ] ; then
+        {
+          echo -e "${RED}" 
+          echo failed to install requirements "${package}"
+          echo -e "${RESET}"
+        }
+        fi
       }
       fi
     }
@@ -305,81 +276,115 @@ _package_list_installer() {
   fi
 } # end _package_list_installer
 
-_debian_flavor_install() {
-  echo "Procedure not yet implemented. I don't know what to do."
-} # end _debian_flavor_install
-
-_redhat_flavor_install() {
-  sudo_it
-  local -i _err
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
-  trap 'echo -e "${RED}" && echo "ERROR err:$_err failed $0:$LINENO _build_compile whatsapp" && echo -e "${RESET}" && return 0' ERR
-  local package packages="
-    make
-    automake
-    cmake
-    gcc
-    git
-    intltool
-    gtkmm30
-    gtkmm30-devel
-    webkit2gtk4.0
-    rust-webkit2gtk+default-devel
-    rust-webkit2gtk+v2_4-devel
-    webkit2gtk3-devel
-    webkit2gtk3-jsc-devel
-    webkit2gtk3
-    webkit2gtk3-jsc
-    rust-webkit2gtk-sys+v2_8-devel
-    rust-webkit2gtk+v2_8-devel
-    rust-webkit2gtk+v2_18-devel
-    rust-webkit2gtk-sys+v2_32-devel
-    rust-webkit2gtk+v2_30-devel
-    rust-webkit2gtk-sys+default-devel
-    rust-webkit2gtk-devel
-    webkit2gtk3
-    rubygem-webkit2-gtk
-    webkit2gtk4.0-devel
-    gnome-shell-extension-appindicator
-    libappindicator
-    libappindicator-devel
-    libappindicator-gtk3
-    libappindicator-gtk3-devel
-    libindicator-devel
-    libindicator      
-    libindicator-devel
-    libindicator-gtk3-tools
-    libindicator-gtk3
-    libindicator-gtk3-devel
-    libindicator-tools
-  "
-  echo "
-  if fails try this 
-  sudo dnf install -vy  https://ftp.lysator.liu.se/pub/opensuse/tumbleweed/repo/oss/x86_64/libayatana-ido3-0_4-0-0.9.2-1.2.x86_64.rpm
-  sudo dnf install -vy  https://ftp.lysator.liu.se/pub/opensuse/tumbleweed/repo/oss/x86_64/libayatana-indicator3-7-0.9.0-1.9.x86_64.rpm 
-  sudo dnf install -vy  https://ftp.lysator.liu.se/pub/opensuse/tumbleweed/repo/oss/x86_64/libayatana-appindicator-devel-0.5.91-1.2.x86_64.rpm
-  sudo dnf install -vy  https://ftp.lysator.liu.se/pub/opensuse/tumbleweed/repo/oss/x86_64/libayatana-appindicator1-0.5.91-1.2.x86_64.rpm
-  sudo dnf install -vy  https://ftp.lysator.liu.se/pub/opensuse/tumbleweed/repo/oss/x86_64/libayatana-appindicator3-1-0.5.91-1.2.x86_64.rpm
-  sudo dnf install -vy  https://ftp.lysator.liu.se/pub/opensuse/tumbleweed/repo/oss/x86_64/libayatana-appindicator3-devel-0.5.91-1.2.x86_64.rpm
-  "
-  _package_list_installer "${packages}"
-
-  # is_not_installed pygmentize &&   dnf  -y install pygmentize
-  # if ( ! command -v pygmentize >/dev/null 2>&1; ) ;  then
-  #   pip3 install pygments
-  # fi
-  local groupsinstalled=$(dnf group list --installed)
-  if [[ "${groupsinstalled}" = *"Development Tools"* ]] ; then
+_git_clone() {
+  local _source="${1}"
+  local _target="${2}"
+  if  it_exists_with_spaces "${_target}" ; then
   {
-    passed installed 'Development Tools'
+    cd "${_target}"
+    git config pull.rebase false
+    git fetch
+    git pull
   }
   else
   {
-    dnf groupinstall 'Development Tools' -y
+   git clone "${_source}" "${_target}"
   }
   fi
-  _git_clone "https://github.com/eneshecan/whatsapp-for-linux.git" "${USER_HOME}/whatsapp-for-linux"
-  _build_compile "${USER_HOME}/whatsapp-for-linux"
+  chown -R "${SUDO_USER}" "${_target}"
+
+} # _git_clone
+
+
+_install_and_add_variables_to_bashrc_zshrc(){
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _install_and_add_variables_to_bashrc_zshrc EVM" && echo -e "${RESET}" && return 0' ERR
+  
+  local dir DIRS="erlang_tars erlang_versions evm_config scripts"
+  local EVM_HOME="${USER_HOME}/.evm"
+  # For each dir, check whether it's already exists or not
+  for dir in $DIRS
+  do
+    if [[ ! -d "$EVM_HOME/$dir" ]]
+    then
+      mkdir -p "$EVM_HOME/$dir"
+      echo "$EVM_HOME/$dir successfully created"
+    else
+      echo "$EVM_HOME/$dir already exists and will not be replaced"
+    fi
+  done
+  # Create the config file
+  if [[ ! -f "$EVM_HOME/evm_config/erlang_default" ]]
+  then 
+    touch "$EVM_HOME/evm_config/erlang_default"
+    echo "$EVM_HOME/evm_config/erlang_default succesfully created"
+  else
+    echo "$EVM_HOME/evm_config/erlang_default already exists and will not be replaced"
+  fi
+
+  # Copy the script
+  cp "evm" "$EVM_HOME/scripts"
+
+  local EVM_SH_CONTENT='
+
+# EVM
+export EVM_HOME="'${USER_HOME}'/.evm"
+export PATH="'${USER_HOME}'/.evm/scripts:${PATH}"
+source "'${USER_HOME}'/.evm/scripts/evm
+
+' 
+  echo "${EVM_SH_CONTENT}"
+  local INITFILE INITFILES="
+   .bashrc
+   .zshrc
+   .bash_profile
+   .profile
+   .zshenv
+   .zprofile
+  "
+  while read INITFILE; do
+  { 
+    [ -z ${INITFILE} ] && continue
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "# EVM" ||  echo "${EVM_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "EVM_HOME" ||  echo "${EVM_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "evm/scripts" ||  echo "${EVM_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+  }
+  done <<< "${INITFILES}"
+  # type EVM
+  source "${USER_HOME}/.evm/scripts/evm"
+  _finale_message
+
+} # _add_variables_to_bashrc_zshrc
+
+_debian_flavor_install() {
+  apt update -y
+  trap 'echo -e "${RED}" && echo "ERROR err:$_err failed $0:$LINENO _debian_flavor_install evm" && echo -e "${RESET}" && return 0' ERR
+  local package packages="
+    wget
+    openssl
+    libssl-dev
+    fop
+    xsltproc
+    unixodbc-dev
+    libxml2-utils
+    libqt5opengl5-dev
+    libncurses-dev
+    libwxgtk-media3.0-gtk3-0v5
+    libwxgtk-media3.0-gtk3-dev
+    libwxgtk-webview3.0-gtk3-0v5
+    libwxgtk-webview3.0-gtk3-dev
+    libwxgtk3.0-gtk3-0v5
+    libwxgtk3.0-gtk3-dev
+    wx-common
+   "
+  _package_list_installer "${packages}"
+  _git_clone "https://github.com/robisonsantos/evm.git" "${USER_HOME}/.evm"
+  local MSG=$(_install_and_add_variables_to_bashrc_zshrc)
+  echo "${MSG}"
+  _finale_message
+} # end _debian_flavor_install
+
+_redhat_flavor_install() {
+    echo "Procedure not yet implemented. I don't know what to do."
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
@@ -451,7 +456,17 @@ _ubuntu__64() {
 } # end _ubuntu__64
 
 _darwin__64() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  export HOMEBREW_NO_AUTO_UPDATE=1
+  trap 'echo -e "${RED}" && echo "ERROR err:$_err failed $0:$LINENO _darwin__64 evm" && echo -e "${RESET}" && return 0' ERR
+  local package packages="
+    wget
+    openssl
+  "
+  _package_list_installer "${packages}"
+  _git_clone "https://github.com/robisonsantos/evm.git" "${USER_HOME}/.evm"
+  local MSG=$(_install_and_add_variables_to_bashrc_zshrc)
+  echo "${MSG}" 
+  _finale_message
 } # end _darwin__64
 
 _tar() {
@@ -466,9 +481,39 @@ _windows__32() {
   echo "Procedure not yet implemented. I don't know what to do."
 } # end _windows__32
 
+_finale_message(){
+  echo
+  echo "
+             _______________   ____ _____                    
+             \_   _____/\   \ /   //     \                   
+     ______   |    __)_  \   Y   //  \ /  \    ______        
+    /_____/   |        \  \     //    Y    \  /_____/        
+             /_______  /   \___/ \____|__  /                 
+                     \/                  \/                  
+   ___________        .__                                    
+   \_   _____/_______ |  |  _____     ____    ____           
+    |    __)_ \_  __ \|  |  \__  \   /    \  / ___\          
+    |        \ |  | \/|  |__ / __ \_|   |  \/ /_/  >         
+   /_______  / |__|   |____/(____  /|___|  /\___  /          
+           \/                    \/      \//_____/           
+   ____   ____                     .__                       
+   \   \ /   / ____ _______  ______|__|  ____    ____        
+    \   Y   /_/ __ \\\\_  __ \/  ___/|  | /  _ \  /    \\       
+     \     / \  ___/ |  | \/\___ \ |  |(  <_> )|   |  \      
+      \___/   \___  >|__|  /____  >|__| \____/ |___|  /      
+                  \/            \/                  \/       
+      _____                                                  
+     /     \  _____     ____  _____     ____    ____ _______ 
+    /  \ /  \ \__  \   /    \ \__  \   / ___\ _/ __ \\\\_  __ \\
+   /    Y    \ / __ \_|   |  \ / __ \_/ /_/  >\  ___/ |  | \/
+   \____|__  /(____  /|___|  /(____  /\___  /  \___  >|__|   
+           \/      \/      \/      \//_____/       \/       
+  "
+} # end _finale_message
 
 
- #--------/\/\/\/\-- tasks_templates_sudo/whatsapp …install_whatsapp.bash” -- Custom code-/\/\/\/\-------
+
+ #--------/\/\/\/\-- tasks_templates_sudo/evm …install_evm.bash” -- Custom code-/\/\/\/\-------
 
 
 _main() {

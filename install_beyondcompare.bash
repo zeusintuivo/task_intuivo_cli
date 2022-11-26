@@ -1,54 +1,252 @@
 #!/usr/bin/env bash
-#!/bin/bash
 #
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
-#
-# Compatible start with low version bash, like mac before zsh change and after
-export USER_HOME
-export THISSCRIPTCOMPLETEPATH
-typeset -r THISSCRIPTCOMPLETEPATH="$(realpath $(which $(basename "$0")))"  # updated realpath macos 20210902 # § This goes in the FATHER-MOTHER script
+# 20200415 Compatible with Fedora, Mac, Ubuntu "sudo_up" "load_struct" "#
 
+set -E -o functrace
+export THISSCRIPTCOMPLETEPATH
+typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")"   # updated realpath macos 20210902
 export BASH_VERSION_NUMBER
 typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
 
 export  THISSCRIPTNAME
-typeset -r THISSCRIPTNAME="$(realpath $(which $(basename "$0")))"  # updated realpath macos 20210902
+typeset -r THISSCRIPTNAME="$(basename "$0")"
 
 export _err
 typeset -i _err=0
 
-load_struct_testing_wget(){
-    local provider="$HOME/_/clis/execute_command_intuivo_cli/struct_testing"
-    [   -e "${provider}"  ] && source "${provider}" && echo "Loaded locally"
-    [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
-    ( ( ! command -v passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
-} # end load_struct_testing_wget
-load_struct_testing_wget
+  function _trap_on_error(){
+    #echo -e "\\n \033[01;7m*** ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR ...\033[0m"
+    local cero="$0"
+    local file1="$(paeth ${BASH_SOURCE})"
+    local file2="$(paeth ${cero})"
+    echo -e "ERROR TRAP $THISSCRIPTNAME
+${file1}:${BASH_LINENO[-0]}     \t ${FUNCNAME[-0]}()
+$file2:${BASH_LINENO[1]}    \t ${FUNCNAME[1]}()
+ERR ..."
+    exit 1
+  }
+  trap _trap_on_error ERR
+  function _trap_on_int(){
+    # echo -e "\\n \033[01;7m*** INTERRUPT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n  INT ...\033[0m"
+    local cero="$0"
+    local file1="$(paeth ${BASH_SOURCE})"
+    local file2="$(paeth ${cero})"
+    echo -e "INTERRUPT TRAP $THISSCRIPTNAME
+${file1}:${BASH_LINENO[-0]}     \t ${FUNCNAME[-0]}()
+$file2:${BASH_LINENO[1]}    \t ${FUNCNAME[1]}()
+INT ..."
+    exit 0
+  }
+
+  trap _trap_on_int INT
+
+load_struct_testing(){
+  function _trap_on_error(){
+    local -ir __trapped_error_exit_num="${2:-0}"
+    echo -e "\\n \033[01;7m*** ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR ...\033[0m  \n \n "
+    echo ". ${1}"
+    echo ". exit  ${__trapped_error_exit_num}  "
+    echo ". caller $(caller) "
+    echo ". ${BASH_COMMAND}"
+    local -r __caller=$(caller)
+    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+
+    # $(eval ${BASH_COMMAND}  2>&1; )
+    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+    exit 1
+  }
+  function load_library(){
+    local _library="${1:struct_testing}"
+    if [[ -z "${1}" ]] ; then
+    {
+       echo "Must call with name of library example: struct_testing execute_command"
+       exit 1
+    }
+    fi
+    trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+      local provider="$HOME/_/clis/execute_command_intuivo_cli/${_library}"
+      local _err=0 structsource
+      if [   -e "${provider}"  ] ; then
+        if (( DEBUG )) ; then
+          echo "$0: tasks_base/sudoer.bash Loading locally"
+        fi
+        structsource="""$(<"${provider}")"""
+        _err=$?
+        if [ $_err -gt 0 ] ; then
+        {
+           echo -e "\n \n  ERROR! Loading ${_library}. running 'source locally' returned error did not download or is empty err:$_err  \n \n  " 
+           exit 1
+        }
+        fi
+      else
+        if ( command -v curl >/dev/null 2>&1; )  ; then
+          if (( DEBUG )) ; then
+            echo "$0: tasks_base/sudoer.bash Loading ${_library} from the net using curl "
+          fi
+          structsource="""$(curl https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/${_library}  -so -   2>/dev/null )"""  #  2>/dev/null suppress only curl download messages, but keep curl output for variable
+          _err=$?
+          if [ $_err -gt 0 ] ; then
+          {
+            echo -e "\n \n  ERROR! Loading ${_library}. running 'curl' returned error did not download or is empty err:$_err  \n \n  "
+            exit 1
+          }
+          fi
+        elif ( command -v wget >/dev/null 2>&1; ) ; then
+          if (( DEBUG )) ; then
+            echo "$0: tasks_base/sudoer.bash Loading ${_library} from the net using wget "
+          fi
+          structsource="""$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/${_library} -O -   2>/dev/null )"""  #  2>/dev/null suppress only wget download messages, but keep wget output for variable
+          _err=$?
+          if [ $_err -gt 0 ] ; then
+          {
+            echo -e "\n \n  ERROR! Loading ${_library}. running 'wget' returned error did not download or is empty err:$_err  \n \n  "
+            exit 1
+          }
+          fi
+        else
+          echo -e "\n \n  ERROR! Loading ${_library} could not find wget or curl to download  \n \n "
+          exit 69
+        fi
+      fi
+      if [[ -z "${structsource}" ]] ; then
+      {
+        echo -e "\n \n  ERROR! Loading ${_library} into ${_library}_source did not download or is empty " 
+        exit 1
+      }
+      fi
+      local _temp_dir="$(mktemp -d 2>/dev/null || mktemp -d -t "${_library}_source")"
+      echo "${structsource}">"${_temp_dir}/${_library}"
+      if (( DEBUG )) ; then
+        echo "$0: tasks_base/sudoer.bash Temp location ${_temp_dir}/${_library}"
+      fi
+      source "${_temp_dir}/${_library}"
+      _err=$?
+      if [ $_err -gt 0 ] ; then
+      {
+        echo -e "\n \n  ERROR! Loading ${_library}. Occured while running 'source' err:$_err  \n \n  "
+        exit 1
+      }
+      fi
+      if  ! typeset -f passed >/dev/null 2>&1; then
+        echo -e "\n \n  ERROR! Loading ${_library}. Passed was not loaded !!!  \n \n "
+        exit 69;
+      fi
+      return $_err
+  } # end load_library
+  load_library "struct_testing"
+  load_library "execute_command"
+} # end load_struct_testing
+load_struct_testing
+
+ _err=$?
+if [ $_err -ne 0 ] ; then
+{
+  echo -e "\n \n  ERROR FATAL! load_struct_testing_wget !!! returned:<$_err> \n \n  "
+  exit 69;
+}
+fi
 
 export sudo_it
 function sudo_it() {
   raise_to_sudo_and_user_home
-  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
+  local _err=$?
+  if (( DEBUG )) ; then
+    Comment _err:${_err}
+  fi
+  if [ $_err -gt 0 ] ; then
+  {
+    failed to sudo_it raise_to_sudo_and_user_home
+    exit 1
+  }
+  fi
+  # [ $_err -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
+  _err=$?
+  if (( DEBUG )) ; then
+    Comment _err:${_err}
+  fi
   enforce_variable_with_value SUDO_USER "${SUDO_USER}"
   enforce_variable_with_value SUDO_UID "${SUDO_UID}"
   enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
   # Override bigger error trap  with local
-  function _trap_on_error(){
-    echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}\(\) \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}\(\) \\n ERR INT ...\033[0m"
-
+  function _trap_on_err_int(){
+    # echo -e "\033[01;7m*** ERROR OR INTERRUPT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR INT ...\033[0m"
+    local cero="$0"
+    local file1="$(paeth ${BASH_SOURCE})"
+    local file2="$(paeth ${cero})"
+    echo -e " ERROR OR INTERRUPT  TRAP $THISSCRIPTNAME
+${file1}:${BASH_LINENO[-0]}     \t ${FUNCNAME[-0]}()
+$file2:${BASH_LINENO[1]}    \t ${FUNCNAME[1]}()
+ERR INT ..."
+    exit 1
   }
-  trap _trap_on_error ERR INT
+  trap _trap_on_err_int ERR INT
 } # end sudo_it
 
-
-_linux_prepare(){
+# _linux_prepare(){
   sudo_it
-  [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
-  export USER_HOME="/home/${SUDO_USER}"
+  _err=$?
+  if (( DEBUG )) ; then
+    Comment _err:${_err}
+  fi
+  if [ $_err -gt 0 ] ; then
+  {
+    failed to sudo_it raise_to_sudo_and_user_home
+    exit 1
+  }
+  fi
+  # [ $_err -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
+  _err=$?
+  if (( DEBUG )) ; then
+    Comment _err:${_err}
+  fi
+  # [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
+  export USER_HOME
+  # shellcheck disable=SC2046
+  # shellcheck disable=SC2031
+  typeset -r USER_HOME="$(echo -n $(bash -c "cd ~${SUDO_USER} && pwd"))"  # Get the caller's of sudo home dir LINUX and MAC
+  # USER_HOME=$(getent passwd "${SUDO_USER}" | cut -d: -f6)   # Get the caller's of sudo home dir LINUX
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-}  # end _linux_prepare
+# }  # end _linux_prepare
 
+
+# _linux_prepare
+export SUDO_GRP='staff'
+enforce_variable_with_value USER_HOME "${USER_HOME}"
+enforce_variable_with_value SUDO_USER "${SUDO_USER}"
+if (( DEBUG )) ; then
+  passed "Caller user identified:${SUDO_USER}"
+fi
+  if (( DEBUG )) ; then
+    Comment DEBUG_err?:${?}
+  fi
+if (( DEBUG )) ; then
+  passed "Home identified:${USER_HOME}"
+fi
+  if (( DEBUG )) ; then
+    Comment DEBUG_err?:${?}
+  fi
+directory_exists_with_spaces "${USER_HOME}"
+
+
+
+ #---------/\/\/\-- tasks_base/sudoer.bash -------------/\/\/\--------
+
+
+
+
+
+ #--------\/\/\/\/-- tasks_templates_sudo/beyondcompare …install_beyondcompare.bash” -- Custom code -\/\/\/\/-------
+
+
+#!/usr/bin/env bash
+#!/bin/bash
+#
+# @author Zeus Intuivo <zeus@intuivo.com>
+#
 _version() {
   # fedora_32 https://www.scootersoftware.com/bcompare-4.3.3.24545.i386.rpm
   # https://www.scootersoftware.com/bcompare-4.3.3.24545.x86_64.rpm
@@ -65,6 +263,7 @@ _version() {
   [[ -z "${CODELASTESTBUILD}" ]] && failed "Beyond Compare Version not found! :${CODELASTESTBUILD}:"
 
 
+
   # enforce_variable_with_value USER_HOME "${USER_HOME}"
   # enforce_variable_with_value CODELASTESTBUILD "${CODELASTESTBUILD}"
 
@@ -75,6 +274,7 @@ _version() {
   unset CODEFILE
   unset CODELASTESTBUILD
 } # end _version
+
 
 
 _darwin__64() {
@@ -106,29 +306,70 @@ _darwin__64() {
   ls -d "/Applications/${APPDIR}"
 
   _trust_dmgs_application "${APPDIR}"
-
+  ln -s /Applications/Beyond\ Compare.app/Contents/MacOS/bcomp /usr/local/bin/bcompare
+  ln -s /Applications/Beyond\ Compare.app/Contents/MacOS/bcomp /usr/local/bin/bcomp
     # sudo hdiutil attach ${CODENAME}
     # sudo cp -R /Volumes/Beyond\ Compare/Beyond\ Compare.app /Applications/
     # sudo hdiutil detach /Volumes/Beyond \ Compare
 } # end _darwin__64
 
-_ubuntu__64() {
-	_linux_prepare
+_debian_flavor_install() {
+  sudo_it
+  trap 'echo -e "${RED}" && echo -e "ERROR failed \n$0:$LINENO _debian_flavor_install beyondcomapre" && echo -e "${RESET}" && return 0' ERR
+
+  # export USER_HOME="/home/${SUDO_USER}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  enforce_variable_with_value SUDO_USER "${SUDO_USER}"
   # THOUGHT          local CODENAME="bcompare-4.3.3.24545_amd64.deb"
   local CODENAME=$(_version "linux" "bcompare-*.*.*.*amd64.deb")
   enforce_variable_with_value CODENAME "${CODENAME}"
   local TARGET_URL="https://www.scootersoftware.com/${CODENAME}"
   enforce_variable_with_value TARGET_URL "${TARGET_URL}"
-
   local DOWNLOADFOLDER="$(_find_downloads_folder)"
   enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
   cd "${DOWNLOADFOLDER}"
   _download_mac "${TARGET_URL}" "${DOWNLOADFOLDER}"
-  sudo dpkg -i ${CODENAME}
+  dpkg -i ${CODENAME}
+} # end _debian_flavor_install
+
+_package_list_installer() {
+  local package packages="${@}"
+  trap 'echo -e "${RED}" && echo -e "ERROR failed \n$0:$LINENO _package_list_installer rbenv" && echo -e "${RESET}" && return 0' ERR
+
+  if ! install_requirements "linux" "${packages}" ; then
+  {
+    warning "installing requirements. ${CYAN} attempting to install one by one"
+    while read package; do
+    {
+      [ -z ${package} ] && continue
+      install_requirements "linux" "${package}"
+      _err=$?
+      if [ ${_err} -gt 0 ] ; then
+      {
+        failed to install requirements "${package}"
+      }
+      fi
+    }
+    done <<< "${packages}"
+  }
+  fi
+} # end _package_list_installer
+
+_ubuntu__64() {
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _ubuntu__64 beyondcomapre" && echo -e "${RESET}" && return 0' ERR
+
+  local package packages="
+    poppler-utils
+  "
+  _package_list_installer "${packages}"
+  _debian_flavor_install
 } # end _ubuntu__64
 
 _ubuntu__32() {
-	_linux_prepare
+  sudo_it
+  # export USER_HOME="/Users/${SUDO_USER}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  # _linux_prepare
   # THOUGHT local CODENAME="bcompare-4.3.3.24545_i386.deb"
   local CODENAME=$(_version "linux" "bcompare-*.*.*.*i386.deb")
   enforce_variable_with_value CODENAME "${CODENAME}"
@@ -143,7 +384,10 @@ _ubuntu__32() {
 } # end _ubuntu__32
 
 _fedora__32() {
-	_linux_prepare
+  sudo_it
+  # export USER_HOME="/Users/${SUDO_USER}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  # _linux_prepare
   local CODENAME=$(_version "linux" "bcompare*.*.*.*.i386.rpm")
   enforce_variable_with_value CODENAME "${CODENAME}"
   # THOUGHT                          bcompare-4.3.3.24545.i386.rpm
@@ -180,7 +424,10 @@ _centos__64() {
 } # end _centos__64
 
 _fedora__64() {
-	_linux_prepare
+  sudo_it
+  # export USER_HOME="/Users/${SUDO_USER}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  # _linux_prepare
   local CODENAME=$(_version "linux" "bcompare*.*.*.*.x86_64.rpm")
   enforce_variable_with_value CODENAME "${CODENAME}"
   # THOUGHT  https://www.scootersoftware.com/bcompare-4.3.3.24545.x86_64.rpm
@@ -198,7 +445,10 @@ _fedora__64() {
 } # end _fedora__64
 
 _mingw__64() {
-	_linux_prepare
+  sudo_it
+  export USER_HOME="/Users/${SUDO_USER}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  # _linux_prepare
     local CODENAME=$(_version "win" "BCompare*.*.*.*.exe")
     # THOUGHT        local CODENAME="BCompare-4.3.3.24545.exe"
     local URL="https://www.scootersoftware.com/${CODENAME}"
@@ -229,3 +479,15 @@ _main
 echo ":)"
 
 
+
+ #--------/\/\/\/\-- tasks_templates_sudo/beyondcompare …install_beyondcompare.bash” -- Custom code-/\/\/\/\-------
+
+
+_main() {
+  determine_os_and_fire_action
+} # end _main
+
+_main
+
+echo "🥦"
+exit 0

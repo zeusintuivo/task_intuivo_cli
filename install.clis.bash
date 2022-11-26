@@ -170,8 +170,8 @@ _checka_node_commander() {
     is_not_installed npm &&  $COMANDDER install -y npm             # Ubuntu only
     is_not_installed node && $COMANDDER install -y nodejs          # In Fedora installs npm and node
     is_not_installed node && $COMANDDER install -y nodejs-legacy   # Ubuntu only
-    verify_is_installed npm
-    verify_is_installed node
+    #verify_is_installed npm
+    #verify_is_installed node
 } # end _checka_node_commander
 
 _checka_tools_commander(){
@@ -190,17 +190,17 @@ _checka_tools_commander(){
     # # Ubuntu only
     # python-pip
     # "
-    verify_is_installed "
-    xclip
-    tree
-    ag
-    ack
-    pv
-    nano
-    vim
-    pip
-    sed
-    "
+    #verify_is_installed "
+    #xclip
+    #tree
+    #ag
+    #ack
+    #pv
+    #nano
+    #vim
+    #pip
+    #sed
+    #"
   if ( ! command -v pygmentize >/dev/null 2>&1; ) ;  then
     if ( command -v pip >/dev/null 2>&1; ) ; then # MAC
     {
@@ -217,7 +217,7 @@ _checka_tools_commander(){
   fi
 
    # is_not_installed pygmentize &&    pip install pygments
-    verify_is_installed pygmentize
+   # verify_is_installed pygmentize
   ensure pygmentize or "Canceling Install. Could not find pygmentize.  pip install pygments"
   # ensure npm or "Canceling Install. Could not find npm"
   # ensure node or "Canceling Install. Could not find node"
@@ -484,8 +484,8 @@ _install_npm_utils() {
         npm i -g live-server
     }
     fi
-    verify_is_installed live-server
-    verify_is_installed nodemon
+   # verify_is_installed live-server
+   # verify_is_installed nodemon
     # is_not_installed jest &&  npm i -g jest
     # verify_is_installed jest
     #CHAINSTALLED=$(su - "${SUDO_USER}" -c 'npm -g info chai >/dev/null 2>&1')
@@ -545,7 +545,7 @@ _if_not_is_installed(){
 _install_nvm() {
     local -i ret
     local msg
-    [[  ! -e "${USER_HOME}/.config" ]] && touch "${USER_HOME}/.config"
+    [[  ! -e "${USER_HOME}/.config" ]] && mkdir -p "${USER_HOME}/.config"
     chown  -R "${SUDO_USER}" "${USER_HOME}/.config"
     [ -s "${USER_HOME}/.nvm/nvm.sh" ] && . "${USER_HOME}/.nvm/nvm.sh" # This loads nvm
 
@@ -747,6 +747,8 @@ _setup_ohmy(){
         # install ohmyzsh
         su - "${SUDO_USER}" -c 'sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"'
         chown -R "${SUDO_USER}" "${USER_HOME}/.oh-my-zsh"
+	chsh -s /usr/bin/zsh "${SUDO_USER}"
+	su - "${SUDO_USER}" -c 'chsh -s /usr/bin/zsh "'${SUDO_USER}'"'
         Testing ohmyzsh
         directory_exists_with_spaces "${USER_HOME}/.oh-my-zsh"
     }
@@ -799,7 +801,7 @@ else
 {
   if [[ "$(uname)" == "Darwin" ]] ; then
   {
-    verify_is_installed xcodebuild
+   # verify_is_installed xcodebuild
     # Do something under Mac OS X platform
     local xcodeversion=$(xcodebuild -version | head -1)
     if  ! version_installed_is "${xcodeversion}"  "11.3.1" ;   then # is like version installed is  11.3.1 ?
@@ -867,6 +869,7 @@ return 0
 _setup_clis(){
   local -i ret
   local msg
+  Comment start _setup_clis
   ret=0
   if  it_exists_with_spaces "${USER_HOME}/_/clis" ; then
   {
@@ -1067,10 +1070,12 @@ else
 fi
 
 chown -R "${SUDO_USER}" "${USER_HOME}/_/clis"
+Comment ended _setup_clis
 return 0
 } # end _setup_clis
 
 _setup_mycd(){
+  Comment start $0$1 _setup_mycd
   if it_does_not_exist_with_spaces "${USER_HOME}/.mycd"  ; then
   {
     # My CD
@@ -1149,7 +1154,8 @@ _setup_mycd(){
     fi
   }
   fi
-  return 0
+  Comment end $0$1 _setup_mycd 
+  # return 0
 } # end _setup_mycd
 
 _install_dmg__64() {
@@ -1157,6 +1163,7 @@ _install_dmg__64() {
   local extension="$(echo "${CODENAME}" | rev | cut -d'.' -f 1 | rev)"
   local APPDIR="${2}"
   local TARGET_URL="${3}"
+  Comment start $0$1 _install_dmg__64
   # CODENAME="$(basename "${TARGET_URL}" )"
   echo "${CODENAME}";
   echo "Extension:${extension}"
@@ -1239,9 +1246,11 @@ _install_dmg__64() {
    #   fi
    # }
    # fi
+  Comment end $0$1 _install_dmg__64
 } # end _install_dmg__64
 
-_install_dmgs_list(){
+_install_dmgs_list() {
+  Comment start $0$1 _install_dmgs_list
   # Iris.dmg|
   # 1Password.pkg|https://c.1password.com/dist/1P/mac7/1Password-7.7.pkg
   # Keka-1.2.16.dmg|Keka/Keka.app|https://github-releases.githubusercontent.com/73220421/eec2e3d8-ba82-4d01-ac25-b266ad0bcf64?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIWNJYAX4CSVEH53A%2F20210809%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20210809T155416Z&X-Amz-Expires=300&X-Amz-Signature=9f60b0ef230cff82eaebd6673579693211968bc6451c539af92d8b5cccec03f7&X-Amz-SignedHeaders=host&actor_id=0&key_id=0&repo_id=73220421&response-content-disposition=attachment%3B%20filename%3DKeka-1.2.16.dmg&response-content-type=application%2Foctet-stream
@@ -1308,20 +1317,15 @@ _install_dmgs_list(){
     fi
   }
   done <<< "$(echo "${installlist}" | grep -vE '^#' | grep -vE '^\s+#')"
-  if it_exists_with_spaces /Applications/Sublime\ Text.app && is_not_installed subl  ; then
-  {
-    Creating softlinks for subl, sublime
-    [ ! -d /usr/local/bin/ ] && anounce_command mkdir -p  /usr/local/bin/
-    anounce_command sudo chown -R "${SUDO_USER}"  /usr/local/&
-    anounce_command rm -rf  /usr/local/bin/sublime
-    anounce_command rm -rf  /usr/local/bin/subl
-    anounce_command ln -s /Applications/Sublime\\ Text.app/Contents/SharedSupport/bin/subl  /usr/local/bin/sublime
-    anounce_command ln -s /Applications/Sublime\\ Text.app/Contents/SharedSupport/bin/subl /usr/local/bin/subl
-    anounce_command sudo chown -R "${SUDO_USER}"  /usr/local/bin/sublime&
-    anounce_command sudo chown -R "${SUDO_USER}"  /usr/local/bin/subl&
-  }
-  fi
+  _sublime_softlink_command_line "/Applications/Sublime\\ Text.app"
+  _bcompare_softlink_command_line "/Applications/Beyond\\ Compare.app"
 
+  Comment end $0$1 _install_dmgs_list
+  return 0
+} # end _install_dmgs_list
+
+_bcompare_softlink_command_line() {
+  local _target="${1}"
   if it_exists_with_spaces /Applications/Beyond\ Compare.app && is_not_installed bcomp  ; then
   {
     Creating softlinks for bcomp, bcompare, pdftotext
@@ -1334,10 +1338,26 @@ _install_dmgs_list(){
     anounce_command sudo chown -R root  /usr/local/bin/pdftotext
   }
   fi
-  return 0
-} # end _install_dmgs_list
+} # end _bcompare_link_command_line
 
-_password_simple(){
+_sublime_softlink_command_line() {
+  local _target="${1}"
+  if it_exists_with_spaces /Applications/Sublime\ Text.app && is_not_installed subl  ; then
+  {
+    Creating softlinks for subl, sublime
+    [ ! -d /usr/local/bin/ ] && anounce_command mkdir -p  /usr/local/bin/
+    anounce_command sudo chown -R "${SUDO_USER}"  /usr/local/&
+    anounce_command rm -rf  /usr/local/bin/sublime
+    anounce_command rm -rf  /usr/local/bin/subl
+    anounce_command ln -s  /Applications/Sublime\\ Text.app/Contents/SharedSupport/bin/subl /usr/local/bin>
+    anounce_command ln -s  /Applications/Sublime\\ Text.app/Contents/SharedSupport/bin/subl /usr/local/bin>
+    anounce_command sudo chown -R "${SUDO_USER}"  /usr/local/bin/sublime&
+    anounce_command sudo chown -R "${SUDO_USER}"  /usr/local/bin/subl&
+  }
+  fi
+} # end _sublime_link_command_line
+
+_password_simple() {
   Installing password change
   local Answer
   read -p 'Change Passwords? [Y/n] (Enter Defaults - No/N/n )' Answer
@@ -1487,11 +1507,11 @@ _debian__32() {
   _setup_ohmy
   _install_colorls
   _setup_clis
-  _setup_mycd
+  # _setup_mycd
 
 
 
-  # _password_simple
+  _password_simple
   # _password_simple2
 
   if it_does_not_exist_with_spaces /etc/apt/sources.list.d/cloudfoundry-cli.list ; then
@@ -1503,11 +1523,11 @@ _debian__32() {
     apt update -y
     $COMANDDER cf-cli
     snap install cf-cli
+    chown -R "${SUDO_USER}" "${USER_HOME}/.cf"
   }
   fi
-  chown -R "${SUDO_USER}" "${USER_HOME}/.cf"
-  verify_is_installed cf
-
+ # verify_is_installed cf
+  _setup_mycd
 } # end _debian__32
 _debian__64() {
   COMANDDER="apt install -y"
@@ -1543,11 +1563,11 @@ _debian__64() {
   _setup_ohmy
   _install_colorls
   _setup_clis
-  _setup_mycd
+  # _setup_mycd
 
 
 
-  # _password_simple
+  _password_simple
   # _password_simple2
 
   if it_does_not_exist_with_spaces /etc/apt/sources.list.d/cloudfoundry-cli.list ; then
@@ -1559,13 +1579,14 @@ _debian__64() {
     apt update -y
     $COMANDDER cf-cli
     snap install cf-cli
+    chown -R "${SUDO_USER}" "${USER_HOME}/.cf"
   }
   fi
-  chown -R "${SUDO_USER}" "${USER_HOME}/.cf"
-  verify_is_installed cf
-
+ # verify_is_installed cf
+  _setup_mycd
 } # end _debian__64
 _ubuntu__64() {
+  Comment start $0$1 _ubuntu__64
   # debian sudo usermod -aG sudo "${SUDO_USER}"
   # chown "${SUDO_USER}" /home
   # chgrp -R "${SUDO_GRP}" /home
@@ -1607,7 +1628,7 @@ _ubuntu__64() {
 
 
 
-  # _password_simple
+  _password_simple
   # _password_simple2
 
   if it_does_not_exist_with_spaces /etc/apt/sources.list.d/cloudfoundry-cli.list ; then
@@ -1619,11 +1640,12 @@ _ubuntu__64() {
     apt update -y
     $COMANDDER cf-cli
     snap install cf-cli
+    chown -R "${SUDO_USER}" "${USER_HOME}/.cf"
   }
   fi
-  chown -R "${SUDO_USER}" "${USER_HOME}/.cf"
   # verify_is_installed cf
-
+  _setup_mycd
+  Comment end $0$1 _ubuntu__64
 } # end _ubuntu__64
 
 _centos__64() {
@@ -1633,36 +1655,43 @@ _centos__64() {
 _fedora__64() {
   COMANDDER="dnf install -y"
   is_not_installed ag && $COMANDDER the_silver_searcher          # In Fedora
-cd
-  git clone https://github.com/astrand/xclip.git
-cd xclip
-./bootstrap
-./configure
-make
-make install
   dnf groupinstall 'development tools' -y
 
-  install_requirements "linux" "
+  install_requirements "linux" "xclip"
   # epel-release
   # python3-paramiko
-"
-  install_requirements "linux" "
+
+  install_requirements "linux" 
   # epel-release
-  snap
+  install_requirements "linux"  snap
     # xclip
     # tree
-    ack
-    vim
-    nano
-    pv
-    python2
+  install_requirements "linux"  ack
+  install_requirements "linux"  vim
+  install_requirements  "linux"  nano
+  install_requirements  "linux"  pv
+  install_requirements  "linux"  python2
     # python2-devel
-    python3
-    python3-devel
+  install_requirements  "linux"   python3
+  install_requirements  "linux"  python3-devel
     # twisted
-     zsh
-    "
-   systemctl enable --now snapd.socket
+  install_requirements  "linux"   zsh
+  install_requirements  "linux"  xclip
+  install_requirements  "linux"  autoconf
+  install_requirements  "linux"  automake
+  install_requirements  "linux"  libtool
+  install_requirements  "linux"  libXmu-devel
+  # autoreconf ubuntu
+
+   cd
+   git clone https://github.com/astrand/xclip.git
+   cd xclip
+    ./bootstrap
+    ./configure
+    make
+    make install
+
+   #systemctl enable --now snapd.socket
    sudo snap install tree
   _checka_tools_commander
   _configure_git
@@ -1673,11 +1702,11 @@ make install
   _setup_ohmy
   _install_colorls
   _setup_clis
-  _setup_mycd
+  # _setup_mycd
 
 
 
-  # _password_simple
+  _password_simple
   # _password_simple2
   if  it_does_not_exist_with_spaces /etc/yum.repos.d/cloudfoundry-cli.repo ; then
   {
@@ -1687,8 +1716,8 @@ make install
     $COMANDDER cf7-cli
   }
   fi
-  verify_is_installed cf
-
+ # verify_is_installed cf
+  _setup_mycd
 } # end _fedora__64
 
 _darwin__64() {
@@ -1767,20 +1796,20 @@ _darwin__64() {
   Comment "relink ag"
   brew unlink the_silver_searcher && brew link the_silver_searcher
 
-  verify_is_installed "
-    wget
-    tree
-    ag
-    pt
-    cf
-    node
-    ack
-    pv
-    nano
-    vim
-    gawk
-    pygmentize
-    "
+  # verify_is_installed "
+  #  wget
+  #  tree
+  #  ag
+  #  pt
+  #  cf
+  #  node
+  #  ack
+  #  pv
+  #  nano
+  #  vim
+  #  gawk
+  #  pygmentize
+  #  "
   if  ! command -v pygmentize >/dev/null 2>&1;   then
     if  command -v pip >/dev/null 2>&1;   then # MAC
     {
@@ -1820,7 +1849,7 @@ _darwin__64() {
   chown -R "${SUDO_USER}" "/Library/Ruby"
   _install_colorls
   _setup_clis
-  _setup_mycd
+  # _setup_mycd
   [[  -e "${USER_HOME}/.bash_profile" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.bash_profile"
   [[  -e "${USER_HOME}/.bashrc" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.bashrc"
   [[  -e "${USER_HOME}/.zshrc" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.zshrc"
@@ -1871,6 +1900,7 @@ EOINSERT
   Message then run this file  disable.spotlight.bash
   chmod +x  disable.spotlight.bash
   chown -R "${SUDO_USER}"   disable.spotlight.bash
+  _setup_mycd
   return 0
   # _password_simple2
 } # end _darwin__64
