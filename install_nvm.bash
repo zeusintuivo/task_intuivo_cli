@@ -244,6 +244,9 @@ directory_exists_with_spaces "${USER_HOME}"
 
 #!/usr/bin/env bash
 #
+# @author Zeus Intuivo <zeus@intuivo.com>
+#
+
 _git_clone() {
   local _source="${1}"
   local _target="${2}"
