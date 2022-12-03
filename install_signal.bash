@@ -239,143 +239,117 @@ directory_exists_with_spaces "${USER_HOME}"
 
 
 
- #--------\/\/\/\/-- tasks_templates_sudo/valet …install_valet.bash” -- Custom code -\/\/\/\/-------
+ #--------\/\/\/\/-- tasks_templates_sudo/signal …install_signal.bash” -- Custom code -\/\/\/\/-------
 
 
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
-#
-# Compatible start with low version bash
-export THISSCRIPTCOMPLETEPATH
-typeset -r THISSCRIPTCOMPLETEPATH="$(realpath $(which $(basename "$0")))"   # updated realpath macos 20210902 # § This goes in the FATHER-MOTHER script
+_debian_flavor_install() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _debian_flavor_install
 
-export BASH_VERSION_NUMBER
-typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
+_redhat_flavor_install() {
+  Comment Based on OpenSuse Repos REF: https://build.opensuse.org/repositories/network:im:signal
+  dnf install https://download.opensuse.org/repositories/network:/im:/signal/Fedora_36/x86_64/nodejs-electron-devel-21.3.0-2.4.x86_64.rpm  https://download.opensuse.org/repositories/network:/im:/signal/Fedora_36/x86_64/nodejs-electron-21.3.0-2.4.x86_64.rpm -vy
+  dnf install https://download.opensuse.org/repositories/network:/im:/signal/Fedora_36/x86_64/signal-libringrtc-2.21.2-2.1.x86_64.rpm https://download.opensuse.org/repositories/network:/im:/signal/Fedora_36/x86_64/libheif1-1.13.0-35.1.x86_64.rpm https://download.opensuse.org/repositories/network:/im:/signal/Fedora_36/x86_64/libheif-devel-1.13.0-35.1.x86_64.rpm -vy
+  dnf install https://download.opensuse.org/repositories/network:/im:/signal/Fedora_36/x86_64/gdk-pixbuf-loader-libheif-1.13.0-35.1.x86_64.rpm -vy
+  dnf install https://download.opensuse.org/repositories/network:/im:/signal/Fedora_36/x86_64/esbuild-0.15.11-4.1.x86_64.rpm -vy
+  curl -sSLO https://download.opensuse.org/repositories/network:/im:/signal/Fedora_36/x86_64/app-builder-3.4.2%5e20220309g4e2aa6a1-5.116.x86_64.rpm
+  dnf install ./app-builder-3.4.2%5e20220309g4e2aa6a1-5.116.x86_64.rpm -vy
+  rm ./app-builder-3.4.2%5e20220309g4e2aa6a1-5.116.x86_64.rpm
+  dnf install https://download.opensuse.org/repositories/network:/im:/signal/Fedora_36/x86_64/signal-desktop-5.63.1-3.1.x86_64.rpm -vy
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _redhat_flavor_install
 
-export  THISSCRIPTNAME
-typeset -r THISSCRIPTNAME="$(realpath $(which $(basename "$0")))"  # updated realpath macos 20210902
+_arch_flavor_install() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _readhat_flavor_install
 
-export _err
-typeset -i _err=0
+_arch__32() {
+  _arch_flavor_install
+} # end _arch__32
 
-load_struct_testing_wget(){
-    local provider="$HOME/_/clis/execute_command_intuivo_cli/struct_testing"
-    [   -e "${provider}"  ] && source "${provider}" && echo "Loaded locally"
-    [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
-    ( ( ! command -v passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
-} # end load_struct_testing_wget
-load_struct_testing_wget
+_arch__64() {
+  _arch_flavor_install
+} # end _arch__64
 
-export sudo_it
-function sudo_it() {
-  raise_to_sudo_and_user_home
-  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
-  function _trap_on_error(){
-    echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME $BASHLINENO ERR INT ...\033[0m"
+_centos__32() {
+  _redhat_flavor_install
+} # end _centos__32
 
-  }
-  trap _trap_on_error ERR INT
-} # end sudo_it
+_centos__64() {
+  _redhat_flavor_install
+} # end _centos__64
 
-
-
-_debian_flavor_install(){
-  sudo_it
-  install_requirements "linux" "
-    # Debian Ubuntu only
-    network-manager
-    libnss3-tools
-    jq
-    xsel
-  "
-  verify_is_installed "
-    network-manager
-    libnss3-tools
-    jq
-    xsel
-    composer
-    php
-  "
-    PHPS=$(which php)
-  COMPOSERS=$(which composer)
-
-  su - "$SUDO_USER" -c ''"$PHPS"''"$COMPOSERS"' global update'
-  su - "$SUDO_USER" -c ''"$PHPS"''"$COMPOSERS"' global require cpriego/valet-linux'
-  return 0
-}
 _debian__32() {
-  echo "CURRENTLY NOT SUPPORTED BY LINUX BREW REF: https://docs.brew.sh/Homebrew-on-Linux#install"
-}
+  _debian_flavor_install
+} # end _debian__32
+
 _debian__64() {
   _debian_flavor_install
-}
+} # end _debian__64
+
+_fedora__32() {
+  _redhat_flavor_install
+} # end _fedora__32
+
+_fedora__64() {
+  _redhat_flavor_install
+} # end _fedora__64
+
+_gentoo__32() {
+  _redhat_flavor_install
+} # end _gentoo__32
+
+_gentoo__64() {
+  _redhat_flavor_install
+} # end _gentoo__64
+
+_madriva__32() {
+  _redhat_flavor_install
+} # end _madriva__32
+
+_madriva__64() {
+  _redhat_flavor_install
+} # end _madriva__64
+
+_suse__32() {
+  _redhat_flavor_install
+} # end _suse__32
+
+_suse__64() {
+  _redhat_flavor_install
+} # end _suse__64
+
 _ubuntu__32() {
-  echo "CURRENTLY NOT SUPPORTED BY LINUX BREW REF: https://docs.brew.sh/Homebrew-on-Linux#install"
-}
+  _debian_flavor_install
+} # end _ubuntu__32
+
 _ubuntu__64() {
   _debian_flavor_install
-}
-_darwin__32() {
-  echo "CURRENTLY NOT SUPPORTED BY LINUX BREW REF: https://docs.brew.sh/Homebrew-on-Linux#install"
-}
+} # end _ubuntu__64
+
 _darwin__64() {
-  sudo_it
-  echo "MORE TODO - Install not implemented"
-}
-_readhat_flavor_install(){
-  sudo_it
-  install_requirements "linux" "
-    # RedHat Flavor only
-    nss-tools
-    jq
-    xsel
-  "
-  verify_is_installed "
-    nss-tools
-    jq
-    xsel
-    composer
-    php
-  "
-  setenforce 0
-  echo "Permanent:
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _darwin__64
 
-    Open /etc/selinux/config
-    Change SELINUX=enforcing to SELINUX=permissive"
+_tar() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end tar
 
-  PHPS=$(which php)
-  COMPOSERS=$(which composer)
+_windows__64() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _windows__64
 
-  su - "$SUDO_USER" -c ''"$PHPS"''"$COMPOSERS"' global update'
-  su - "$SUDO_USER" -c ''"$PHPS"''"$COMPOSERS"' global require cpriego/valet-linux'
-  return 0
-}
-_centos__32() {
-  echo "CURRENTLY NOT SUPPORTED BY LINUX BREW REF: https://docs.brew.sh/Homebrew-on-Linux#install"
-}
-_centos__64() {
-  _readhat_flavor_install
-}
-_fedora__32() {
-  echo "CURRENTLY NOT SUPPORTED BY LINUX BREW REF: https://docs.brew.sh/Homebrew-on-Linux#install"
-}
-_fedora__64() {
-  _readhat_flavor_install
-} # end _fedora__64
-_main() {
-  determine_os_and_fire_action
-} # end _main
-
-_main
-
-echo ":)"
+_windows__32() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _windows__32
 
 
 
- #--------/\/\/\/\-- tasks_templates_sudo/valet …install_valet.bash” -- Custom code-/\/\/\/\-------
+ #--------/\/\/\/\-- tasks_templates_sudo/signal …install_signal.bash” -- Custom code-/\/\/\/\-------
 
 
 _main() {
