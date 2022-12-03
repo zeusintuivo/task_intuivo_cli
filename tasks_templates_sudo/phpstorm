@@ -63,6 +63,7 @@ _ubuntu__64() {
     cd ${DOWNLOADFOLDER}/
     _download "${URL}"
     sudo dpkg -i ${CODENAME}
+    _xdebug_add
 } # end _ubuntu__64
 
 _ubuntu__32() {
@@ -74,6 +75,7 @@ _ubuntu__32() {
     cd ${DOWNLOADFOLDER}/
     _download "${URL}"
     sudo dpkg -i ${CODENAME}
+    _xdebug_add
 } # end _ubuntu__32
 
 _fedora__32() {
@@ -106,6 +108,7 @@ _fedora__32() {
   ensure PhpStorm or "Failed to install Beyond Compare"
   rm -f "${DOWNLOADFOLDER}/${CODENAME}"
   file_does_not_exist_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
+  _xdebug_add
 } # end _fedora__32
 
 _centos__64() {
@@ -133,6 +136,8 @@ _fedora__64() {
   enforce_variable_with_value TARGET_URL "${TARGET_URL}"
   local DOWNLOADFOLDER="$(_find_downloads_folder)"
   enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+
+  _xdebug_add
   _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}.tar.gz"
   _untar_gz_download "${DOWNLOADFOLDER}"  "${DOWNLOADFOLDER}/${CODENAME}.tar.gz"
   _move_to_target_dir "${DOWNLOADFOLDER}" "${_target_dir_install}" "${TARGETFOLDER}"
@@ -149,7 +154,22 @@ _fedora__64() {
   file_exists_with_spaces "${_target_dir_install}/bin/phpstorm.sh"
 
   chown $SUDO_USER:$SUDO_USER -R "${_target_dir_install}"
+  
+  _create_pstorm_open_rb "${_target_dir_install}"
+  _create_pstorm_open_sh "${_target_dir_install}"
+  _create_application_x_pstorm_xml "${_target_dir_install}"
+  _create_jetbrains_phpstorm_desktop "${_target_dir_install}"
+  _create_phpstorm_mimeinfo_cache  "${_target_dir_install}"
+  _register_xdg_mime
+  _create_mimeapps_list "${_target_dir_install}"
+  _check_xdg_mime "${_target_dir_install}"
+  _update_mime_database
+  _test_mime_updates
+  _xdebug_add
+} # end _fedora__64
 
+_create_pstorm_open_rb() {
+  local _target_dir_install="${*}"
   # Now Proceed to register REF:  https://gist.github.com/c80609a/752e566093b1489bd3aef0e56ee0426c
   ensure cat or "Failed to use cat command does not exists"
   ensure xdg-mime or "Failed to install run xdg-mime"
@@ -187,8 +207,10 @@ EOF
   file_exists_with_spaces "${_target_dir_install}/bin/pstorm-open.rb"
   chown $SUDO_USER:$SUDO_USER -R "${_target_dir_install}/bin/pstorm-open.rb"
   chmod +x ${_target_dir_install}/bin/pstorm-open.rb
+} # end _create_pstorm_open_rb
 
-
+_create_pstorm_open_sh() {
+  local _target_dir_install="${*}"
     cat << EOF > ${_target_dir_install}/bin/pstorm-open.sh
 #!/usr/bin/env bash
 #encoding: UTF-8
@@ -218,7 +240,10 @@ EOF
   file_exists_with_spaces "${_target_dir_install}/bin/pstorm-open.sh"
   chown $SUDO_USER:$SUDO_USER -R "${_target_dir_install}/bin/pstorm-open.sh"
   chmod +x ${_target_dir_install}/bin/pstorm-open.sh
+} # end _create_pstorm_open_sh
 
+_create_application_x_pstorm_xml() {
+  local _target_dir_install="${*}"
  cat << EOF > $USER_HOME/.local/share/mime/packages/application-x-pstorm.xml
 <?xml version="1.0" encoding="UTF-8"?>
 <mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
@@ -230,10 +255,10 @@ EOF
 EOF
   file_exists_with_spaces "$USER_HOME/.local/share/mime/packages/application-x-pstorm.xml"
   chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/.local/share/mime/packages/application-x-pstorm.xml"
+} # end _create_application_x_pstorm_xml
 
-
-
-
+_create_jetbrains_phpstorm_desktop() {
+  local _target_dir_install="${*}"
   cat << EOF > $USER_HOME/.local/share/applications/jetbrains-phpstorm.desktop
 # $USER_HOME/.local/share/applications/jetbrains-phpstorm.desktop
 [Desktop Entry]
@@ -251,8 +276,10 @@ StartupWMClass=jetbrains-phpstorm
 EOF
   file_exists_with_spaces "$USER_HOME/.local/share/applications/jetbrains-phpstorm.desktop"
   chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/.local/share/applications/jetbrains-phpstorm.desktop"
+} # end _create_jetbrains_phpstorm_desktop
 
-
+_create_phpstorm_mimeinfo_cache() {
+  local _target_dir_install="${*}"
   cat << EOF > $USER_HOME/.local/share/applications/phpstorm.mimeinfo.cache
 # $USER_HOME/.local/share/applications/mimeinfo.cache
 
@@ -276,7 +303,9 @@ Comment=BetterErrors
 EOF
   file_exists_with_spaces "$USER_HOME/.local/share/applications/pstorm-open.desktop"
   chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/.local/share/applications/pstorm-open.desktop"
+} # end _create_phpstorm_mimeinfo_cache
 
+_register_xdg_mime() {
   # xdg-mime default jetbrains-phpstorm.desktop text/plain;text/x-chdr;text/x-csrc;text/x-c++hdr;text/x-c++src;text/x-java;text/x-dsrc;text/x-pascal;text/x-perl;text/x-python;application/x-php;application/x-httpd-php3;application/x-httpd-php4;application/x-httpd-php5;application/xml;text/html;text/css;text/x-sql;text/x-diff;x-directory/normal;inode/directory;
   # xdg-mime default pstorm-open.desktop x-scheme-handler/phpstorm
   # msg=$(_try "xdg-mime default pstorm-open.desktop x-scheme-handler/phpstorm" )
@@ -286,7 +315,10 @@ EOF
   su - "${SUDO_USER}" -c "xdg-mime default jetbrains-phpstorm.desktop x-scheme-handler/x-pstorm"
   su - "${SUDO_USER}" -c "xdg-mime default jetbrains-phpstorm.desktop text/x-pstorm"
   su - "${SUDO_USER}" -c "xdg-mime default jetbrains-phpstorm.desktop application/x-pstorm"
+} # end _register_xdg_mime
 
+_create_mimeapps_list() {
+  local _target_dir_install="${*}"
 #   cat << EOF > $USER_HOME/.config/mimeapps.list
 #   cat << EOF > $USER_HOME/.local/share/applications/mimeapps.list
 # [Default Applications]
@@ -307,11 +339,14 @@ EOF
 # EOF
 #   file_exists_with_spaces "$USER_HOME/.local/share/applications/mimeapps.list"
 #   file_exists_with_spaces "$USER_HOME/.config/mimeapps.list"
-ln -fs "$USER_HOME/.config/mimeapps.list" "$USER_HOME/.local/share/applications/mimeapps.list"
-softlink_exists_with_spaces "$USER_HOME/.local/share/applications/mimeapps.list>$USER_HOME/.config/mimeapps.list"
-chown $SUDO_USER:$SUDO_USER -R  "$USER_HOME/.local/share/applications/mimeapps.list"
+  ln -fs "$USER_HOME/.config/mimeapps.list" "$USER_HOME/.local/share/applications/mimeapps.list"
+  softlink_exists_with_spaces "$USER_HOME/.local/share/applications/mimeapps.list>$USER_HOME/.config/mimeapps.list"
+  chown $SUDO_USER:$SUDO_USER -R  "$USER_HOME/.local/share/applications/mimeapps.list"
+} # end _create_mimeapps_list
 
-file_exists_with_spaces "${_target_dir_install}/bin/pstorm-open.sh"
+_check_xdg_mime() {
+  local _target_dir_install="${*}"
+  file_exists_with_spaces "${_target_dir_install}/bin/pstorm-open.sh"
 
   su - "${SUDO_USER}" -c "xdg-mime query default x-scheme-handler/phpstorm"
   su - "${SUDO_USER}" -c "xdg-mime query default x-scheme-handler/x-pstorm"
@@ -331,8 +366,14 @@ file_exists_with_spaces "${_target_dir_install}/bin/pstorm-open.sh"
     passed Install with xdg-mime scheme success!
   }
   fi
+} # end _create_mimeapps_list
+
+_update_mime_database() {
   su - "${SUDO_USER}" -c "update-mime-database \"$USER_HOME/.local/share/mime\""
   su - "${SUDO_USER}" -c "update-desktop-database \"$USER_HOME/.local/share/applications\""
+} # end _update_mime_database
+
+_test_mime_updates() {  
   su - "${SUDO_USER}" -c "touch test12345.rb "
   su - "${SUDO_USER}" -c "gio info test12345.rb  | grep \"standard::content-type\""
   su - "${SUDO_USER}" -c "touch test12345.erb "
@@ -362,16 +403,132 @@ file_exists_with_spaces "${_target_dir_install}/bin/pstorm-open.sh"
   su - "${SUDO_USER}" -c "rm test12345.js.haml"
   su - "${SUDO_USER}" -c "rm test12345.html.haml"
   echo " "
-  echo "HINT: Add this to your config/initializers/better_errors.php file "
-  echo "better_errors.rb
-  # ... /path_to_php_project/ ... /config/initializers/better_errors.php
+} # end _test_mime_updates
 
-  if (defined?(\$BetterErrors) {
-    \$BetterErrors.editor = \"phpstorm://open?file=%{file}:%{line}\"
-    \$BetterErrors.editor = \"x-pstorm://open?file=%{file}:%{line}\"
-  }
+
+_xdebug_add() {
+  echo "HINT: Change xdebug.ini 
+  
+  from
+   ; xdebug.file_link_format = \"xdebug://%f:%l\"
+  to
+   ; xdebug.file_link_format = \"phpstorm://open?file=%f:%l\"
   "
-} # end _fedora__64
+  Comment Attemping to find xdebug config 
+  local _xdebug_config_filepath="$(php -i | grep xdebug.ini | cut -d, -f1)"
+  if [[ -n "${_xdebug_config_filepath}" ]] ; then
+  {
+    passed "Found"
+    Checking does "${_xdebug_config_filepath}" exists 
+    ls -la "${_xdebug_config_filepath}" 
+    if file_exists_with_spaces "${_xdebug_config_filepath}" ; then 
+    {
+      passed "Yes it exists"
+      local _xdebug_ini_file_contents="$(<"${_xdebug_config_filepath}")"
+
+      passed "Yes the key word file_link_format exists "
+      local _xdebug_ini_file_contents="$(<"${_xdebug_config_filepath}")"
+      Checking file "${_xdebug_ini_file_contents}" is not empty 
+      if [[ -n "${_xdebug_ini_file_contents}" ]] ; then
+      {
+        passed file has lines  
+        Checking if file contains \"; xdebug.file_link_format\" 
+        if _if_contains  "${_xdebug_config_filepath}" "file_link_format" ; then
+        {
+          passed file was this code line ; xdebug.file_link_format
+          if _if_contains  "${_xdebug_config_filepath}" "phpstorm" ; then
+          {
+            warning it looks that phpstorm word is already found inside
+            warning Control it and add it manually to "${_xdebug_config_filepath}"
+            Comment "\n; xdebug.file_link_format = \"phpstorm://open?file=%f:%l\""
+            Comment I will not add
+          }
+          else 
+          {
+            passed it has no phpstorm word inside 
+            Comment Attempting to add manually
+            local one_line=""
+            local new_file=""
+            Message first comment out all current lines
+            while read -r one_line; do
+            {
+              if [[ -z "${one_line}" ]] ; then
+              {
+                new_file="${new_file}\n${one_line}"
+                continue
+              }
+              elif [[ "${one_line}" == *"file_link_format"* ]] ; then
+              {
+                new_file="${new_file}\n; ${one_line}"
+                if [ ${added} -eq 0 ] ; then
+                {
+                  new_file="${new_file}\n; xdebug.file_link_format = \"phpstorm://open?file=%f:%l\""
+                  added=1
+                }
+                fi
+                continue
+              } else {
+                new_file="${new_file}\n${one_line}"
+                continue
+              }
+              fi
+            }
+            done <<< "${_xdebug_ini_file_contents}"
+            Message attempting to write file
+            Comment backup current file 
+            local _err=0
+            local CURRENTDATE=$(date +%Y%m%d%H%M)
+            cp "${_xdebug_config_filepath}" "${_xdebug_config_filepath}_bk_${CURRENTDATE}"
+            _err=$?
+            if [ ${_err} -gt 0 ] ; then
+            {
+              warning add it manually to "${_xdebug_config_filepath}"
+              Comment "\n; xdebug.file_link_format = \"phpstorm://open?file=%f:%l\""
+              failed to back up current file "${_xdebug_config_filepath}"
+            }
+            fi
+            echo -e "${new_file}" > "${_xdebug_config_filepath}"
+            _err=$?
+            if [ ${_err} -gt 0 ] ; then
+            {
+              warning add it manually to "${_xdebug_config_filepath}"
+              Comment "\n; xdebug.file_link_format = \"phpstorm://open?file=%f:%l\""
+              failed to copy new content to file "${_xdebug_config_filepath}"
+            }
+            fi
+          }
+          fi
+        } 
+        else 
+        {
+          warning It does not contain this directive 
+          Comment Just appending it 
+          ersetze "; xdebug.file_link_format" "; ; xdebug.file_link_format"
+          echo -e "; xdebug.file_link_format = \"phpstorm://open?file=%f:%l\"" >>"${_xdebug_config_filepath}"
+        }
+        fi
+      }
+      else
+      {
+        Message file has no lines but it exists
+        warning file is empty then creating it 
+        Comment and adding file_link_format
+        echo -e "; xdebug.file_link_format = \"phpstorm://open?file=%f:%l\"" >"${_xdebug_config_filepath}"
+      }
+      fi
+      Checking if the new change is There
+      if _if_not_contains  "${_xdebug_config_filepath}" "phpstorm" ; then
+      {
+        warning add it manually to "${_xdebug_config_filepath}"
+        Comment "\n; xdebug.file_link_format = \"phpstorm://open?file=%f:%l\""
+        failed to write  "${_xdebug_config_filepath}"
+      }
+      fi
+    }
+    fi
+  }
+  fi
+} # end _xdebug_add
 
 _mingw__64() {
     local CODENAME=$(_version "win" "PhpStorm*.*.*.*.exe")
