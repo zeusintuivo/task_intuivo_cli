@@ -45,9 +45,9 @@ _darwin__64() {
     local CODENAME=$(_version "mac" "PhpStormOSX*.*.*.*.zip")
     # THOUGHT        local CODENAME="PhpStormOSX-4.3.3.24545.zip"
     local URL="https://download-cf.jetbrains.com/webide/${CODENAME}"
-    local DOWNLOADFOLDER="$(_find_downloads_folder)"
-    enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-    cd ${DOWNLOADFOLDER}/
+    local DOWNLOAD_FOLDER="$(_find_downloads_folder)"
+    enforce_variable_with_value DOWNLOAD_FOLDER "${DOWNLOAD_FOLDER}"
+    cd ${DOWNLOAD_FOLDER}/
     _download "${URL}"
     unzip ${CODENAME}
     sudo hdiutil attach ${CODENAME}
@@ -59,8 +59,8 @@ _ubuntu__64() {
     local CODENAME=$(_version "linux" "PhpStorm-*.*.*.*amd64.deb")
     # THOUGHT          local CODENAME="PhpStorm-4.3.3.24545_amd64.deb"
     local URL="https://download-cf.jetbrains.com/webide/${CODENAME}"
-    enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-    cd ${DOWNLOADFOLDER}/
+    enforce_variable_with_value DOWNLOAD_FOLDER "${DOWNLOAD_FOLDER}"
+    cd ${DOWNLOAD_FOLDER}/
     _download "${URL}"
     sudo dpkg -i ${CODENAME}
     _xdebug_add
@@ -70,30 +70,32 @@ _ubuntu__32() {
     local CODENAME=$(_version "linux" "PhpStorm-*.*.*.*i386.deb")
     # THOUGHT local CODENAME="PhpStorm-4.3.3.24545_i386.deb"
     local URL="https://download-cf.jetbrains.com/webide/${CODENAME}"
-    local DOWNLOADFOLDER="$(_find_downloads_folder)"
-    enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-    cd ${DOWNLOADFOLDER}/
+    local DOWNLOAD_FOLDER="$(_find_downloads_folder)"
+    enforce_variable_with_value DOWNLOAD_FOLDER "${DOWNLOAD_FOLDER}"
+    cd ${DOWNLOAD_FOLDER}/
     _download "${URL}"
     sudo dpkg -i ${CODENAME}
     _xdebug_add
 } # end _ubuntu__32
 
 _fedora__32() {
-  local CODENAME=$(_version "linux" "PhpStorm*.*.*.*.i386.rpm")
+  local CODENAME
+  CODENAME=$(_version "linux" "PhpStorm*.*.*.*.i386.rpm")
   # THOUGHT                          PhpStorm-4.3.3.24545.i386.rpm
   local TARGET_URL="https://download-cf.jetbrains.com/webide/${CODENAME}"
-  local DOWNLOADFOLDER="$(_find_downloads_folder)"
-  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-  file_exists_with_spaces ${DOWNLOADFOLDER}
-  cd ${DOWNLOADFOLDER}
+  local DOWNLOAD_FOLDER
+  DOWNLOAD_FOLDER="$(_find_downloads_folder)"
+  enforce_variable_with_value DOWNLOAD_FOLDER "${DOWNLOAD_FOLDER}"
+  file_exists_with_spaces "${DOWNLOAD_FOLDER}"
+  cd "${DOWNLOAD_FOLDER}" || return 1
   _download "${TARGET_URL}"
-  file_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
+  file_exists_with_spaces "${DOWNLOAD_FOLDER}/${CODENAME}"
   ensure tar or "Canceling Install. Could not find tar command to execute unzip"
 
   # provide error handling , once learned goes here. LEarn under if, once learned here.
   # Start loop while ERROR flag in case needs to try again, based on error
   _try "rpm --import https://download-cf.jetbrains.com/webide/RPM-GPG-KEY-scootersoftware"
-  local msg=$(_try "rpm -ivh \"${DOWNLOADFOLDER}/${CODENAME}\"" )
+  local msg=$(_try "rpm -ivh \"${DOWNLOAD_FOLDER}/${CODENAME}\"" )
   local ret=$?
   if [ $ret -gt 0 ] ; then
   {
@@ -106,8 +108,8 @@ _fedora__32() {
   }
   fi
   ensure PhpStorm or "Failed to install Beyond Compare"
-  rm -f "${DOWNLOADFOLDER}/${CODENAME}"
-  file_does_not_exist_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
+  rm -f "${DOWNLOAD_FOLDER}/${CODENAME}"
+  file_does_not_exist_with_spaces "${DOWNLOAD_FOLDER}/${CODENAME}"
   _xdebug_add
 } # end _fedora__32
 
@@ -126,7 +128,8 @@ _fedora__64() {
   # https://download.jetbrains.com/webide/PhpStorm-2019.3.4.tar.gz
   # https://download-cf.jetbrains.com/webide/PhpStorm-2019.3.4.tar.gz
   # https://download.jetbrains.com/webide/PhpStorm-2021.3.2.tar.gz
-  local CODENAME=$(_version "linux" "PhpStorm-*.*.*.tar.gz")
+  local CODENAME
+  CODENAME=$(_version "linux" "PhpStorm-*.*.*.tar.gz")
   # echo "CODENAME:${CODENAME}"
   enforce_variable_with_value CODENAME "${CODENAME}"
 
@@ -134,16 +137,17 @@ _fedora__64() {
   passed "CODENAME:${CODENAME}"
   local TARGET_URL="https://download-cf.jetbrains.com/webide/${CODENAME}.tar.gz"
   enforce_variable_with_value TARGET_URL "${TARGET_URL}"
-  local DOWNLOADFOLDER="$(_find_downloads_folder)"
-  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  local DOWNLOAD_FOLDER
+  DOWNLOAD_FOLDER="$(_find_downloads_folder)"
+  enforce_variable_with_value DOWNLOAD_FOLDER "${DOWNLOAD_FOLDER}"
 
   _xdebug_add
-  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}.tar.gz"
-  _untar_gz_download "${DOWNLOADFOLDER}"  "${DOWNLOADFOLDER}/${CODENAME}.tar.gz"
-  _move_to_target_dir "${DOWNLOADFOLDER}" "${_target_dir_install}" "${TARGETFOLDER}"
+  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOAD_FOLDER}"  "${CODENAME}.tar.gz"
+  _untar_gz_download "${DOWNLOAD_FOLDER}"  "${DOWNLOAD_FOLDER}/${CODENAME}.tar.gz"
+  _move_to_target_dir "${DOWNLOAD_FOLDER}" "${_target_dir_install}" "${TARGETFOLDER}"
 
-  [ -e "${DOWNLOADFOLDER}/${CODENAME}.tar.gz" ] && rm "${DOWNLOADFOLDER}/${CODENAME}.tar.gz"
-  directory_does_not_exist_with_spaces "${DOWNLOADFOLDER}/${CODENAME}.tar.gz"
+  [ -e "${DOWNLOAD_FOLDER}/${CODENAME}.tar.gz" ] && rm "${DOWNLOAD_FOLDER}/${CODENAME}.tar.gz"
+  directory_does_not_exist_with_spaces "${DOWNLOAD_FOLDER}/${CODENAME}.tar.gz"
 
 
   directory_exists_with_spaces "${_target_dir_install}/bin"
@@ -153,7 +157,7 @@ _fedora__64() {
   directory_exists_with_spaces "$USER_HOME/.local/share/mime/packages"
   file_exists_with_spaces "${_target_dir_install}/bin/phpstorm.sh"
 
-  chown $SUDO_USER:$SUDO_USER -R "${_target_dir_install}"
+  chown "${SUDO_USER}":"${SUDO_USER}" -R "${_target_dir_install}"
   
   _create_pstorm_open_rb "${_target_dir_install}"
   _create_pstorm_open_sh "${_target_dir_install}"
@@ -174,7 +178,7 @@ _create_pstorm_open_rb() {
   ensure cat or "Failed to use cat command does not exists"
   ensure xdg-mime or "Failed to install run xdg-mime"
 
-   cat << EOF > ${_target_dir_install}/bin/pstorm-open.rb
+   cat << EOF > "${_target_dir_install}/bin/pstorm-open.rb"
 #!/usr/bin/env ruby
 
 # ${_target_dir_install}/bin/pstorm-open.rb
@@ -211,7 +215,7 @@ EOF
 
 _create_pstorm_open_sh() {
   local _target_dir_install="${*}"
-    cat << EOF > ${_target_dir_install}/bin/pstorm-open.sh
+    cat << EOF > "${_target_dir_install}/bin/pstorm-open.sh"
 #!/usr/bin/env bash
 #encoding: UTF-8
 # ${_target_dir_install}/bin/pstorm-open.sh
@@ -535,9 +539,9 @@ _mingw__64() {
     # THOUGHT        local CODENAME="PhpStorm-4.3.3.24545.exe"
     local URL="https://download-cf.jetbrains.com/webide/${CODENAME}"
     cd $HOMEDIR
-    local DOWNLOADFOLDER="$(_find_downloads_folder)"
-    enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-    cd "${DOWNLOADFOLDER}"
+    local DOWNLOAD_FOLDER="$(_find_downloads_folder)"
+    enforce_variable_with_value DOWNLOAD_FOLDER "${DOWNLOAD_FOLDER}"
+    cd "${DOWNLOAD_FOLDER}"
     curl -O $URL
     ${CODENAME}
 } # end _mingw__64
@@ -547,9 +551,9 @@ _mingw__32() {
     # THOUGHT        local CODENAME="PhpStorm-4.3.3.24545.exe"
     local URL="https://download-cf.jetbrains.com/webide/${CODENAME}"
     cd $HOMEDIR
-    local DOWNLOADFOLDER="$(_find_downloads_folder)"
-    enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-    cd "${DOWNLOADFOLDER}"
+    local DOWNLOAD_FOLDER="$(_find_downloads_folder)"
+    enforce_variable_with_value DOWNLOAD_FOLDER "${DOWNLOAD_FOLDER}"
+    cd "${DOWNLOAD_FOLDER}"
     curl -O $URL
     ${CODENAME}
 } # end
