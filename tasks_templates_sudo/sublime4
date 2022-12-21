@@ -1,4 +1,4 @@
-
+#!/usr/bin/bash
 
 function _version() {
     local -i _err
@@ -185,7 +185,8 @@ function _do_install() {
 } # end _do_install
 
 _redhat_flavor_install() {
-  local -i __online_version_from_page=$(_version)
+  local -i __online_version_from_page
+  __online_version_from_page=$(_version)
   enforce_variable_with_value __online_version_from_page "${__online_version_from_page}"
   passed "${__online_version_from_page}"
   if new_version_is_higher "${__online_version_from_page}" ; then
