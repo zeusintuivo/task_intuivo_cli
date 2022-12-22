@@ -73,7 +73,35 @@ _ubuntu__32() {
 } # end _ubuntu__32
 
 _ubuntu__64() {
-  _debian_flavor_install
+  git clone https://github.com/drogonframework/drogon 
+  cd drogon
+  git submodule update --init
+  mkdir build
+  cd build
+  
+  sudo apt install cmake -vy
+  sudo apt-get install cmake -vy
+  sudo apt-get install gddrescue -y
+  sudo apt-get install cmake -y
+  sudo apt install gcc -y
+  sudo apt install g++ -y
+  sudo apt install libjsoncpp-dev -y
+  sudo apt install libjsoncpp -y
+  sudo apt install uuid-dev -y
+  sudo apt install libssl-dev -y
+  sudo apt install zlib1g-dev -y
+  sudo apt install zlib1g -y
+  sudo apt-get install postgresql-all -y
+  sudo apt-get install postgresql-server-dev -y
+  sudo apt install libmariadbclient-dev -y
+  sudo apt install libmariadb-dev-compat -y
+  sudo apt-get install libsqlite3-dev -y
+  udo apt-get install libhiredis-dev -y
+  sudo apt-get install cmake  -y
+  sudo apt-get install libhiredis-dev -y
+  sudo apt-get install libsqlite3-dev -y
+  cmake ..
+  make && sudo make install
 } # end _ubuntu__64
 
 _darwin__64() {

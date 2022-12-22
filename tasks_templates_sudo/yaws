@@ -73,7 +73,15 @@ _ubuntu__32() {
 } # end _ubuntu__32
 
 _ubuntu__64() {
-  _debian_flavor_install
+  sudo apt install yaws -y
+  sudo systemctl status yaws
+  sudo systemctl enable yaws
+  sudo systemctl restart yaws
+  uname -a
+  cat /etc/resolv.conf
+  cat /etc/debian_version
+  sudo systemctl yaws
+  sudo systemctl status  yaws
 } # end _ubuntu__64
 
 _darwin__64() {
