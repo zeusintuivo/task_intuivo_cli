@@ -244,42 +244,6 @@ directory_exists_with_spaces "${USER_HOME}"
 
 #!/bin/bash
 #
-# @author Zeus Intuivo <zeus@intuivo.com>
-#
-#
-# Compatible start with low version bash
-export THISSCRIPTCOMPLETEPATH
-typeset -r THISSCRIPTCOMPLETEPATH="$(realpath $(which $(basename "$0")))"   # updated realpath macos 20210902 # § This goes in the FATHER-MOTHER script
-
-export BASH_VERSION_NUMBER
-typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
-
-export  THISSCRIPTNAME
-typeset -r THISSCRIPTNAME="$(realpath $(which $(basename "$0")))"  # updated realpath macos 20210902
-
-export _err
-typeset -i _err=0
-
-load_struct_testing_wget(){
-    local provider="$HOME/_/clis/execute_command_intuivo_cli/struct_testing"
-    [   -e "${provider}"  ] && source "${provider}" && echo "Loaded locally"
-    [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
-    ( ( ! command -v passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
-} # end load_struct_testing_wget
-load_struct_testing_wget
-
-export sudo_it
-function sudo_it() {
-  raise_to_sudo_and_user_home
-  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
-  function _trap_on_error(){
-    echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME $BASHLINENO ERR INT ...\033[0m"
-
-  }
-  trap _trap_on_error ERR INT
-} # end sudo_it
-
 
 
 _debian_flavor_install(){
