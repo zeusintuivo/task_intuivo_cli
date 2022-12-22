@@ -318,6 +318,9 @@ _ubuntu__32() {
 
 _ubuntu__64() {
   echo NOTICE This sentry needs at least 2 CPUs 
+  echo WARN: Recommended minimum CPU cores available to Docker is 4, found 2
+  echo FAIL: Required minimum RAM available to Docker is 3800 MB, found 1928 MB
+
   curl -OkKvsSL https://codeload.github.com/getsentry/self-hosted/zip/refs/tags/22.12.0
   mv 22.12.0  22.12.0.zip
   unzip 22.12.0.zip
