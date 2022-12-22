@@ -54,7 +54,8 @@ _debian__64() {
   echo verify docker installs by creating hello world
   docker run hello-world
   apt install docker-compose -y
-
+  echo Architecture:
+  docker info  | grep Archi | cut -d: -f2 | cut -d\  -f2
 } # end _debian__64
 
 _fedora__32() {
