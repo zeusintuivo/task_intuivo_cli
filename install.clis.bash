@@ -1349,8 +1349,8 @@ _sublime_softlink_command_line() {
     anounce_command sudo chown -R "${SUDO_USER}"  /usr/local/&
     anounce_command rm -rf  /usr/local/bin/sublime
     anounce_command rm -rf  /usr/local/bin/subl
-    anounce_command ln -s  /Applications/Sublime\\ Text.app/Contents/SharedSupport/bin/subl /usr/local/bin>
-    anounce_command ln -s  /Applications/Sublime\\ Text.app/Contents/SharedSupport/bin/subl /usr/local/bin>
+    anounce_command ln -s  /Applications/Sublime\\ Text.app/Contents/SharedSupport/bin/subl /usr/local/bin/sublime
+    anounce_command ln -s  /Applications/Sublime\\ Text.app/Contents/SharedSupport/bin/subl /usr/local/bin/subl
     anounce_command sudo chown -R "${SUDO_USER}"  /usr/local/bin/sublime&
     anounce_command sudo chown -R "${SUDO_USER}"  /usr/local/bin/subl&
   }
