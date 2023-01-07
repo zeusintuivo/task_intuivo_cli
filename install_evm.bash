@@ -327,9 +327,9 @@ _install_and_add_variables_to_bashrc_zshrc(){
   local EVM_SH_CONTENT='
 
 # EVM
-export EVM_HOME="'${USER_HOME}'/.evm"
-export PATH="'${USER_HOME}'/.evm/scripts:${PATH}"
-source "'${USER_HOME}'/.evm/scripts/evm
+[[ -f "'${USER_HOME}'/.evm" ]] && export EVM_HOME="'${USER_HOME}'/.evm"
+[[ -d "'${USER_HOME}'/.evm/scripts" ]] && export PATH="'${USER_HOME}'/.evm/scripts:${PATH}"
+[[ -f "'${USER_HOME}'/.evm" ]] && source "'${USER_HOME}'/.evm/scripts/evm"
 
 ' 
   echo "${EVM_SH_CONTENT}"
@@ -461,6 +461,7 @@ _darwin__64() {
   local package packages="
     wget
     openssl
+    wxWidgets
   "
   _package_list_installer "${packages}"
   _git_clone "https://github.com/robisonsantos/evm.git" "${USER_HOME}/.evm"

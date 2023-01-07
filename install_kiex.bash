@@ -242,17 +242,148 @@ directory_exists_with_spaces "${USER_HOME}"
  #--------\/\/\/\/-- tasks_templates_sudo/kiex …install_kiex.bash” -- Custom code -\/\/\/\/-------
 
 
+#!/bin/bash
+
+_package_list_installer() {
+  local package packages="${@}"
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer kiex" && echo -e "${RESET}" && return 0' ERR
+
+  if ! install_requirements "linux" "${packages}" ; then
+  {
+    warning "installing requirements. ${CYAN} attempting to install one by one"
+    while read package; do
+    {
+      [ -z ${package} ] && continue
+      if ! install_requirements "linux" "${package}" ; then
+      {
+        _err=$?
+        if [ ${_err} -gt 0 ] ; then
+        {
+          echo -e "${RED}" 
+          echo failed to install requirements "${package}"
+          echo -e "${RESET}"
+        }
+        fi
+      }
+      fi
+    }
+    done <<< "${packages}"
+  }
+  fi
+} # end _package_list_installer
+
+_git_clone() {
+  local _source="${1}"
+  local _target="${2}"
+  if  it_exists_with_spaces "${_target}" ; then
+  {
+    cd "${_target}"
+    git config pull.rebase false
+    git fetch
+    git pull
+  }
+  else
+  {
+   git clone "${_source}" "${_target}"
+  }
+  fi
+  chown -R "${SUDO_USER}" "${_target}"
+
+} # _git_clone
+
+
+_install_and_add_variables_to_bashrc_zshrc(){
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _install_and_add_variables_to_bashrc_zshrc kiex" && echo -e "${RESET}" && return 0' ERR
+  
+  local dir DIRS="erlang_tars erlang_versions kiex_config scripts"
+  local KIEX_HOME="${USER_HOME}/.kiex"
+  # For each dir, check whether it's already exists or not
+  for dir in $DIRS
+  do
+    if [[ ! -d "$KIEX_HOME/$dir" ]]
+    then
+      mkdir -p "$KIEX_HOME/$dir"
+      echo "$KIEX_HOME/$dir successfully created"
+    else
+      echo "$KIEX_HOME/$dir already exists and will not be replaced"
+    fi
+  done
+  # Create the config file
+  if [[ ! -f "$KIEX_HOME/kiex_config/erlang_default" ]]
+  then 
+    touch "$KIEX_HOME/kiex_config/erlang_default"
+    echo "$KIEX_HOME/kiex_config/erlang_default succesfully created"
+  else
+    echo "$KIEX_HOME/kiex_config/erlang_default already exists and will not be replaced"
+  fi
+
+  # Copy the script
+  # cp "kiex" "$KIEX_HOME/scripts"
+
+  local KIEX_SH_CONTENT='
+
+# KIEX
+test -s "'${USER_HOME}'/.kiex/scripts/kiex" && source "'${USER_HOME}'/.kiex/scripts/kiex"
+
+' 
+  echo "${KIEX_SH_CONTENT}"
+  local INITFILE INITFILES="
+   .bashrc
+   .zshrc
+   .bash_profile
+   .profile
+   .zshenv
+   .zprofile
+  "
+  while read INITFILE; do
+  { 
+    [ -z ${INITFILE} ] && continue
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "# KIEX" ||  echo "${KIEX_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "kiex/scripts" ||  echo "${KIEX_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+  }
+  done <<< "${INITFILES}"
+  # type kiex
+  source "${USER_HOME}/.kiex/scripts/kiex"
+  _finale_message
+
+} # _add_variables_to_bashrc_zshrc
+
+_finale_message(){
+  echo
+  echo "
+   ___________        .__   <>           <>                    
+   \_   _____/_______ |  |  ___ __    __ __. _______          
+    |    __)_ \_  __ \|  |  \ | \ \  / / \ | \\\_  __ \\ 
+    |        \ |  | \/|  |__| |  \_|/_/  | |  |  | \\/        
+   /_______  / |__|   |____/|_|  / /\ \  |_|  |__|             
+           \/                   /_/  \_\
+
+
+   ____   ____                     .__                       
+   \   \ /   / ____ _______  ______|__|  ____    ____        
+    \   Y   /_/ __ \\\\_  __ \/  ___/|  | /  _ \\  /    \\
+     \     / \  ___/ |  | \/\___ \ |  |(  <_> )|   |  \\ 
+      \___/   \___  >|__|  /____  >|__| \____/ |___|  /      
+                  \/            \/                  \/       
+      _____                                                  
+     /     \  _____     ____  _____     ____    ____ _______ 
+    /  \ /  \ \__  \   /    \ \__  \   / ___\ _/ __ \\\\_  __ \\
+   /    Y    \ / __ \_|   |  \ / __ \_/ /_/  >\  ___/ |  | \/
+   \____|__  /(____  /|___|  /(____  /\___  /  \___  >|__|   
+           \/      \/      \/      \//_____/       \/       
+  "
+} # end _finale_message
 
 _debian_flavor_install() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  curl -Lqs https://raw.githubusercontent.com/taylor/kiex/master/install | bash -s
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  curl -Lqs https://raw.githubusercontent.com/taylor/kiex/master/install | bash -s
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  curl -Lqs https://raw.githubusercontent.com/taylor/kiex/master/install | bash -s
 } # end _readhat_flavor_install
 
 _arch__32() {
@@ -320,7 +451,20 @@ _ubuntu__64() {
 } # end _ubuntu__64
 
 _darwin__64() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  curl -Lqs https://raw.githubusercontent.com/taylor/kiex/master/install | bash -s
+  export HOMEBREW_NO_AUTO_UPDATE=1
+  trap 'echo -e "${RED}" && echo "ERROR err:$_err failed $0:$LINENO _darwin__64 kiex" && echo -e "${RESET}" && return 0' ERR
+  local package packages="
+    wget
+    openssl
+    wxWidgets
+    fop
+    libxslt
+  "
+  _package_list_installer "${packages}"
+  _git_clone "https://raw.githubusercontent.com/taylor/kiex.git" "${USER_HOME}/.kiex"
+  local MSG=$(_install_and_add_variables_to_bashrc_zshrc)
+  echo "${MSG}" 
 } # end _darwin__64
 
 _tar() {

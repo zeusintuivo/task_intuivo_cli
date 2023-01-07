@@ -217,15 +217,15 @@ ERR INT ..."
 export SUDO_GRP='staff'
 enforce_variable_with_value USER_HOME "${USER_HOME}"
 enforce_variable_with_value SUDO_USER "${SUDO_USER}"
-if (( DEBUG )) ; then
-  passed "Caller user identified:${SUDO_USER}"
-fi
+  if (( DEBUG )) ; then
+    passed "Caller user identified:${SUDO_USER}"
+  fi
   if (( DEBUG )) ; then
     Comment DEBUG_err?:${?}
   fi
-if (( DEBUG )) ; then
-  passed "Home identified:${USER_HOME}"
-fi
+  if (( DEBUG )) ; then
+    passed "Home identified:${USER_HOME}"
+  fi
   if (( DEBUG )) ; then
     Comment DEBUG_err?:${?}
   fi
