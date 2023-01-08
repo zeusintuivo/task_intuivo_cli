@@ -132,14 +132,23 @@ _finale_message(){
 
 _debian_flavor_install() {
   curl -Lqs https://raw.githubusercontent.com/taylor/kiex/master/install | bash -s
+  _git_clone "https://raw.githubusercontent.com/taylor/kiex.git" "${USER_HOME}/.kiex"
+  local MSG=$(_install_and_add_variables_to_bashrc_zshrc)
+  echo "${MSG}"
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
   curl -Lqs https://raw.githubusercontent.com/taylor/kiex/master/install | bash -s
+  _git_clone "https://raw.githubusercontent.com/taylor/kiex.git" "${USER_HOME}/.kiex"
+  local MSG=$(_install_and_add_variables_to_bashrc_zshrc)
+  echo "${MSG}"
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
   curl -Lqs https://raw.githubusercontent.com/taylor/kiex/master/install | bash -s
+  _git_clone "https://raw.githubusercontent.com/taylor/kiex.git" "${USER_HOME}/.kiex"
+  local MSG=$(_install_and_add_variables_to_bashrc_zshrc)
+  echo "${MSG}"
 } # end _readhat_flavor_install
 
 _arch__32() {

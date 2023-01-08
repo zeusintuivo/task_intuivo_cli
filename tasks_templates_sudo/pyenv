@@ -56,6 +56,10 @@ _redhat_flavor_install() {
   # export USER_HOME="/home/${SUDO_USER}"
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   enforce_variable_with_value SUDO_USER "${SUDO_USER}"
+  verify_is_installed "
+      # RedHat Flavor only
+`      python
+  "
   # RedHat Flavor only
   local package packages="
     sqlite
