@@ -462,6 +462,8 @@ _darwin__64() {
     wget
     openssl
     wxWidgets
+    fop
+    libxslt
   "
   _package_list_installer "${packages}"
   _git_clone "https://github.com/robisonsantos/evm.git" "${USER_HOME}/.evm"
