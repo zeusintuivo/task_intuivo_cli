@@ -1721,21 +1721,21 @@ _fedora__64() {
 } # end _fedora__64
 
 _darwin__64() {
-  Installing ## macOS Preferences
+  Installing "## macOS Preferences"
 
-  Comment # Set a blazingly fast keyboard repeat rate ms
+  Comment "# Set a blazingly fast keyboard repeat rate ms"
   defaults write NSGlobalDomain KeyRepeat -int 1
 
-  Comment # Set a shorter Delay until key repeat ms
+  Comment "# Set a shorter Delay until key repeat ms"
   defaults write NSGlobalDomain InitialKeyRepeat -int 10
 
-  Comment # Add a context menu item for showing the Web Inspector in web views
+  Comment "# Add a context menu item for showing the Web Inspector in web views"
   defaults write NSGlobalDomain WebKitDeveloperExtras -bool true
 
-  Comment # Show the ~/Library folder
+  Comment "# Show the ~/Library folder"
   chflags nohidden ~/Library
 
-  Comment # Store screenshots in subfolder on desktop
+  Comment "# Store screenshots in subfolder on desktop"
   mkdir -p ~/Desktop/Screenshots
   defaults write com.apple.screencapture location ~/Desktop/Screenshots
   SUDO_GRP='wheel'
