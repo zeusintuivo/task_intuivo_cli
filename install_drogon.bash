@@ -245,16 +245,24 @@ directory_exists_with_spaces "${USER_HOME}"
 #!/usr/bin/bash
 
 _debian_flavor_install() {
+  sudo apt install git gcc g++ cmake libjsoncpp-dev uuid-dev openssl libssl-dev zlib1g-dev
   echo "Procedure not yet implemented. I don't know what to do."
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
+  sudo dnf install git gcc gcc-c++ cmake libuuid-devel openssl-devel zlib-devel 
   echo "Procedure not yet implemented. I don't know what to do."
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
   echo "Procedure not yet implemented. I don't know what to do."
 } # end _readhat_flavor_install
+
+_gentoo_flavor_install(){
+  sudo emerge dev-vcs/git jsoncpp ossp-uuid openssl -y
+  echo "Procedure not yet implemented. I don't know what to do."
+
+}
 
 _arch__32() {
   _arch_flavor_install
@@ -288,13 +296,28 @@ _fedora__64() {
   _redhat_flavor_install
 } # end _fedora__64
 
+
 _gentoo__32() {
-  _redhat_flavor_install
+  sudo emerge dev-vcs/git jsoncpp ossp-uuid openssl
+  
+  _gentoo_flavor_install
 } # end _gentoo__32
 
 _gentoo__64() {
-  _redhat_flavor_install
+  sudo emerge dev-vcs/git jsoncpp ossp-uuid openssl
+  _gentoo_flavor_install
 } # end _gentoo__64
+
+_fundoo__64() {
+  sudo emerge dev-vcs/git jsoncpp ossp-uuid openssl
+  _gentoo_flavor_install
+} # end _fundoo__64
+
+_fundoo__32() {
+  sudo emerge dev-vcs/git jsoncpp ossp-uuid openssl
+  _gentoo_flavor_install
+} # end _fundoo__32
+
 
 _madriva__32() {
   _redhat_flavor_install
@@ -322,7 +345,11 @@ _ubuntu__64() {
   git submodule update --init
   mkdir build
   cd build
-  
+  sudo apt-get install -y  apt-utils tzdata dirmngr gnupg2 lsb-release sudo 
+  sudo apt-get install -y  build-essential autoconf automake cmake  curl wget gcc g++ git libtool gzip make unzip mc  \
+                        lsb-release wgetpkg-config libboost-all-dev  libjsoncpp-dev libconfig++-dev  libprotobuf-dev \
+                        protobuf-compiler libgrpc++-dev libgrpc++1 libgrpc-dev protobuf-compiler-grpc
+
   sudo apt install cmake -vy
   sudo apt-get install cmake -vy
   sudo apt-get install gddrescue -y
@@ -340,17 +367,84 @@ _ubuntu__64() {
   sudo apt install libmariadbclient-dev -y
   sudo apt install libmariadb-dev-compat -y
   sudo apt-get install libsqlite3-dev -y
-  udo apt-get install libhiredis-dev -y
+  sudo apt-get install libhiredis-dev -y
   sudo apt-get install cmake  -y
   sudo apt-get install libhiredis-dev -y
   sudo apt-get install libsqlite3-dev -y
+  sudo apt install git gcc g++ cmake libjsoncpp-dev uuid-dev openssl libssl-dev zlib1g-dev -y
   cmake ..
   make && sudo make install
 } # end _ubuntu__64
 
 _darwin__64() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  Comment 'REF: https://terminalroot.com/drogon-cpp-the-fastest-web-framework-in-the-world/'
+  export HOMEBREW_NO_AUTO_UPDATE=1
+  export HOMEBREW_PREFIX=/usr/local
+  brew install jsoncpp
+  brew install libcpuid
+  brew install ossp-uuid
+  brew install openssl
+  brew install zlib
+  brew install --build-from-source  --HEAD  zlib
+  brew install hiredis
+  brew install cmake
+  brew install g++
+  brew install gpp
+  brew install gcc 
+  brew install git
+  brew install  mongo-c-driver
+  brew install  mongo-cxx-driver
+  brew install --build-from-source  --HEAD  mongo-c-driver
+  brew install --build-from-source  --HEAD  mongo-cxx-driver
+  brew install   protobuf-c
+  brew install grpc
+  brew install googletest
+  git clone https://github.com/an-tao/drogon
+  cd drogon
+  git submodule update --init
+  mkdir -p build
+  cd build
+  make clean
+  
+  # cmake ..
+  # REF: https://github.com/eulerto/pgquarrel/issues/27
+  # Fix for -- Could NOT find PostgreSQL (missing: PostgreSQL_INCLUDE_DIR)
+  # Fix for -- Could NOT find pg (missing: PG_LIBRARIES PG_INCLUDE_DIRS)
+  export PostgreSQL_INCLUDE_DIR=/usr/local/opt/postgresql@12/include
+  export PG_LIBRARIES=/usr/local/opt/postgresql@12/lib
+  export PG_INCLUDE_DIRS=/usr/local/opt/postgresql@12/include
+  cmake -DCMAKE_PREFIX_PATH=/usr/local/opt/postgresql@12 ..
+
+  make && sudo make install
+
 } # end _darwin__64
+
+test_speed () {
+  url=https://velophil.berlin
+  benchrequest -r2 -c15 -s1 "${url}"
+  ab -n 100 -c 10 "${url}"
+  siege -v -r 2 -c 15 "${url}"
+
+  port=8083
+  url=https://velophil.berlin
+  oha -n 10000 "${url}"
+  reset 
+  oha -n 1000000 -c 100 --latency-correction --disable-keepalive "${url}"
+  oha -n 1000000 -c 100 --latency-correction --disable-keepalive https://unsaferust.org/
+  oha -n 1000000 -c 100 --latency-correction --disable-keepalive https://velophil.berlin
+  oha -n 1000000 -c 100 --latency-correction --disable-keepalive https://pixum.de
+
+
+  port=8083
+  url=https://velophil.berlin
+  duration=30
+  wrk -t 6 -c 1000 -d 3s "${url}"
+  reset 
+  wrk -t 6 -c 1000 -d ${duration}s "${url}"
+  echo "Url tested: ${url}"
+
+
+}
 
 _tar() {
   echo "Procedure not yet implemented. I don't know what to do."
