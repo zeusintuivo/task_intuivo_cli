@@ -204,7 +204,7 @@ sudo echo ":"
 
 ._dirs() {
     find * -maxdepth 0 -type d   # mac and linux tested
-}
+} # end ._dirs
 ._replace_all_hashes(){
   local found
   local one_item="${1}"
@@ -216,7 +216,7 @@ sudo echo ":"
     [ $? -eq 1 ] &&  break
   done
   echo "${one_action}"
-}
+} # end ._replace_all_hashes
 .loopsubdirs() {
   # Perform all actions in
   #        LIST1
@@ -244,7 +244,7 @@ ls -p1 | grep -v / | xargs -I {} echo "    location = /{} {
   }
   done <<< "${local_items}"
   return 0
-}
+} # end .loopsubdirs
 local -i IS_WORDPRESS=0
 CWD="${PWD}"
 if [[ -d "${PWD}/public" ]] ; then
