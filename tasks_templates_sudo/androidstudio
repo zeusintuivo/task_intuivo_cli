@@ -1,0 +1,144 @@
+#!/usr/bin/bash
+
+_debian_flavor_install() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _debian_flavor_install
+
+_redhat_flavor_install() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _redhat_flavor_install
+
+_arch_flavor_install() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _readhat_flavor_install
+
+_arch__32() {
+  _arch_flavor_install
+} # end _arch__32
+
+_arch__64() {
+  _arch_flavor_install
+} # end _arch__64
+
+_centos__32() {
+  _redhat_flavor_install
+} # end _centos__32
+
+_centos__64() {
+  _redhat_flavor_install
+} # end _centos__64
+
+_debian__32() {
+  _debian_flavor_install
+} # end _debian__32
+
+_debian__64() {
+  _debian_flavor_install
+} # end _debian__64
+
+_fedora__32() {
+  _redhat_flavor_install
+} # end _fedora__32
+
+_fedora__64() {
+  _redhat_flavor_install
+} # end _fedora__64
+
+_gentoo__32() {
+  _redhat_flavor_install
+} # end _gentoo__32
+
+_gentoo__64() {
+  _redhat_flavor_install
+} # end _gentoo__64
+
+_madriva__32() {
+  _redhat_flavor_install
+} # end _madriva__32
+
+_madriva__64() {
+  _redhat_flavor_install
+} # end _madriva__64
+
+_suse__32() {
+  _redhat_flavor_install
+} # end _suse__32
+
+_suse__64() {
+  _redhat_flavor_install
+} # end _suse__64
+
+_ubuntu__32() {
+  _debian_flavor_install
+} # end _ubuntu__32
+
+_ubuntu__64() {
+  _debian_flavor_install
+} # end _ubuntu__64
+
+_darwin__64() {
+
+say ";;"
+say  "Removing all AndroidStudio Following instructions form "
+say  "REF: https://stackoverflow.com/questions/17625622/how-to-completely-uninstall-android-studio-on-mac"
+say ";;" 
+  # Over write say with text version since Struct Testing say will speak on mac 
+  HOW_TO_LOAD_JUST_ONE_SCRIPT_LOCAL_AND_ONLINE_EXECUTE_COMMAND
+say  "Deletes the Android Studio application"
+say  "Note that this may be different depending on what you named the application as, or whether you downloaded the preview version"
+anounce_command rm -Rf /Applications/Android\ Studio.app
+say  "Delete All Android Studio related preferences"
+say  "The asterisk here should target all folders/files beginning with the string before it"
+anounce_command rm -Rf ~/Library/Preferences/AndroidStudio*
+anounce_command rm -Rf ~/Library/Preferences/Google/AndroidStudio*
+say  "Deletes the Android Studio's plist file"
+anounce_command rm -Rf ~/Library/Preferences/com.google.android.*
+say  "Deletes the Android Emulator's plist file"
+anounce_command rm -Rf ~/Library/Preferences/com.android.*
+say  "Deletes mainly plugins (or at least according to what mine (Edric) contains)"
+anounce_command rm -Rf ~/Library/Application\ Support/AndroidStudio*
+anounce_command rm -Rf ~/Library/Application\ Support/Google/AndroidStudio*
+say  "Deletes all logs that Android Studio outputs"
+anounce_command rm -Rf ~/Library/Logs/AndroidStudio*
+anounce_command rm -Rf ~/Library/Logs/Google/AndroidStudio*
+say  "Deletes Android Studio's caches"
+anounce_command rm -Rf ~/Library/Caches/AndroidStudio*
+anounce_command rm -Rf ~/Library/Caches/Google/AndroidStudio*
+say  "Deletes older versions of Android Studio"
+anounce_command rm -Rf ~/.AndroidStudio*
+say ";;"
+say "If you would like to delete all projects:"
+say ";;"
+anounce_command rm -Rf ~/AndroidStudioProjects
+say ";;"
+say "To remove gradle related files (caches & wrapper)"
+say ";;"
+anounce_command rm -Rf ~/.gradle
+say ";;"
+say "Use the below command to delete all Android Virtual Devices(AVDs) and keystores."
+say ";;"
+say "Note: This folder is used by other Android IDEs as well, so if you still using other IDE you may not want to delete this folder)"
+say ";;"
+anounce_command rm -Rf ~/.android
+say ";;"
+say "To delete Android SDK tools"
+say ";;"
+anounce_command rm -Rf ~/Library/Android*
+say ";;"
+say "Emulator Console Auth Token"
+say ";;"
+anounce_command rm -Rf ~/.emulator_console_auth_token
+
+} # end _darwin__64
+
+_tar() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end tar
+
+_windows__64() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _windows__64
+
+_windows__32() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _windows__32
