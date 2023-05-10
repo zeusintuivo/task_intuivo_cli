@@ -150,7 +150,7 @@ _ubuntu__64() {
 _darwin__64() {
 
 say ";;"
-say  "Removing all AndroidStudio Following instructions form "
+say  "Removing all AndroidStudio Following instructions from "
 say  "REF: https://stackoverflow.com/questions/17625622/how-to-completely-uninstall-android-studio-on-mac"
 say ";;" 
   # Over write say with text version since Struct Testing say will speak on mac 
@@ -177,6 +177,8 @@ anounce_command rm -Rf ~/Library/Caches/AndroidStudio*
 anounce_command rm -Rf ~/Library/Caches/Google/AndroidStudio*
 say  "Deletes older versions of Android Studio"
 anounce_command rm -Rf ~/.AndroidStudio*
+say "Also remove /usr/local/var/lib/android-sdk/ folder. In my case it occupied 17G!"
+anounce_command rm -Rf /usr/local/var/lib/android-sdk/
 say ";;"
 say "If you would like to delete all projects:"
 say ";;"
@@ -184,7 +186,7 @@ anounce_command rm -Rf ~/AndroidStudioProjects
 say ";;"
 say "To remove gradle related files (caches & wrapper)"
 say ";;"
-anounce_command rm -Rf ~/.gradle
+anounce_command rm -Rfv ~/.gradle/
 say ";;"
 say "Use the below command to delete all Android Virtual Devices(AVDs) and keystores."
 say ";;"
@@ -199,7 +201,12 @@ say ";;"
 say "Emulator Console Auth Token"
 say ";;"
 anounce_command rm -Rf ~/.emulator_console_auth_token
+say "REF: from https://gist.github.com/talal/25d6b05b6969c2a8459b2b3abb86481f 
+Android studio now also stores configurations in ~/Library/Application\ Support/JetBrains/ not removing it leads to unexpected"
 
+anounce_command rm -Rf ~/Library/Application\ Support/JetBrains/IntelliJ*
+say "Also some files stores in ~/Library/Application\ Support/Google"
+anounce_command rm -Rf  ~/Library/Application\ Support/Google
 } # end _darwin__64
 
 _tar() {
