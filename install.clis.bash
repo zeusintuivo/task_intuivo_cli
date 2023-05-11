@@ -7,7 +7,7 @@ set -E -o functrace
 export THISSCRIPTCOMPLETEPATH
 
 
-echo "Checking realpath  "
+echo "0. sudologic $0 Start Checking realpath  "
 if ! ( command -v realpath >/dev/null 2>&1; )  ; then
   echo "... realpath not found. Downloading REF:https://github.com/swarmbox/realpath.git "
   cd $HOME
@@ -67,11 +67,11 @@ load_struct_testing(){
   # trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
  
   
-  if [[ -d "${HOME}/_/clis" ]] && [[ ! -f "${HOME}/_/clis/task_intuivo_cli/add_error_trap.sh" ]] ; then
-  {
-    sudo rm -rf "${HOME}/_"
-  }
-  fi
+  # if [[ -d "${HOME}/_/clis" ]] && [[ ! -f "${HOME}/_/clis/task_intuivo_cli/add_error_trap.sh" ]] ; then
+  # {
+  #   sudo rm -rf "${HOME}/_"
+  # }
+  # fi
     local provider="$HOME/_/clis/execute_command_intuivo_cli/struct_testing"
     local _err=0 structsource
     if [   -e "${provider}"  ] ; then
@@ -98,7 +98,7 @@ load_struct_testing(){
     [[ -z "${structsource}" ]] && echo -e "\n \n  ERROR! Loading struct_testing. structsource did not download or is empty " && exit 1
     local _temp_dir="$(mktemp -d 2>/dev/null || mktemp -d -t 'struct_testing_source')"
     echo "${structsource}">"${_temp_dir}/struct_testing"
-    echo "Temp location ${_temp_dir}/struct_testing"
+    echo "1. sudologic struct_testing Temp location ${_temp_dir}/struct_testing"
     source "${_temp_dir}/struct_testing"
     _err=$?
     [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading struct_testing. Occured while running 'source' err:$_err  \n \n  " && exit 1
@@ -108,13 +108,27 @@ load_struct_testing(){
     fi
     return $_err
 } # end load_struct_testing
-load_struct_testing
+#
+# Since the script is relaoded this IF takes care of not reloading struct_testing again
+# When switched to sudo it loosed its context we might need to reload
+#
+if  ! typeset -f passed >/dev/null 2>&1; then
+  echo "0.1 sudologic load_struct_testing"
+  load_struct_testing
+   _err=$?
+  [ $_err -ne 0 ]  && echo -e "\n \n  ERROR FATAL! load_struct_testing_wget !!! returned:<$_err> \n \n  " && exit 69;
+else 
+  echo "4.1 sudologic not run load_struct_testing again"
+fi
 
- _err=$?
-[ $_err -ne 0 ]  && echo -e "\n \n  ERROR FATAL! load_struct_testing_wget !!! returned:<$_err> \n \n  " && exit 69;
 
 export sudo_it
 function sudo_it() {
+  # Call struct_testing.raise_to_sudo_and_user_home 
+  # \... which loads 
+  # _    \.... execute_command_intuivo_cli/execute_boot_basic.sh
+  # _    \.... task_intuivo_cli/add_error_trap.sh
+  # Will fail with ERROR Local File does not exists  or cannot be accessed if not found
   raise_to_sudo_and_user_home
   if [ $? -gt 0 ] ; then
   {
@@ -1719,7 +1733,9 @@ _fedora__64() {
  # verify_is_installed cf
   _setup_mycd
 } # end _fedora__64
-
+_darwin__arm64() {
+  _darwin__64
+} # end _darwin__arm64
 _darwin__64() {
   Installing "## macOS Preferences"
 
@@ -1746,6 +1762,17 @@ _darwin__64() {
 
   _add_launchd "${USER_HOME}/Library/LaunchAgents" "${USER_HOME}/Library/LaunchAgents/com.intuivo.clis_pull_all.plist"
   _install_dmgs_list
+
+  (
+    if anounce_command sudo chown -R "${SUDO_USER}" "${USER_HOME}/Library/Caches/" ; then
+    {
+      mkdir -p "${USER_HOME}/Library/Caches/"
+      Comment ${ORANGE} WARNING! ${YELLOW_OVER_DARKBLUE} failed chown -R "${SUDO_USER}" "${USER_HOME}/Library/Caches/" ${YELLOW_OVER_GRAY241}"${APPDIR}"${RESET}
+    }
+    fi
+  )
+
+
   local Answer
   read -p 'Continue with more brew installs.clis....etc ? [Y/n] (Enter Defaults to - No/N/n - No exits )' Answer
   case $Answer in
@@ -1761,14 +1788,11 @@ _darwin__64() {
   esac
 
   COMANDDER="_run_command /usr/local/bin/brew install "
-  # $COMANDDER install nodejs
+  COMANDDER="_run_command /opt/homebrew/bin/brew install "
+  LINKER="_run_command /opt/homebrew/bin/brew link "
+  $COMANDDER  nodejs
   # version 6 brew install cloudfoundry/tap/cf-cli
-  if anounce_command sudo chown -R "${SUDO_USER}" "${USER_HOME}/Library/Caches/" ; then
-  {
-    mkdir -p "${USER_HOME}/Library/Caches/"
-    Comment ${ORANGE} WARNING! ${YELLOW_OVER_DARKBLUE} failed chown -R "${SUDO_USER}" "${USER_HOME}/Library/Caches/" ${YELLOW_OVER_GRAY241}"${APPDIR}"${RESET}
-  }
-  fi
+
   # su - "${SUDO_USER}" -c 'brew install the_silver_searcher'
   install_requirements "darwin" "
     tree
@@ -1811,7 +1835,7 @@ _darwin__64() {
   #su - "${SUDO_USER}" -c 'pip3 install pygments'
   #su - "${SUDO_USER}" -c 'pip install pygments'
   Comment "relink ag"
-  brew unlink the_silver_searcher && brew link the_silver_searcher
+  brew unlink the_silver_searcher && $LINKER the_silver_searcher
 
   # verify_is_installed "
   #  wget
