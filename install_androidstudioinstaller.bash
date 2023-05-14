@@ -320,6 +320,26 @@ _ubuntu__64() {
   _debian_flavor_install
 } # end _ubuntu__64
 
+_darwin__arm64() {
+  
+    # Over write say with text version since Struct Testing say will speak on mac and make it so I can use anounce_command
+
+  HOW_TO_LOAD_JUST_ONE_SCRIPT_LOCAL_AND_ONLINE_EXECUTE_COMMAND
+  anounce_command _run_command pip install xattr
+  anounce_command _run_command brew install GCC
+  anounce_command _run_command  brew reinstall --cask android-studio
+  anounce_command _run_command  brew reinstall --cask android-SDK
+  anounce_command _run_command  brew reinstall --cask android-ndk
+  anounce_command _run_command  brew reinstall --cask flutter
+  anounce_command _run_command  brew reinstall libimobiledevice
+  anounce_command _run_command  brew reinstall ideviceinstaller ios-deploy cocoapods
+  anounce_command _run_command  pod setup
+  anounce_command _run_command  flutter doctor
+  anounce_command _run_command xcodebuild -license
+  anounce_command _run_command flutter config --android-SDK
+  anounce_command _run_command brew install --cask intel-haxm
+} # end _darwin__arm64
+
 _darwin__64() {
   
     # Over write say with text version since Struct Testing say will speak on mac and make it so I can use anounce_command
@@ -335,8 +355,9 @@ _darwin__64() {
   anounce_command  brew reinstall ideviceinstaller ios-deploy cocoapods
   anounce_command  pod setup
   anounce_command  flutter doctor
-  
-
+  anounce_command xcodebuild -license
+  anounce_command flutter config --android-SDK
+  anounce_command brew install --cask intel-haxm
 } # end _darwin__64
 
 _tar() {
