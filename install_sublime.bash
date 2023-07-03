@@ -98,12 +98,13 @@ if [[ "$(uname)" == "Darwin" ]] ; then
   # Do something under Mac OS X platform
     [[ "$(uname -m)" == "x86_64" ]] && install_darwin_lastest_sublime_64 "$@"
     [[ "$(uname -m)" == "i686"   ]] && install_darwin_lastest_sublime_64 "$@"
+    [[ "$(uname -m)" == "arm64"   ]] && install_darwin_lastest_sublime_64 "$@"
 elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]] ; then
   # Do something under GNU/Linux platform
   # ubuntu lsb_release -i | sed 's/Distributor\ ID://g' = \tUbuntu\n
     [[ "$(uname -i)" == "x86_64" ]] && install_linux_lastest_sublime_64 "$@"
     [[ "$(uname -i)" == "i686"   ]] && install_linux_lastest_sublime_32 "$@"
-elif [[ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]] ; then
+elif [[ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]] || [[ "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT" ]] ; then
   # Do something under Windows NT platform
     [[ "$(uname -i)" == "x86_64" ]] && install_windows_lastest_sublime_64 "$*"
     [[ "$(uname -i)" == "i686"   ]] && install_windows_lastest_sublime_32 "$*"
