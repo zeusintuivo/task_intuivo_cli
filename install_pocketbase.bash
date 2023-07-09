@@ -378,6 +378,10 @@ WantedBy = multi-user.target
   local TARGETPORT=8090
   local SERVERNAME="${THISIP}"
   local PROJECTROOTFOLDER="${UNZIPDIR}"
+  mkdir -p /etc/letsencrypt/pockerbase
+  local CERTIFICATECRTPATH="/etc/letsencrypt/${PROJECTNAME}/cert.pem"
+  local CERTIFICATEKEYPATH="/etc/letsencrypt/${PROJECTNAME}/key.pem"
+  local CERTIFICATEKEYPATH="/etc/letsencrypt/${PROJECTNAME}/ip.key"
   local STATICFILES=""
   local server="
 upstream ${PROJECTNAME} {
@@ -419,6 +423,42 @@ ${STATICFILES}
         proxy_redirect off;
     }
 
+    client_max_body_size 4G;
+    keepalive_timeout 10;
+}
+# REF: https://gist.github.com/tadast/9932075  see this script about how to build the script from ground up and read the comments
+# REF: https://gist.github.com/rkjha/d898e225266f6bbe75d8  See that script as reference for these confs and read the comments
+server {
+    listen  443 ssl;
+    server_name ${SERVERNAME} www.${SERVERNAME} *.${SERVERNAME};
+    charset utf-8;
+
+    root ${PROJECTROOTFOLDER};
+
+    # Additional rules go here.
+    # ssl on;   [warn] the \"ssl\" directive is deprecated, use the \"listen ... ssl\"
+    ssl_certificate ${CERTIFICATECRTPATH};
+    ssl_certificate_key ${CERTIFICATEKEYPATH};
+
+    ssl_session_timeout  5m;
+
+    # Uncomment error pages one you place make them accesible
+    # error_page 500 502 503 504 /500.html;
+    # Place generated invidual cases here too
+    # -- between here
+    # here starts
+${STATICFILES}
+    # here ends
+    # --- and here
+    try_files \$uri/index.html \$uri @${PROJECTNAME};
+
+    location @${PROJECTNAME} {
+        proxy_pass http://${PROJECTNAME};
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header Host \$http_host;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_redirect off;
+    }
     client_max_body_size 4G;
     keepalive_timeout 10;
 }
