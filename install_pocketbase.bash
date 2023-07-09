@@ -245,6 +245,20 @@ directory_exists_with_spaces "${USER_HOME}"
 #!/usr/bin/bash
 
 _debian_flavor_install() {
+  
+  install_requirements "linux" "
+    curl
+    wget
+    ufw
+    nginx
+  "
+  verify_is_installed "
+    curl
+    wget
+    tar
+    ufw
+    nginx
+  "
   local PB_VERSION=0.16.7
   local CODENAME="pocketbase_${PB_VERSION}_linux_amd64.zip"
   local TARGET_URL="https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/${CODENAME}"
@@ -304,19 +318,6 @@ WantedBy = multi-user.target
 systemctl enable pocketbase.service
 systemctl start pocketbase
 
-install_requirements "linux" "
-  curl
-  wget
-  ufw
-  nginx
-"
-verify_is_installed "
-  curl
-  wget
-  tar
-  ufw
-  nginx
-"
 ufw enable
 ufw allow 'Nginx HTTP'
 ufw status numbered
