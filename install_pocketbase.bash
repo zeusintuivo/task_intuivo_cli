@@ -319,7 +319,7 @@ echo "disabled
 ExecStart      = \"${PATHTOPOCKETBASE}\" serve --http=${THISIP}:8090 --https=${THISIP}:8443
 ExecStart      = \"${PATHTOPOCKETBASE}\" serve --http="${THISIP}:8090" --https="${THISIP}:8443" PB_ENCRYPTION_KEY=$(base64<<< $(echo \"$(myip)-$(whoami)-$(pwd)\")) 
 "
-  echo -e "${CYAN}[Unit]
+  local systempocket="[Unit]
 Description = pocketbase
 
 [Service]
@@ -336,24 +336,9 @@ ExecStart      = \"${PATHTOPOCKETBASE}\" serve --http=127.0.0.1:8090 --https=127
 [Install]
 WantedBy = multi-user.target
 " 
-  ( echo "[Unit]
-Description = pocketbase
-
-[Service]
-Type           = simple
-User           = root
-Group          = root
-LimitNOFILE    = 4096
-Restart        = always
-RestartSec     = 5s
-StandardOutput = append:${UNZIPDIR}/errors.log
-StandardError  = append:${UNZIPDIR}/errors.log
-ExecStart      = \"${PATHTOPOCKETBASE}\" serve --http=127.0.0.1:8090 --https=127.0.0.1:8443 
-
-[Install]
-WantedBy = multi-user.target
-" > /usr/lib/systemd/system/pocketbase.service
-  )
+  echo -e "${CYAN}${systempocket}"
+  echo -e "${RESET}"
+  (  echo -e "${systempocket}"  > /usr/lib/systemd/system/pocketbase.service )
   echo  -e "${RESET}"
   yes | systemctl enable pocketbase.service
   yes | systemctl start pocketbase
@@ -387,33 +372,63 @@ WantedBy = multi-user.target
         proxy_pass http://127.0.0.1:8090;
     }
 }
-"  
-  echo  -e "${RESET}"
-  ( yes | echo "server {
-    listen 80;
-    server_name ${THISIP};
-    client_max_body_size 10M;
-
-    location / {
-        # check http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive
-        proxy_set_header Connection '';
-        proxy_http_version 1.1;
-        proxy_read_timeout 360s;
-
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-
-        # enable if you are serving under a subpath location
-        # rewrite /yourSubpath/(.*) /\$1  break;
-
-        proxy_pass http://127.0.0.1:8090;
-    }
+"
+  local PROJECTNAME="pocketbase"
+  local TARGETSERVER="127.0.0.1"
+  local TARGETPORT=8090
+  local SERVERNAME="${THISIP}"
+  local PROJECTROOTFOLDER="${UNZIPDIR}"
+  local STATICFILES=""
+  local server="
+upstream ${PROJECTNAME} {
+    # Path to Puma SOCK file, as defined previously
+    # NodeJS Express Etc ANything with custom port localhost:8080 localhost:3000 etc
+    server ${TARGETSERVER}:${TARGETPORT} fail_timeout=0;
+    # Ruby Puma Sample:
+    # server unix://${PROJECTFOLDER}/sockets/puma.sock fail_timeout=0;
+    # server unix://${PROJECTFOLDER}/shared/sockets/puma.sock fail_timeout=0;
 }
-" >  /etc/nginx/sites-available/pocketbase.conf
-  )
-  ln -s /etc/nginx/sites-available/pocketbase.conf /etc/nginx/sites-enabled/
+
+server {
+    listen 80;
+    server_name ${SERVERNAME} www.${SERVERNAME} *.${SERVERNAME};
+    charset utf-8;
+
+    root ${PROJECTROOTFOLDER};
+
+    # Uncomment error pages one you place make them accesible
+    # error_page 500 502 503 504 /500.html;
+# Use this to generate individual accesses
+# ls -p1 | grep -v / | xargs -I {} echo \"    location = /{} {
+#         access_log off; log_not_found off;
+#         alias \$(pwd)/{};
+#     }\"
+    # Place generated invidual cases here
+    # -- between here
+    # here starts
+${STATICFILES}
+    # here ends
+    # --- and here
+    try_files \$uri/index.html \$uri @${PROJECTNAME};
+
+    location @${PROJECTNAME} {
+        proxy_pass http://${PROJECTNAME};
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header Host \$http_host;
+        proxy_set_header X-Forwarded-Proto http;
+        proxy_redirect off;
+    }
+
+    client_max_body_size 4G;
+    keepalive_timeout 10;
+}
+
+"
+  echo -e  "${RED}${server}"
+  echo  -e "${RESET}"
+  ( yes | echo "${server}" >  /etc/nginx/sites-available/pocketbase.conf )
+
+    ln -s /etc/nginx/sites-available/pocketbase.conf /etc/nginx/sites-enabled/
   yes | nginx -t
   yes | systemctl restart nginx
   systemctl status nginx | head
