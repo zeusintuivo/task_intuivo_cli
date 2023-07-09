@@ -315,7 +315,9 @@ _debian_flavor_install() {
   
   touch /usr/lib/systemd/system/pocketbase.service
 
-# ExecStart      = \"${PATHTOPOCKETBASE}\" serve --http="${THISIP}:8090" --https="${THISIP}:8443" PB_ENCRYPTION_KEY=$(base64<<< $(echo \"$(myip)-$(whoami)-$(pwd)\")) 
+echo "disabled
+ExecStart      = \"${PATHTOPOCKETBASE}\" serve --http="${THISIP}:8090" --https="${THISIP}:8443" 
+"
   echo -e "${CYAN}[Unit]
 Description = pocketbase
 
@@ -328,7 +330,7 @@ Restart        = always
 RestartSec     = 5s
 StandardOutput = append:${UNZIPDIR}/errors.log
 StandardError  = append:${UNZIPDIR}/errors.log
-ExecStart      = \"${PATHTOPOCKETBASE}\" serve --http="${THISIP}:8090" --https="${THISIP}:8443" 
+ExecStart      = \"${PATHTOPOCKETBASE}\" serve --http="${THISIP}:8090" --https="${THISIP}:8443" PB_ENCRYPTION_KEY=$(base64<<< $(echo \"$(myip)-$(whoami)-$(pwd)\")) 
 
 [Install]
 WantedBy = multi-user.target
@@ -345,7 +347,7 @@ Restart        = always
 RestartSec     = 5s
 StandardOutput = append:${UNZIPDIR}/errors.log
 StandardError  = append:${UNZIPDIR}/errors.log
-ExecStart      = \"${PATHTOPOCKETBASE}\" serve --http="${THISIP}:8090" --https="${THISIP}:8443"
+ExecStart      = \"${PATHTOPOCKETBASE}\" serve --http="${THISIP}:8090" --https="${THISIP}:8443" PB_ENCRYPTION_KEY=$(base64<<< $(echo \"$(myip)-$(whoami)-$(pwd)\")) 
 
 [Install]
 WantedBy = multi-user.target
