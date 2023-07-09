@@ -108,8 +108,8 @@ WantedBy = multi-user.target
   yes | ufw enable
   ufw allow 'Nginx HTTP'
   ufw status numbered
-  nginx -t
-  systemctl restart nginx
+  # nginx -t
+  # systemctl restart nginx
   touch /etc/nginx/sites-enabled/pocketbase.server
   echo -e "${RED}server {
     listen 80;
