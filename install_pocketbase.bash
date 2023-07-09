@@ -306,6 +306,7 @@ _debian_flavor_install() {
   setcap 'cap_net_bind_service=+ep' \"${PATHTOPOCKETBASE}\" 
   
   "
+  touch /usr/lib/systemd/system/pocketbase.service
   echo "[Unit]
 Description = pocketbase
 
@@ -332,6 +333,7 @@ ufw allow 'Nginx HTTP'
 ufw status numbered
 nginx -t
 systemctl restart nginx
+touch /etc/nginx/sites-enabled/pocketbase.server
 
 echo "server {
     listen 80;
@@ -355,7 +357,7 @@ echo "server {
         proxy_pass http://127.0.0.1:8090;
     }
 }
-" >  " /etc/nginx/sites-enabled/pocketbase.server"
+" >  /etc/nginx/sites-enabled/pocketbase.server
 nginx -t
 systemctl restart nginx
 systemctl status nginx | head
