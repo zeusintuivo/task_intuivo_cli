@@ -308,7 +308,7 @@ _debian_flavor_install() {
   # exit 0 
   touch /usr/lib/systemd/system/pocketbase.service
 
-  echo "[Unit]
+  echo -e "${CYAN}[Unit]
 Description = pocketbase
 
 [Service]
@@ -343,17 +343,17 @@ ExecStart      = \"${PATHTOPOCKETBASE}\" serve --http="${THISIP}:80" --https="${
 WantedBy = multi-user.target
 " > /usr/lib/systemd/system/pocketbase.service
   )
+  echo  -e "${RESET}"
+  yes | systemctl enable pocketbase.service
+  yes | systemctl start pocketbase
 
-  systemctl enable pocketbase.service
-  systemctl start pocketbase
-
-  ufw enable
+  yes | ufw enable
   ufw allow 'Nginx HTTP'
   ufw status numbered
   nginx -t
   systemctl restart nginx
   touch /etc/nginx/sites-enabled/pocketbase.server
-  echo "server {
+  echo -e "${RED}server {
     listen 80;
     server_name ${THISIP};
     client_max_body_size 10M;
@@ -375,8 +375,9 @@ WantedBy = multi-user.target
         proxy_pass http://127.0.0.1:8090;
     }
 }
-"
-  ( echo "server {
+"  
+  echo  -e "${RESET}"
+  ( yes | echo "server {
     listen 80;
     server_name ${THISIP};
     client_max_body_size 10M;
@@ -400,9 +401,10 @@ WantedBy = multi-user.target
 }
 " >  /etc/nginx/sites-enabled/pocketbase.server
   )
-  nginx -t
-  systemctl restart nginx
+  yes | nginx -t
+  yes | systemctl restart nginx
   systemctl status nginx | head
+  curl "${THISIP}"
 
 } # end _debian_flavor_install
 
