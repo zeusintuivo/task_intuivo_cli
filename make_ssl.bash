@@ -44,7 +44,9 @@ SAN='\n[SAN]\nsubjectAltName=IP:'
 SAN="$SAN$THISIP"
 SAN="$SAN,IP:192.168.1.0,IP:192.168.1.1,IP:192.168.1.2,IP:192.168.1.3,IP:192.168.1.4,IP:192.168.1.5,IP:192.168.1.6,IP:192.168.1.7,IP:192.168.1.8,IP:192.168.1.9,IP:192.168.1.10"
 
-cp /etc/pki/tls/openssl.cnf /tmp/openssl.cnf
+# ubuntu
+cp /etc/ssl/openssl.cnf /tmp/openssl.cnf
+# centos cp /etc/pki/tls/openssl.cnf /tmp/openssl.cnf
 echo -e "$SAN" >> /tmp/openssl.cnf
 
 openssl req -subj "$SUBJ" -new -x509 -days 10950 \
