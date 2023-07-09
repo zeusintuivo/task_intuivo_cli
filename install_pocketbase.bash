@@ -278,7 +278,7 @@ _debian_flavor_install() {
   local UNZIPDIR="${USER_HOME}/_/pocketbase"
   mkdir -p "${UNZIPDIR}"
   # _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
-  unzip "${DOWNLOADFOLDER}/${CODENAME}" -d "${UNZIPDIR}"
+  unzip "${DOWNLOADFOLDER}/${CODENAME}" -d "${UNZIPDIR}" -y
   echo "Target: ${UNZIPDIR}"
   ls "${UNZIPDIR}"
   # exit 0 
@@ -322,7 +322,7 @@ ExecStart      = \"${PATHTOPOCKETBASE}\" serve --http="${THISIP}:80" --https="${
 
 [Install]
 WantedBy = multi-user.target
-" > /lib/systemd/system/pocketbase.service
+" > /usr/lib/systemd/system/pocketbase.service
 
 systemctl enable pocketbase.service
 systemctl start pocketbase
