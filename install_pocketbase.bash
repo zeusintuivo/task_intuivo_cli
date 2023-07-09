@@ -278,7 +278,7 @@ _debian_flavor_install() {
   local UNZIPDIR="${USER_HOME}/_/pocketbase"
   mkdir -p "${UNZIPDIR}"
   # _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
-  unzip "${DOWNLOADFOLDER}/${CODENAME}" -od "${UNZIPDIR}"
+  yes | unzip "${DOWNLOADFOLDER}/${CODENAME}" -d "${UNZIPDIR}"
   echo "Target: ${UNZIPDIR}"
   ls "${UNZIPDIR}"
   # exit 0 
