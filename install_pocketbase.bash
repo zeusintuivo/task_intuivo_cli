@@ -262,6 +262,7 @@ _debian_flavor_install() {
     }
   fi
   verify_is_installed "
+    myip
     unzip
     curl
     wget
@@ -285,7 +286,7 @@ _debian_flavor_install() {
   ls "${UNZIPDIR}"
   # exit 0 
   local PATHTOPOCKETBASE="${UNZIPDIR}/pocketbase"
-  local THISIP=$(myip)
+  local THISIP=$(myip | tail -1)
   enforce_variable_with_value THISIP "${THISIP}"
   echo -e "${YELLOW} 
   export PB_DIR=\"${PATHTOPOCKETBASE}\"
