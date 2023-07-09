@@ -405,7 +405,7 @@ WantedBy = multi-user.target
   yes | systemctl restart nginx
   systemctl status nginx | head
   curl "${THISIP}"
-
+  echo  -e "${RESET}"
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
