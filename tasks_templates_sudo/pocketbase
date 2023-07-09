@@ -40,8 +40,7 @@ _debian_flavor_install() {
   # exit 0 
   local PATHTOPOCKETBASE="${UNZIPDIR}/pocketbase"
   local THISIP=$(myip)
-  echo 
-  " 
+  echo -e "${YELLOW} 
   # REF: https://pocketbase.io/docs/going-to-production
 
   # Upload the binary and anything else related to your remote server, for example using rsync:
