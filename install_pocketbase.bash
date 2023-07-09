@@ -403,9 +403,9 @@ WantedBy = multi-user.target
 }
 " >  /etc/nginx/sites-enabled/pocketbase.server
   )
-  yes | nginx -t
-  yes | systemctl restart nginx
-  systemctl status nginx | head
+  # yes | nginx -t
+  # yes | systemctl restart nginx
+  # systemctl status nginx | head
   curl "${THISIP}"
   echo  -e "${RESET}"
   echo  -e "${YELLOW}"
