@@ -407,7 +407,7 @@ WantedBy = multi-user.target
   curl "${THISIP}"
   echo  -e "${RESET}"
   echo  -e "${YELLOW}"
-
+  systemctl restart pocketbase
   echo "
   systemctl start pocketbase
   systemctl status pocketbase
