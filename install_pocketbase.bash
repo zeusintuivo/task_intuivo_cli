@@ -380,8 +380,8 @@ WantedBy = multi-user.target
   local PROJECTROOTFOLDER="${UNZIPDIR}"
   mkdir -p /etc/letsencrypt/pockerbase
   local CERTIFICATECRTPATH="/etc/letsencrypt/${PROJECTNAME}/cert.pem"
-  local CERTIFICATEKEYPATH="/etc/letsencrypt/${PROJECTNAME}/key.pem"
   local CERTIFICATEKEYPATH="/etc/letsencrypt/${PROJECTNAME}/ip.key"
+  local CERTIFICATEKEYPATH="/etc/letsencrypt/${PROJECTNAME}/key.pem"
   local STATICFILES=""
   local server="
 upstream ${PROJECTNAME} {
