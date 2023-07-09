@@ -1,0 +1,203 @@
+#!/usr/bin/bash
+
+_debian_flavor_install() {
+  install_requirements "linux" "
+    docker 
+    docker-compose
+  "
+  verify_is_installed "
+    docker 
+    docker-compose
+    whoami
+    date
+    sha384sum
+    base64
+    myip
+  "
+  local confscript="version: '2'
+
+
+secrets:
+  # Secrets are single-line text files where the sole content is the secret
+  # Paths in this example assume that secrets are kept in local folder called '.secrets'
+  DB_ROOT_PWD:
+    file: .secrets/db_root_pwd.txt
+  MYSQL_PWD:
+    file: .secrets/mysql_pwd.txt
+
+
+services:
+  app:
+    image: 'jc21/nginx-proxy-manager:latest'
+    restart: unless-stopped
+    ports:
+      # Public HTTP Port:
+      - '80:80'
+      # Public HTTPS Port:
+      - '443:443'
+      # Admin Web Port:
+      - '81:81'
+
+    volumes:
+      - ./data:/data
+      - ./letsencrypt:/etc/letsencrypt
+
+    environment:
+      # These are the settings to access your db
+      DB_MYSQL_HOST: 'db'
+      DB_MYSQL_PORT: 3306
+      DB_MYSQL_USER: 'npm'
+      # DB_MYSQL_PASSWORD: 'npm'  # use secret instead
+      DB_MYSQL_PASSWORD__FILE: /run/secrets/MYSQL_PWD
+      DB_MYSQL_NAME: 'npm'
+      # If you would rather use Sqlite, remove all DB_MYSQL_* lines above
+      # Uncomment this if IPv6 is not enabled on your host
+      DISABLE_IPV6: 'true'
+
+    secrets:
+      - MYSQL_PWD
+    depends_on:
+      - db
+
+
+  db:
+    image: jc21/mariadb-aria
+    restart: unless-stopped
+    environment:
+      # MYSQL_ROOT_PASSWORD: 'npm'  # use secret instead
+      MYSQL_ROOT_PASSWORD__FILE: /run/secrets/DB_ROOT_PWD
+      MYSQL_DATABASE: 'npm'
+      MYSQL_USER: 'npm'
+      # MYSQL_PASSWORD: 'npm'  # use secret instead
+      MYSQL_PASSWORD__FILE: /run/secrets/MYSQL_PWD
+    volumes:
+      # - ./mysql:/var/lib/mysql
+      # - ./data/mysql:/var/lib/mysql  # did not work
+      # - /var/docker/nginx-proxy-manager/data/mysql:/var/lib/mysql # OLD PATH THAT CAUSES ISSUES
+      - /var/docker/mariadb-aria/data/mysql:/var/lib/mysql
+    secrets:
+      - DB_ROOT_PWD
+      - MYSQL_PWD
+  " 
+  mkdir -p .secrets
+  touch .secrets/db_root_pwd.txt
+  touch .secrets/mysql_pwd.txt
+  local rootpass=$( date +%Y%m%d%H%M%Z%u%U%z%m%N | base64 |sha384sum)
+  local dbpass=$(echo -en "$(whoami) $(date +%Y%m%d%H%M%Z%u%U%z%m%N)" | base64 |sha384sum)
+  enforce_variable_with_value rootpass "${rootpass}"
+  echo $rootpass > .secrets/db_root_pwd.txt
+  enforce_variable_with_value dbpass "${dbpass}"
+  echo $dbpass >  .secrets/mysql_pwd.txt
+  touch docker-compose.yml
+  enforce_variable_with_value confscript "${confscript}"
+  echo "$confscript" > docker-compose.yml
+  docker-compose up -d
+  wait
+  local THISIP=$(myip)
+  enforce_variable_with_value THISIP "${THISIP}"
+  wait
+  echo " 
+  
+  go to http://$THISIP:81/login  to make changes
+
+  Default Admin User:
+
+  Email:    admin@example.com
+  Password: changeme
+
+
+  "
+
+} # end _debian_flavor_install
+
+_redhat_flavor_install() {
+  echo "_redhat_flavor_install Procedure not yet implemented. I don't know what to do."
+} # end _redhat_flavor_install
+
+_arch_flavor_install() {
+  echo "_arch_flavor_install Procedure not yet implemented. I don't know what to do."
+} # end _readhat_flavor_install
+
+_arch__32() {
+  _arch_flavor_install
+} # end _arch__32
+
+_arch__64() {
+  _arch_flavor_install
+} # end _arch__64
+
+_centos__32() {
+  _redhat_flavor_install
+} # end _centos__32
+
+_centos__64() {
+  _redhat_flavor_install
+} # end _centos__64
+
+_debian__32() {
+  _debian_flavor_install
+} # end _debian__32
+
+_debian__64() {
+  _debian_flavor_install
+} # end _debian__64
+
+_fedora__32() {
+  _redhat_flavor_install
+} # end _fedora__32
+
+_fedora__64() {
+  _redhat_flavor_install
+} # end _fedora__64
+
+_gentoo__32() {
+  _redhat_flavor_install
+} # end _gentoo__32
+
+_gentoo__64() {
+  _redhat_flavor_install
+} # end _gentoo__64
+
+_madriva__32() {
+  _redhat_flavor_install
+} # end _madriva__32
+
+_madriva__64() {
+  _redhat_flavor_install
+} # end _madriva__64
+
+_suse__32() {
+  _redhat_flavor_install
+} # end _suse__32
+
+_suse__64() {
+  _redhat_flavor_install
+} # end _suse__64
+
+_ubuntu__32() {
+  _debian_flavor_install
+} # end _ubuntu__32
+
+_ubuntu__64() {
+  _debian_flavor_install
+} # end _ubuntu__64
+
+_darwin__64() {
+  echo "_darwin__64 Procedure not yet implemented. I don't know what to do."
+} # end _darwin__64
+
+_darwin__arm64() {
+  echo "_darwin__arm64 Procedure not yet implemented. I don't know what to do."
+} # end _darwin__arm64
+
+_tar() {
+  echo "_tar Procedure not yet implemented. I don't know what to do."
+} # end tar
+
+_windows__64() {
+  echo "_windows__64 Procedure not yet implemented. I don't know what to do."
+} # end _windows__64
+
+_windows__32() {
+  echo "_windows__32 Procedure not yet implemented. I don't know what to do."
+} # end _windows__32
