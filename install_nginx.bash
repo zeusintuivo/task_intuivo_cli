@@ -489,15 +489,34 @@ _download_compile_install() {
 } # end _download_and_install
 
 _debian_flavor_install() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  install_requirements "linux" "
+    curl
+    wget
+    ufw
+    nginx
+  "
+  verify_is_installed "
+    curl
+    wget
+    tar
+    ufw
+    nginx
+  "
+  ufw enable
+  ufw allow 'Nginx HTTP'
+  ufw status numbered
+  nginx -t
+  systemctl restart nginx
+
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  echo "_redhat_flavor_install Procedure not yet implemented. I don't know what to do."
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  echo "_arch_flavor_install Procedure not yet implemented. I don't know what to do."
 } # end _readhat_flavor_install
 
 _arch__32() {
@@ -572,6 +591,7 @@ _darwin__64() {
   install_requirements "darwin" "
     curl
     wget
+    nginx
     # ncurses-devel
     # tar
   "
@@ -656,15 +676,15 @@ _darwin__64() {
 } # end _darwin__64
 
 _tar() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  echo "_tar Procedure not yet implemented. I don't know what to do."
 } # end tar
 
 _windows__64() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  echo "_windows__64 Procedure not yet implemented. I don't know what to do."
 } # end _windows__64
 
 _windows__32() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  echo "_windows__32 Procedure not yet implemented. I don't know what to do."
 } # end _windows__32
 
 
