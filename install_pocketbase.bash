@@ -306,6 +306,7 @@ _debian_flavor_install() {
   setcap 'cap_net_bind_service=+ep' \"${PATHTOPOCKETBASE}\" 
   
   "
+  exit 0 
   touch /usr/lib/systemd/system/pocketbase.service
 
   echo "[Unit]
