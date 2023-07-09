@@ -78,7 +78,7 @@ Restart        = always
 RestartSec     = 5s
 StandardOutput = append:${UNZIPDIR}/errors.log
 StandardError  = append:${UNZIPDIR}/errors.log
-ExecStart      = export PB_ENCRYPTION_KEY=$(echo \"$(myip)-$(whoami)-$(pwd)\") && \"${PATHTOPOCKETBASE}\" serve --http="${THISIP}:80" --https="${THISIP}:443"
+ExecStart      = export PB_ENCRYPTION_KEY=$(base64<<< $(echo \"$(myip)-$(whoami)-$(pwd)\")) && \"${PATHTOPOCKETBASE}\" serve --http="${THISIP}:80" --https="${THISIP}:443"
 
 [Install]
 WantedBy = multi-user.target
@@ -95,7 +95,7 @@ Restart        = always
 RestartSec     = 5s
 StandardOutput = append:${UNZIPDIR}/errors.log
 StandardError  = append:${UNZIPDIR}/errors.log
-ExecStart      = export PB_ENCRYPTION_KEY=$(echo \"$(myip)-$(whoami)-$(pwd)\")  && \"${PATHTOPOCKETBASE}\" serve --http="${THISIP}:80" --https="${THISIP}:443"
+ExecStart      = export PB_ENCRYPTION_KEY=$(base64<<< $(echo \"$(myip)-$(whoami)-$(pwd)\"))  && \"${PATHTOPOCKETBASE}\" serve --http="${THISIP}:80" --https="${THISIP}:443"
 
 [Install]
 WantedBy = multi-user.target
