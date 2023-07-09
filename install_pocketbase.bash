@@ -279,8 +279,8 @@ _debian_flavor_install() {
   mkdir -p "${UNZIPDIR}"
   # _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
   unzip "${DOWNLOADFOLDER}/${CODENAME}" -d "${UNZIPDIR}"
-  echo "${UNZIPDIR}"
-  ls "Target: ${UNZIPDIR}"
+  echo "Target: ${UNZIPDIR}"
+  ls "${UNZIPDIR}"
   # exit 0 
   local PATHTOPOCKETBASE="${UNZIPDIR}/pocketbase"
   local THISIP=$(myip)
