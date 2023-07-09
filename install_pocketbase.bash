@@ -245,8 +245,7 @@ directory_exists_with_spaces "${USER_HOME}"
 #!/usr/bin/bash
 
 _debian_flavor_install() {
-  if (
-  install_requirements "linux" "
+  if ( ! install_requirements "linux" "
     base64
     unzip
     curl
