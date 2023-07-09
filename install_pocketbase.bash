@@ -307,6 +307,7 @@ _debian_flavor_install() {
   
   "
   touch /usr/lib/systemd/system/pocketbase.service
+
   echo "[Unit]
 Description = pocketbase
 
@@ -323,19 +324,59 @@ ExecStart      = \"${PATHTOPOCKETBASE}\" serve --http="${THISIP}:80" --https="${
 
 [Install]
 WantedBy = multi-user.target
+" 
+  ( echo "[Unit]
+Description = pocketbase
+
+[Service]
+Type           = simple
+User           = root
+Group          = root
+LimitNOFILE    = 4096
+Restart        = always
+RestartSec     = 5s
+StandardOutput = append:${UNZIPDIR}/errors.log
+StandardError  = append:${UNZIPDIR}/errors.log
+ExecStart      = \"${PATHTOPOCKETBASE}\" serve --http="${THISIP}:80" --https="${THISIP}:443"
+
+[Install]
+WantedBy = multi-user.target
 " > /usr/lib/systemd/system/pocketbase.service
+  )
 
-systemctl enable pocketbase.service
-systemctl start pocketbase
+  systemctl enable pocketbase.service
+  systemctl start pocketbase
 
-ufw enable
-ufw allow 'Nginx HTTP'
-ufw status numbered
-nginx -t
-systemctl restart nginx
-touch /etc/nginx/sites-enabled/pocketbase.server
+  ufw enable
+  ufw allow 'Nginx HTTP'
+  ufw status numbered
+  nginx -t
+  systemctl restart nginx
+  touch /etc/nginx/sites-enabled/pocketbase.server
+  echo "server {
+    listen 80;
+    server_name ${THISIP};
+    client_max_body_size 10M;
 
-echo "server {
+    location / {
+        # check http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive
+        proxy_set_header Connection '';
+        proxy_http_version 1.1;
+        proxy_read_timeout 360s;
+
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+
+        # enable if you are serving under a subpath location
+        # rewrite /yourSubpath/(.*) /\$1  break;
+
+        proxy_pass http://127.0.0.1:8090;
+    }
+}
+"
+  ( echo "server {
     listen 80;
     server_name ${THISIP};
     client_max_body_size 10M;
@@ -358,9 +399,10 @@ echo "server {
     }
 }
 " >  /etc/nginx/sites-enabled/pocketbase.server
-nginx -t
-systemctl restart nginx
-systemctl status nginx | head
+  )
+  nginx -t
+  systemctl restart nginx
+  systemctl status nginx | head
 
 } # end _debian_flavor_install
 
