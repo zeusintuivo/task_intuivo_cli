@@ -245,7 +245,7 @@ directory_exists_with_spaces "${USER_HOME}"
 #!/usr/bin/bash
 
 _debian_flavor_install() {
-
+  if (
   install_requirements "linux" "
     unzip
     curl
@@ -253,6 +253,12 @@ _debian_flavor_install() {
     ufw
     nginx
   "
+  ); then 
+    {
+      apt install unzip -y
+      apt install nginx -y
+    }
+  fi
   verify_is_installed "
     unzip
     curl
