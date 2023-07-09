@@ -76,7 +76,7 @@ Restart        = always
 RestartSec     = 5s
 StandardOutput = append:${UNZIPDIR}/errors.log
 StandardError  = append:${UNZIPDIR}/errors.log
-ExecStart      = \"${PATHTOPOCKETBASE}\" serve --http="${THISIP}:8090" --https="${THISIP}:8443"
+ExecStart      = \"${PATHTOPOCKETBASE}\" serve --http="${THISIP}:80" --https="${THISIP}:443"
 
 [Install]
 WantedBy = multi-user.target
@@ -93,7 +93,7 @@ Restart        = always
 RestartSec     = 5s
 StandardOutput = append:${UNZIPDIR}/errors.log
 StandardError  = append:${UNZIPDIR}/errors.log
-ExecStart      = \"${PATHTOPOCKETBASE}\" serve --http="${THISIP}:8090" --https="${THISIP}:8443"
+ExecStart      = \"${PATHTOPOCKETBASE}\" serve --http="${THISIP}:80" --https="${THISIP}:443"
 
 [Install]
 WantedBy = multi-user.target
@@ -164,10 +164,19 @@ WantedBy = multi-user.target
   echo  -e "${RESET}"
   echo  -e "${YELLOW}"
   systemctl restart pocketbase
+  systemctl stop nginx
+  systemctl disable nginx
   echo "
   systemctl start pocketbase
   systemctl status pocketbase
   systemctl status nginx
+
+  ufw status numbered
+
+  curl ${THISIP}:8090
+
+  curl ${THISIP}:80
+  
   "
   echo  -e "${RESET}"
 } # end _debian_flavor_install
