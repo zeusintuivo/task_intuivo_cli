@@ -5,7 +5,7 @@ _debian_flavor_install() {
   sudo apt remove docker-desktop -y
   rm -r $HOME/.docker/desktop
   sudo rm /usr/local/bin/com.docker.cli
-  sudo apt purge docker-desktop -y
+  # sudo apt purge docker-desktop -y
   docker compose version
   # Docker Compose version v2.17.3
   docker --version

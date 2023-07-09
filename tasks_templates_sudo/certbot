@@ -21,20 +21,21 @@ _debian_flavor_install() {
       python3-certbot-nginx
   "
   certbot --nginx --register-unsafely-without-email
-  local PB_VERSION=0.16.7
-  local CODENAME="pocketbase_${PB_VERSION}_linux_amd64.zip"
-  local TARGET_URL="https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/${CODENAME}"
-  local DOWNLOADFOLDER="$(_find_downloads_folder)"
-  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-  directory_exists_with_spaces "${DOWNLOADFOLDER}"
-  cd "${DOWNLOADFOLDER}"
-  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
-  # unzip "${DOWNLOADFOLDER}/${CODENAME}" -d $HOME/pb/
-  local UNZIPDIR="${USER_HOME}/_/software"
-  mkdir -p "${UNZIPDIR}"
-  _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
-  local PATHTOPOCKETBASE="${UNZIPDIR}/pocketbase"
-  local THISIP=$(myip)
+  certbot certonly --standalone --preferred-challenges
+  # local PB_VERSION=0.16.7
+  # local CODENAME="pocketbase_${PB_VERSION}_linux_amd64.zip"
+  # local TARGET_URL="https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/${CODENAME}"
+  # local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  # enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  # directory_exists_with_spaces "${DOWNLOADFOLDER}"
+  # cd "${DOWNLOADFOLDER}"
+  # _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+  # # unzip "${DOWNLOADFOLDER}/${CODENAME}" -d $HOME/pb/
+  # local UNZIPDIR="${USER_HOME}/_/software"
+  # mkdir -p "${UNZIPDIR}"
+  # _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
+  # local PATHTOPOCKETBASE="${UNZIPDIR}/pocketbase"
+  # local THISIP=$(myip)
 
 } # end _debian_flavor_install
 
