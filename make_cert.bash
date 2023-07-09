@@ -3,7 +3,7 @@
 echo -e "making cert for ip adress based on
 
  this one call it like this 
- $0 | bash -s 127.0.0.1
+ $0 127.0.0.1
  
  REF:https://medium.com/@antelle/how-to-generate-a-self-signed-ssl-certificate-for-an-ip-address-f0dd8dddf754
  online call it like this curl -sS https://raw.githubusercontent.com/antelle/generate-ip-cert/master/generate-ip-cert.sh | bash -s 127.0.0.1
