@@ -247,6 +247,7 @@ directory_exists_with_spaces "${USER_HOME}"
 _debian_flavor_install() {
   if (
   install_requirements "linux" "
+    base64
     unzip
     curl
     wget
@@ -255,6 +256,7 @@ _debian_flavor_install() {
   "
   ); then 
     {
+      apt install base64 -y
       apt install unzip -y
       apt install nginx -y
     }
@@ -320,7 +322,7 @@ Restart        = always
 RestartSec     = 5s
 StandardOutput = append:${UNZIPDIR}/errors.log
 StandardError  = append:${UNZIPDIR}/errors.log
-ExecStart      = \"${PATHTOPOCKETBASE}\" serve --http="${THISIP}:80" --https="${THISIP}:443"
+ExecStart      = export PB_ENCRYPTION_KEY=$(echo \"$(myip)-$(whoami)-$(pwd)\") && \"${PATHTOPOCKETBASE}\" serve --http="${THISIP}:80" --https="${THISIP}:443"
 
 [Install]
 WantedBy = multi-user.target
@@ -337,7 +339,7 @@ Restart        = always
 RestartSec     = 5s
 StandardOutput = append:${UNZIPDIR}/errors.log
 StandardError  = append:${UNZIPDIR}/errors.log
-ExecStart      = \"${PATHTOPOCKETBASE}\" serve --http="${THISIP}:80" --https="${THISIP}:443"
+ExecStart      = export PB_ENCRYPTION_KEY=$(echo \"$(myip)-$(whoami)-$(pwd)\")  && \"${PATHTOPOCKETBASE}\" serve --http="${THISIP}:80" --https="${THISIP}:443"
 
 [Install]
 WantedBy = multi-user.target
