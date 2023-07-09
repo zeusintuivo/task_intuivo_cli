@@ -255,6 +255,7 @@ _debian_flavor_install() {
   "
   ); then 
     {
+      apt update 
       apt install base64 -y
       apt install unzip -y
       apt install nginx -y
@@ -356,7 +357,7 @@ WantedBy = multi-user.target
   ufw status numbered
   nginx -t
   systemctl restart nginx
-  unlink  /etc/nginx/sites-enabled/pocketbase.conf
+  [ -e /etc/nginx/sites-enabled/pocketbase.conf ] &&  unlink  /etc/nginx/sites-enabled/pocketbase.conf
   touch /etc/nginx/sites-available/pocketbase.conf
   echo -e "${RED}server {
     listen 80;
