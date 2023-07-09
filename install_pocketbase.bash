@@ -253,10 +253,10 @@ _debian_flavor_install() {
   directory_exists_with_spaces "${DOWNLOADFOLDER}"
   cd "${DOWNLOADFOLDER}"
   _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
-  # unzip "${DOWNLOADFOLDER}/${CODENAME}" -d $HOME/pb/
   local UNZIPDIR="${USER_HOME}/_/software"
   mkdir -p "${UNZIPDIR}"
-  _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
+  # _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
+  unzip "${DOWNLOADFOLDER}/${CODENAME}" -d "${UNZIPDIR}"
   ls "${UNZIPDIR}"
   exit 0 
   local PATHTOPOCKETBASE="${UNZIPDIR}/pocketbase"
