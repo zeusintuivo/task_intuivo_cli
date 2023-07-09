@@ -43,6 +43,7 @@ _debian_flavor_install() {
   local PATHTOPOCKETBASE="${UNZIPDIR}/pocketbase"
   local THISIP=$(myip)
   echo -e "${YELLOW} 
+  export PB_DIR=\"${PATHTOPOCKETBASE}\"
   # REF: https://pocketbase.io/docs/going-to-production
 
   # Upload the binary and anything else related to your remote server, for example using rsync:
@@ -63,7 +64,9 @@ _debian_flavor_install() {
   setcap 'cap_net_bind_service=+ep' \"${PATHTOPOCKETBASE}\" 
   
   "
-  # exit 0 
+  # exit 0
+  export PB_DIR="${PATHTOPOCKETBASE}"
+  
   touch /usr/lib/systemd/system/pocketbase.service
 
   echo -e "${CYAN}[Unit]
@@ -78,7 +81,7 @@ Restart        = always
 RestartSec     = 5s
 StandardOutput = append:${UNZIPDIR}/errors.log
 StandardError  = append:${UNZIPDIR}/errors.log
-ExecStart      = \"${PATHTOPOCKETBASE}\" serve --http="${THISIP}:80" --https="${THISIP}:443" PB_ENCRYPTION_KEY=$(base64<<< $(echo \"$(myip)-$(whoami)-$(pwd)\")) 
+ExecStart      = \"${PATHTOPOCKETBASE}\" serve --http="${THISIP}:8090" --https="${THISIP}:8443" PB_ENCRYPTION_KEY=$(base64<<< $(echo \"$(myip)-$(whoami)-$(pwd)\")) 
 
 [Install]
 WantedBy = multi-user.target
@@ -95,7 +98,7 @@ Restart        = always
 RestartSec     = 5s
 StandardOutput = append:${UNZIPDIR}/errors.log
 StandardError  = append:${UNZIPDIR}/errors.log
-ExecStart      = \"${PATHTOPOCKETBASE}\" serve --http="${THISIP}:80" --https="${THISIP}:443" PB_ENCRYPTION_KEY=$(base64<<< $(echo \"$(myip)-$(whoami)-$(pwd)\"))
+ExecStart      = \"${PATHTOPOCKETBASE}\" serve --http="${THISIP}:8090" --https="${THISIP}:8443" PB_ENCRYPTION_KEY=$(base64<<< $(echo \"$(myip)-$(whoami)-$(pwd)\"))
 
 [Install]
 WantedBy = multi-user.target
@@ -108,9 +111,10 @@ WantedBy = multi-user.target
   yes | ufw enable
   ufw allow 'Nginx HTTP'
   ufw status numbered
-  # nginx -t
-  # systemctl restart nginx
-  touch /etc/nginx/sites-enabled/pocketbase.server
+  nginx -t
+  systemctl restart nginx
+  unlink  /etc/nginx/sites-enabled/pocketbase.conf
+  touch /etc/nginx/sites-available/pocketbase.conf
   echo -e "${RED}server {
     listen 80;
     server_name ${THISIP};
@@ -157,14 +161,16 @@ WantedBy = multi-user.target
         proxy_pass http://127.0.0.1:8090;
     }
 }
-" >  /etc/nginx/sites-enabled/pocketbase.server
+" >  /etc/nginx/sites-available/pocketbase.conf
   )
-  # yes | nginx -t
-  # yes | systemctl restart nginx
-  # systemctl status nginx | head
+  ln -s /etc/nginx/sites-available/pocketbase.conf /etc/nginx/sites-enabled/
+  yes | nginx -t
+  yes | systemctl restart nginx
+  systemctl status nginx | head
   curl "${THISIP}"
   echo  -e "${RESET}"
   echo  -e "${YELLOW}"
+  systemctl daemon-reload
   systemctl restart pocketbase
   systemctl stop nginx
   systemctl disable nginx
