@@ -245,14 +245,16 @@ directory_exists_with_spaces "${USER_HOME}"
 #!/usr/bin/bash
 
 _debian_flavor_install() {
-  
+
   install_requirements "linux" "
+    unzip
     curl
     wget
     ufw
     nginx
   "
   verify_is_installed "
+    unzip
     curl
     wget
     tar
