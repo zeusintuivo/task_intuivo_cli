@@ -286,6 +286,7 @@ _debian_flavor_install() {
   # exit 0 
   local PATHTOPOCKETBASE="${UNZIPDIR}/pocketbase"
   local THISIP=$(myip)
+  enforce_variable_with_value THISIP "${THISIP}"
   echo -e "${YELLOW} 
   export PB_DIR=\"${PATHTOPOCKETBASE}\"
   # REF: https://pocketbase.io/docs/going-to-production
@@ -412,6 +413,7 @@ WantedBy = multi-user.target
   yes | nginx -t
   yes | systemctl restart nginx
   systemctl status nginx | head
+  echo curl \"${THISIP}\"
   curl "${THISIP}"
   echo  -e "${RESET}"
   echo  -e "${YELLOW}"
