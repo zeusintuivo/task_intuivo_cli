@@ -249,20 +249,20 @@ _debian_flavor_install() {
   if (
     install_requirements "linux" "
       certbot 
-      python3-certbot-apache
-      python3-certbot-nginx
+      # python3-certbot-apache
+      # python3-certbot-nginx
   "
   ); then 
     {
       apt install certbot -y
-      apt install python3-certbot-apache -y
-      apt install python3-certbot-nginx -y
+      # apt install python3-certbot-apache -y
+      # apt install python3-certbot-nginx -y
     }
   fi
   verify_is_installed "
       certbot 
-      python3-certbot-apache
-      python3-certbot-nginx
+      # python3-certbot-apache
+      # python3-certbot-nginx
   "
   certbot --nginx --register-unsafely-without-email
   certbot certonly --standalone --preferred-challenges
