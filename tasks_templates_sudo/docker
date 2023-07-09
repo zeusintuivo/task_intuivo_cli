@@ -16,7 +16,9 @@ _debian_flavor_install() {
   # Version:           23.0.5
   # API version:       1.42
   # <...>
-  systemctl --user enable docker-desktop
+  apt install docker.io -y
+  apt install docker-compose -y
+  # systemctl --user enable docker-desktop
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
