@@ -162,6 +162,14 @@ WantedBy = multi-user.target
   systemctl status nginx | head
   curl "${THISIP}"
   echo  -e "${RESET}"
+  echo  -e "${YELLOW}"
+
+  echo "
+  systemctl start pocketbase
+  systemctl status pocketbase
+  systemctl status nginx
+  "
+  echo  -e "${RESET}"
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
