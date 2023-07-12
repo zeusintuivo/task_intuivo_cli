@@ -124,6 +124,9 @@ passed Caller user identified:$SUDO_USER
 passed Home identified:$USER_HOME
 directory_exists_with_spaces "$USER_HOME"
 
+_darwin__arm64() {
+  _darwin__64
+}
 
 _darwin__64() {
   # Using homebrew seemed like the best choice so far

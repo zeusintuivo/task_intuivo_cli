@@ -239,38 +239,56 @@ directory_exists_with_spaces "${USER_HOME}"
 
 
 
- #--------\/\/\/\/-- tasks_templates_sudo/docker …install_docker.bash” -- Custom code -\/\/\/\/-------
+ #--------\/\/\/\/-- tasks_templates_sudo/certbot …install_certbot.bash” -- Custom code -\/\/\/\/-------
 
 
 #!/usr/bin/bash
 
 _debian_flavor_install() {
-  sudo apt install gnome-terminal -y
-  sudo apt remove docker-desktop -y
-  rm -r $HOME/.docker/desktop
-  sudo rm /usr/local/bin/com.docker.cli
-  # sudo apt purge docker-desktop -y
-  docker compose version
-  # Docker Compose version v2.17.3
-  docker --version
-  # Docker version 23.0.5, build bc4487a
-  docker version
-  # Client: Docker Engine - Community
-  # Cloud integration: v1.0.31
-  # Version:           23.0.5
-  # API version:       1.42
-  # <...>
-  apt install docker.io -y
-  apt install docker-compose -y
-  # systemctl --user enable docker-desktop
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  if (
+    install_requirements "linux" "
+      certbot 
+      # python3-certbot-apache
+      # python3-certbot-nginx
+  "
+  ); then 
+    {
+      apt install certbot -y
+      # apt install python3-certbot-apache -y
+      # apt install python3-certbot-nginx -y
+    }
+  fi
+  verify_is_installed "
+      certbot 
+      # python3-certbot-apache
+      # python3-certbot-nginx
+  "
+  certbot --nginx --register-unsafely-without-email
+  certbot certonly --standalone --preferred-challenges
+  # local PB_VERSION=0.16.7
+  # local CODENAME="pocketbase_${PB_VERSION}_linux_amd64.zip"
+  # local TARGET_URL="https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/${CODENAME}"
+  # local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  # enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  # directory_exists_with_spaces "${DOWNLOADFOLDER}"
+  # cd "${DOWNLOADFOLDER}"
+  # _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+  # # unzip "${DOWNLOADFOLDER}/${CODENAME}" -d $HOME/pb/
+  # local UNZIPDIR="${USER_HOME}/_/software"
+  # mkdir -p "${UNZIPDIR}"
+  # _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
+  # local PATHTOPOCKETBASE="${UNZIPDIR}/pocketbase"
+  # local THISIP=$(myip)
+
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  echo "_redhat_flavor_install Procedure not yet implemented. I don't know what to do."
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  echo "_arch_flavor_install Procedure not yet implemented. I don't know what to do."
 } # end _readhat_flavor_install
 
 _arch__32() {
@@ -294,29 +312,7 @@ _debian__32() {
 } # end _debian__32
 
 _debian__64() {
-  # debian_flavor_install
-  echo REF: https://docs.docker.com/engine/install/ubuntu/
-  apt-get update -y
-  apt-get install \
-    ca-certificates \
-    curl \
-    gnupg \
-    lsb-release -y
-  mkdir -p /etc/apt/keyrings
-  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-  echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-  apt-get update -y
-  chmod a+r /etc/apt/keyrings/docker.gpg
-  apt-get update -y
-  echo install lastest version. see website to see how to install another version
-  apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin -y
-  echo verify docker installs by creating hello world
-  docker run hello-world
-  apt install docker-compose -y
-  echo Architecture:
-  docker info  | grep Archi | cut -d: -f2 | cut -d\  -f2
+  _debian_flavor_install
 } # end _debian__64
 
 _fedora__32() {
@@ -360,24 +356,28 @@ _ubuntu__64() {
 } # end _ubuntu__64
 
 _darwin__64() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  echo "_darwin__64 Procedure not yet implemented. I don't know what to do."
 } # end _darwin__64
 
+_darwin__arm64() {
+  echo "_darwin__arm64 Procedure not yet implemented. I don't know what to do."
+} # end _darwin__arm64
+
 _tar() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  echo "_tar Procedure not yet implemented. I don't know what to do."
 } # end tar
 
 _windows__64() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  echo "_windows__64 Procedure not yet implemented. I don't know what to do."
 } # end _windows__64
 
 _windows__32() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  echo "_windows__32 Procedure not yet implemented. I don't know what to do."
 } # end _windows__32
 
 
 
- #--------/\/\/\/\-- tasks_templates_sudo/docker …install_docker.bash” -- Custom code-/\/\/\/\-------
+ #--------/\/\/\/\-- tasks_templates_sudo/certbot …install_certbot.bash” -- Custom code-/\/\/\/\-------
 
 
 _main() {

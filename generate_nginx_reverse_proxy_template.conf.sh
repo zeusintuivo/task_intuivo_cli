@@ -64,7 +64,7 @@ sudo echo ":"
     NGINXPID="/usr/local/var/run/nginx.pid"
   }
   elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]] || \
-       [[ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]] ; then
+       [[ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]] || [[ "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT" ]]  ; then
   {
 
     # Do something under GNU/Linux platform

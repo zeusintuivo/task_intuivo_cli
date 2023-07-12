@@ -3,43 +3,39 @@
 _debian_flavor_install() {
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   if (
-  install_requirements "linux" "
-    base64
-    unzip
-    curl
-    wget
-    ufw
-    nginx
+    install_requirements "linux" "
+      certbot 
+      # python3-certbot-apache
+      # python3-certbot-nginx
   "
   ); then 
     {
-      apt install base64 -y
-      apt install unzip -y
-      apt install nginx -y
+      apt install certbot -y
+      # apt install python3-certbot-apache -y
+      # apt install python3-certbot-nginx -y
     }
   fi
   verify_is_installed "
-    unzip
-    curl
-    wget
-    tar
-    ufw
-    nginx
+      certbot 
+      # python3-certbot-apache
+      # python3-certbot-nginx
   "
-  local PB_VERSION=0.16.7
-  local CODENAME="pocketbase_${PB_VERSION}_linux_amd64.zip"
-  local TARGET_URL="https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/${CODENAME}"
-  local DOWNLOADFOLDER="$(_find_downloads_folder)"
-  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-  directory_exists_with_spaces "${DOWNLOADFOLDER}"
-  cd "${DOWNLOADFOLDER}"
-  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
-  # unzip "${DOWNLOADFOLDER}/${CODENAME}" -d $HOME/pb/
-  local UNZIPDIR="${USER_HOME}/_/software"
-  mkdir -p "${UNZIPDIR}"
-  _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
-  local PATHTOPOCKETBASE="${UNZIPDIR}/pocketbase"
-  local THISIP=$(myip)
+  certbot --nginx --register-unsafely-without-email
+  certbot certonly --standalone --preferred-challenges
+  # local PB_VERSION=0.16.7
+  # local CODENAME="pocketbase_${PB_VERSION}_linux_amd64.zip"
+  # local TARGET_URL="https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/${CODENAME}"
+  # local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  # enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  # directory_exists_with_spaces "${DOWNLOADFOLDER}"
+  # cd "${DOWNLOADFOLDER}"
+  # _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+  # # unzip "${DOWNLOADFOLDER}/${CODENAME}" -d $HOME/pb/
+  # local UNZIPDIR="${USER_HOME}/_/software"
+  # mkdir -p "${UNZIPDIR}"
+  # _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
+  # local PATHTOPOCKETBASE="${UNZIPDIR}/pocketbase"
+  # local THISIP=$(myip)
 
 } # end _debian_flavor_install
 

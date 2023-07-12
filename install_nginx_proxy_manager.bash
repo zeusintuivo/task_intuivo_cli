@@ -239,38 +239,127 @@ directory_exists_with_spaces "${USER_HOME}"
 
 
 
- #--------\/\/\/\/-- tasks_templates_sudo/docker …install_docker.bash” -- Custom code -\/\/\/\/-------
+ #--------\/\/\/\/-- tasks_templates_sudo/nginx_proxy_manager …install_nginx_proxy_manager.bash” -- Custom code -\/\/\/\/-------
 
 
 #!/usr/bin/bash
 
 _debian_flavor_install() {
-  sudo apt install gnome-terminal -y
-  sudo apt remove docker-desktop -y
-  rm -r $HOME/.docker/desktop
-  sudo rm /usr/local/bin/com.docker.cli
-  # sudo apt purge docker-desktop -y
-  docker compose version
-  # Docker Compose version v2.17.3
-  docker --version
-  # Docker version 23.0.5, build bc4487a
-  docker version
-  # Client: Docker Engine - Community
-  # Cloud integration: v1.0.31
-  # Version:           23.0.5
-  # API version:       1.42
-  # <...>
-  apt install docker.io -y
-  apt install docker-compose -y
-  # systemctl --user enable docker-desktop
+  install_requirements "linux" "
+    docker 
+    docker-compose
+  "
+  verify_is_installed "
+    docker 
+    docker-compose
+    whoami
+    date
+    sha384sum
+    base64
+    myip
+  "
+  local confscript="version: '2'
+
+
+secrets:
+  # Secrets are single-line text files where the sole content is the secret
+  # Paths in this example assume that secrets are kept in local folder called '.secrets'
+  DB_ROOT_PWD:
+    file: .secrets/db_root_pwd.txt
+  MYSQL_PWD:
+    file: .secrets/mysql_pwd.txt
+
+
+services:
+  app:
+    image: 'jc21/nginx-proxy-manager:latest'
+    restart: unless-stopped
+    ports:
+      # Public HTTP Port:
+      - '80:80'
+      # Public HTTPS Port:
+      - '443:443'
+      # Admin Web Port:
+      - '81:81'
+
+    volumes:
+      - ./data:/data
+      - ./letsencrypt:/etc/letsencrypt
+
+    environment:
+      # These are the settings to access your db
+      DB_MYSQL_HOST: 'db'
+      DB_MYSQL_PORT: 3306
+      DB_MYSQL_USER: 'npm'
+      # DB_MYSQL_PASSWORD: 'npm'  # use secret instead
+      DB_MYSQL_PASSWORD__FILE: /run/secrets/MYSQL_PWD
+      DB_MYSQL_NAME: 'npm'
+      # If you would rather use Sqlite, remove all DB_MYSQL_* lines above
+      # Uncomment this if IPv6 is not enabled on your host
+      DISABLE_IPV6: 'true'
+
+    secrets:
+      - MYSQL_PWD
+    depends_on:
+      - db
+
+
+  db:
+    image: jc21/mariadb-aria
+    restart: unless-stopped
+    environment:
+      # MYSQL_ROOT_PASSWORD: 'npm'  # use secret instead
+      MYSQL_ROOT_PASSWORD__FILE: /run/secrets/DB_ROOT_PWD
+      MYSQL_DATABASE: 'npm'
+      MYSQL_USER: 'npm'
+      # MYSQL_PASSWORD: 'npm'  # use secret instead
+      MYSQL_PASSWORD__FILE: /run/secrets/MYSQL_PWD
+    volumes:
+      # - ./mysql:/var/lib/mysql
+      # - ./data/mysql:/var/lib/mysql  # did not work
+      # - /var/docker/nginx-proxy-manager/data/mysql:/var/lib/mysql # OLD PATH THAT CAUSES ISSUES
+      - /var/docker/mariadb-aria/data/mysql:/var/lib/mysql
+    secrets:
+      - DB_ROOT_PWD
+      - MYSQL_PWD
+  " 
+  mkdir -p .secrets
+  touch .secrets/db_root_pwd.txt
+  touch .secrets/mysql_pwd.txt
+  local rootpass=$( date +%Y%m%d%H%M%Z%u%U%z%m%N | base64 |sha384sum)
+  local dbpass=$(echo -en "$(whoami) $(date +%Y%m%d%H%M%Z%u%U%z%m%N)" | base64 |sha384sum)
+  enforce_variable_with_value rootpass "${rootpass}"
+  echo $rootpass > .secrets/db_root_pwd.txt
+  enforce_variable_with_value dbpass "${dbpass}"
+  echo $dbpass >  .secrets/mysql_pwd.txt
+  touch docker-compose.yml
+  enforce_variable_with_value confscript "${confscript}"
+  echo "$confscript" > docker-compose.yml
+  docker-compose up -d
+  wait
+  local THISIP=$(myip)
+  enforce_variable_with_value THISIP "${THISIP}"
+  wait
+  echo " 
+  
+  go to http://$THISIP:81/login  to make changes
+
+  Default Admin User:
+
+  Email:    admin@example.com
+  Password: changeme
+
+
+  "
+
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  echo "_redhat_flavor_install Procedure not yet implemented. I don't know what to do."
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  echo "_arch_flavor_install Procedure not yet implemented. I don't know what to do."
 } # end _readhat_flavor_install
 
 _arch__32() {
@@ -294,29 +383,7 @@ _debian__32() {
 } # end _debian__32
 
 _debian__64() {
-  # debian_flavor_install
-  echo REF: https://docs.docker.com/engine/install/ubuntu/
-  apt-get update -y
-  apt-get install \
-    ca-certificates \
-    curl \
-    gnupg \
-    lsb-release -y
-  mkdir -p /etc/apt/keyrings
-  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-  echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-  apt-get update -y
-  chmod a+r /etc/apt/keyrings/docker.gpg
-  apt-get update -y
-  echo install lastest version. see website to see how to install another version
-  apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin -y
-  echo verify docker installs by creating hello world
-  docker run hello-world
-  apt install docker-compose -y
-  echo Architecture:
-  docker info  | grep Archi | cut -d: -f2 | cut -d\  -f2
+  _debian_flavor_install
 } # end _debian__64
 
 _fedora__32() {
@@ -360,24 +427,28 @@ _ubuntu__64() {
 } # end _ubuntu__64
 
 _darwin__64() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  echo "_darwin__64 Procedure not yet implemented. I don't know what to do."
 } # end _darwin__64
 
+_darwin__arm64() {
+  echo "_darwin__arm64 Procedure not yet implemented. I don't know what to do."
+} # end _darwin__arm64
+
 _tar() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  echo "_tar Procedure not yet implemented. I don't know what to do."
 } # end tar
 
 _windows__64() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  echo "_windows__64 Procedure not yet implemented. I don't know what to do."
 } # end _windows__64
 
 _windows__32() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  echo "_windows__32 Procedure not yet implemented. I don't know what to do."
 } # end _windows__32
 
 
 
- #--------/\/\/\/\-- tasks_templates_sudo/docker …install_docker.bash” -- Custom code-/\/\/\/\-------
+ #--------/\/\/\/\-- tasks_templates_sudo/nginx_proxy_manager …install_nginx_proxy_manager.bash” -- Custom code-/\/\/\/\-------
 
 
 _main() {

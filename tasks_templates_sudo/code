@@ -73,7 +73,7 @@ _get_user_home() {
     # shellcheck disable=SC2046
     # shellcheck disable=SC2031
     typeset -rg USER_HOME="$(echo -n $(bash -c "cd ~${SUDO_USER} && pwd"))"  # Get the caller's of sudo home dir LINUX and MAC
-  elif [[ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]] ; then
+  elif [[ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]] || [[ "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT" ]] ; then
     # Do something under Windows NT platform
     USER_HOME=$(echo "/Users/$SUDO_USER")
     # nothing here

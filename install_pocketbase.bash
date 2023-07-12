@@ -239,30 +239,260 @@ directory_exists_with_spaces "${USER_HOME}"
 
 
 
- #--------\/\/\/\/-- tasks_templates_sudo/docker …install_docker.bash” -- Custom code -\/\/\/\/-------
+ #--------\/\/\/\/-- tasks_templates_sudo/pocketbase …install_pocketbase.bash” -- Custom code -\/\/\/\/-------
 
 
 #!/usr/bin/bash
 
 _debian_flavor_install() {
-  sudo apt install gnome-terminal -y
-  sudo apt remove docker-desktop -y
-  rm -r $HOME/.docker/desktop
-  sudo rm /usr/local/bin/com.docker.cli
-  # sudo apt purge docker-desktop -y
-  docker compose version
-  # Docker Compose version v2.17.3
-  docker --version
-  # Docker version 23.0.5, build bc4487a
-  docker version
-  # Client: Docker Engine - Community
-  # Cloud integration: v1.0.31
-  # Version:           23.0.5
-  # API version:       1.42
-  # <...>
-  apt install docker.io -y
-  apt install docker-compose -y
-  # systemctl --user enable docker-desktop
+  if ( ! install_requirements "linux" "
+    base64
+    unzip
+    curl
+    wget
+    ufw
+    nginx
+  "
+  ); then 
+    {
+      apt update 
+      apt install base64 -y
+      apt install unzip -y
+      apt install nginx -y
+    }
+  fi
+  verify_is_installed "
+    myip
+    unzip
+    curl
+    wget
+    tar
+    ufw
+    nginx
+  "
+  local PB_VERSION=0.16.7
+  local CODENAME="pocketbase_${PB_VERSION}_linux_amd64.zip"
+  local TARGET_URL="https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/${CODENAME}"
+  local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  directory_exists_with_spaces "${DOWNLOADFOLDER}"
+  cd "${DOWNLOADFOLDER}"
+  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+  local UNZIPDIR="${USER_HOME}/_/pocketbase"
+  mkdir -p "${UNZIPDIR}"
+  # _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
+  yes | unzip "${DOWNLOADFOLDER}/${CODENAME}" -d "${UNZIPDIR}"
+  echo "Target: ${UNZIPDIR}"
+  ls "${UNZIPDIR}"
+  # exit 0 
+  local PATHTOPOCKETBASE="${UNZIPDIR}/pocketbase"
+  local THISIP=$(myip | tail -1)
+  enforce_variable_with_value THISIP "${THISIP}"
+  echo -e "${YELLOW} 
+  export PB_DIR=\"${PATHTOPOCKETBASE}\"
+  # REF: https://pocketbase.io/docs/going-to-production
+
+  # Upload the binary and anything else related to your remote server, for example using rsync:
+
+  rsync -avz -e ssh  \"${PATHTOPOCKETBASE}\"  \"root@${THISIP}:${PATHTOPOCKETBASE}\"
+
+  # Start a SSH session with your server:
+
+  ssh \"root@${THISIP}\"
+
+  # Start the executable (the --https flag issues a Let's Encrypt certificate):
+  
+  \"${PATHTOPOCKETBASE}\" serve --http="${THISIP}:80" --https="${THISIP}:443"
+
+  #    Notice that in the above example we are logged in as root which allow us to bind to the privileged 80 and 443 ports.
+  #  For non-root users usually you'll need special privileges to be able to do that. You have several options depending on your OS - authbind, setcap, iptables, sysctl, etc. Here is an example using setcap:
+  
+  setcap 'cap_net_bind_service=+ep' \"${PATHTOPOCKETBASE}\" 
+  
+  "
+  # exit 0
+  export PB_DIR="${PATHTOPOCKETBASE}"
+  
+  touch /usr/lib/systemd/system/pocketbase.service
+
+echo "disabled
+ExecStart      = \"${PATHTOPOCKETBASE}\" serve --http=${THISIP}:8090 --https=${THISIP}:8443
+ExecStart      = \"${PATHTOPOCKETBASE}\" serve --http="${THISIP}:8090" --https="${THISIP}:8443" PB_ENCRYPTION_KEY=$(base64<<< $(echo \"$(myip)-$(whoami)-$(pwd)\")) 
+"
+  local systempocket="[Unit]
+Description = pocketbase
+
+[Service]
+Type           = simple
+User           = root
+Group          = root
+LimitNOFILE    = 4096
+Restart        = always
+RestartSec     = 5s
+StandardOutput = append:${UNZIPDIR}/errors.log
+StandardError  = append:${UNZIPDIR}/errors.log
+ExecStart      = \"${PATHTOPOCKETBASE}\" serve --http=127.0.0.1:8090 --https=127.0.0.1:8443 
+
+[Install]
+WantedBy = multi-user.target
+" 
+  echo -e "${CYAN}${systempocket}"
+  echo -e "${RESET}"
+  (  echo -e "${systempocket}"  > /usr/lib/systemd/system/pocketbase.service )
+  echo  -e "${RESET}"
+  yes | systemctl enable pocketbase.service
+  yes | systemctl start pocketbase
+
+  yes | ufw enable
+  ufw allow 'Nginx HTTP'
+  ufw status numbered
+  nginx -t
+  systemctl restart nginx
+  [ -e /etc/nginx/sites-enabled/pocketbase.conf ] &&  unlink  /etc/nginx/sites-enabled/pocketbase.conf
+  touch /etc/nginx/sites-available/pocketbase.conf
+  echo -e "${RED}server {
+    listen 80;
+    server_name ${THISIP};
+    client_max_body_size 10M;
+
+    location / {
+        # check http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive
+        proxy_set_header Connection '';
+        proxy_http_version 1.1;
+        proxy_read_timeout 360s;
+
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+
+        # enable if you are serving under a subpath location
+        # rewrite /yourSubpath/(.*) /\$1  break;
+
+        proxy_pass http://127.0.0.1:8090;
+    }
+}
+"
+  local PROJECTNAME="pocketbase"
+  local TARGETSERVER="127.0.0.1"
+  local TARGETPORT=8090
+  local SERVERNAME="${THISIP}"
+  local PROJECTROOTFOLDER="${UNZIPDIR}"
+  mkdir -p /etc/letsencrypt/pockerbase
+  local CERTIFICATECRTPATH="/etc/letsencrypt/${PROJECTNAME}/cert.pem"
+  local CERTIFICATEKEYPATH="/etc/letsencrypt/${PROJECTNAME}/ip.key"
+  local CERTIFICATEKEYPATH="/etc/letsencrypt/${PROJECTNAME}/key.pem"
+  local STATICFILES=""
+  local server="
+upstream ${PROJECTNAME} {
+    # Path to Puma SOCK file, as defined previously
+    # NodeJS Express Etc ANything with custom port localhost:8080 localhost:3000 etc
+    server ${TARGETSERVER}:${TARGETPORT} fail_timeout=0;
+    # Ruby Puma Sample:
+    # server unix://${PROJECTFOLDER}/sockets/puma.sock fail_timeout=0;
+    # server unix://${PROJECTFOLDER}/shared/sockets/puma.sock fail_timeout=0;
+}
+
+server {
+    listen 80;
+    server_name ${SERVERNAME} www.${SERVERNAME} *.${SERVERNAME};
+    charset utf-8;
+
+    root ${PROJECTROOTFOLDER};
+
+    # Uncomment error pages one you place make them accesible
+    # error_page 500 502 503 504 /500.html;
+# Use this to generate individual accesses
+# ls -p1 | grep -v / | xargs -I {} echo \"    location = /{} {
+#         access_log off; log_not_found off;
+#         alias \$(pwd)/{};
+#     }\"
+    # Place generated invidual cases here
+    # -- between here
+    # here starts
+${STATICFILES}
+    # here ends
+    # --- and here
+    try_files \$uri/index.html \$uri @${PROJECTNAME};
+
+    location @${PROJECTNAME} {
+        proxy_pass http://${PROJECTNAME};
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header Host \$http_host;
+        proxy_set_header X-Forwarded-Proto http;
+        proxy_redirect off;
+    }
+
+    client_max_body_size 4G;
+    keepalive_timeout 10;
+}
+# REF: https://gist.github.com/tadast/9932075  see this script about how to build the script from ground up and read the comments
+# REF: https://gist.github.com/rkjha/d898e225266f6bbe75d8  See that script as reference for these confs and read the comments
+server {
+    listen  443 ssl;
+    server_name ${SERVERNAME} www.${SERVERNAME} *.${SERVERNAME};
+    charset utf-8;
+
+    root ${PROJECTROOTFOLDER};
+
+    # Additional rules go here.
+    # ssl on;   [warn] the \"ssl\" directive is deprecated, use the \"listen ... ssl\"
+    ssl_certificate ${CERTIFICATECRTPATH};
+    ssl_certificate_key ${CERTIFICATEKEYPATH};
+
+    ssl_session_timeout  5m;
+
+    # Uncomment error pages one you place make them accesible
+    # error_page 500 502 503 504 /500.html;
+    # Place generated invidual cases here too
+    # -- between here
+    # here starts
+${STATICFILES}
+    # here ends
+    # --- and here
+    try_files \$uri/index.html \$uri @${PROJECTNAME};
+
+    location @${PROJECTNAME} {
+        proxy_pass http://${PROJECTNAME};
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header Host \$http_host;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_redirect off;
+    }
+    client_max_body_size 4G;
+    keepalive_timeout 10;
+}
+
+"
+  echo -e  "${RED}${server}"
+  echo  -e "${RESET}"
+  ( yes | echo "${server}" >  /etc/nginx/sites-available/pocketbase.conf )
+
+    ln -s /etc/nginx/sites-available/pocketbase.conf /etc/nginx/sites-enabled/
+  yes | nginx -t
+  yes | systemctl restart nginx
+  systemctl status nginx | head
+  echo curl \"${THISIP}\"
+  curl "${THISIP}"
+  echo  -e "${RESET}"
+  echo  -e "${YELLOW}"
+  systemctl daemon-reload
+  systemctl restart pocketbase
+  systemctl stop nginx
+  systemctl disable nginx
+  echo "
+  systemctl start pocketbase
+  systemctl status pocketbase
+  systemctl status nginx
+
+  ufw status numbered
+
+  curl ${THISIP}:8090
+
+  curl ${THISIP}:80
+  
+  "
+  echo  -e "${RESET}"
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
@@ -294,29 +524,7 @@ _debian__32() {
 } # end _debian__32
 
 _debian__64() {
-  # debian_flavor_install
-  echo REF: https://docs.docker.com/engine/install/ubuntu/
-  apt-get update -y
-  apt-get install \
-    ca-certificates \
-    curl \
-    gnupg \
-    lsb-release -y
-  mkdir -p /etc/apt/keyrings
-  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-  echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-  apt-get update -y
-  chmod a+r /etc/apt/keyrings/docker.gpg
-  apt-get update -y
-  echo install lastest version. see website to see how to install another version
-  apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin -y
-  echo verify docker installs by creating hello world
-  docker run hello-world
-  apt install docker-compose -y
-  echo Architecture:
-  docker info  | grep Archi | cut -d: -f2 | cut -d\  -f2
+  _debian_flavor_install
 } # end _debian__64
 
 _fedora__32() {
@@ -363,6 +571,10 @@ _darwin__64() {
   echo "Procedure not yet implemented. I don't know what to do."
 } # end _darwin__64
 
+_darwin__arm64() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _darwin__arm64
+
 _tar() {
   echo "Procedure not yet implemented. I don't know what to do."
 } # end tar
@@ -377,7 +589,7 @@ _windows__32() {
 
 
 
- #--------/\/\/\/\-- tasks_templates_sudo/docker …install_docker.bash” -- Custom code-/\/\/\/\-------
+ #--------/\/\/\/\-- tasks_templates_sudo/pocketbase …install_pocketbase.bash” -- Custom code-/\/\/\/\-------
 
 
 _main() {
