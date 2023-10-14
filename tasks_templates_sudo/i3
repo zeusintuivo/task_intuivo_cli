@@ -45,47 +45,52 @@ _debian_flavor_install() {
 
 _redhat_flavor_install() {
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  install_1password.bash
-  install_zoom.bash
-  install_kebase.bash
-  install_drogon.bash
-  install_sublime_dev.sh.bash
-  install_taskwarrior.bash
-  compile_nano.bash
-  install_rbenv.bash
-  install_nvm.bash
-  install_evm.bash
-  install_kiex.bash
-  install_emacs.bash
-  install_masterpdf.bash
-  install_i3.bash
-  install_beyondcompare.bash
-  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-
+  echo "REF: https://fedoramagazine.org/getting-started-i3-window-manager/"
   if (
   install_requirements "linux" "
-    task
-		gparted
-		gpart
-    thunderbird
-    boxes
-    firefox
-    guake
-    yakuake
-    nginx
-    gnome-tweaks
-    breeze-cursor-theme
-    oxygen-cursor-themes
-
+    bzip2-devel
+		libzip-devel
+    bzip2-libs
+    bzip2
+    lbzip2
+    pbzip2
+    rust-zip+bzip2-devel
+    rust-bzip2-devel
+    bzip2
+		yakuake
+    i3
+    i3status
+    dmenu
+    i3lock
+    xbacklight
+    feh
+    conky
+		dunst
+		flameshot
+		rofi
+		kitty
+		audacious
+		mpc
+		mpv
+		xset
+		light
+		lightdm-settings
+		lxappearance
+		nitrogen
+		fedora-release-kde
+		kde-gtk-config
+		kf5-kconfig
+		kf5-knotifyconfig
+		kf5-kxmlgui
+		libkscreen-qt5
   "
   ); then
     {
-      apt install base64 -y
-      apt install unzip -y
-      apt install nginx -y
+      echo "something failed"
     }
   fi
   brew install libxscrnsaver libnotify bzip2 freetype2
+
   verify_is_installed "
     unzip
     curl
@@ -95,7 +100,6 @@ _redhat_flavor_install() {
     nginx
   "
   echo "End of install tasks should be installed. I don't know what to do next... "
-
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {

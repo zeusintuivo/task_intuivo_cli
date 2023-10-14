@@ -257,7 +257,8 @@ _version() {
   # THOUGHT: local CODEFILE=$(curl -d "zz=dl4&platform=linux" -H "Content-Type: application/x-www-form-urlencoded" -X POST  -sSLo -  https://www.scootersoftware.com/download.php  2>&1;) # suppress only wget download messages, but keep wget output for variable
   local CODEFILE=$(curl -d "zz=dl4&platform=${PLATFORM}" -H "Content-Type: application/x-www-form-urlencoded" -X POST  -sSLo -  https://www.scootersoftware.com/download.php  2>&1;) # suppress only wget download messages, but keep wget output for variable
   # THOUGHT: local CODELASTESTBUILD=$(echo $CODEFILE | sed s/\</\\n\</g | grep "bcompare*.*.*.*.x86_64.rpm" | sed s/\"/\\n/g | grep "/" | cuet "/")
-  local CODELASTESTBUILD=$(echo $CODEFILE | sed s/\</\\n\</g | grep "${PATTERN}" | sed s/\"/\\n/g | grep "/" | cüt "/")
+  # local CODELASTESTBUILD=$(echo $CODEFILE | sed s/\</\\n\</g | grep "${PATTERN}" | sed s/\"/\\n/g | grep "/" | cüt "/")
+  local CODELASTESTBUILD=$(echo $CODEFILE | sed s/\</\\n\</g | grep "${PATTERN}" | sed s/\"/\\n/g | grep "/" | cüt "/files/")
   # fedora 32 local CODELASTESTBUILD=$(echo $CODEFILE | sed s/\</\\n\</g | grep "bcompare*.*.*.*.i386.rpm" | sed s/\"/\\n/g | grep "/" | cuet "/")
   wait
   [[ -z "${CODELASTESTBUILD}" ]] && failed "Beyond Compare Version not found! :${CODELASTESTBUILD}:"
@@ -275,7 +276,13 @@ _version() {
   unset CODELASTESTBUILD
 } # end _version
 
-
+_version_test(){
+  local CODENAME=$(_version "linux" "bcompare*.*.*.*.x86_64.rpm")
+	Checking "CODENAME:${CODENAME}" 
+  enforce_variable_with_value CODENAME "${CODENAME}"
+  exit 0
+} # end _version_test
+#_version_test
 
 _darwin__64() {
   sudo_it
@@ -429,9 +436,12 @@ _fedora__64() {
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   # _linux_prepare
   local CODENAME=$(_version "linux" "bcompare*.*.*.*.x86_64.rpm")
+	Checking "_version:${_version}" 
   enforce_variable_with_value CODENAME "${CODENAME}"
   # THOUGHT  https://www.scootersoftware.com/bcompare-4.3.3.24545.x86_64.rpm
-  local TARGET_URL="https://www.scootersoftware.com/${CODENAME}"
+	local TARGET_URL="$(sed 's@//@/@g' <<<"www.scootersoftware.com/files/${CODENAME}")"
+  TARGET_URL="https://${TARGET_URL}"
+	Checking "TARGET_URL:${TARGET_URL}" 
   enforce_variable_with_value TARGET_URL "${TARGET_URL}"
   local DOWNLOADFOLDER="$(_find_downloads_folder)"
   enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"

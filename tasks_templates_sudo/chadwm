@@ -4,12 +4,13 @@ _debian_flavor_install() {
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   if (
   install_requirements "linux" "
-    base64
-    unzip
-    curl
-    wget
-    ufw
-    nginx
+    git
+    apache2
+    php
+    git
+    php-json
+    php-common
+    php-xml
   "
   ); then
     {
@@ -18,6 +19,8 @@ _debian_flavor_install() {
       apt install nginx -y
     }
   fi
+  #systemctl start apache2
+  #systemctl enable apache2
   verify_is_installed "
     unzip
     curl
@@ -44,7 +47,42 @@ _debian_flavor_install() {
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
-  echo "_redhat_flavor_install Procedure not yet implemented. I don't know what to do."
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  if (
+  install_requirements "linux" "
+    ruby-devel
+    zlib-devel
+    gnome-extensions-app
+    gnome-shell-extension-dash-to-dock
+    git-all
+    httpd
+    git
+    php
+    php-json
+    php-xml
+    php-common
+  "
+  ); then
+    {
+      apt install base64 -y
+      apt install unzip -y
+      apt install nginx -y
+    }
+  fi
+  #systemctl start httpd
+  #systemctl enable httpd
+  git clone https://github.com/afaqurk/linux-dash.git
+  su -c "gem install sass"
+  verify_is_installed "
+    unzip
+    curl
+    wget
+    tar
+    ufw
+    nginx
+  "
+
+  echo "End of install tasks should be installed. I don't know what to do next... "
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {

@@ -239,7 +239,7 @@ directory_exists_with_spaces "${USER_HOME}"
 
 
 
- #--------\/\/\/\/-- tasks_templates_sudo/chadwm …install_chadwm.bash” -- Custom code -\/\/\/\/-------
+ #--------\/\/\/\/-- tasks_templates_sudo/i3 …install_i3.bash” -- Custom code -\/\/\/\/-------
 
 
 #!/usr/bin/bash
@@ -248,13 +248,12 @@ _debian_flavor_install() {
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   if (
   install_requirements "linux" "
-    git
-    apache2
-    php
-    git
-    php-json
-    php-common
-    php-xml
+    base64
+    unzip
+    curl
+    wget
+    ufw
+    nginx
   "
   ); then
     {
@@ -263,8 +262,6 @@ _debian_flavor_install() {
       apt install nginx -y
     }
   fi
-  #systemctl start apache2
-  #systemctl enable apache2
   verify_is_installed "
     unzip
     curl
@@ -292,31 +289,52 @@ _debian_flavor_install() {
 
 _redhat_flavor_install() {
   enforce_variable_with_value USER_HOME "${USER_HOME}"
+  echo "REF: https://fedoramagazine.org/getting-started-i3-window-manager/"
   if (
   install_requirements "linux" "
-    ruby-devel
-    zlib-devel
-    gnome-extensions-app
-    gnome-shell-extension-dash-to-dock
-    git-all
-    httpd
-    git
-    php
-    php-json
-    php-xml
-    php-common
+    bzip2-devel
+		libzip-devel
+    bzip2-libs
+    bzip2
+    lbzip2
+    pbzip2
+    rust-zip+bzip2-devel
+    rust-bzip2-devel
+    bzip2
+		yakuake
+    i3
+    i3status
+    dmenu
+    i3lock
+    xbacklight
+    feh
+    conky
+		dunst
+		flameshot
+		rofi
+		kitty
+		audacious
+		mpc
+		mpv
+		xset
+		light
+		lightdm-settings
+		lxappearance
+		nitrogen
+		fedora-release-kde
+		kde-gtk-config
+		kf5-kconfig
+		kf5-knotifyconfig
+		kf5-kxmlgui
+		libkscreen-qt5
   "
   ); then
     {
-      apt install base64 -y
-      apt install unzip -y
-      apt install nginx -y
+      echo "something failed"
     }
   fi
-  #systemctl start httpd
-  #systemctl enable httpd
-  git clone https://github.com/afaqurk/linux-dash.git
-  su -c "gem install sass"
+  brew install libxscrnsaver libnotify bzip2 freetype2
+
   verify_is_installed "
     unzip
     curl
@@ -325,7 +343,6 @@ _redhat_flavor_install() {
     ufw
     nginx
   "
-
   echo "End of install tasks should be installed. I don't know what to do next... "
 } # end _redhat_flavor_install
 
@@ -362,8 +379,6 @@ _fedora__32() {
 } # end _fedora__32
 
 _fedora__64() {
-  Installing https://github.com/siduck/chadwm
-
   _redhat_flavor_install
 } # end _fedora__64
 
@@ -421,7 +436,7 @@ _windows__32() {
 
 
 
- #--------/\/\/\/\-- tasks_templates_sudo/chadwm …install_chadwm.bash” -- Custom code-/\/\/\/\-------
+ #--------/\/\/\/\-- tasks_templates_sudo/i3 …install_i3.bash” -- Custom code-/\/\/\/\-------
 
 
 _main() {
