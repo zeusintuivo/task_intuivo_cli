@@ -78,6 +78,7 @@ _install_and_add_variables_to_bashrc_zshrc(){
   fi
 
   # Copy the script
+  cd "${USER_HOME}/.evm"
   cp "evm" "$EVM_HOME/scripts"
 
   local EVM_SH_CONTENT='
@@ -100,12 +101,18 @@ _install_and_add_variables_to_bashrc_zshrc(){
   while read INITFILE; do
   { 
     [ -z ${INITFILE} ] && continue
+    # if ! it_exists_with_spaces "${_target}" ; then
+    # {
+    #   continue
+    # }
+    # fi
     _if_not_contains "${USER_HOME}/${INITFILE}"  "# EVM" ||  echo "${EVM_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
     _if_not_contains "${USER_HOME}/${INITFILE}"  "EVM_HOME" ||  echo "${EVM_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
     _if_not_contains "${USER_HOME}/${INITFILE}"  "evm/scripts" ||  echo "${EVM_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
   }
   done <<< "${INITFILES}"
   # type EVM
+  file_exists_with_spaces "${USER_HOME}/.evm/scripts/evm" 
   source "${USER_HOME}/.evm/scripts/evm"
   _finale_message
 
@@ -227,6 +234,25 @@ _darwin__64() {
   echo "${MSG}" 
   _finale_message
 } # end _darwin__64
+
+
+_darwin__arm64() {
+  export HOMEBREW_NO_AUTO_UPDATE=1
+  trap 'echo -e "${RED}" && echo "ERROR err:$_err failed $0:$LINENO _darwin__arm64 evm" && echo -e "${RESET}" && return 0' ERR
+  local package packages="
+    wget
+    openssl
+    wxWidgets
+    fop
+    libxslt
+  "
+  _package_list_installer "${packages}"
+  _git_clone "https://github.com/robisonsantos/evm.git" "${USER_HOME}/.evm"
+  local MSG=$(_install_and_add_variables_to_bashrc_zshrc)
+  echo "${MSG}" 
+  _finale_message
+} # end _darwin__arm64
+
 
 _tar() {
   echo "Procedure not yet implemented. I don't know what to do."
