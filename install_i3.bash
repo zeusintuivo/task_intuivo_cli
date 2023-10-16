@@ -308,6 +308,7 @@ _redhat_flavor_install() {
     i3lock
     xbacklight
     feh
+		brightnessctl
     conky
 		dunst
 		flameshot

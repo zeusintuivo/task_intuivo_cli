@@ -61,6 +61,10 @@ _redhat_flavor_install() {
   install_i3.bash
   install_beyondcompare.bash
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+	dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+	dnf groupupdate core -y
+	dnf group update core -y
+	dnf install https://rpms.remirepo.net/fedora/remi-release-$(rpm -E %fedora).rpm -yv 
 
   if (
   install_requirements "linux" "
