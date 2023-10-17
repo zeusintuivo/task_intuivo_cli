@@ -1,8 +1,29 @@
 #!/bin/bash
 
+
+  function _trap_on_error(){
+    local -ir __trapped_error_exit_num="${2:-0}"
+    echo -e "\\n \033[01;7m*** 2 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+    echo ". ${1}"
+    echo ". exit  ${__trapped_error_exit_num}  "
+    echo ". caller $(caller) "
+    echo ". ${BASH_COMMAND}"
+    local -r __caller=$(caller)
+    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+
+    # $(eval ${BASH_COMMAND}  2>&1; )
+    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+    exit 1
+  }
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+
+
 _package_list_installer() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   local package packages="${@}"
-  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer kiex" && echo -e "${RESET}" && return 0' ERR
+  # trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer kiex" && echo -e "${RESET}" && return 0' ERR
 
   if ! install_requirements "linux" "${packages}" ; then
   {
@@ -29,9 +50,12 @@ _package_list_installer() {
 } # end _package_list_installer
 
 _git_clone() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   local _source="${1}"
   local _target="${2}"
-  if  it_exists_with_spaces "${_target}" ; then
+  Checking "${SUDO_USER}" "${_target}"
+  pwd
+  if  it_exists_with_spaces "${_target}" && it_exists_with_spaces "${_target}/.git" ; then
   {
     cd "${_target}"
     git config pull.rebase false
@@ -131,6 +155,7 @@ _finale_message(){
 } # end _finale_message
 
 _debian_flavor_install() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   curl -Lqs https://raw.githubusercontent.com/taylor/kiex/master/install | bash -s
   _git_clone "https://raw.githubusercontent.com/taylor/kiex.git" "${USER_HOME}/.kiex"
   local MSG=$(_install_and_add_variables_to_bashrc_zshrc)
@@ -138,6 +163,7 @@ _debian_flavor_install() {
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   curl -Lqs https://raw.githubusercontent.com/taylor/kiex/master/install | bash -s
   _git_clone "https://raw.githubusercontent.com/taylor/kiex.git" "${USER_HOME}/.kiex"
   local MSG=$(_install_and_add_variables_to_bashrc_zshrc)
@@ -145,6 +171,7 @@ _redhat_flavor_install() {
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   curl -Lqs https://raw.githubusercontent.com/taylor/kiex/master/install | bash -s
   _git_clone "https://raw.githubusercontent.com/taylor/kiex.git" "${USER_HOME}/.kiex"
   local MSG=$(_install_and_add_variables_to_bashrc_zshrc)
@@ -152,70 +179,87 @@ _arch_flavor_install() {
 } # end _readhat_flavor_install
 
 _arch__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _arch_flavor_install
 } # end _arch__32
 
 _arch__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _arch_flavor_install
 } # end _arch__64
 
 _centos__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _centos__32
 
 _centos__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _centos__64
 
 _debian__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _debian_flavor_install
 } # end _debian__32
 
 _debian__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _debian_flavor_install
 } # end _debian__64
 
 _fedora__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _fedora__32
 
 _fedora__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _fedora__64
 
 _gentoo__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _gentoo__32
 
 _gentoo__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _gentoo__64
 
 _madriva__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _madriva__32
 
 _madriva__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _madriva__64
 
 _suse__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _suse__32
 
 _suse__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _suse__64
 
 _ubuntu__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _debian_flavor_install
 } # end _ubuntu__32
 
 _ubuntu__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _debian_flavor_install
 } # end _ubuntu__64
 
 _darwin__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   curl -Lqs https://raw.githubusercontent.com/taylor/kiex/master/install | bash -s
   export HOMEBREW_NO_AUTO_UPDATE=1
   trap 'echo -e "${RED}" && echo "ERROR err:$_err failed $0:$LINENO _darwin__64 kiex" && echo -e "${RESET}" && return 0' ERR
@@ -233,17 +277,21 @@ _darwin__64() {
 } # end _darwin__64
 
 _darwin__arm64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _darwin__64
 } # end _darwin__arm64
 
 _tar() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   echo "Procedure not yet implemented. I don't know what to do."
 } # end tar
 
 _windows__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   echo "Procedure not yet implemented. I don't know what to do."
 } # end _windows__64
 
 _windows__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   echo "Procedure not yet implemented. I don't know what to do."
 } # end _windows__32
