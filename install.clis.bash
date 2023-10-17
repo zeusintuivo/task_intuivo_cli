@@ -1810,8 +1810,7 @@ _darwin__64() {
   COMANDDER="_run_command /usr/local/bin/brew install "
   COMANDDER="_run_command /opt/homebrew/bin/brew install "
   LINKER="_run_command /opt/homebrew/bin/brew link "
-  $COMANDDER  nodejs
-  # version 6 brew install cloudfoundry/tap/cf-cli
+  $COMANDDER  node
 
   # su - "${SUDO_USER}" -c 'brew install the_silver_searcher'
   install_requirements "darwin" "
@@ -1829,9 +1828,12 @@ _darwin__64() {
     nano
     pv
     gsed@gnu-sed
+    zsh
     powerlevel10k@romkatv/powerlevel10k/powerlevel10k
     powerline-go
-    zsh
+    powerlevel10k
+    zsh-completions
+    bash-completion
   "
   #su - "${SUDO_USER}" -c 'pip install --upgrade pip'
   #su - "${SUDO_USER}" -c 'pip3 install --upgrade pip'
