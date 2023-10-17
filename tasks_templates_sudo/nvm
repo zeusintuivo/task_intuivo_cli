@@ -365,8 +365,26 @@ _ubuntu__64() {
 } # end _ubuntu__64
 
 _darwin__64() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  _git_clone "https://github.com/nvm-sh/nvm.git" "${USER_HOME}/.nvm"
+  cd "${USER_HOME}/.nvm"
+  git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" $(git rev-list --tags --max-count=1)`
+  \. "${USER_HOME}/.nvm/nvm.sh"
+  local MSG=$(_add_variables_to_bashrc_zshrc)
+  echo "${MSG}"
+  # _checka_tools_commander
+  _install_nvm
+  _install_nvm_version 14.16.1
+  _install_npm_utils
+  if ( ! command -v cf >/dev/null 2>&1; ) ;  then
+    su - "${SUDO_USER}" -c 'npm i -g cloudfoundry/tap/cf-cli@7'
+  fi
+  # echo "Procedure not yet implemented. I don't know what to do."
 } # end _darwin__64
+
+_darwin__arm64() {
+  _darwin__64
+  # echo "Procedure not yet implemented. I don't know what to do."
+} # end _darwin__arm64
 
 _tar() {
   echo "Procedure not yet implemented. I don't know what to do."

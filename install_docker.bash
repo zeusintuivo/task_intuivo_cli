@@ -363,6 +363,10 @@ _darwin__64() {
   echo "Procedure not yet implemented. I don't know what to do."
 } # end _darwin__64
 
+_darwin__arm64() {
+  echo "$0 Procedure not yet implemented. I don't know what to do."
+} # end _darwin__arm64
+
 _tar() {
   echo "Procedure not yet implemented. I don't know what to do."
 } # end tar

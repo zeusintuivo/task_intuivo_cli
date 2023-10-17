@@ -28,7 +28,7 @@ typeset -r THISSCRIPTNAME="$(basename "$0")"
 export _err
 typeset -i _err=0
   function _trap_on_error(){
-    echo -e "\\n \033[01;7m*** ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR ...\033[0m"
+    echo -e "\\n \033[01;7m*** 1 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR ...\033[0m"
     exit 1
   }
   trap _trap_on_error ERR
@@ -42,7 +42,7 @@ typeset -i _err=0
 load_struct_testing(){
   function _trap_on_error(){
     local -ir __trapped_error_exit_num="${2:-0}"
-    echo -e "\\n \033[01;7m*** ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR ...\033[0m  \n \n "
+    echo -e "\\n \033[01;7m*** 2 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
     echo ". ${1}"
     echo ". exit  ${__trapped_error_exit_num}  "
     echo ". caller $(caller) "
@@ -120,7 +120,7 @@ function sudo_it() {
       enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
       # Override bigger error trap  with local
       function _trap_on_error(){
-        echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR INT ...\033[0m"
+        echo -e "\033[01;7m*** 3 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR INT ...\033[0m"
 
       }
       trap _trap_on_error ERR INT
@@ -654,8 +654,14 @@ _setup_clis(){
         mkdir -p $USER_HOME/_/clis
         chown $SUDO_USER:$SUDO_USER -R $USER_HOME/_
         cd $USER_HOME/_/clis
-    } else {
+    } 
+    else
+    {
         passed clis: clis folder exists
+        cd $USER_HOME/_/clis/bash_intuivo_cli
+        git remote remove origin
+        git remote add origin git@github.com:zeusintuivo/bash_intuivo_cli.git
+        ./link_folder_scripts
     }
     fi
     if  it_does_not_exist_with_spaces "$USER_HOME/_/clis/bash_intuivo_cli" ; then
@@ -673,8 +679,15 @@ _setup_clis(){
         git remote remove origin
         git remote add origin git@github.com:zeusintuivo/bash_intuivo_cli.git
         ./link_folder_scripts
-    } else {
+    } 
+    else 
+    {
         passed clis: bash_intuivo_cli folder exists
+        chown -R $SUDO_USER  $USER_HOME/_/clis/bash_intuivo_cli
+        cd $USER_HOME/_/clis/bash_intuivo_cli
+        git remote remove origin
+        git remote add origin git@github.com:zeusintuivo/bash_intuivo_cli.git
+        ./link_folder_scripts
     }
     fi
     if  is_not_installed link_folder_scripts ; then
@@ -692,8 +705,20 @@ _setup_clis(){
         git remote remove origin
         git remote add origin git@github.com:zeusintuivo/bash_intuivo_cli.git
         ./link_folder_scripts
-    } else {
+    } 
+    else 
+    {
         passed clis: bash_intuivo_cli folder exists
+        cd $USER_HOME/_/clis/ssh_intuivo_cli
+        chown -R $SUDO_USER $USER_HOME/_/clis/ssh_intuivo_cli
+        # ( 
+        #   chown -R $SUDO_USER $USER_HOME/.ssh
+        # )
+        git remote remove origin
+        git remote add origin git@github.com:zeusintuivo/ssh_intuivo_cli.git
+        $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts
+        pwd
+        $USER_HOME/_/clis/ssh_intuivo_cli/sshswitchkey zeus
     }
     fi
     if  it_does_not_exist_with_spaces ${USER_HOME}/_/clis/ssh_intuivo_cli ; then
@@ -709,13 +734,21 @@ _setup_clis(){
         fi
         cd $USER_HOME/_/clis/ssh_intuivo_cli
         chown -R $SUDO_USER $USER_HOME/_/clis/ssh_intuivo_cli
-        chown -R $SUDO_USER $USER_HOME/.ssh
+        # ( 
+        #   chown -R $SUDO_USER $USER_HOME/.ssh
+        # )
         git remote remove origin
         git remote add origin git@github.com:zeusintuivo/ssh_intuivo_cli.git
         $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts
-        ./sshswitchkey zeus
-    } else {
+        pwd
+        $USER_HOME/_/clis/ssh_intuivo_cli/sshswitchkey zeus
+    } 
+    else 
+    {
         passed clis: ssh_intuivo_cli folder exists
+        git remote remove origin
+        git remote add origin git@github.com:zeusintuivo/ssh_intuivo_cli.git
+        $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts
     }
     fi
 # rm -rf $USER_HOME/_/clis/ssh_intuivo_cli
@@ -750,67 +783,75 @@ while read -r ONE ; do
             fi
             cd "$USER_HOME/_/clis/${ONE}"
             chown -R "$SUDO_USER" "$USER_HOME/_/clis/${ONE}"
-	    git remote remove origin
+            git remote remove origin
             git remote add origin git@github.com:zeusintuivo/${ONE}.git
             directory_exists_with_spaces "$USER_HOME/_/clis/${ONE}"
-            echo "UserHome:$USER_HOME"
-if [[ -x "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ]] ; then
-{
-  if    "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ; then 
-  {
-     Comment failed to run link_folder_scripts
-  }
-  fi 
-}
-fi
-            # link_folder_scripts
-	    if [[ "$ONE" == "git_intuivo_cli" ]] ; then  # is not empty
-    	    {
-      	      cd "$USER_HOME/_/clis/${ONE}/en"
-if [[ -x "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ]] ; then
-{
-  if    "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ; then 
-  {
-     Comment failed to run link_folder_scripts
-  }
-  fi 
-}
-fi
-              # link_folder_scripts
-	    }
+            echo "$0:$LINENO UserHome:$USER_HOME"
+            if [[ -x "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ]] ; then
+            {
+              (
+                if    "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ; then 
+                {
+                   Comment failed to run link_folder_scripts
+                }
+                fi
+              ) 
+            }
             fi
-        } else {
-            Installing else $ONE
-            passed clis: ${ONE} folder exists
-	    cd "$USER_HOME/_/clis/${ONE}"
-	    chown -R "$SUDO_USER" "$USER_HOME/_/clis/${ONE}"
-            pwd
-            echo "UserHome:$USER_HOME"
-            echo "One:$ONE"
-if [[ -x "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ]] ; then
-{
-  if    "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ; then 
-  {
-     Comment failed to run link_folder_scripts
-  }
-  fi 
-}
-fi
             # link_folder_scripts
-	    if [[ "$ONE" == "git_intuivo_cli" ]] ; then  # is not empty
-    	    {
+      	    if [[ "$ONE" == "git_intuivo_cli" ]] ; then  # is not empty
+          	{
+      	      cd "$USER_HOME/_/clis/${ONE}/en"
+              if [[ -x "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ]] ; then
+              {
+                (
+                  if    "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ; then 
+                  {
+                     Comment failed to run link_folder_scripts
+                  }
+                  fi
+                ) 
+              }
+              fi
+              # link_folder_scripts
+            }
+            fi
+        } 
+        else
+        {
+            Installing "$0:$LINENO  else $ONE"
+            passed "$0:$LINENO  clis: ${ONE} folder exists "
+            cd "$USER_HOME/_/clis/${ONE}"
+            chown -R "$SUDO_USER" "$USER_HOME/_/clis/${ONE}"
+            pwd
+            echo "$0:$LINENO UserHome:$USER_HOME"
+            echo "$0:$LINENO One:$ONE"
+            if [[ -x "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ]] ; then
+            {
+              (
+                if    "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ; then 
+                {
+                   Comment failed to run link_folder_scripts
+                }
+                fi
+              ) 
+            }
+            fi
+            # link_folder_scripts
+	          if [[ "$ONE" == "git_intuivo_cli" ]] ; then  # is not empty
+    	      {
       	      cd "$USER_HOME/_/clis/${ONE}/en"
               # link_folder_scripts
-if [[ -x "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ]] ; then
-{
-  if    "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ; then 
-  {
-     Comment failed to run link_folder_scripts
-  }
-  fi 
-}
-fi
-	    }
+              if [[ -x "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ]] ; then
+              {
+                if    "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ; then 
+                {
+                   Comment failed to run link_folder_scripts
+                }
+                fi 
+              }
+              fi
+            }
             fi
             # msg=$(link_folder_scripts)
             ret=$?
@@ -833,7 +874,9 @@ fi
 if  softlink_exists_with_spaces "/usr/local/bin/added>$USER_HOME/_/clis/git_intuivo_cli/en/added" ; then
 {
     passed clis: git_intuivo_cli/en folder exists and is linked
-} else {
+} 
+else 
+{
     Configuring extra work git_intuivo_cli/en
     directory_exists_with_spaces $USER_HOME/_/clis/git_intuivo_cli/en
     cd $USER_HOME/_/clis/git_intuivo_cli/en
@@ -842,6 +885,7 @@ if  softlink_exists_with_spaces "/usr/local/bin/added>$USER_HOME/_/clis/git_intu
 fi
 
 chown -R $SUDO_USER $USER_HOME/_/clis
+chown $SUDO_USER $USER_HOME/_
 
 }
 _setup_clis
@@ -853,6 +897,10 @@ _setup_mycd(){
         # My CD
         cd $USER_HOME
         yes | git clone https://gist.github.com/jesusalc/b14a57ec9024ff1a3889be6b2c968bb7 .mycd
+    }
+    fi
+        passed that: mycd is downloaded, relinking
+
         chown -R $SUDO_USER   $USER_HOME/.mycd
         chmod +x  $USER_HOME/.mycd/mycd.sh
 
@@ -871,10 +919,7 @@ _setup_mycd(){
         chown -R $SUDO_USER  $USER_HOME/.config/git
         touch  $USER_HOME/.config/git/ignore
         _if_not_contains $USER_HOME/.config/git/ignore  ".dir_bash_history" &&  echo '.dir_bash_history' >> $USER_HOME/.config/git/ignore
-    } else {
-        passed that: mycd is installed
-    }
-    fi
+ 
 }
 _setup_mycd
 

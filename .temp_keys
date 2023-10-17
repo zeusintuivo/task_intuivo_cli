@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# git pull push section
+export SSH_KEY="zeus"          # "local name from file 'zeus' or 'mark'"
+export GITUSER="zeusintuivo"          # "user name only 'usename' from the github or gitlab account or bitbucket login"
+# export GITTOKEN=""        # generate a token in https://github.com/settings/tokens
+# export GITPROVIDER=""      # default is "git@github.com" but private can be "git@git.company.net"
+# export VPNREQUIRED=""      # empty default will check is the named here vpn name is listed and on
+# export EDITOR=""           # empty default guake_quick_file_opener will try to guess which editor to use, or use this instead if not found
+
+# Manually force to change name before commit
+# ( command -v git >/dev/null 2>&1; ) && [ -e .git ] && git config --local user.name "First.Last"
+# export BUNDLE_GITHUB__COM=qweqwerqwerqwerqwerqwerqwerqwerqwerqwerq
+
+# Manually force to special value key before pull push or commit
+# ( command -v git >/dev/null 2>&1; ) && [ -e .git ] && git config --global --add url."https://${BUNDLE_GITHUB__COM}@github.com".insteadOf "https://github.com"
+# export GITHUB_TOKEN=qweqwerqwerqwerqwerqwerqwerqwerqwerqwerq
+
+# Sample Wagon Shopify values
+# export CMS_WAGON_NAME=wagon_name_en_de_or_nl
+# export CMS_HOST=http://0.0.0.0:3001
+# export CMS_HANDLE=wagon_name_en_de_or_nl
+# export CMS_USER_EMAIL=root@none.com
+# export CMS_USER_API_KEY=qwerqwerqwerqwerqwerqwerqwerqwerqwerqwer
+
+# journal section
+export JOURNAL_PUT_COMMIT_METHOD="commit"    #   "can only be 'put' or 'commit'. PUT makes a direct add and push and COMMIT just commits without pushing "
+# export JOURNAL_HOME="$HOME/_" #  /journal folder  will be added
+# export JOURNAL_HOME="$(realpath $(pwd)/../)" # updated realpath macos 20210902 #  /journal folder  will be added   # updated realpath macos 20210902
+export JOURNAL_HOME="$(realpath $(pwd)/../)"   #   /journal folder will be added
+
+# journal section - Custom ISSUETRACKERLOCATION - journal_get_description_work_link_url script worker dependency
+# [[ -n "${TICKETID}" ]] && export ISSUETRACKERLOCATION=$(echo "https://pm.company.net/jira/browse/HTMLEDITOR-${TICKETID}")   # Sample we can use TICKETID available inside journal_intuivo_cli
+[[ -n "${TICKETID}" ]] && export ISSUETRACKERLOCATION="$(echo "https://pm.company.net/jira/browse/HTMLEDITOR-${TICKETID}")"
+
+# journal section- newfeature command script
+# Linux
+# [[ type -t only_7_dashed_words == *"function"* ]] && export JOURNAL_NEWBRANCH_STYLE_4_FEATURE=$(echo "${TICKETID}_${DESCRIPTION}\" |  only_7_dashed_words ) # methods from sed_function inside journal
+# [[ type -t only_5_dashed_words == *"function"* ]] && export JOURNAL_NEWBRANCH_STYLE_4_FEATURE=$(echo "${TICKETID}_${DESCRIPTION}\" |  only_5_dashed_words ) # methods from sed_function inside journal
+# [[ type -t only_4_dashed_words == *"function"* ]] && export JOURNAL_NEWBRANCH_STYLE_4_FEATURE=$(echo "${TICKETID}_${DESCRIPTION}\" |  only_4_dashed_words ) # methods from sed_function inside journal
+# Mac
+type only_2_dashed_words &>/dev/null && export JOURNAL_NEWBRANCH_STYLE_4_FEATURE="$(echo "${TICKETID}_${DESCRIPTION}" |  only_2_dashed_words )" # methods from sed_function inside journal
+export JOURNAL_NEWBRANCH_STYLE_4_FEATURE
+export JOURNAL_JOURNALDIR_STYLE_4_FEATURE="empty"  # empty will behave as empty directory when creating it.
+
+# newissue script
+# Linux
+# [[ type -t only_7_dashed_words == *"function"* ]] && export JOURNAL_NEWBRANCH_STYLE_4_ISSUE=$(echo "${TICKETID}_${DESCRIPTION}\" |  only_7_dashed_words )  # methods from sed_function inside journal
+# [[ type -t only_5_dashed_words == *"function"* ]] && export JOURNAL_NEWBRANCH_STYLE_4_ISSUE=$(echo "${TICKETID}_${DESCRIPTION}\" |  only_5_dashed_words )  # methods from sed_function inside journal
+# [[ type -t only_4_dashed_words == *"function"* ]] && export JOURNAL_NEWBRANCH_STYLE_4_ISSUE=$(echo "${TICKETID}_${DESCRIPTION}\" |  only_4_dashed_words )  # methods from sed_function inside journal
+# Mac
+type only_2_dashed_words &>/dev/null && export JOURNAL_NEWBRANCH_STYLE_4_ISSUE="$(echo "${TICKETID}_${DESCRIPTION}" |  only_2_dashed_words )"  # methods from sed_function inside journal
+export JOURNAL_NEWBRANCH_STYLE_4_ISSUE
+export JOURNAL_JOURNALDIR_STYLE_4_ISSUE="empty"   # empty will behave as empty directory when creating it.
+
