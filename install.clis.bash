@@ -756,13 +756,31 @@ _setup_ohmy(){
       fi
     }
     fi
-
-
+        Testing zsh
         # install ohmyzsh
         su - "${SUDO_USER}" -c 'sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"'
         chown -R "${SUDO_USER}" "${USER_HOME}/.oh-my-zsh"
-	chsh -s /usr/bin/zsh "${SUDO_USER}"
-	su - "${SUDO_USER}" -c 'chsh -s /usr/bin/zsh "'${SUDO_USER}'"'
+        if [ -e /opt/homebrew/bin/zsh ] ; then 
+        {
+          chsh -s /opt/homebrew/bin/zsh "${SUDO_USER}"
+          su - "${SUDO_USER}" -c 'chsh -s /opt/homebrew/bin/zsh "'${SUDO_USER}'"'
+        }
+        elif [ -e /usr/local/bin/zsh ] ; then 
+        {
+          chsh -s /usr/local/bin/zsh "${SUDO_USER}"
+          su - "${SUDO_USER}" -c 'chsh -s /usr/local/bin/zsh "'${SUDO_USER}'"'
+        }
+        elif [ -e /usr/bin/zsh ] ; then 
+        {
+          chsh -s /usr/bin/zsh "${SUDO_USER}"
+          su - "${SUDO_USER}" -c 'chsh -s /usr/bin/zsh "'${SUDO_USER}'"'
+        }
+        elif [ -e /bin/zsh ] ; then 
+        {
+          chsh -s /bin/zsh "${SUDO_USER}"
+          su - "${SUDO_USER}" -c 'chsh -s /bin/zsh "'${SUDO_USER}'"'
+        }
+        fi
         Testing ohmyzsh
         directory_exists_with_spaces "${USER_HOME}/.oh-my-zsh"
     }
@@ -1276,28 +1294,30 @@ _install_dmgs_list() {
   Caffeine.dmg|Caffeine/Caffeine.app|https://github.com/IntelliScape/caffeine/releases/download/1.1.3/Caffeine.dmg
   Keybase.dmg|Keybase App/Keybase.app|https://prerelease.keybase.io/Keybase.dmg
   Brave-Browser.dmg|Brave Browser/Brave Browser.app|https://referrals.brave.com/latest/Brave-Browser.dmg
-  #Firefox.dmg|Firefox/Firefox.app|https://download-installer.cdn.mozilla.net/pub/firefox/releases/98.0.1/mac/en-US/Firefox%2098.0.1.dmg
+  Firefox%20118.0.2.dmg|Firefox/Firefox.app|https://download-installer.cdn.mozilla.net/pub/firefox/releases/118.0.2/mac/en-US/Firefox%20118.0.2.dmg
+  # Firefox%2098.0.1.dmg|Firefox/Firefox.app|https://download-installer.cdn.mozilla.net/pub/firefox/releases/98.0.1/mac/en-US/Firefox%2098.0.1.dmg
   MFF2_latest.dmg|MultiFirefox/MultiFirefox.app|http://mff.s3.amazonaws.com/MFF2_latest.dmg
-  #vlc-3.0.11.dmg|VLC media player/VLC.app|https://download.vlc.de/vlc/macosx/vlc-3.0.11.dmg
-  #mattermost-desktop-4.6.2-mac.dmg|Mattermost 4.6.2/Mattermost.app|https://releases.mattermost.com/desktop/4.6.2/mattermost-desktop-4.6.2-mac.dmg
-  #gimp-2.10.22-x86_64-2.dmg|GIMP 2.10 Install/GIMP-2.10.app|https://ftp.lysator.liu.se/pub/gimp/v2.10/osx/gimp-2.10.22-x86_64-2.dmg
-  #sketch-70.3-109109.zip|Sketch.app|https://download.sketch.com/sketch-70.3-109109.zip
-  #Iris-1.2.0-OSX.zip|Iris.app|https://raw.githubusercontent.com/danielng01/product-builds/master/iris/macos/Iris-1.2.0-OSX.zip
+  vlc-3.0.11.dmg|VLC media player/VLC.app|https://download.vlc.de/vlc/macosx/vlc-3.0.11.dmg
+  mattermost-desktop-4.6.2-mac.dmg|Mattermost 4.6.2/Mattermost.app|https://releases.mattermost.com/desktop/4.6.2/mattermost-desktop-4.6.2-mac.dmg
+  # gimp-2.10.22-x86_64-2.dmg|GIMP 2.10 Install/GIMP-2.10.app|https://ftp.lysator.liu.se/pub/gimp/v2.10/osx/gimp-2.10.22-x86_64-2.dmg
+  sketch-70.3-109109.zip|Sketch.app|https://download.sketch.com/sketch-70.3-109109.zip
+  Iris-1.2.0-OSX.zip|Iris.app|https://raw.githubusercontent.com/danielng01/product-builds/master/iris/macos/Iris-1.2.0-OSX.zip
   BetterTouchTool.zip|BetterTouchTool.app|https://folivora.ai/releases/BetterTouchTool.zip
-#  Options_8.36.76.zip|LogiMgr Installer 8.36.76.app|https://download01.logi.com/web/ftp/pub/techsupport/options/Options_8.36.76.zip
-  #tsetup.3.5.1.dmg|Telegram Desktop/Telegram.app|https://updates.tdesktop.com/tmac/tsetup.3.5.1.dmg
-  #VSCode-darwin.zip|Visual Studio Code.app|https://az764295.vo.msecnd.net/stable/ea3859d4ba2f3e577a159bc91e3074c5d85c0523/VSCode-darwin.zip
-  #VSCode-darwin.zip|Visual Studio Code.app|https://code.visualstudio.com/sha/download?build=stable&os=darwin
-  #VSCode-darwin.zip|Visual Studio Code.app|https://az764295.vo.msecnd.net/insider/5a52bc29d5e9bc419077552d336ea26d904299fa/VSCode-darwin.zip
-  #VSCode-darwin.zip|Visual Studio Code.app|https://code.visualstudio.com/sha/download?build=insider&os=darwin
-  BCompareOSX-4.3.7.25118.zip|Beyond Compare.app|https://www.scootersoftware.com/BCompareOSX-4.3.7.25118.zip
+  # Options_8.36.76.zip|LogiMgr Installer 8.36.76.app|https://download01.logi.com/web/ftp/pub/techsupport/options/Options_8.36.76.zip
+  # tsetup.3.5.1.dmg|Telegram Desktop/Telegram.app|https://updates.tdesktop.com/tmac/tsetup.3.5.1.dmg
+  # VSCode-darwin.zip|Visual Studio Code.app|https://az764295.vo.msecnd.net/stable/ea3859d4ba2f3e577a159bc91e3074c5d85c0523/VSCode-darwin.zip
+  # VSCode-darwin.zip|Visual Studio Code.app|https://code.visualstudio.com/sha/download?build=stable&os=darwin
+  # VSCode-darwin.zip|Visual Studio Code.app|https://az764295.vo.msecnd.net/insider/5a52bc29d5e9bc419077552d336ea26d904299fa/VSCode-darwin.zip
+  # VSCode-darwin.zip|Visual Studio Code.app|https://code.visualstudio.com/sha/download?build=insider&os=darwin
+  # BCompareOSX-4.3.7.25118.zip|Beyond Compare.app|https://www.scootersoftware.com/BCompareOSX-4.3.7.25118.zip
   dbeaver-ce-latest-macos-x86_64.dmg|DBeaver Community/DBeaver.app|https://dbeaver.io/files/dbeaver-ce-latest-macos-x86_64.dmg
-  #Inkscape-1.0.2.dmg|Inkscape/Inkscape.app|https://media.inkscape.org/dl/resources/file/Inkscape-1.0.2.dmg
-  #LittleSnitch-5.3.2.dmg|Little Snitch 5.3.2/Little Snitch.app|https://www.obdev.at/ftp/pub/Products/littlesnitch/LittleSnitch-5.3.2.dmg
-  #Postgres-2.5.6-10-11-12-13-14.dmg|Postgres-2.5.6-10-11-12-13-14/Postgres.app|https://objects.githubusercontent.com/github-production-release-asset-2e65be/3946572/fca30b05-f1f0-47e7-ab2b-a53feb55c76e?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIWNJYAX4CSVEH53A%2F20220216%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20220216T162004Z&X-Amz-Expires=300&X-Amz-Signature=5e36ddb945a897c7d34367c1f63668442f668bc97a3a4dff4771f9e78ee4fe4c&X-Amz-SignedHeaders=host&actor_id=0&key_id=0&repo_id=3946572&response-content-disposition=attachment%3B%20filename%3DPostgres-2.5.6-10-11-12-13-14.dmg&response-content-type=application%2Foctet-stream
-  #mysql-workbench-community-8.0.28-macos-x86_64.dmg|MySQL Workbench community-8.0.28/MySQLWorkbench.app|https://cdn.mysql.com//Downloads/MySQLGUITools/mysql-workbench-community-8.0.28-macos-x86_64.dmg
+  Inkscape-1.0.2.dmg|Inkscape/Inkscape.app|https://media.inkscape.org/dl/resources/file/Inkscape-1.0.2.dmg
+  # LittleSnitch-5.3.2.dmg|Little Snitch 5.3.2/Little Snitch.app|https://www.obdev.at/ftp/pub/Products/littlesnitch/LittleSnitch-5.3.2.dmg
+  # Postgres-2.5.6-10-11-12-13-14.dmg|Postgres-2.5.6-10-11-12-13-14/Postgres.app|https://objects.githubusercontent.com/github-production-release-asset-2e65be/3946572/fca30b05-f1f0-47e7-ab2b-a53feb55c76e?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIWNJYAX4CSVEH53A%2F20220216%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20220216T162004Z&X-Amz-Expires=300&X-Amz-Signature=5e36ddb945a897c7d34367c1f63668442f668bc97a3a4dff4771f9e78ee4fe4c&X-Amz-SignedHeaders=host&actor_id=0&key_id=0&repo_id=3946572&response-content-disposition=attachment%3B%20filename%3DPostgres-2.5.6-10-11-12-13-14.dmg&response-content-type=application%2Foctet-stream
+  # mysql-workbench-community-8.0.28-macos-x86_64.dmg|MySQL Workbench community-8.0.28/MySQLWorkbench.app|https://cdn.mysql.com//Downloads/MySQLGUITools/mysql-workbench-community-8.0.28-macos-x86_64.dmg
   Red+1.7.8.zip|Red.app|https://s3.amazonaws.com/echodot/red/Red+1.7.8.zip
-  #mysql-8.0.28-macos11-x86_64.dmg|mysql-8.0.28-macos11-x86_64/mysql-8.0.28-macos11-x86_64.pkg|https://cdn.mysql.com//Downloads/MySQL-8.0/mysql-8.0.28-macos11-x86_64.dmg"
+  Unlox.zip|https://unlox.it/download/
+  # mysql-8.0.28-macos11-x86_64.dmg|mysql-8.0.28-macos11-x86_64/mysql-8.0.28-macos11-x86_64.pkg|https://cdn.mysql.com//Downloads/MySQL-8.0/mysql-8.0.28-macos11-x86_64.dmg"
   Checking dmgs apps
   while read -r one ; do
   {

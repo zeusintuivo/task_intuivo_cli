@@ -346,6 +346,10 @@ _darwin__64() {
   sudo hdiutil detach "/Volumes/${UNZIPDIR}"
 } # end _darwin__64
 
+_darwin__arm64() {
+  _darwin__64  
+} # end _darwin__arm64
+
 _ubuntu__64() {
   # _linux_prepare
   local CODENAME=$(_version "linux" "RubyMine-*.*.*.*amd64.deb")
