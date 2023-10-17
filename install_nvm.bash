@@ -261,9 +261,45 @@ directory_exists_with_spaces "${USER_HOME}"
 
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
-    exit 1
+    exit ${__trapped_INT_num}
   }
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+
+  # function _trap_on_exit(){
+  #   local -ir __trapped_exit_num="${2:-0}"
+  #   echo -e "\\n \033[01;7m*** 5 EXIT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n EXIT ...\033[0m  \n \n "
+  #   echo ". ${1}"
+  #   echo ". exit  ${__trapped_exit_num}  "
+  #   echo ". caller $(caller) "
+  #   echo ". ${BASH_COMMAND}"
+  #   local -r __caller=$(caller)
+  #   local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+  #   local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+  #   awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+
+  #   # $(eval ${BASH_COMMAND}  2>&1; )
+  #   # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+  #   exit ${__trapped_INT_num}
+  # }
+  # trap  '_trap_on_exit $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  EXIT
+
+  function _trap_on_INT(){
+    local -ir __trapped_INT_num="${2:-0}"
+    echo -e "\\n \033[01;7m*** 7 INT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n INT ...\033[0m  \n \n "
+    echo ". ${1}"
+    echo ". INT  ${__trapped_INT_num}  "
+    echo ". caller $(caller) "
+    echo ". ${BASH_COMMAND}"
+    local -r __caller=$(caller)
+    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+
+    # $(eval ${BASH_COMMAND}  2>&1; )
+    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+    INT ${__trapped_INT_num}
+  }
+  trap  '_trap_on_INT $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  INT
 
 _git_clone() {
   local _source="${1}"
@@ -275,6 +311,7 @@ _git_clone() {
     cd "${_target}"
     git config pull.rebase false    
     git fetch
+    git checkout master
     git pull
     git fetch --tags origin
   }
@@ -296,7 +333,7 @@ export NVM_DIR="'${USER_HOME}'/.nvm"
 [ -s "${NVM_DIR}/bash_completion" ] && . "${NVM_DIR}/bash_completion"  # This loads nvm bash_completion
 
 '
-  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _add_variables_to_bashrc_zshrc nvm" && echo -e "${RESET}" && return 0' ERR
+  # trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _add_variables_to_bashrc_zshrc nvm" && echo -e "${RESET}" && return 0' ERR
   echo "${NVM_SH_CONTENT}"
   local INITFILE INITFILES="
    .bashrc
@@ -309,8 +346,9 @@ export NVM_DIR="'${USER_HOME}'/.nvm"
   while read INITFILE; do
   {
     [ -z ${INITFILE} ] && continue    
-    _if_not_contains "${USER_HOME}/${INITFILE}"  "# NVM" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
-    _if_not_contains "${USER_HOME}/${INITFILE}"  "nvm.sh" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+    Installing ${INITFILE}
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "# NVM" ||  echo "${NVM_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "nvm.sh" ||  echo "${NVM_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
   }
   done <<< "${INITFILES}"
 
@@ -471,7 +509,7 @@ _install_npm_utils() {
   mkdir -p "${USER_HOME}/.nvm"
   chown -R "${SUDO_USER}" "${USER_HOME}/.npm"
   chown -R "${SUDO_USER}" "${USER_HOME}/.nvm"
-  # Global node utils
+  Installing "# Global node utils"
   is_not_installed nodemon  && npm i -g nodemon
   if  is_not_installed live-server  ; then
   {
@@ -483,6 +521,7 @@ _install_npm_utils() {
   # is_not_installed jest &&  npm i -g jest
   # verify_is_installed jest
   # CHAINSTALLED=$(su - "${SUDO_USER}" -c 'npm -g info chai >/dev/null 2>&1')
+  Checking info chai 
   CHAINSTALLED=$(npm -g info chai >/dev/null 2>&1)
   if [[ -n "$CHAINSTALLED" ]] &&  [[ "$CHAINSTALLED" == *"npm ERR"* ]]  ; then
   {
@@ -491,6 +530,7 @@ _install_npm_utils() {
   }
   fi
   # MOCHAINSTALLED=$(su - "${SUDO_USER}" -c 'npm -g info mocha >/dev/null 2>&1')
+  Checking info mocha
   MOCHAINSTALLED=$(npm -g info mocha >/dev/null 2>&1)
   if [[ -n "$MOCHAINSTALLED" ]] &&  [[ "$MOCHAINSTALLED" == *"npm ERR"* ]]  ; then
   {
