@@ -1834,6 +1834,9 @@ _darwin__64() {
     powerlevel10k
     zsh-completions
     bash-completion
+    zsh-syntax-highlighting 
+    zsh-autosuggestions
+
   "
   #su - "${SUDO_USER}" -c 'pip install --upgrade pip'
   #su - "${SUDO_USER}" -c 'pip3 install --upgrade pip'
