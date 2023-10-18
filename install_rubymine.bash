@@ -246,6 +246,42 @@ directory_exists_with_spaces "${USER_HOME}"
 #
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
+  function _trap_on_error(){
+    local -ir __trapped_error_exit_num="${2:-0}"
+    echo -e "\\n \033[01;7m*** 2 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+    echo ". ${1}"
+    echo ". exit  ${__trapped_error_exit_num}  "
+    echo ". caller $(caller) "
+    echo ". ${BASH_COMMAND}"
+    local -r __caller=$(caller)
+    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+
+    # $(eval ${BASH_COMMAND}  2>&1; )
+    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+    exit ${__trapped_INT_num}
+  }
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  
+  function _trap_on_INT(){
+    local -ir __trapped_INT_num="${2:-0}"
+    echo -e "\\n \033[01;7m*** 7 INT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n INT ...\033[0m  \n \n "
+    echo ". ${1}"
+    echo ". INT  ${__trapped_INT_num}  "
+    echo ". caller $(caller) "
+    echo ". ${BASH_COMMAND}"
+    local -r __caller=$(caller)
+    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+
+    # $(eval ${BASH_COMMAND}  2>&1; )
+    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+    exit ${__trapped_INT_num}
+  }
+  trap  '_trap_on_INT $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  INT
+
 
 _version() {
   local PLATFORM="${1}" # mac windows linux
@@ -286,6 +322,8 @@ _version() {
 } # end _version
 
 _darwin__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+
   verify_is_installed "
     wget
   "
@@ -351,6 +389,8 @@ _darwin__arm64() {
 } # end _darwin__arm64
 
 _ubuntu__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+
   # _linux_prepare
   local CODENAME=$(_version "linux" "RubyMine-*.*.*.*amd64.deb")
   # THOUGHT          local CODENAME="RubyMine-4.3.3.24545_amd64.deb"
@@ -370,6 +410,8 @@ _ubuntu__32() {
 } # end _ubuntu__32
 
 _fedora__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+
   # _linux_prepare
   local CODENAME=$(_version "linux" "RubyMine*.*.*.*.i386.rpm")
   # THOUGHT                          RubyMine-4.3.3.24545.i386.rpm
@@ -645,6 +687,8 @@ EOF
 } # end _add_mine_associacions_and_browser_click_to_open
 
 _fedora__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  
   # _linux_prepare
   local CODENAME=$(_version "linux" "*.*")
   echo "${CODENAME}";

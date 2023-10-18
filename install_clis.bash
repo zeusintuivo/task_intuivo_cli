@@ -769,100 +769,100 @@ task_intuivo_cli
 
 while read -r ONE ; do
 {
-    if [ -n "$ONE" ] ; then  # is not empty
+    [[ -z "$ONE" ]] && continue   # skip if is empty
+    Installing "$ONE"
+    if  it_does_not_exist_with_spaces "$USER_HOME/_/clis/${ONE}" ; then
     {
-        Installing "$ONE"
-        if  it_does_not_exist_with_spaces "$USER_HOME/_/clis/${ONE}" ; then
+        cd "$USER_HOME/_/clis"
+        if [[ ! -d "$USER_HOME/_/clis/${ONE}" ]] ; then
         {
-            cd "$USER_HOME/_/clis"
-            if [[ ! -d "$USER_HOME/_/clis/${ONE}" ]] ; then
-            {
-              yes | git clone https://github.com/zeusintuivo/${ONE}.git
-              it_does_not_exist_with_spaces ${USER_HOME}/_/clis/${ONE} && yes | git clone https://github.com/zeusintuivo/${ONE}.git
-            }
-            fi
-            cd "$USER_HOME/_/clis/${ONE}"
-            chown -R "$SUDO_USER" "$USER_HOME/_/clis/${ONE}"
-            git remote remove origin
-            git remote add origin git@github.com:zeusintuivo/${ONE}.git
-            directory_exists_with_spaces "$USER_HOME/_/clis/${ONE}"
-            echo "$0:$LINENO UserHome:$USER_HOME"
-            if [[ -x "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ]] ; then
-            {
-              (
-                if    "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ; then 
-                {
-                   Comment failed to run link_folder_scripts
-                }
-                fi
-              ) 
-            }
-            fi
-            # link_folder_scripts
-      	    if [[ "$ONE" == "git_intuivo_cli" ]] ; then  # is not empty
-          	{
-      	      cd "$USER_HOME/_/clis/${ONE}/en"
-              if [[ -x "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ]] ; then
-              {
-                (
-                  if    "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ; then 
-                  {
-                     Comment failed to run link_folder_scripts
-                  }
-                  fi
-                ) 
-              }
-              fi
-              # link_folder_scripts
-            }
-            fi
-        } 
-        else
-        {
-            Installing "$0:$LINENO  else $ONE"
-            passed "$0:$LINENO  clis: ${ONE} folder exists "
-            cd "$USER_HOME/_/clis/${ONE}"
-            chown -R "$SUDO_USER" "$USER_HOME/_/clis/${ONE}"
-            pwd
-            echo "$0:$LINENO UserHome:$USER_HOME"
-            echo "$0:$LINENO One:$ONE"
-            if [[ -x "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ]] ; then
-            {
-              (
-                if    "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ; then 
-                {
-                   Comment failed to run link_folder_scripts
-                }
-                fi
-              ) 
-            }
-            fi
-            # link_folder_scripts
-	          if [[ "$ONE" == "git_intuivo_cli" ]] ; then  # is not empty
-    	      {
-      	      cd "$USER_HOME/_/clis/${ONE}/en"
-              # link_folder_scripts
-              if [[ -x "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ]] ; then
-              {
-                if    "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ; then 
-                {
-                   Comment failed to run link_folder_scripts
-                }
-                fi 
-              }
-              fi
-            }
-            fi
-            # msg=$(link_folder_scripts)
-            ret=$?
-            Configuring existed with $ret
-            [ $ret -gt 0 ] && Configuring $ONE existed with $ret
-            # [ $ret -gt 0 ] && failed clis: execute link_folder_scripts && echo -E $msg && pwd
-
+          yes | git clone https://github.com/zeusintuivo/${ONE}.git
+          it_does_not_exist_with_spaces ${USER_HOME}/_/clis/${ONE} && yes | git clone https://github.com/zeusintuivo/${ONE}.git
         }
         fi
+        cd "$USER_HOME/_/clis/${ONE}"
+        chown -R "$SUDO_USER" "$USER_HOME/_/clis/${ONE}"
+        git remote remove origin
+        git remote add origin git@github.com:zeusintuivo/${ONE}.git
+        directory_exists_with_spaces "$USER_HOME/_/clis/${ONE}"
+        echo "$0:$LINENO UserHome:$USER_HOME"
+        if [[ -x "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ]] ; then
+        {
+          (
+            if    "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ; then 
+            {
+               Comment failed to run link_folder_scripts
+            }
+            fi
+          ) 
+        }
+        fi
+        # link_folder_scripts
+  	    if [[ "$ONE" == "git_intuivo_cli" ]] ; then  # is not empty
+      	{
+  	      cd "$USER_HOME/_/clis/${ONE}/en"
+          if [[ -x "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ]] ; then
+          {
+            (
+              if    "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ; then 
+              {
+                 Comment failed to run link_folder_scripts
+              }
+              fi
+            ) 
+          }
+          fi
+          # link_folder_scripts
+        }
+        fi
+
+        continue
+        
+    } 
+    fi
+
+    Installing "$0:$LINENO  else $ONE"
+    passed "$0:$LINENO  clis: ${ONE} folder exists "
+    cd "$USER_HOME/_/clis/${ONE}"
+    chown -R "$SUDO_USER" "$USER_HOME/_/clis/${ONE}"
+    pwd
+    echo "$0:$LINENO UserHome:$USER_HOME"
+    echo "$0:$LINENO One:$ONE"
+    if [[ -x "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ]] ; then
+    {
+      (
+        if    "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ; then 
+        {
+           Comment failed to run link_folder_scripts
+        }
+        fi
+      ) 
     }
     fi
+    # link_folder_scripts
+    if [[ "$ONE" == "git_intuivo_cli" ]] ; then  # is not empty
+    {
+      cd "$USER_HOME/_/clis/${ONE}/en"
+      # link_folder_scripts
+      if [[ -x "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ]] ; then
+      {
+        if    "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ; then 
+        {
+           Comment failed to run link_folder_scripts
+        }
+        fi 
+      }
+      fi
+    }
+    fi
+    # msg=$(link_folder_scripts)
+    ret=$?
+    Configuring existed with $ret
+    [ $ret -gt 0 ] && Configuring $ONE existed with $ret
+    # [ $ret -gt 0 ] && failed clis: execute link_folder_scripts && echo -E $msg && pwd
+
+
+    
 }
 done <<< "${clis}"
 if [ -f /usr/local/bin/ag ] ; then 

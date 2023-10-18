@@ -276,7 +276,7 @@ directory_exists_with_spaces "${USER_HOME}"
 
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
-    INT ${__trapped_INT_num}
+    exit ${__trapped_INT_num}
   }
   trap  '_trap_on_INT $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  INT
 
@@ -471,12 +471,13 @@ typeset -r THISSCRIPTNAME="\$(basename "\$0")"
   # }
 EOF
   chmod a+x install_powerlevel10k_sub.zsh
-  ./install_powerlevel10k_sub.zsh
+  ( ./install_powerlevel10k_sub.zsh )
   chown -R "${SUDO_USER}" "${USER_HOME}/.oh-my-zsh"
   install_requirements "darwin" "
     zsh-syntax-highlighting 
     zsh-autosuggestions
   "
+  rm ./install_powerlevel10k_sub.zsh
   # echo "_darwin__arm64 Procedure not yet implemented. I don't know what to do."
 } # end _darwin__arm64
 

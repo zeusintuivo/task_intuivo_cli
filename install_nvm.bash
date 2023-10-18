@@ -297,7 +297,7 @@ directory_exists_with_spaces "${USER_HOME}"
 
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
-    INT ${__trapped_INT_num}
+    exit ${__trapped_INT_num}
   }
   trap  '_trap_on_INT $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  INT
 
@@ -322,7 +322,7 @@ _git_clone() {
   fi
   chown -R "${SUDO_USER}" "${_target}"
 
-} # _git_clone
+} # end _git_clone
 
 _add_variables_to_bashrc_zshrc(){
   local NVM_SH_CONTENT='
@@ -567,6 +567,7 @@ _install_npm_utils() {
 _debian_flavor_install() {
   _git_clone "https://github.com/nvm-sh/nvm.git" "${USER_HOME}/.nvm"
   cd "${USER_HOME}/.nvm"
+  Installing older version that is compatible with old linux 
   git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" $(git rev-list --tags --max-count=1)`
   \. "${USER_HOME}/.nvm/nvm.sh"
   local MSG=$(_add_variables_to_bashrc_zshrc)
@@ -586,6 +587,7 @@ _debian_flavor_install() {
 _redhat_flavor_install() {
   _git_clone "https://github.com/nvm-sh/nvm.git" "${USER_HOME}/.nvm"
   cd "${USER_HOME}/.nvm"
+    Installing older version that is compatible with old linux
   git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" $(git rev-list --tags --max-count=1)`
   \. "${USER_HOME}/.nvm/nvm.sh"
   local MSG=$(_add_variables_to_bashrc_zshrc)
@@ -672,6 +674,7 @@ _darwin__64() {
     trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _git_clone "https://github.com/nvm-sh/nvm.git" "${USER_HOME}/.nvm"
   cd "${USER_HOME}/.nvm"
+    Installing older version that is compatible with old mac
   git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" $(git rev-list --tags --max-count=1)`
   \. "${USER_HOME}/.nvm/nvm.sh"
   local MSG=$(_add_variables_to_bashrc_zshrc)
