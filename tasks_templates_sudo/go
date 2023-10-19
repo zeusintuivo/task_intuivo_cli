@@ -1,8 +1,4 @@
-#!/bin/bash
-#
-# @author Zeus Intuivo <zeus@intuivo.com>
-#
-#
+#!/usr/bin/bash
 
 
   function _trap_on_error(){
@@ -46,12 +42,7 @@ _debian_flavor_install() {
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   if (
   install_requirements "linux" "
-    base64
-    unzip
-    curl
-    wget
-    ufw
-    nginx
+    go
   "
   ); then 
     {
@@ -61,33 +52,41 @@ _debian_flavor_install() {
     }
   fi
   verify_is_installed "
-    unzip
-    curl
-    wget
-    tar
-    ufw
-    nginx
+    go
   "
-  local PB_VERSION=0.16.7
-  local CODENAME="pocketbase_${PB_VERSION}_linux_amd64.zip"
-  local TARGET_URL="https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/${CODENAME}"
-  local DOWNLOADFOLDER="$(_find_downloads_folder)"
-  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-  directory_exists_with_spaces "${DOWNLOADFOLDER}"
-  cd "${DOWNLOADFOLDER}"
-  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
-  # unzip "${DOWNLOADFOLDER}/${CODENAME}" -d $HOME/pb/
-  local UNZIPDIR="${USER_HOME}/_/software"
-  mkdir -p "${UNZIPDIR}"
-  _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
-  local PATHTOPOCKETBASE="${UNZIPDIR}/pocketbase"
-  local THISIP=$(myip)
+  # local PB_VERSION=0.16.7
+  # local CODENAME="pocketbase_${PB_VERSION}_linux_amd64.zip"
+  # local TARGET_URL="https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/${CODENAME}"
+  # local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  # enforce_variable_with_val§ue DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  # directory_exists_with_spaces "${DOWNLOADFOLDER}"
+  # cd "${DOWNLOADFOLDER}"
+  # _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+  # # unzip "${DOWNLOADFOLDER}/${CODENAME}" -d $HOME/pb/
+  # local UNZIPDIR="${USER_HOME}/_/software"
+  # mkdir -p "${UNZIPDIR}"
+  # _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
+  # local PATHTOPOCKETBASE="${UNZIPDIR}/pocketbase"
+  # local THISIP=$(myip)
 
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  echo "_redhat_flavor_install Procedure not yet implemented. I don't know what to do."
+  # echo "_redhat_flavor_install Procedure not yet implemented. I don't know what to do."
+   enforce_variable_with_value USER_HOME "${USER_HOME}"
+  if (
+  install_requirements "linux" "
+    go
+  "
+  ); then 
+    {
+      failed to get install golang
+    }
+  fi
+  verify_is_installed "
+    go
+  "
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
@@ -177,59 +176,25 @@ _ubuntu__64() {
 
 _darwin__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  Installing "  
-    # em script Emacs on mac experience  REF: https://medium.com/@holzman.simon/emacs-on-macos-catalina-10-15-in-2019-79ff713c1ccc
-    # Compile emacs mac REF: https://emacs.stackexchange.com/questions/58526/how-do-i-build-emacs-from-sources-on-macos-catalina-version-10-15-4
-  "
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
-  local _requirements="
-    texinfo
-    autogen
-    cmake
-    cmake-docs
-    make
-    z3
-    llvm
-    emacs-clang-complete-async
-    emacs
-  "
-  if ( ! install_requirements "darwin" " ${_requirements}"  ); then 
-  {
-    Installing trying again brew installs 
-    su - "${SUDO_USER}" -c 'HOME='${USER_HOME}'  brew install '$(xargs <<< "${_requirements}")
-  }
-  fi
-  # verify_is_installed " ${_requirements} "
-  Checking makeinfo version: "# checkversion \$(makeinfo --version)>=4.13"
-  Installing "
-  # REF: https://stackoverflow.com/questions/44379909/how-to-upgrade-update-makeinfo-texinfo-from-version-4-8-to-4-13-on-macosx-termin
-  brew info textinfo
-  echo 'export PATH="/usr/local/opt/texinfo/bin:$PATH"' >> ~/.zshrc
-  "
-  Checking makeinfo version: "# checkversion \$(makeinfo --version)>=4.13"
-  # checkversion $(makeinfo --version)>=4.13
-  makeinfo --version
-
-  echo mac:
-  cd  "${USER_HOME}"
-  su - "${SUDO_USER}" -c 'mkdir -p _/software' 
-  cd "${USER_HOME}/_/software"
-  su - "${SUDO_USER}" -c 'HOME='${USER_HOME}' cd '${USER_HOME}'/_/software && git clone -b master git://git.sv.gnu.org/emacs.git'
-  cd "${USER_HOME}/_/software/emacs"
-  ./autogen.sh
-  ./configure
-  make -j3 -B --debug
-  make check -j3 -B --debug
-  make install -j3 -B --debug
-
-
-  # echo "_darwin__64 Procedure not yet implemented. I don't know what to do."
+  echo "_darwin__64 Procedure not yet implemented. I don't know what to do."
 } # end _darwin__64
 
 _darwin__arm64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _darwin__64
   # echo "_darwin__arm64 Procedure not yet implemented. I don't know what to do."
+   enforce_variable_with_value USER_HOME "${USER_HOME}"
+  if (
+  install_requirements "linux" "
+    go
+  "
+  ); then 
+    {
+      failed to get install golang
+    }
+  fi
+  verify_is_installed "
+    go
+  "
 } # end _darwin__arm64
 
 _tar() {
@@ -246,4 +211,3 @@ _windows__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   echo "_windows__32 Procedure not yet implemented. I don't know what to do."
 } # end _windows__32
-

@@ -1,8 +1,4 @@
-#!/bin/bash
-#
-# @author Zeus Intuivo <zeus@intuivo.com>
-#
-#
+#!/usr/bin/bash
 
 
   function _trap_on_error(){
@@ -40,6 +36,30 @@
     exit ${__trapped_INT_num}
   }
   trap  '_trap_on_INT $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  INT
+
+_git_clone() {
+  local _source="${1}"
+  local _target="${2}"
+  Checking "${SUDO_USER}" "${_target}"
+  pwd
+  if  it_exists_with_spaces "${_target}" && it_exists_with_spaces "${_target}/.git" ; then
+  {
+    cd "${_target}"
+    git config pull.rebase false    
+    git fetch
+    git checkout main
+    git pull
+    git fetch --tags origin
+  }
+  else
+  {
+   git clone "${_source}" "${_target}"
+  }
+  fi
+  chown -R "${SUDO_USER}" "${_target}"
+
+} # end _git_clone
+
 
 _debian_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
@@ -175,54 +195,166 @@ _ubuntu__64() {
   _debian_flavor_install
 } # end _ubuntu__64
 
-_darwin__64() {
+_rbenv_check() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  Installing "  
-    # em script Emacs on mac experience  REF: https://medium.com/@holzman.simon/emacs-on-macos-catalina-10-15-in-2019-79ff713c1ccc
-    # Compile emacs mac REF: https://emacs.stackexchange.com/questions/58526/how-do-i-build-emacs-from-sources-on-macos-catalina-version-10-15-4
-  "
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
-  local _requirements="
-    texinfo
-    autogen
-    cmake
-    cmake-docs
-    make
-    z3
-    llvm
-    emacs-clang-complete-async
-    emacs
-  "
-  if ( ! install_requirements "darwin" " ${_requirements}"  ); then 
+
+  Checking rbenv is installed
+  if ( ! command -v rbenv >/dev/null 2>&1; )  ; then
   {
-    Installing trying again brew installs 
-    su - "${SUDO_USER}" -c 'HOME='${USER_HOME}'  brew install '$(xargs <<< "${_requirements}")
+    Installing rbenv 
+    local TARGET_URL="https://raw.githubusercontent.com/zeusintuivo/task_intuivo_cli/master/install_rbenv.bash"
+    Skipping "${CYAN}Based on \n${RED}\n/bin/bash -c \"\$(curl -fsSL "${TARGET_URL}")\"\n${RESET}${CYAN}\n and doing structed tested."
+    local DOWNLOADFOLDER="$(_find_downloads_folder)"
+    local CODENAME=install_rbenv.bash
+    _do_not_downloadtwice   "${TARGET_URL}"  "${DOWNLOADFOLDER}"  "${CODENAME}"
+    chmod a+x "${CODENAME}"
+    local NEWNAME=install_rbenv.bash
+    mv "${DOWNLOADFOLDER}/${CODENAME}" "${USER_HOME}/${NEWNAME}"
+    chmod a+x "${NEWNAME}"
+    cd  "${USER_HOME}"
+    Installing "${USER_HOME}/${NEWNAME}" 
+    su - "${SUDO_USER}" -c "${USER_HOME}/${NEWNAME}"
+    wait    
   }
   fi
-  # verify_is_installed " ${_requirements} "
-  Checking makeinfo version: "# checkversion \$(makeinfo --version)>=4.13"
-  Installing "
-  # REF: https://stackoverflow.com/questions/44379909/how-to-upgrade-update-makeinfo-texinfo-from-version-4-8-to-4-13-on-macosx-termin
-  brew info textinfo
-  echo 'export PATH="/usr/local/opt/texinfo/bin:$PATH"' >> ~/.zshrc
+  \. "${USER_HOME}/.profile"
+  ensure rbenv or "rbenv ruby version manager is required to continue  [rbenv](https://github.com/sstephenson/rbenv) and Ruby. " 
+} # end _rbenv_check
+
+
+_ruby_check() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local PROJECTSBASEDIR=${1}
+  enforce_parameter_with_value           1        PROJECTSBASEDIR     "${PROJECTSBASEDIR}"    "one dir before clone to"
+  local PROJECTREPO=${2}
+  enforce_parameter_with_value           2        PROJECTREPO         "${PROJECTREPO}"        "path folder to clone to"
+  local PROJECTGITREPO=${3}
+  enforce_parameter_with_value           3        PROJECTGITREPO      "${PROJECTGITREPO}"     "a git url "
+
+
+  mkdir -p  "${PROJECTSBASEDIR}" 
+  cd  "${PROJECTSBASEDIR}" 
+  _git_clone  "${PROJECTGITREPO}" "${PROJECTREPO}"
+
+  Checking   Repo loanlink 
+  cd "${PROJECTREPO}"
+  pwd
+  Checking "ruby required in Gemfile   cat \"${PROJECTREPO}/Gemfile\" | grep ruby\\\ \\\'  | cut -d\\\' -f2 "
+  local _RUBYVERSION=$(cat "${PROJECTREPO}/Gemfile" | grep ruby\ \'  | cut -d\' -f2)
+  # set -x
+  enforce_variable_with_value _RUBYVERSION "${_RUBYVERSION}"
+  if [[ -z "${_RUBYVERSION}" ]] ; then
+  {
+    failed to get _RUBYVERSION:${_RUBYVERSION}
+  }
+  fi
+  Comment "Required ruby:${_RUBYVERSION}"
+  Checking "ruby installed su - \"${SUDO_USER}\" -c \"bash -c 'rbenv versions'\" "
+  Comment LINENO:$LINENO local isrubynotinstalled=
+  local isrubynotinstalled="$(su - "${SUDO_USER}" -c "bash -c 'rbenv versions'" | grep 'is not installed')"
+  enforce_variable_with_value isrubynotinstalled "${isrubynotinstalled}"
+  Comment LINENO:$LINENO local isrubyinstalled=
+  local isrubyinstalled="$(su - "${SUDO_USER}" -c "bash -c 'rbenv versions'" | grep "${_RUBYVERSION}")"
+  enforce_variable_with_value isrubyinstalled "${isrubyinstalled}"
+  Comment LINENO:$LINENO -z \"\${isrubynotinstalled}\" 
+  if [[ -z "${isrubynotinstalled}" ]] && [[ -z "${isrubyinstalled}" ]] ; then
+  {
+    failed to get isrubyinstalled:${isrubyinstalled}
+  }
+  fi
+  Comment LINENO:$LINENO \\t \"\${_RUBYVERSION}\" \\t == \*\"\${isrubyinstalled}\"\* 
+  Comment LINENO:$LINENO \\t \\t \\t   "${_RUBYVERSION}"  \\t == \* \\t "${isrubyinstalled}" \\t \*
+  Comment LINENO:$LINENO -n \"\${isrubyinstalled}\" 
+  if [[ -n "${isrubyinstalled}" ]] &&  (echo ${isrubyinstalled} | grep "${_RUBYVERSION}" >/dev/null 2>&1; )  ; then
+  {
+    # set +x
+    Comment "ruby installed appears to be installed  "
+  }
+  else 
+  {
+    # set +x
+    Comment "LINENO:$LINENO ------ else" 
+    su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" && rbenv install ${_RUBYVERSION} ' "
+  }
+  fi
+  Comment LINENO:$LINENO local _RUBYLOCATION=
+  # set +x
+  local _RUBYLOCATION="$(su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" && rbenv which ruby ' ")"
+  Comment LINENO:$LINENO  local _RUBYLOCATION="${_RUBYLOCATION}"
+  enforce_variable_with_value _RUBYLOCATION "${_RUBYLOCATION}"
+  "${_RUBYLOCATION}" -v
+
+
+
+  Comment "### bundle"
+  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   gem install pg ' "
+  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   gem install bundler:2.3.17 ' "
+  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   bundle install ' "
+} # end _rbenv_bundle
+
+
+_darwin__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  
+  Installing REF: https://dev.chaskiq.io/getting-started/installation-on-mac-for-development
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  
+
+
+  Comment "### install_requirements  darwin"
+  Comment LINENO:$LINENO  local _requirements=
+  local _requirements=" 
+    rbenv
+    redis
+    git
+    ghostscript
+    imagemagick
   "
-  Checking makeinfo version: "# checkversion \$(makeinfo --version)>=4.13"
-  # checkversion $(makeinfo --version)>=4.13
-  makeinfo --version
-
-  echo mac:
-  cd  "${USER_HOME}"
-  su - "${SUDO_USER}" -c 'mkdir -p _/software' 
-  cd "${USER_HOME}/_/software"
-  su - "${SUDO_USER}" -c 'HOME='${USER_HOME}' cd '${USER_HOME}'/_/software && git clone -b master git://git.sv.gnu.org/emacs.git'
-  cd "${USER_HOME}/_/software/emacs"
-  ./autogen.sh
-  ./configure
-  make -j3 -B --debug
-  make check -j3 -B --debug
-  make install -j3 -B --debug
+  if ( ! install_requirements "darwin" " ${_requirements}"   ); then 
+  {
+    failed "to install some or one of ::\" ${_requirements}\":: "
+  }
+  else
+  {
+    # postgresql@12
+    su - "${SUDO_USER}" -c "brew install  postgresql@15"
+  }
+  fi
+  
+  _rbenv_check
 
 
+  local PROJECTSBASEDIR="${USER_HOME}/_/rnd/"
+  local PROJECTREPO="${USER_HOME}/_/rnd/chaskiq"
+  local PROJECTGITREPO="https://github.com/chaskiq/chaskiq.git"
+  
+  _ruby_check "${PROJECTSBASEDIR}" "${PROJECTREPO}" "${PROJECTGITREPO}"
+  _bundle_check "${PROJECTREPO}" 
+  
+
+
+
+  cd "${USER_HOME}/_/rnd/chaskiq"
+  echo "
+HOST=http://localhost:3000
+ASSET_HOST=http://localhost:3000
+WS=ws://localhost:3000/cable
+
+
+
+SES_ADDRESS=
+SES_USER_NAME=
+SES_PASSWORD=
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_S3_BUCKET=
+AWS_S3_REGION=
+ADMIN_EMAIL=your@email.com
+ADMIN_PASSWORD=123456
+SNS_CONFIGURATION_SET=metrics
+DEFAULT_SENDER_EMAIL=
+  "  >> .env
+  rbenv use 
   # echo "_darwin__64 Procedure not yet implemented. I don't know what to do."
 } # end _darwin__64
 
@@ -246,4 +378,3 @@ _windows__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   echo "_windows__32 Procedure not yet implemented. I don't know what to do."
 } # end _windows__32
-

@@ -290,7 +290,7 @@ _version() {
   local CODEFILE="""$(wget --quiet --no-check-certificate  https://www.jetbrains.com/ruby/ -O -  2>/dev/null )""" # suppress only wget download messages, but keep wget output for variable
   # enforce_variable_with_value CODEFILE "${CODEFILE}"
   wait
-  local CODELASTESTBUILD=$(echo "${CODEFILE}" | sed s/\</\\n\</g | sed s/\>/\>\\n/g | sed "s/&apos;/\'/g" | sed 's/&nbsp;/ /g' | grep  "New in RubyMine ${PATTERN}" | sed s/\ /\\n/g | tail -1 ) # | grep "What&apos;s New in&nbsp;RubyMine&nbsp;" | sed 's/\;/\;'\\n'/g' | sed s/\</\\n\</g  )
+  local CODELASTESTBUILD=$(echo "${CODEFILE}" | sed s/\>/\>\\n/g | sed "s/&apos;/\'/g" | sed 's/&nbsp;/ /g' | grep  "New in RubyMine ${PATTERN}" | sed s/\ /\\n/g | tail -1 ) # | grep "What&apos;s New in&nbsp;RubyMine&nbsp;" | sed 's/\;/\;'\\n'/g' | sed s/\</\\n\</g  )
   enforce_variable_with_value CODELASTESTBUILD "${CODELASTESTBUILD}"
 
   local CODENAME=""

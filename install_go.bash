@@ -239,10 +239,11 @@ directory_exists_with_spaces "${USER_HOME}"
 
 
 
- #--------\/\/\/\/-- tasks_templates_sudo/brew …install_brew.bash” -- Custom code -\/\/\/\/-------
+ #--------\/\/\/\/-- tasks_templates_sudo/go …install_go.bash” -- Custom code -\/\/\/\/-------
 
 
-#!/bin/bash
+#!/usr/bin/bash
+
 
   function _trap_on_error(){
     local -ir __trapped_error_exit_num="${2:-0}"
@@ -280,300 +281,184 @@ directory_exists_with_spaces "${USER_HOME}"
   }
   trap  '_trap_on_INT $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  INT
 
-
-_add_variables_to_bashrc_zshrc(){
-  local BREW_SH_CONTENT="
-
-# BREW - HOMEBREW 
-eval \$($(brew --prefix)/bin/brew shellenv)
-
-"
-  # trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _add_variables_to_bashrc_zshrc nvm" && echo -e "${RESET}" && return 0' ERR
-  echo "${BREW_SH_CONTENT}"
-  local INITFILE INITFILES="
-   .bashrc
-   .zshrc
-   .bash_profile
-   .profile
-   .zshenv
-   .zprofile
-  "
-  while read INITFILE; do
-  {
-    [ -z ${INITFILE} ] && continue    
-    (_if_not_contains  "${USER_HOME}/${INITFILE}" "/bin/brew shellenv" ) || Configuring ${INITFILE}
-    (_if_not_contains  "${USER_HOME}/${INITFILE}" "/bin/brew shellenv" ) && Skipping configuration for ${INITFILE}
-    #                   filename            value      || do this .............
-    (_if_not_contains  "${USER_HOME}/${INITFILE}" "# BREW - HOMEBREW" ) || echo -e "${BREW_SH_CONTENT}" >>"${USER_HOME}/${INITFILE}"
-    (_if_not_contains  "${USER_HOME}/${INITFILE}" "/bin/brew shellenv" ) || echo -e "${BREW_SH_CONTENT}" >>"${USER_HOME}/${INITFILE}"
-  }
-  done <<< "${INITFILES}"
-
-} # _add_variables_to_bashrc_zshrc
-
-_make_linuxbrewfolder() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-
-  if it_exists /home/linuxbrew ; then
-  {
-    rm -rf /home/linuxbrew
-  }
-  fi
-  directory_does_not_exist /home/linuxbrew
-  mkdir /home/linuxbrew
-  directory_exists_with_spaces /home/linuxbrew
-  mkdir /home/linuxbrew/.linuxbrew/
-  directory_exists_with_spaces /home/linuxbrew/.linuxbrew/
-  chown -R "${SUDO_USER}" /home/linuxbrew
-  chgrp -R "${SUDO_USER}" /home/linuxbrew
-}
-_eval_linuxbrew() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-
-  # test -d "${USER_HOME}/.linuxbrew" && eval $("${USER_HOME}/.linuxbrew/bin/brew" shellenv)
-  test -d "/home/linuxbrew/.linuxbrew" && eval $("/home/linuxbrew/.linuxbrew/bin/brew" shellenv)
-}
-_add_to_file() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-
-  if test -r "${USER_HOME}/${1}" ; then
-  {
-    #                   filename            value      || do this .............
-    (_if_not_contains  "${USER_HOME}/${1}" "# BREW - HOMEBREW" ) || echo "# BREW - HOMEBREW " >>"${USER_HOME}/${1}"
-    (_if_not_contains  "${USER_HOME}/${1}" "/bin/brew shellenv" ) || echo "eval \$($(brew --prefix)/bin/brew shellenv)" >>"${USER_HOME}/${1}"
-  }
-  fi
-}
-_clone_linuxbrew() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-
-  git clone https://github.com/Homebrew/brew "/home/linuxbrew/.linuxbrew/Homebrew"
-  chown -R "${SUDO_USER}" /home/linuxbrew
-  chgrp -R "${SUDO_USER}" /home/linuxbrew
-}
-_softlink_it() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-
-  file_does_not_exist_with_spaces "/home/linuxbrew/.linuxbrew/.linuxbrew"
-  mkdir "/home/linuxbrew/.linuxbrew/bin"
-  ln -s "/home/linuxbrew/.linuxbrew/Homebrew/bin/brew" "/home/linuxbrew/.linuxbrew/bin"
-  softlink_exists "/home/linuxbrew/.linuxbrew/bin/brew>/home/linuxbrew/.linuxbrew/Homebrew/bin/brew"
-  chown -R "${SUDO_USER}" "/home/linuxbrew/.linuxbrew"
-  chgrp -R "${SUDO_USER}" "/home/linuxbrew/.linuxbrew"
-}
-_softlink_user_it() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-
-  cd "${USER_HOME}"
-  if it_exists "${USER_HOME}/.linuxbrew" ; then
-    if softlink_exists "${USER_HOME}/.linuxbrew>/home/linuxbrew/.linuxbrew" ; then
-      unlink  "${USER_HOME}/.linuxbrew"
-    else
-      rm -rf .linuxbrew
-    fi
-  fi
-  Message Make sure we did not delete the install
-  directory_exists_with_spaces "/home/linuxbrew/.linuxbrew"
-  ln -s "/home/linuxbrew/.linuxbrew" "${USER_HOME}/.linuxbrew"
-  Message Make sure we did overlap current folders
-  softlink_exists "${USER_HOME}/.linuxbrew>/home/linuxbrew/.linuxbrew"
-  [ -s  /home/linuxbrew/.linuxbrew/.linuxbrew ] && unlink /home/linuxbrew/.linuxbrew/.linuxbrew
-  file_does_not_exist_with_spaces "/home/linuxbrew/.linuxbrew/.linuxbrew"
-  directory_does_not_exist_with_spaces "/home/linuxbrew/.linuxbrew/.linuxbrew"
-  file_does_not_exist_with_spaces "${USER_HOME}/.linuxbrew/.linuxbrew"
-  directory_does_not_exist_with_spaces "${USER_HOME}/.linuxbrew/.linuxbrew"
-  chown -R "${SUDO_USER}" "${USER_HOME}/.linuxbrew"
-  chgrp -R "${SUDO_USER}" "${USER_HOME}/.linuxbrew"
-}
-
-  # directory_exists_with_spaces "/home/linuxbrew/.linuxbrew"
-  # file_does_not_exists_with_spaces "${USER_HOME}/.linuxbrew"
-  # ln -s /home/linuxbrew/.linuxbrew .linuxbrew
-  # softlink_exists "${USER_HOME}/.linuxbrew>/home/linuxbrew/.linuxbrew"
-  # [ $? -gt 0 ] && failed install $BASHLINENO brew  && exit 1
-  # file_does_not_exist_with_spaces "/home/linuxbrew/.linuxbrew/.linuxbrew"
-  # [ $? -gt 0 ] && failed install $BASHLINENO brew  && exit 1
-
-  # mkdir "${USER_HOME}/.linuxbrew/bin"
-  # [ $? -gt 0 ] && failed install $BASHLINENO brew  && exit 1
-  # directory_exists_with_spaces "${USER_HOME}/.linuxbrew/bin"
-  # [ $? -gt 0 ] && failed install $BASHLINENO brew  && exit 1
-  # ln -s "${USER_HOME}/.linuxbrew/Homebrew/bin/brew" "${USER_HOME}/.linuxbrew/bin"
-  # [ $? -gt 0 ] && failed install $BASHLINENO brew  && exit 1
-  # file_exists_with_spaces "${USER_HOME}/.linuxbrew/bin/brew"
-  # [ $? -gt 0 ] && failed install $BASHLINENO brew  && exit 1
-  # eval $("${USER_HOME}/.linuxbrew/bin/brew" shellenv)
-  # [ $? -gt 0 ] && failed install $BASHLINENO brew  && exit 1
-
-
 _debian_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  export USER_HOME="/home/${SUDO_USER}"
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  if (
   install_requirements "linux" "
-    # Debian Ubuntu only
-    build-essential
-    curl
-    file
-    git
+    go
   "
-  verify_is_installed "
-    curl
-    file
-    git
-  "
-  _make_linuxbrewfolder
-  _clone_linuxbrew
-  _softlink_it
-  _softlink_user_it
-  _eval_linuxbrew
-  _add_to_file .profile
-  _add_to_file .zshrc
-  return 0
-} # end _debian_flavor_install
-_debian__32() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-
-  echo "CURRENTLY NOT SUPPORTED BY LINUX BREW REF: https://docs.brew.sh/Homebrew-on-Linux#install"
-}
-_debian__64() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-
-  _debian_flavor_install
-}
-_ubuntu__32() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-
-  echo "CURRENTLY NOT SUPPORTED BY LINUX BREW REF: https://docs.brew.sh/Homebrew-on-Linux#install"
-}
-_ubuntu__64() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-
-  _debian_flavor_install
-}
-_darwin__32() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-
-  echo "CURRENTLY NOT SUPPORTED BY LINUX BREW REF: https://docs.brew.sh/Homebrew-on-Linux#install"
-}
-_darwin__64() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
-  Checking homebrew is installed
-  if ( ! command -v brew >/dev/null 2>&1; )  ; then
-  {
-    Installing homebrew 
-    local TARGET_URL="https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh" 
-    Skipping "${CYAN}Based on \n${RED}\n/bin/bash -c \"\$(curl -fsSL  "${TARGET_URL}")\"\n${RESET}${CYAN}\n and doing structed tested."
-    local DOWNLOADFOLDER="$(_find_downloads_folder)"
-    local CODENAME=install.sh
-    _do_not_downloadtwice   "${TARGET_URL}"  "${DOWNLOADFOLDER}"  "${CODENAME}"
-    chmod a+x "${CODENAME}"
-    local NEWNAME=install_brew.sh
-    mv "${DOWNLOADFOLDER}/${CODENAME}" "${USER_HOME}/${NEWNAME}"
-    chmod a+x "${NEWNAME}"
-    cd  "${USER_HOME}"
-    Installing "${USER_HOME}/${NEWNAME}" 
-    su - "${SUDO_USER}" -c "${USER_HOME}/${NEWNAME}"
-    wait    
-  }
+  ); then 
+    {
+      apt install base64 -y
+      apt install unzip -y
+      apt install nginx -y
+    }
   fi
-  ensure brew or "Homebrew is required to continue " 
-  _add_variables_to_bashrc_zshrc
-} # end _darwin__64
+  verify_is_installed "
+    go
+  "
+  # local PB_VERSION=0.16.7
+  # local CODENAME="pocketbase_${PB_VERSION}_linux_amd64.zip"
+  # local TARGET_URL="https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/${CODENAME}"
+  # local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  # enforce_variable_with_val§ue DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  # directory_exists_with_spaces "${DOWNLOADFOLDER}"
+  # cd "${DOWNLOADFOLDER}"
+  # _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+  # # unzip "${DOWNLOADFOLDER}/${CODENAME}" -d $HOME/pb/
+  # local UNZIPDIR="${USER_HOME}/_/software"
+  # mkdir -p "${UNZIPDIR}"
+  # _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
+  # local PATHTOPOCKETBASE="${UNZIPDIR}/pocketbase"
+  # local THISIP=$(myip)
 
-_darwin__arm64() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _darwin__64
-} # end _darwin__arm64
-
-_darwin__arm64_13_3() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _darwin__64
-} # end _darwin__arm64
-
+} # end _debian_flavor_install
 
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  # echo "_redhat_flavor_install Procedure not yet implemented. I don't know what to do."
+   enforce_variable_with_value USER_HOME "${USER_HOME}"
+  if (
   install_requirements "linux" "
-    # RedHat Flavor only
-    curl
-    file
-    git
-    # needed by Fedora 30 and up
-    libxcrypt-compat
+    go
   "
-  is_not_installed pygmentize &&   dnf  -y install pygmentize
-  if ( ! command -v pygmentize >/dev/null 2>&1; ) ;  then
-    pip3 install pygments
+  ); then 
+    {
+      failed to get install golang
+    }
   fi
-  local groupsinstalled=$(dnf group list --installed)
-  if [[ "${groupsinstalled}" = *"Development Tools"* ]] ; then
-  {
-    passed installed 'Development Tools'
-  }
-  else
-  {
-    dnf groupinstall 'Development Tools' -y
-  }
-  fi
-  # dnf install libxcrypt-compat -y # needed by Fedora 30 and up
   verify_is_installed "
-    curl
-    file
-    git
-    pip3
-    pygmentize
-    xclip
-    tree
-    ag
-    ack
-    pv
-    nano
-    vim
+    go
   "
-
-  _make_linuxbrewfolder
-  _clone_linuxbrew
-  _softlink_it
-  _softlink_user_it
-  _eval_linuxbrew
-  _add_to_file .bash_profile
-  _add_to_file .zshrc
-  return 0
 } # end _redhat_flavor_install
+
+_arch_flavor_install() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_arch_flavor_install Procedure not yet implemented. I don't know what to do."
+} # end _readhat_flavor_install
+
+_arch__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _arch_flavor_install
+} # end _arch__32
+
+_arch__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _arch_flavor_install
+} # end _arch__64
 
 _centos__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _centos__32
 
-  echo "CURRENTLY NOT SUPPORTED BY LINUX BREW REF: https://docs.brew.sh/Homebrew-on-Linux#install"
-}
 _centos__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-
   _redhat_flavor_install
-}
+} # end _centos__64
+
+_debian__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _debian__32
+
+_debian__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _debian__64
+
 _fedora__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-
-  echo "CURRENTLY NOT SUPPORTED BY LINUX BREW REF: https://docs.brew.sh/Homebrew-on-Linux#install"
-}
-_fedora__64__37() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
-} # end _fedora__64
+} # end _fedora__32
 
 _fedora__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _fedora__64
 
+_gentoo__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _gentoo__32
+
+_gentoo__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _gentoo__64
+
+_madriva__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _madriva__32
+
+_madriva__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _madriva__64
+
+_suse__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _suse__32
+
+_suse__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _suse__64
+
+_ubuntu__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _ubuntu__32
+
+_ubuntu__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _ubuntu__64
+
+_darwin__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_darwin__64 Procedure not yet implemented. I don't know what to do."
+} # end _darwin__64
+
+_darwin__arm64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  # echo "_darwin__arm64 Procedure not yet implemented. I don't know what to do."
+   enforce_variable_with_value USER_HOME "${USER_HOME}"
+  if (
+  install_requirements "linux" "
+    go
+  "
+  ); then 
+    {
+      failed to get install golang
+    }
+  fi
+  verify_is_installed "
+    go
+  "
+} # end _darwin__arm64
+
+_tar() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_tar Procedure not yet implemented. I don't know what to do."
+} # end tar
+
+_windows__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_windows__64 Procedure not yet implemented. I don't know what to do."
+} # end _windows__64
+
+_windows__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_windows__32 Procedure not yet implemented. I don't know what to do."
+} # end _windows__32
 
 
- #--------/\/\/\/\-- tasks_templates_sudo/brew …install_brew.bash” -- Custom code-/\/\/\/\-------
+
+ #--------/\/\/\/\-- tasks_templates_sudo/go …install_go.bash” -- Custom code-/\/\/\/\-------
 
 
 _main() {

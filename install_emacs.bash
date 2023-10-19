@@ -281,7 +281,7 @@ directory_exists_with_spaces "${USER_HOME}"
 
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
-    INT ${__trapped_INT_num}
+    exit ${__trapped_INT_num}
   }
   trap  '_trap_on_INT $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  INT
 
@@ -437,20 +437,21 @@ _darwin__64() {
     emacs-clang-complete-async
     emacs
   "
-  if (  install_requirements "darwin" " ${_requirements}"  ); then 
+  if ( ! install_requirements "darwin" " ${_requirements}"  ); then 
   {
     Installing trying again brew installs 
     su - "${SUDO_USER}" -c 'HOME='${USER_HOME}'  brew install '$(xargs <<< "${_requirements}")
   }
   fi
-  verify_is_installed " ${_requirements} "
-  checkversion $(makeinfo --version)>=4.13
+  # verify_is_installed " ${_requirements} "
+  Checking makeinfo version: "# checkversion \$(makeinfo --version)>=4.13"
   Installing "
   # REF: https://stackoverflow.com/questions/44379909/how-to-upgrade-update-makeinfo-texinfo-from-version-4-8-to-4-13-on-macosx-termin
   brew info textinfo
   echo 'export PATH="/usr/local/opt/texinfo/bin:$PATH"' >> ~/.zshrc
   "
-  checkversion $(makeinfo --version)>=4.13
+  Checking makeinfo version: "# checkversion \$(makeinfo --version)>=4.13"
+  # checkversion $(makeinfo --version)>=4.13
   makeinfo --version
 
   echo mac:
