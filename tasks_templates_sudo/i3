@@ -8,14 +8,11 @@ _debian_flavor_install() {
     unzip
     curl
     wget
-    ufw
-    nginx
   "
   ); then
     {
       apt install base64 -y
       apt install unzip -y
-      apt install nginx -y
     }
   fi
   verify_is_installed "
@@ -23,8 +20,6 @@ _debian_flavor_install() {
     curl
     wget
     tar
-    ufw
-    nginx
   "
   local PB_VERSION=0.16.7
   local CODENAME="pocketbase_${PB_VERSION}_linux_amd64.zip"
@@ -90,15 +85,13 @@ _redhat_flavor_install() {
       echo "something failed"
     }
   fi
-  brew install libxscrnsaver libnotify bzip2 freetype2
+  su - "${SUDO_USER}" -c 'brew install libxscrnsaver libnotify bzip2 freetype2'
 
   verify_is_installed "
     unzip
     curl
     wget
     tar
-    ufw
-    nginx
   "
   echo "End of install tasks should be installed. I don't know what to do next... "
 } # end _redhat_flavor_install
