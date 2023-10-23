@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DEBUG_VERB_READING_LOGIC=$DEBUG || 0
+DEBUG_VERB_READING_LOGIC=${DEBUG:-0} || 0
 LIGHTPINK="\\033[1;204m"
 TO_LIGHTPINK="\\o033[1;204m\\o033[48;5;0m"    # Notice the only the \\o changes NOT \\[]
 LIGHTPINK_OVER_DARKBLUE="\\033[38;5;204m\\033[48;5;21m"
@@ -163,3 +163,4 @@ function _trap_on_error() {
 set -E -o functrace
 #                      1   2       3      4          5       6            7          8            9         10
 trap '_trap_on_error  $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND' ERR
+
