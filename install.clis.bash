@@ -1189,7 +1189,7 @@ _setup_mycd(){
     fi
   }
   fi
-  Comment end $0$1 _setup_mycd 
+  Comment end ${0:-} ${1:-}  _setup_mycd 
   # return 0
 } # end _setup_mycd
 
@@ -1281,7 +1281,7 @@ _install_dmg__64() {
    #   fi
    # }
    # fi
-  Comment end $0$1 _install_dmg__64
+  Comment end ${0:-} ${1:-} _install_dmg__64
 } # end _install_dmg__64
 
 _install_dmgs_list() {
@@ -1357,7 +1357,7 @@ _install_dmgs_list() {
   _sublime_softlink_command_line "/Applications/Sublime\\ Text.app"
   _bcompare_softlink_command_line "/Applications/Beyond\\ Compare.app"
 
-  Comment end $0$1 _install_dmgs_list
+  Comment end ${0:-} ${1:-} _install_dmgs_list
   return 0
 } # end _install_dmgs_list
 
@@ -1682,7 +1682,7 @@ _ubuntu__64() {
   fi
   # verify_is_installed cf
   _setup_mycd
-  Comment end $0$1 _ubuntu__64
+  Comment end ${0:-} ${1:-} _ubuntu__64
 } # end _ubuntu__64
 
 _centos__64() {
