@@ -1110,7 +1110,7 @@ return 0
 } # end _setup_clis
 
 _setup_mycd(){
-  Comment start $0$1 _setup_mycd
+  Comment start ${0:-} ${1:-} _setup_mycd
   if it_does_not_exist_with_spaces "${USER_HOME}/.mycd"  ; then
   {
     # My CD
