@@ -3,6 +3,7 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 # 20200415 Compatible with Fedora, Mac, Ubuntu "sudo_up" "load_struct" "#
+set -u
 set -E -o functrace
 export THISSCRIPTCOMPLETEPATH
 
@@ -21,7 +22,7 @@ else
   echo "... realpath exists .. check!"
 fi
 
-typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")" # updated realpath macos 20210924
+typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")"   # updated realpath macos 20210902
 export BASH_VERSION_NUMBER
 typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
 
@@ -164,7 +165,7 @@ function sudo_it() {
 
 
 # _linux_prepare
-export SUDO_GRP='staff'
+export SUDO_GRP='wheel'
 enforce_variable_with_value USER_HOME "${USER_HOME}"
 enforce_variable_with_value SUDO_USER "${SUDO_USER}"
 passed "Caller user identified:${SUDO_USER}"
@@ -902,6 +903,8 @@ _setup_clis(){
   local -i ret
   local msg
   Comment start _setup_clis
+  Comment USER_HOME:${USER_HOME}
+  Comment SUDO_GRP:${SUDO_GRP}
   ret=0
   if  it_exists_with_spaces "${USER_HOME}/_/clis" ; then
   {
@@ -944,7 +947,7 @@ _setup_clis(){
   {
     cd "${USER_HOME}/_/clis"
     Installing No. 2 Clis pre work  bash_intuivo_cli  for link_folder_scripts
-    su - "${SUDO_USER}" -c "yes | git clone https://github.com/zeusintuivo/bash_intuivo_cli.git  \"${USER_HOME}/_/clis/bash_intuivo_cli\""
+    # su - "${SUDO_USER}" -c "yes | git clone https://github.com/zeusintuivo/bash_intuivo_cli.git  \"${USER_HOME}/_/clis/bash_intuivo_cli\""
     if it_does_not_exist_with_spaces "${USER_HOME}/_/clis/bash_intuivo_cli" ; then
     {
       su - "${SUDO_USER}" -c "yes | git clone https://github.com/zeusintuivo/bash_intuivo_cli.git \"${USER_HOME}/_/clis/bash_intuivo_cli\""
@@ -1687,6 +1690,7 @@ _centos__64() {
 } # end _centos__64
 
 _fedora__64() {
+  SUDO_GRP='wheel'
   COMANDDER="dnf install -y"
   is_not_installed ag && $COMANDDER the_silver_searcher          # In Fedora
   dnf groupinstall 'development tools' -y
@@ -1752,7 +1756,12 @@ _fedora__64() {
   fi
  # verify_is_installed cf
   _setup_mycd
+  su - "${SUDO_USER}" -c 'brew install the_silver_searcher'
+	su - "${SUDO_USER}" -c 'brew install ag@the_silver_searcher'
+  su - "${SUDO_USER}" -c 'brew install pt@the_platinum_searcher'
+
 } # end _fedora__64
+
 _darwin__arm64() {
   _darwin__64
 } # end _darwin__arm64
@@ -1774,7 +1783,7 @@ _darwin__64() {
   Comment "# Store screenshots in subfolder on desktop"
   mkdir -p ~/Desktop/Screenshots
   defaults write com.apple.screencapture location ~/Desktop/Screenshots
-  SUDO_GRP='wheel'
+  SUDO_GRP='staff'
   [[  -e "${USER_HOME}/.bash_profile" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.bash_profile"
   [[  -e "${USER_HOME}/.bashrc" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.bashrc"
   [[  -e "${USER_HOME}/.zshrc" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.zshrc"

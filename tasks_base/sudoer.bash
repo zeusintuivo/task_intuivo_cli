@@ -6,6 +6,22 @@
 set -u
 set -E -o functrace
 export THISSCRIPTCOMPLETEPATH
+
+
+echo "0. sudologic $0 Start Checking realpath  "
+if ! ( command -v realpath >/dev/null 2>&1; )  ; then
+  echo "... realpath not found. Downloading REF:https://github.com/swarmbox/realpath.git "
+  cd $HOME
+  git clone https://github.com/swarmbox/realpath.git
+  cd realpath
+  make
+  sudo make install
+  _err=$?
+  [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Builing realpath. returned error did not download or is installed err:$_err  \n \n  " && exit 1
+else
+  echo "... realpath exists .. check!"
+fi
+
 typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")"   # updated realpath macos 20210902
 export BASH_VERSION_NUMBER
 typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
