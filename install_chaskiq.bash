@@ -483,8 +483,8 @@ _ruby_check() {
   Checking   Repo loanlink 
   cd "${PROJECTREPO}"
   pwd
-  Checking "ruby required in Gemfile   cat \"${PROJECTREPO}/Gemfile\" | grep ruby\\\ \\\'  | cut -d\\\' -f2 "
-  local _RUBYVERSION=$(cat "${PROJECTREPO}/Gemfile" | grep ruby\ \'  | cut -d\' -f2)
+  Checking "ruby required in Gemfile   cat \"${PROJECTREPO}/Gemfile\" | grep ruby\\\ \\\"  | cut -d\\\" -f2 "
+  local _RUBYVERSION=$(cat "${PROJECTREPO}/Gemfile" | grep ruby\ \"  | cut -d\" -f2)
   # set -x
   enforce_variable_with_value _RUBYVERSION "${_RUBYVERSION}"
   if [[ -z "${_RUBYVERSION}" ]] ; then
@@ -500,9 +500,21 @@ _ruby_check() {
   Comment LINENO:$LINENO local isrubyinstalled=
   local isrubyinstalled="$(su - "${SUDO_USER}" -c "bash -c 'rbenv versions'" | grep "${_RUBYVERSION}")"
   enforce_variable_with_value isrubyinstalled "${isrubyinstalled}"
-  Comment LINENO:$LINENO -z \"\${isrubynotinstalled}\" 
+  Comment LINENO:$LINENO -z \"\${isrubynotinstalled}\"=${isrubyinstalled}
   if [[ -z "${isrubynotinstalled}" ]] && [[ -z "${isrubyinstalled}" ]] ; then
   {
+    echo "rbenv versions | grep ${_RUBYVERSION}   returned nothing"
+    warning to get isrubyinstalled:${isrubyinstalled}
+    Working Installing ruby: rbenv install ${_RUBYVERSION}
+    su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&  ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"/opt/homebrew/opt/libpq/bin:$PATH\"  rbenv install ${_RUBYVERSION} ' "
+  }
+  fi
+  isrubyinstalled="$(su - "${SUDO_USER}" -c "bash -c 'rbenv versions'" | grep "${_RUBYVERSION}")"
+  enforce_variable_with_value isrubyinstalled "${isrubyinstalled}"
+  Comment LINENO:$LINENO -z \"\${isrubynotinstalled}\"=${isrubyinstalled} 
+  if [[ -z "${isrubynotinstalled}" ]] && [[ -z "${isrubyinstalled}" ]] ; then
+  {
+    echo "rbenv versions | grep ${_RUBYVERSION}   returned nothing"
     failed to get isrubyinstalled:${isrubyinstalled}
   }
   fi
@@ -518,7 +530,7 @@ _ruby_check() {
   {
     # set +x
     Comment "LINENO:$LINENO ------ else" 
-    su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" && rbenv install ${_RUBYVERSION} ' "
+    su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&  ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"/opt/homebrew/opt/libpq/bin:$PATH\"  rbenv install ${_RUBYVERSION} ' "
   }
   fi
   Comment LINENO:$LINENO local _RUBYLOCATION=
@@ -527,15 +539,107 @@ _ruby_check() {
   Comment LINENO:$LINENO  local _RUBYLOCATION="${_RUBYLOCATION}"
   enforce_variable_with_value _RUBYLOCATION "${_RUBYLOCATION}"
   "${_RUBYLOCATION}" -v
-
-
-
-  Comment "### bundle"
-  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   gem install pg ' "
-  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   gem install bundler:2.3.17 ' "
-  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   bundle install ' "
 } # end _rbenv_bundle
 
+
+_bundle_check() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local PROJECTREPO=${1}
+  enforce_parameter_with_value           1        PROJECTREPO         "${PROJECTREPO}"        "path folder to clone to"
+
+  cd  "${PROJECTREPO}" 
+  
+  Comment "### gem update"
+  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"/opt/homebrew/opt/libpq/bin:$PATH\" gem update --system' "
+  
+  
+  Comment "### bundle"
+  export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
+  Comment "### gem pg"
+  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"/opt/homebrew/opt/libpq/bin:$PATH\" gem install pg ' "
+  # Comment "### gem pg"
+  # su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"/opt/homebrew/opt/libpq/bin:$PATH\" gem install pg -v 1.2.3' "
+  Comment "### gem activerecord-postgres_enum"
+  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"/opt/homebrew/opt/libpq/bin:$PATH\" gem install activerecord-postgres_enum ' "
+  # Comment "### gem activerecord-postgres_enum"
+  # su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"/opt/homebrew/opt/libpq/bin:$PATH\" gem install activerecord-postgres_enum -v 1.6.0 ' "
+  Comment "### gem bundler"
+  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   gem install bundler ' "
+  # su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   gem install bundler:2.3.17 ' "
+  Comment "### bundle bundle install"
+  bundle config build.pg --with-pg-config=$(brew --prefix)/opt/libpq/bin/pg_config
+  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   bundle install ' "
+} # end _bundle_check
+
+
+_env_check() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local PROJECTREPO=${1}
+  enforce_parameter_with_value           1        PROJECTREPO         "${PROJECTREPO}"        "path folder to clone to"
+
+  cd  "${PROJECTREPO}" 
+  Comment "### _env_check"
+  echo "
+HOST=http://localhost:3000
+ASSET_HOST=http://localhost:3000
+WS=ws://localhost:3000/cable
+
+HOST=http://app.chaskiq.test:3000
+ASSET_HOST=http://app.chaskiq.test:3000
+WS=ws://app.chaskiq.test/cable
+
+
+SES_ADDRESS=
+SES_USER_NAME=
+SES_PASSWORD=
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_S3_BUCKET=
+AWS_S3_REGION=
+ADMIN_EMAIL=your@email.com
+ADMIN_PASSWORD=123456
+SNS_CONFIGURATION_SET=metrics
+DEFAULT_SENDER_EMAIL=
+  "  >> .env
+  chown "${SUDO_USER}" .env
+} # end  _env_check
+
+
+_migrate_check() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local PROJECTREPO=${1}
+  enforce_parameter_with_value           1        PROJECTREPO         "${PROJECTREPO}"        "path folder to clone to"
+
+  cd  "${PROJECTREPO}" 
+  Comment "### _migrate_check"
+
+  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" && bundle exec rake db:reset  '"
+  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" && bundle exec rake db:create db:migrate  '" 
+  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" && bundle exec rake db:seed data:migrate '"
+  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" && RAILS_ENV=test bundle exec rake db:resest '"
+  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" && RAILS_ENV=test bundle exec rake db:test:prepare '"
+} # end  _migrate_check
+
+_etc_hosts_file_check(){
+  local SH_CONTENT="
+127.0.0.1 app.chaskiq.test
+"
+  # trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _add_variables_to_bashrc_zshrc nvm" && echo -e "${RESET}" && return 0' ERR
+  echo "${SH_CONTENT}"
+  local INITFILE INITFILES="
+   /etc/hosts
+  "
+  while read INITFILE; do
+  {
+    [ -z ${INITFILE} ] && continue    
+    (_if_not_contains  "${INITFILE}" "app.chaskiq.test" ) || Configuring ${INITFILE}
+    (_if_not_contains  "${INITFILE}" "app.chaskiq.test" ) && Skipping configuration for ${INITFILE}
+    #                   filename            value      || do this .............
+    (_if_not_contains  "${INITFILE}" "app.chaskiq.test" ) || echo -e "${SH_CONTENT}" >>"${INITFILE}"
+  }
+  done <<< "${INITFILES}"
+
+} # end _etc_hosts_file_check
 
 _darwin__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
@@ -573,32 +677,26 @@ _darwin__64() {
   local PROJECTGITREPO="https://github.com/chaskiq/chaskiq.git"
   
   _ruby_check "${PROJECTSBASEDIR}" "${PROJECTREPO}" "${PROJECTGITREPO}"
+  _env_check "${PROJECTREPO}" 
+  _etc_hosts_file_check
   _bundle_check "${PROJECTREPO}" 
-  
+  _migrate_check "${PROJECTREPO}"   
 
+  Comment "
+  # tests
+  bundle exec rspec
+  # server
+  bundle exec rails server
+  # assets precompilation
+  yarn start
+  # backround tasks
+  bundle exec sidekiq
+  # generate new admin password
+  # The rails admin_generator task will create an admin user for you, 
+  # you will need to have an ADMIN_EMAIL and ADMIN_PASSWORD on your .env try these credentials:
+  rails admin_generator
+  "
 
-
-  cd "${USER_HOME}/_/rnd/chaskiq"
-  echo "
-HOST=http://localhost:3000
-ASSET_HOST=http://localhost:3000
-WS=ws://localhost:3000/cable
-
-
-
-SES_ADDRESS=
-SES_USER_NAME=
-SES_PASSWORD=
-AWS_ACCESS_KEY_ID=
-AWS_SECRET_ACCESS_KEY=
-AWS_S3_BUCKET=
-AWS_S3_REGION=
-ADMIN_EMAIL=your@email.com
-ADMIN_PASSWORD=123456
-SNS_CONFIGURATION_SET=metrics
-DEFAULT_SENDER_EMAIL=
-  "  >> .env
-  rbenv use 
   # echo "_darwin__64 Procedure not yet implemented. I don't know what to do."
 } # end _darwin__64
 
