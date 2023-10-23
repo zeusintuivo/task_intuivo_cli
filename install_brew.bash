@@ -503,6 +503,8 @@ _redhat_flavor_install() {
     curl
     file
     git
+    vim
+    vim-enhanced
     # needed by Fedora 30 and up
     libxcrypt-compat
   "
