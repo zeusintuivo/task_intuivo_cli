@@ -3,9 +3,25 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 # 20200415 Compatible with Fedora, Mac, Ubuntu "sudo_up" "load_struct" "#
-
+set -u
 set -E -o functrace
 export THISSCRIPTCOMPLETEPATH
+
+
+echo "0. sudologic $0 Start Checking realpath  "
+if ! ( command -v realpath >/dev/null 2>&1; )  ; then
+  echo "... realpath not found. Downloading REF:https://github.com/swarmbox/realpath.git "
+  cd $HOME
+  git clone https://github.com/swarmbox/realpath.git
+  cd realpath
+  make
+  sudo make install
+  _err=$?
+  [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Builing realpath. returned error did not download or is installed err:$_err  \n \n  " && exit 1
+else
+  echo "... realpath exists .. check!"
+fi
+
 typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")"   # updated realpath macos 20210902
 export BASH_VERSION_NUMBER
 typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
@@ -60,7 +76,8 @@ load_struct_testing(){
     exit 1
   }
   function load_library(){
-    local _library="${1:struct_testing}"
+    local _library="${1:-struct_testing}"
+    local -i _DEBUG=${DEBUG:-0}
     if [[ -z "${1}" ]] ; then
     {
        echo "Must call with name of library example: struct_testing execute_command"
@@ -69,9 +86,20 @@ load_struct_testing(){
     fi
     trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
       local provider="$HOME/_/clis/execute_command_intuivo_cli/${_library}"
+      if [[ -n "${SUDO_USER:-}" ]] && [[ -n "${HOME:-}" ]] && [[ "${HOME:-}" == "/root" ]] && [[ !  -e "${provider}"  ]] ; then
+      {
+        provider="/home/${SUDO_USER}/_/clis/execute_command_intuivo_cli/${_library}"
+      }
+      elif [[ -z "${SUDO_USER:-}" ]] && [[ -n "${HOME:-}" ]] && [[ "${HOME:-}" == "/root" ]] && [[ !  -e "${provider}"  ]] ; then
+      {
+        provider="/home/${USER}/_/clis/execute_command_intuivo_cli/${_library}"
+      }
+      fi
+      echo "$0: ${provider}" 
+      echo "$0: SUDO_USER:${SUDO_USER:-nada SUDOUSER}: USER:${USER:-nada USER}: ${SUDO_HOME:-nada SUDO_HOME}: {${HOME:-nada HOME}}" 
       local _err=0 structsource
-      if [   -e "${provider}"  ] ; then
-        if (( DEBUG )) ; then
+      if [[  -e "${provider}" ]] ; then
+        if (( _DEBUG )) ; then
           echo "$0: tasks_base/sudoer.bash Loading locally"
         fi
         structsource="""$(<"${provider}")"""
@@ -84,7 +112,7 @@ load_struct_testing(){
         fi
       else
         if ( command -v curl >/dev/null 2>&1; )  ; then
-          if (( DEBUG )) ; then
+          if (( _DEBUG )) ; then
             echo "$0: tasks_base/sudoer.bash Loading ${_library} from the net using curl "
           fi
           structsource="""$(curl https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/${_library}  -so -   2>/dev/null )"""  #  2>/dev/null suppress only curl download messages, but keep curl output for variable
@@ -96,7 +124,7 @@ load_struct_testing(){
           }
           fi
         elif ( command -v wget >/dev/null 2>&1; ) ; then
-          if (( DEBUG )) ; then
+          if (( _DEBUG )) ; then
             echo "$0: tasks_base/sudoer.bash Loading ${_library} from the net using wget "
           fi
           structsource="""$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/${_library} -O -   2>/dev/null )"""  #  2>/dev/null suppress only wget download messages, but keep wget output for variable
@@ -120,7 +148,7 @@ load_struct_testing(){
       fi
       local _temp_dir="$(mktemp -d 2>/dev/null || mktemp -d -t "${_library}_source")"
       echo "${structsource}">"${_temp_dir}/${_library}"
-      if (( DEBUG )) ; then
+      if (( _DEBUG )) ; then
         echo "$0: tasks_base/sudoer.bash Temp location ${_temp_dir}/${_library}"
       fi
       source "${_temp_dir}/${_library}"
@@ -152,9 +180,10 @@ fi
 
 export sudo_it
 function sudo_it() {
-  raise_to_sudo_and_user_home
+  local -i _DEBUG=${DEBUG:-}
+	raise_to_sudo_and_user_home
   local _err=$?
-  if (( DEBUG )) ; then
+  if (( _DEBUG )) ; then
     Comment _err:${_err}
   fi
   if [ $_err -gt 0 ] ; then
@@ -165,7 +194,7 @@ function sudo_it() {
   fi
   # [ $_err -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
   _err=$?
-  if (( DEBUG )) ; then
+  if (( _DEBUG )) ; then
     Comment _err:${_err}
   fi
   enforce_variable_with_value SUDO_USER "${SUDO_USER}"
@@ -189,7 +218,8 @@ ERR INT ..."
 # _linux_prepare(){
   sudo_it
   _err=$?
-  if (( DEBUG )) ; then
+	typeset -i tomporalDEBUG=${DEBUG:-}
+  if (( tomporalDEBUG )) ; then
     Comment _err:${_err}
   fi
   if [ $_err -gt 0 ] ; then
@@ -200,7 +230,7 @@ ERR INT ..."
   fi
   # [ $_err -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
   _err=$?
-  if (( DEBUG )) ; then
+  if (( tomporalDEBUG )) ; then
     Comment _err:${_err}
   fi
   # [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
@@ -217,16 +247,16 @@ ERR INT ..."
 export SUDO_GRP='staff'
 enforce_variable_with_value USER_HOME "${USER_HOME}"
 enforce_variable_with_value SUDO_USER "${SUDO_USER}"
-if (( DEBUG )) ; then
+if (( tomporalDEBUG )) ; then
   passed "Caller user identified:${SUDO_USER}"
 fi
-  if (( DEBUG )) ; then
+  if (( tomporalDEBUG )) ; then
     Comment DEBUG_err?:${?}
   fi
-if (( DEBUG )) ; then
+if (( tomporalDEBUG )) ; then
   passed "Home identified:${USER_HOME}"
 fi
-  if (( DEBUG )) ; then
+  if (( tomporalDEBUG )) ; then
     Comment DEBUG_err?:${?}
   fi
 directory_exists_with_spaces "${USER_HOME}"
@@ -291,7 +321,7 @@ _redhat_flavor_install() {
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   install_1password.bash
   install_zoom.bash
-  install_kebase.bash
+  install_keybase.bash
   install_drogon.bash
   install_sublime_dev.sh.bash
   install_taskwarrior.bash
@@ -302,7 +332,7 @@ _redhat_flavor_install() {
   install_kiex.bash
   install_emacs.bash
   install_masterpdf.bash
-  install_i3.bash
+  # install_i3.bash
   install_beyondcompare.bash
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 	dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm

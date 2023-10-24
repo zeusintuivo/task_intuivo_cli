@@ -22,7 +22,8 @@ else
   echo "... realpath exists .. check!"
 fi
 
-typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")"   # updated realpath macos 20210902
+# typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")"   # updated realpath macos 20210902
+typeset -r THISSCRIPTCOMPLETEPATH="$(realpath "$(basename "$0")")"  # updated realpath macos 20210902  # § This goe$
 export BASH_VERSION_NUMBER
 typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
 
@@ -33,7 +34,7 @@ export _err
 typeset -i _err=0
 
   function _trap_on_error(){
-    #echo -e "\\n \033[01;7m*** ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR ...\033[0m"
+    #echo -e "\\n \033[01;7m*** 1 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR ...\033[0m"
     local cero="$0"
     local file1="$(paeth ${BASH_SOURCE})"
     local file2="$(paeth ${cero})"
@@ -45,7 +46,7 @@ ERR ..."
   }
   trap _trap_on_error ERR
   function _trap_on_int(){
-    # echo -e "\\n \033[01;7m*** INTERRUPT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n  INT ...\033[0m"
+    # echo -e "\\n \033[01;7m*** 1 INTERRUPT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n  INT ...\033[0m"
     local cero="$0"
     local file1="$(paeth ${BASH_SOURCE})"
     local file2="$(paeth ${cero})"
@@ -61,7 +62,7 @@ INT ..."
 load_struct_testing(){
   function _trap_on_error(){
     local -ir __trapped_error_exit_num="${2:-0}"
-    echo -e "\\n \033[01;7m*** ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR ...\033[0m  \n \n "
+    echo -e "\\n \033[01;7m*** 2 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
     echo ". ${1}"
     echo ". exit  ${__trapped_error_exit_num}  "
     echo ". caller $(caller) "
@@ -136,31 +137,31 @@ load_struct_testing(){
           }
           fi
         else
-          echo -e "\n \n  ERROR! Loading ${_library} could not find wget or curl to download  \n \n "
+          echo -e "\n \n 2  ERROR! Loading ${_library} could not find wget or curl to download  \n \n "
           exit 69
         fi
       fi
       if [[ -z "${structsource}" ]] ; then
       {
-        echo -e "\n \n  ERROR! Loading ${_library} into ${_library}_source did not download or is empty " 
+        echo -e "\n \n 3 ERROR! Loading ${_library} into ${_library}_source did not download or is empty " 
         exit 1
       }
       fi
       local _temp_dir="$(mktemp -d 2>/dev/null || mktemp -d -t "${_library}_source")"
       echo "${structsource}">"${_temp_dir}/${_library}"
       if (( _DEBUG )) ; then
-        echo "$0: tasks_base/sudoer.bash Temp location ${_temp_dir}/${_library}"
+        echo "1. sudologic $0: tasks_base/sudoer.bash Temp location ${_temp_dir}/${_library}"
       fi
       source "${_temp_dir}/${_library}"
       _err=$?
       if [ $_err -gt 0 ] ; then
       {
-        echo -e "\n \n  ERROR! Loading ${_library}. Occured while running 'source' err:$_err  \n \n  "
+        echo -e "\n \n 4 ERROR! Loading ${_library}. Occured while running 'source' err:$_err  \n \n  "
         exit 1
       }
       fi
       if  ! typeset -f passed >/dev/null 2>&1; then
-        echo -e "\n \n  ERROR! Loading ${_library}. Passed was not loaded !!!  \n \n "
+        echo -e "\n \n 5 ERROR! Loading ${_library}. Passed was not loaded !!!  \n \n "
         exit 69;
       fi
       return $_err
@@ -173,7 +174,7 @@ load_struct_testing
  _err=$?
 if [ $_err -ne 0 ] ; then
 {
-  echo -e "\n \n  ERROR FATAL! load_struct_testing_wget !!! returned:<$_err> \n \n  "
+  echo -e "\n \n 6 ERROR FATAL! load_struct_testing_wget !!! returned:<$_err> \n \n  "
   exit 69;
 }
 fi
@@ -181,8 +182,45 @@ fi
 export sudo_it
 function sudo_it() {
   local -i _DEBUG=${DEBUG:-}
-	raise_to_sudo_and_user_home
   local _err=$?
+  # check operation systems
+  if [[ "$(uname)" == "Darwin" ]] ; then
+  {
+      # Do something under Mac OS X platform
+      # nothing here
+	raise_to_sudo_and_user_home
+      [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
+    SUDO_USER="${USER}"
+    SUDO_COMMAND="$0"
+    SUDO_UID=502
+    SUDO_GID=20
+  }
+  elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]] ; then
+  {
+      # Do something under GNU/Linux platform
+      raise_to_sudo_and_user_home
+      [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
+      enforce_variable_with_value SUDO_USER "${SUDO_USER}"
+      enforce_variable_with_value SUDO_UID "${SUDO_UID}"
+      enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
+      # Override bigger error trap  with local
+      function _trap_on_error(){
+        echo -e "\033[01;7m*** 3 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR INT ...\033[0m"
+
+      }
+      trap _trap_on_error ERR INT
+  }
+  elif [[ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]] || [[ "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT" ]] ; then
+  {
+      # Do something under Windows NT platform
+      # nothing here
+    SUDO_USER="${USER}"
+    SUDO_COMMAND="$0"
+    SUDO_UID=502
+    SUDO_GID=20
+  }
+  fi
+  
   if (( _DEBUG )) ; then
     Comment _err:${_err}
   fi
@@ -202,7 +240,7 @@ function sudo_it() {
   enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
   # Override bigger error trap  with local
   function _trap_on_err_int(){
-    # echo -e "\033[01;7m*** ERROR OR INTERRUPT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR INT ...\033[0m"
+    # echo -e "\033[01;7m*** 7 ERROR OR INTERRUPT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR INT ...\033[0m"
     local cero="$0"
     local file1="$(paeth ${BASH_SOURCE})"
     local file2="$(paeth ${cero})"
@@ -260,3 +298,4 @@ fi
     Comment DEBUG_err?:${?}
   fi
 directory_exists_with_spaces "${USER_HOME}"
+

@@ -47,7 +47,7 @@ _redhat_flavor_install() {
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   install_1password.bash
   install_zoom.bash
-  install_kebase.bash
+  install_keybase.bash
   install_drogon.bash
   install_sublime_dev.sh.bash
   install_taskwarrior.bash
@@ -58,7 +58,7 @@ _redhat_flavor_install() {
   install_kiex.bash
   install_emacs.bash
   install_masterpdf.bash
-  install_i3.bash
+  # install_i3.bash
   install_beyondcompare.bash
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 	dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm

@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+set -u
+
+function ._main() {
+  local -i _err=0
+  local _files=""
+	_files="$(ls -1 ./tasks_templates_sudo)"
+  _err=$?
+	if [ ${_err:-0} -ne 0 ] || [[ -z "${_files:-}" ]] ; then 
+	{
+	  echo "Error When 
+	}
+	fi
+} # end ._main
+
+._main

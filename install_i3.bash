@@ -314,7 +314,8 @@ _debian_flavor_install() {
 
 _redhat_flavor_install() {
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  echo "REF: https://fedoramagazine.org/getting-started-i3-window-manager/"
+  echo "REF: https://fedoraproject.org/wiki/I3_guide#First_Login"
+	echo "REF: https://fedoramagazine.org/getting-started-i3-window-manager/"
   if (
   install_requirements "linux" "
     bzip2-devel
@@ -327,13 +328,12 @@ _redhat_flavor_install() {
     rust-bzip2-devel
     bzip2
 		yakuake
-    i3
-    i3status
-    dmenu
+    i3 
+		i3status 
+		i3lock 
+		dmenu 
     i3lock
-    xbacklight
     feh
-		brightnessctl
     conky
 		dunst
 		flameshot
@@ -343,20 +343,22 @@ _redhat_flavor_install() {
 		mpc
 		mpv
 		xset
-		light
-		lightdm-settings
-		lxappearance
-		nitrogen
-		fedora-release-kde
-		kde-gtk-config
-		kf5-kconfig
-		kf5-knotifyconfig
-		kf5-kxmlgui
-		libkscreen-qt5
+		moc
+		xbacklight
+		terminator
+		rhythmbox
+		totem
+		thunar
+		tmux
+		py3status
   "
   ); then
     {
-      echo "something failed"
+      echo "All installed no error"
+		}
+		else
+		{
+			echo "something failed while installing err:$?"
     }
   fi
   su - "${SUDO_USER}" -c 'brew install libxscrnsaver libnotify bzip2 freetype2'
@@ -366,6 +368,7 @@ _redhat_flavor_install() {
     curl
     wget
     tar
+		xset
   "
   echo "End of install tasks should be installed. I don't know what to do next... "
 } # end _redhat_flavor_install

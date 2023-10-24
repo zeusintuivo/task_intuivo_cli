@@ -1398,7 +1398,7 @@ _password_simple() {
   Installing password change
   local Answer
   read -p 'Change Passwords? [Y/n] (Enter Defaults - No/N/n )' Answer
-  case $Answer in
+  case ${Answer:-N} in
     '' | [Nn]* )
       passed you said no "Skip Password change"
       return 0

@@ -8,11 +8,14 @@ _debian_flavor_install() {
     unzip
     curl
     wget
+    ufw
+    nginx
   "
   ); then
     {
       apt install base64 -y
       apt install unzip -y
+      apt install nginx -y
     }
   fi
   verify_is_installed "
@@ -20,6 +23,8 @@ _debian_flavor_install() {
     curl
     wget
     tar
+    ufw
+    nginx
   "
   local PB_VERSION=0.16.7
   local CODENAME="pocketbase_${PB_VERSION}_linux_amd64.zip"
@@ -40,63 +45,62 @@ _debian_flavor_install() {
 
 _redhat_flavor_install() {
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  echo "REF: https://fedoraproject.org/wiki/I3_guide#First_Login"
-	echo "REF: https://fedoramagazine.org/getting-started-i3-window-manager/"
+  install_brew.sh
+  install_rbenv.bash
+  install_nvm.bash
+	install_1password.bash
+  install_zoom.bash
+  install_keybase.bash
+  install_drogon.bash
+  install_sublime_dev.sh.bash
+  install_taskwarrior.bash
+  compile_nano.bash
+  install_evm.bash
+  install_kiex.bash
+  install_emacs.bash
+  install_masterpdf.bash
+  install_i3.bash
+  install_beyondcompare.bash
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+	dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+	dnf groupupdate core -y
+	dnf group update core -y
+	dnf install https://rpms.remirepo.net/fedora/remi-release-$(rpm -E %fedora).rpm -yv 
+
   if (
   install_requirements "linux" "
-    bzip2-devel
-		libzip-devel
-    bzip2-libs
-    bzip2
-    lbzip2
-    pbzip2
-    rust-zip+bzip2-devel
-    rust-bzip2-devel
-    bzip2
-		yakuake
-    i3 
-		i3status 
-		i3lock 
-		dmenu 
-    i3lock
-    feh
-    conky
-		dunst
-		flameshot
-		rofi
-		kitty
-		audacious
-		mpc
-		mpv
-		xset
-		moc
-		xbacklight
-		terminator
-		rhythmbox
-		totem
-		thunar
-		tmux
-		py3status
+    task
+		gparted
+		gpart
+    thunderbird
+    boxes
+    firefox
+    guake
+    yakuake
+    nginx
+    gnome-tweaks
+    breeze-cursor-theme
+    oxygen-cursor-themes
+
   "
   ); then
     {
-      echo "All installed no error"
-		}
-		else
-		{
-			echo "something failed while installing err:$?"
+      apt install base64 -y
+      apt install unzip -y
+      apt install nginx -y
     }
   fi
-  su - "${SUDO_USER}" -c 'brew install libxscrnsaver libnotify bzip2 freetype2'
-
+  brew install libxscrnsaver libnotify bzip2 freetype2
   verify_is_installed "
     unzip
     curl
     wget
     tar
-		xset
+    ufw
+    nginx
   "
   echo "End of install tasks should be installed. I don't know what to do next... "
+
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
