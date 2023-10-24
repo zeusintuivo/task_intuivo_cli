@@ -58,7 +58,7 @@ _redhat_flavor_install() {
   enforce_variable_with_value SUDO_USER "${SUDO_USER}"
   verify_is_installed "
       # RedHat Flavor only
-`      python
+      python
   "
   # RedHat Flavor only
   local package packages="
@@ -281,6 +281,10 @@ _darwin__64() {
   _add_variables_to_bashrc_zshrc
 
 } # end _darwin__64
+
+_darwin__arm64() {
+  _darwin__64
+} # end _darwin__arm64
 
 _tar() {
   echo "Procedure not yet implemented. I don't know what to do."
