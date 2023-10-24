@@ -7,6 +7,15 @@ set -u
 set -E -o functrace
 export THISSCRIPTCOMPLETEPATH
 
+echo "0. sudologic $0:$LINENO           SUDO_COMMAND:${SUDO_COMMAND:-}"
+echo "0. sudologic $0:$LINENO               SUDO_GRP:${SUDO_GRP:-}"
+echo "0. sudologic $0:$LINENO               SUDO_UID:${SUDO_UID:-}"
+echo "0. sudologic $0:$LINENO               SUDO_GID:${SUDO_GID:-}"
+echo "0. sudologic $0:$LINENO              SUDO_USER:${SUDO_USER:-}"
+echo "0. sudologic $0:$LINENO                   USER:${USER:-}"
+echo "0. sudologic $0:$LINENO              USER_HOME:${USER_HOME:-}"
+echo "0. sudologic $0:$LINENO THISSCRIPTCOMPLETEPATH:${THISSCRIPTCOMPLETEPATH:-}"
+echo "0. sudologic $0:$LINENO         THISSCRIPTNAME:${THISSCRIPTNAME:-}"
 
 echo "0. sudologic $0 Start Checking realpath  "
 if ! ( command -v realpath >/dev/null 2>&1; )  ; then
@@ -22,8 +31,8 @@ else
   echo "... realpath exists .. check!"
 fi
 
-# typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")"   # updated realpath macos 20210902
-typeset -r THISSCRIPTCOMPLETEPATH="$(realpath "$(basename "$0")")"  # updated realpath macos 20210902  # § This goe$
+typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")"   # updated realpath macos 20210902
+# typeset -r THISSCRIPTCOMPLETEPATH="$(realpath "$(basename "$0")")"  # updated realpath macos 20210902  # § This goe$
 export BASH_VERSION_NUMBER
 typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
 
@@ -166,8 +175,12 @@ load_struct_testing(){
       fi
       return $_err
   } # end load_library
-  load_library "struct_testing"
-  load_library "execute_command"
+  if  ! typeset -f passed >/dev/null 2>&1; then
+    load_library "struct_testing"
+  fi
+  if  ! typeset -f load_colors >/dev/null 2>&1; then
+    load_library "execute_command"
+  fi
 } # end load_struct_testing
 load_struct_testing
 
@@ -179,6 +192,47 @@ if [ $_err -ne 0 ] ; then
 }
 fi
 
+if [[ -z "${SUDO_COMMAND:-}" ]] && \
+   [[ -z "${SUDO_GRP:-}" ]] && \
+   [[ -z "${SUDO_UID:-}" ]] && \
+   [[ -z "${SUDO_GID:-}" ]] && \
+   [[ -z "${SUDO_USER:-}" ]] && \
+   [[ -n "${USER:-}" ]] && \
+   [[ -z "${USER_HOME:-}" ]] && \
+   [[ -n "${THISSCRIPTCOMPLETEPATH:-}" ]] && \
+   [[ -n "${THISSCRIPTNAME:-}" ]] \
+  ; then
+{
+  passed Called from user 
+}
+fi
+
+
+if [[ -n "${SUDO_COMMAND:-}"  ]] && \
+   [[ -z "${SUDO_GRP:-}"  ]] && \
+   [[ -n "${SUDO_UID:-}"  ]] && \
+   [[ -n "${SUDO_GID:-}"  ]] && \
+   [[ -n "${SUDO_USER:-}"  ]] && \
+   [[ -n "${USER:-}"  ]] && \
+   [[ -z "${USER_HOME:-}"  ]] && \
+   [[ -n "${THISSCRIPTCOMPLETEPATH:-}"  ]] && \
+   [[ -n "${THISSCRIPTNAME:-}"  ]] \
+  ; then
+{
+  passed Called from user as sudo 
+}
+else
+{
+
+if [[ "${SUDO_USER:-}" == 'root'  ]] && \
+   [[ "${USER:-}" == 'root' ]] \
+  ; then
+{
+  failed This script is has to be called from normal user. Not Root. Abort 
+  exit 69
+}
+fi
+
 export sudo_it
 function sudo_it() {
   local -i _DEBUG=${DEBUG:-}
@@ -186,9 +240,9 @@ function sudo_it() {
   # check operation systems
   if [[ "$(uname)" == "Darwin" ]] ; then
   {
-      # Do something under Mac OS X platform
+    passed "sudo_it() # Do something under Mac OS X platform "
       # nothing here
-	raise_to_sudo_and_user_home
+      raise_to_sudo_and_user_home
       [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
     SUDO_USER="${USER}"
     SUDO_COMMAND="$0"
@@ -256,7 +310,7 @@ ERR INT ..."
 # _linux_prepare(){
   sudo_it
   _err=$?
-	typeset -i tomporalDEBUG=${DEBUG:-}
+  typeset -i tomporalDEBUG=${DEBUG:-}
   if (( tomporalDEBUG )) ; then
     Comment _err:${_err}
   fi
@@ -266,6 +320,17 @@ ERR INT ..."
     exit 1
   }
   fi
+
+
+
+  exit
+}
+fi
+
+
+
+
+typeset -i tomporalDEBUG=${DEBUG:-}
   # [ $_err -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
   _err=$?
   if (( tomporalDEBUG )) ; then

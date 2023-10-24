@@ -58,6 +58,7 @@ function change_hightlight(){
 # echo  -e  ${RED_NOT_VISIBLE} printf  ${BLUE_NOT_VISIBLE} 'something_functi' | change_hightlight
 # exit 0
 
+export colorize
 function colorize(){
   local _one=''
   while read -r _one ; do
@@ -67,6 +68,7 @@ function colorize(){
   done <<< "$(pygmentize -l bash | change_hightlight)"
 }
 
+export _trap_on_error
 function _trap_on_error() {
   local DEBUG=0
   local __trapped_script_name="${1:-0}"

@@ -6,8 +6,7 @@
 # SUDO_USER only exists during execution of sudo
 # REF: https://stackoverflow.com/questions/7358611/get-users-home-directory-when-they-run-a-script-as-root
 # Global:
-# typeset -i _DEBUG=${DEBUG:-0}
-if [[ -n "${1-x}" ]] ; then
+if [[ -n "${1:-x}" ]] ; then
 {
   if [[ "${1:-}" == "--test" ]]; then
   {
@@ -79,10 +78,10 @@ fi
 # # }
 # # fi
 
-function execute_as_sudo() {
-	local -i _DEBUG=${DEBUG:-0}
+function execute_as_sudo(){
+  local -i _DEBUG=${DEBUG:-0}
   if [ -z ${SUDO_USER:-} ] ; then
-    if [ -z "${THISSCRIPTCOMPLETEPATH+x}" ] ; then
+    if [[ -z "${THISSCRIPTCOMPLETEPATH+x}" ]] ; then
     {
         echo "error You need to add THISSCRIPTCOMPLETEPATH variable like this:"
         echo "  export THISSCRIPTCOMPLETEPATH "
@@ -103,7 +102,7 @@ function execute_as_sudo() {
     }
     else
     {
-        if [ -e "./${THISSCRIPTCOMPLETEPATH:-}" ] ; then
+        if [[ -e "./$THISSCRIPTCOMPLETEPATH" ]] ; then
         {
           echo -e "4.1 sudologic execute_as_sudo.sh ${RED} ¿? ${LIGHTYELLOW} Attempting to reload:sudo \"./$THISSCRIPTCOMPLETEPATH\" \"${*}\" " 
           sudo "./$THISSCRIPTCOMPLETEPATH" "${*}"
@@ -134,9 +133,10 @@ function execute_as_sudo() {
     echo "Needs to run as sudo ... ${0}"
   fi
   return 0
-} # end execute_as_sudo
+}
 
 function enforce_variable_with_value(){
+  local -i _DEBUG=${DEBUG:-0}
   # repeated in struct_testing
   # Sample use
   # enforce_variable_with_value HOME $HOME
@@ -156,7 +156,6 @@ function enforce_variable_with_value(){
   # [ -n "${SUDO_USER+x}" ] && echo "SUDO_USER 111"
   # ( declare -p "HOME" ) && echo "HOME 2"
   typeset -r TESTING="that variable is listed and: ${CYAN}${1}${LIGHTYELLOW} and has value: ${RESET}<${YELLOW_OVER_DARKBLUE}${2}${RESET}>"
-	local -i _DEBUG=${DEBUG:-0}
   (( _DEBUG )) && echo -e "${FUNCNAME[0]}"
   (( _DEBUG )) && echo ${@} -assume existing variable for this part
   (( _DEBUG )) && ( typeset -p "${1}"  &>/dev/null  ) && echo "1 defined 1"
@@ -185,5 +184,3 @@ function enforce_variable_with_value(){
   fi
   exit 1  # Stop the scripts execution
 } # end enforce_variable_with_value
-
-
