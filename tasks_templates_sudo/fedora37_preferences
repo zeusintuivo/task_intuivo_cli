@@ -48,6 +48,8 @@ _redhat_flavor_install() {
   install_brew.sh
   install_rbenv.bash
   install_nvm.bash
+	install.clis.bash
+	install_clis.bash
 	install_1password.bash
   install_zoom.bash
   install_keybase.bash
@@ -99,7 +101,9 @@ _redhat_flavor_install() {
     ufw
     nginx
   "
-  echo "End of install tasks should be installed. I don't know what to do next... "
+
+  echo "Virtual box is multi step install ... "
+	install_virtualbox.bash
 
 } # end _redhat_flavor_install
 

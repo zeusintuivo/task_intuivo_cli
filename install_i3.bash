@@ -454,6 +454,11 @@ _redhat_flavor_install() {
 		thunar
 		tmux
 		py3status
+		# until now no issues with boot or breaking gnome brightness
+		xrandr
+    brightnessctl
+		htop
+		polybar
   "
   ); then
     {

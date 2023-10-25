@@ -382,16 +382,8 @@ directory_exists_with_spaces "${USER_HOME}"
 #
 
 
-_linux_prepare(){
-  sudo_it
-  [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
-  # export USER_HOME="/home/${SUDO_USER}"
-  Checking USER_HOME "${USER_HOME}"
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
-}  # end _linux_prepare
-
 _debian__64(){
-  _linux_prepare
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
   local TARGET_URL=https://prerelease.keybase.io/keybase_amd64.deb
   Comment TARGET_URL "${TARGET_URL}"
   enforce_variable_with_value TARGET_URL "${TARGET_URL}"
@@ -414,7 +406,7 @@ _ubuntu__64(){
 } # end _ubuntu__64
 
 _debian__32(){
-  _linux_prepare
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
   local TARGET_URL=https://prerelease.keybase.io/keybase_i386.deb
   Comment TARGET_URL "${TARGET_URL}"
   enforce_variable_with_value TARGET_URL "${TARGET_URL}"
@@ -433,7 +425,7 @@ _debian__32(){
 } # end __debian__64
 
 _fedora__32() {
-  _linux_prepare
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
   local TARGET_URL=https://prerelease.keybase.io/keybase_i386.rpm
   Comment TARGET_URL "${TARGET_URL}"
   enforce_variable_with_value TARGET_URL "${TARGET_URL}"
@@ -454,7 +446,7 @@ _centos__64(){
   _fedora__64
 } # end _centos__64
 _fedora__64() {
-  _linux_prepare
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
   local TARGET_URL=https://prerelease.keybase.io/keybase_amd64.rpm
   Comment TARGET_URL "${TARGET_URL}"
   enforce_variable_with_value TARGET_URL "${TARGET_URL}"
@@ -467,6 +459,7 @@ _fedora__64() {
   _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
   _install_rpm "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
   _err=$?
+	chown -R $USER /etc/keybase/
   _remove_downloaded_codename_or_err  $_err "${DOWNLOADFOLDER}/${CODENAME}"
   _err=$?
   return  $_err

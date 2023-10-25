@@ -97,6 +97,9 @@ _fedora__64() {
     fi
     verify_is_installed cf
     _checka_tools_commander $COMANDDER
+    verify_is_installed brew
+		su - $SUDO_USER -c 'brew install the_platinum_searcher'
+
 }
 _darwin__arm64() {
    _darwin__64
