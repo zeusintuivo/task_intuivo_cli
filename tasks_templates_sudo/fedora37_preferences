@@ -44,7 +44,7 @@ _debian_flavor_install() {
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  # enforce_variable_with_value USER_HOME "${USER_HOME}"
   install_brew.sh
   install_rbenv.bash
   install_nvm.bash
@@ -87,9 +87,7 @@ _redhat_flavor_install() {
   "
   ); then
     {
-      apt install base64 -y
-      apt install unzip -y
-      apt install nginx -y
+      echo "installed $0"
     }
   fi
   brew install libxscrnsaver libnotify bzip2 freetype2
@@ -98,8 +96,6 @@ _redhat_flavor_install() {
     curl
     wget
     tar
-    ufw
-    nginx
   "
 
   echo "Virtual box is multi step install ... "

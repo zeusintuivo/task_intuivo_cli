@@ -23,5 +23,5 @@
  ./generate_installer_with_sudo sublime_dev.sh
 
  ./generate_installer_with_sudo i3
- ./generate_installer_with_sudo fedora37_preferences
- ./generate_installer_with_sudo fedora38_preferences
+ ./generate_installer_simple fedora37_preferences
+ ./generate_installer_simple fedora38_preferences

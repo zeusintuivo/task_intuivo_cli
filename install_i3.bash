@@ -459,6 +459,7 @@ _redhat_flavor_install() {
     brightnessctl
 		htop
 		polybar
+		python-mpd2
   "
   ); then
     {

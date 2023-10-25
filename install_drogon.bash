@@ -378,13 +378,21 @@ directory_exists_with_spaces "${USER_HOME}"
 #!/usr/bin/bash
 
 _debian_flavor_install() {
-  sudo apt install git gcc g++ cmake libjsoncpp-dev uuid-dev openssl libssl-dev zlib1g-dev
+  sudo apt install git gcc g++ cmake libjsoncpp-dev uuid-dev openssl libssl-dev zlib1g-dev -y
   echo "Procedure not yet implemented. I don't know what to do."
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
-  sudo dnf install git gcc gcc-c++ cmake libuuid-devel openssl-devel zlib-devel 
-  echo "Procedure not yet implemented. I don't know what to do."
+  sudo dnf install git gcc gcc-c++ cmake libuuid-devel openssl-devel zlib-devel  -y
+  cd $USER_HOME
+	git clone https://github.com/drogonframework/drogon 
+  cd drogon
+  git submodule update --init
+  mkdir build
+  cd build
+	cmake ..
+  make && sudo make install
+  echo "WIP."
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
@@ -473,7 +481,8 @@ _ubuntu__32() {
 } # end _ubuntu__32
 
 _ubuntu__64() {
-  git clone https://github.com/drogonframework/drogon 
+  cd $USER_HOME
+	git clone https://github.com/drogonframework/drogon 
   cd drogon
   git submodule update --init
   mkdir build
