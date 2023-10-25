@@ -94,6 +94,9 @@ _redhat_flavor_install() {
   fi
   su - "${SUDO_USER}" -c 'brew install libxscrnsaver libnotify bzip2 freetype2'
 
+	su - $SUDO_USER -c 'brew install the_platinum_searcher'
+	su - $SUDO_USER -c 'pip3 install python-mpd'
+	su - $SUDO_USER -c 'pip install python-mpd'
   verify_is_installed "
     unzip
     curl
