@@ -1,5 +1,6 @@
  ./generate_installer_with_sudo brew
  ./generate_installer_with_sudo rbenv
+ ./generate_installer_with_sudo pyenv
  ./generate_installer_with_sudo nvm
  ./generate_installer_with_sudo 1password
  ./generate_installer_with_sudo zoom

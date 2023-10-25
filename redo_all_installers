@@ -9,9 +9,18 @@ function ._main() {
   _err=$?
 	if [ ${_err:-0} -ne 0 ] || [[ -z "${_files:-}" ]] ; then 
 	{
-	  echo "Error When 
+	  echo "Error When loading templares not found ./tasks_templates_sudo "
+    exit 1 
 	}
 	fi
+	local _one
+	while read -r _one ; do
+	{
+    [[ "${_one}" ]] && continue
+		./generate_installer_with_sudo "${_one}"
+	}
+  done <<< "${_files}" 
+
 } # end ._main
 
 ._main

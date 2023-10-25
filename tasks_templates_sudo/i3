@@ -69,7 +69,7 @@ _redhat_flavor_install() {
 		mpc
 		mpv
 		xset
-		moc
+		# moc
 		xbacklight
 		terminator
 		rhythmbox
