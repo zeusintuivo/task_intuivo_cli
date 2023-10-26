@@ -3,7 +3,7 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 # 20200415 Compatible with Fedora, Mac, Ubuntu "sudo_up" "load_struct" "#
-set -u
+#set -u
 set -E -o functrace
 export THISSCRIPTCOMPLETEPATH
 
@@ -313,7 +313,7 @@ directory_exists_with_spaces "${USER_HOME}"
 #!/usr/bin/env bash
 # 20200414 Compatible with Fedora, Mac, Ubuntu "sudo_up" "load_struct" "#
 set -E -o functrace
-set -u
+#set -u
 export THISSCRIPTCOMPLETEPATH
 COMANDDER=""
 _checka_node_commander() {

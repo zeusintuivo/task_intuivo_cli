@@ -3,7 +3,7 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 # 20200415 Compatible with Fedora, Mac, Ubuntu "sudo_up" "load_struct" "#
-set -u
+#set -u
 set -E -o functrace
 export THISSCRIPTCOMPLETEPATH
 
