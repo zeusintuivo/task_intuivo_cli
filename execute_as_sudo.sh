@@ -3,6 +3,39 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 #
+#colors
+[[ -z "${CYAN:-}" ]] && CYAN="\\033[38;5;123m"
+[[ -z "${PURPLE_BLUE:-}" ]] && PURPLE_BLUE="\\033[38;5;93m"
+[[ -z "${GRAY241:-}" ]] && GRAY241="\\033[38;5;241m"
+[[ -z "${YELLOW226:-}" ]] && YELLOW226="\\033[38;5;226m"
+[[ -z "${YELLOW214:-}" ]] && YELLOW214="\\033[38;5;214m"
+[[ -z "${RESET:-}" ]] && RESET="\\033[0m"
+[[ -z "${RED:-}" ]] && RED="\\033[38;5;1m"
+[[ -z "${BRIGHT_BLUE87:-}" ]] && BRIGHT_BLUE87="\\033[38;5;87m"
+LIGHTPINK="\\033[1;204m"
+TO_LIGHTPINK="\\o033[1;204m\\o033[48;5;0m"    # Notice the only the \\o changes NOT \\[]
+LIGHTPINK_OVER_DARKBLUE="\\033[38;5;204m\\033[48;5;21m"
+YELLOW_OVER_DARKBLUE="\\033[38;5;220m\\033[48;5;20m"
+TO_YELLOW_OVER_DARKBLUE="\\o033[38;5;220m\\o033[48;5;20m"   # Notice the only the \\o changes NOT \\[]
+# Change RED_NOT_VISIBLE to LIGHTPINK
+    RED_NOT_VISIBLE="\\033[39m \\033[38;5;124m"
+FROM_RED_NOT_VISIBLE="\\o33\\[39;00m\\o033\\[38;5;124m" # NOtice the \\o \\[ changes
+#          \\o033\\[39m \\o033\\[38;5;124m
+# Change BLUE_NOT_VISIBLE to YELLOW_OVER_DARKBLUE
+BLUE_NOT_VISIBLE="\\033[39;00m\\033[38;5;18m"
+FROM_BLUE_NOT_VISIBLE="\\o33\\[39;00m\\o033\\[38;5;18m"  # Notice the \\o \\[ changes
+FROM_BLUE_NOT_VISIBLE2="\\o033\\[38;5;18m"  # NOtice the \\o \\[ changes
+# Change BLURRY_PINK to YELLOW_OVER_DARKBLUE
+FROM_BLURRY_PINK="\\o33\\[39m\\o33\\[38;5;132;01m"
+DARK_PEACH="\\033[38;5;202m"
+TO_DARK_PEACH="\\o033[38;5;202m\\o033[48;5;0m"
+# Change MAGENTA_NOT_VISIBLE to TO_DARK_BLUE_OVER_PEACH
+FROM_MAGENTA_NOT_VISIBLE="\\o033\\[39m\\o033\\[38;5;124m"
+FROM_MAGENTA_NOT_VISIBLE2="\\o033\\[38;5;124m"
+TO_DARK_BLUE_OVER_PEACH="\\o033[38;5;20m\\o033[48;5;208m"
+DARK_BLUE_OVER_PEACH="\\033[38;5;20m\\033[48;5;208m"
+ LIGHTYELLOW="\\033[38;5;227m"
+ LIGHTGREEN="\\033[38;5;83m"
 # SUDO_USER only exists during execution of sudo
 # REF: https://stackoverflow.com/questions/7358611/get-users-home-directory-when-they-run-a-script-as-root
 # Global:
@@ -102,20 +135,20 @@ function execute_as_sudo(){
     }
     else
     {
-        if [[ -e "./$THISSCRIPTCOMPLETEPATH" ]] ; then
+        if [[ -e "./${THISSCRIPTCOMPLETEPATH:-}" ]] ; then
         {
-          echo -e "4.1 sudologic execute_as_sudo.sh ${RED} ¿? ${LIGHTYELLOW} Attempting to reload:sudo \"./$THISSCRIPTCOMPLETEPATH\" \"${*}\" " 
-          sudo "./$THISSCRIPTCOMPLETEPATH" "${*}"
+          echo -e "4.1 sudologic execute_as_sudo.sh ${RED} ¿? ${LIGHTYELLOW} Attempting to reload:sudo \"./${THISSCRIPTCOMPLETEPATH:-}\" \"${*}\" " 
+          sudo "./${THISSCRIPTCOMPLETEPATH:-}" "${*}"
         }
-        elif ( command -v "$THISSCRIPTCOMPLETEPATH" >/dev/null 2>&1 );  then
+        elif ( command -v "${THISSCRIPTCOMPLETEPATH:-}" >/dev/null 2>&1 );  then
         {
           # echo "sudo sudo sudo "
-          echo -e "4.2 sudologic execute_as_sudo.sh ${RED} ¿? ${LIGHTYELLOW} Attempting to reload:sudo \"$THISSCRIPTCOMPLETEPATH\" \"${*}\" " 
-          sudo "$THISSCRIPTCOMPLETEPATH" "${*}"
+          echo -e "4.2 sudologic execute_as_sudo.sh ${RED} ¿? ${LIGHTYELLOW} Attempting to reload:sudo \"${THISSCRIPTCOMPLETEPATH:-}\" \"${*}\" " 
+          sudo "${THISSCRIPTCOMPLETEPATH:-}" "${*}"
         }
         else
         {
-          echo -e "\033[05;7m*** Failed to find script to recall it as sudo ...\033[0m $THISSCRIPTCOMPLETEPATH"
+          echo -e "\033[05;7m*** Failed to find script to recall it as sudo ...\033[0m ${THISSCRIPTCOMPLETEPATH:-}"
           exit 1
         }
         fi

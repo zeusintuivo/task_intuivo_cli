@@ -180,7 +180,7 @@ _darwin__64() {
 _darwin__arm64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   # () {
-  cat << EOF > install_powerlevel10k_sub.zsh
+  cat << EOF > "${USER_HOME}/install_powerlevel10k_sub.zsh"
 #!/usr/bin/env zsh
 #!/bin/zsh
 
@@ -226,13 +226,18 @@ typeset -r THISSCRIPTNAME="\$(basename "\$0")"
     ZDOTDIR=~ exec zsh -i
   # }
 EOF
-  chmod a+x install_powerlevel10k_sub.zsh
-  ( ./install_powerlevel10k_sub.zsh )
+  cd "${USER_HOME}"
+  chmod a+x "${USER_HOME}/install_powerlevel10k_sub.zsh"
+  chown -R $SUDO_USER  "${USER_HOME}/install_powerlevel10k_sub.zsh"
+  su - "${SUDO_USER}" -c "( "${USER_HOME}/install_powerlevel10k_sub.zsh" )"
   chown -R "${SUDO_USER}" "${USER_HOME}/.oh-my-zsh"
   install_requirements "darwin" "
     zsh-syntax-highlighting 
     zsh-autosuggestions
   "
+  cd "${USER_HOME}"
+  su - "${SUDO_USER}" -c "git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
+  su - "${SUDO_USER}" -c "git clone https://github.com/zsh-users/zsh-autosuggestions ${USER_HOME}/plugins/zsh-autosuggestions"
   rm ./install_powerlevel10k_sub.zsh
   # echo "_darwin__arm64 Procedure not yet implemented. I don't know what to do."
 } # end _darwin__arm64
