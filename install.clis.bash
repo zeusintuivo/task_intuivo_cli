@@ -7,7 +7,7 @@ set -u
 set -E -o functrace
 export THISSCRIPTCOMPLETEPATH
 
-
+${0:-} ${1:-}
 echo "0. sudologic $0 Start Checking realpath  "
 if ! ( command -v realpath >/dev/null 2>&1; )  ; then
   echo "... realpath not found. Downloading REF:https://github.com/swarmbox/realpath.git "
