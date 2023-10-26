@@ -137,14 +137,14 @@ function execute_as_sudo(){
     {
         if [[ -e "./${THISSCRIPTCOMPLETEPATH:-}" ]] ; then
         {
-          echo -e "4.1 sudologic execute_as_sudo.sh ${RED} ¿? ${LIGHTYELLOW} Attempting to reload:sudo \"./${THISSCRIPTCOMPLETEPATH:-}\" \"${*}\" " 
-          sudo "./${THISSCRIPTCOMPLETEPATH:-}" "${*}"
+          echo -e "4.1 sudologic execute_as_sudo.sh ${RED} ¿? ${LIGHTYELLOW} Attempting to reload:sudo \"./${THISSCRIPTCOMPLETEPATH:-}\" \"${*:-}\" " 
+          sudo "./${THISSCRIPTCOMPLETEPATH:-}" "${*:-}"
         }
         elif ( command -v "${THISSCRIPTCOMPLETEPATH:-}" >/dev/null 2>&1 );  then
         {
           # echo "sudo sudo sudo "
-          echo -e "4.2 sudologic execute_as_sudo.sh ${RED} ¿? ${LIGHTYELLOW} Attempting to reload:sudo \"${THISSCRIPTCOMPLETEPATH:-}\" \"${*}\" " 
-          sudo "${THISSCRIPTCOMPLETEPATH:-}" "${*}"
+          echo -e "4.2 sudologic execute_as_sudo.sh ${RED} ¿? ${LIGHTYELLOW} Attempting to reload:sudo \"${THISSCRIPTCOMPLETEPATH:-}\" \"${*:-}\" " 
+          sudo "${THISSCRIPTCOMPLETEPATH:-}" "${*:-}"
         }
         else
         {
