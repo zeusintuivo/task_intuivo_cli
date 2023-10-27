@@ -435,6 +435,7 @@ _fedora__64() {
     # compat-libvpx5
 		libvpx-devel
     mokutil
+		elfutils-libelf-devel 
  "
   is_not_installed pygmentize &&   dnf  -y install pygmentize
   if ( ! command -v pygmentize >/dev/null 2>&1; ) ;  then
@@ -448,6 +449,7 @@ _fedora__64() {
   else
   {
     dnf groupinstall 'Development Tools' -y
+	  dnf install @development-tools -y
   }
   fi
   # dnf install libxcrypt-compat -y # needed by Fedora 30 and up
@@ -471,14 +473,17 @@ _fedora__64() {
     modinfo
   "
   echo sudo dnf install VirtualBox-6.1 -y
-  install_requirements "linux" "
+  #install_requirements "linux" "
     # RedHat Flavor only
-    VirtualBox-6.1
-  "
-  verify_is_installed "
-  VirtualBox
-  "
-
+  #  VirtualBox-6.1
+  #"
+  #verify_is_installed "
+  #VirtualBox
+  #"
+	wget -P /etc/yum.repos.d/ https://download.virtualbox.org/virtualbox/rpm/fedora/virtualbox.repo
+  yes | dnf search virtualbox -y
+	dnf install VirtualBox-7.0 -y
+	usermod -aG vboxusers $USER
   cd  "${USER_HOME}"
   [ ! -f  "${USER_HOME}/.virtualboxinstallreboot" ] && echo System will reboot now, after you press any key
   [ ! -f  "${USER_HOME}/.virtualboxinstallreboot" ] &&  touch "${USER_HOME}/.virtualboxinstallreboot" && _pause  "reboot 1" && reboot
