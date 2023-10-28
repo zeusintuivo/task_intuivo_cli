@@ -1,6 +1,7 @@
 #!/usr/bin/bash
-
-
+#
+# @author Zeus Intuivo <zeus@intuivo.com>
+#
   function _trap_on_error(){
     local -ir __trapped_error_exit_num="${2:-0}"
     echo -e "\\n \033[01;7m*** 2 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
@@ -18,7 +19,7 @@
     exit ${__trapped_error_exit_num}
   }
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  
+
   function _trap_on_INT(){
     local -ir __trapped_INT_num="${2:-0}"
     echo -e "\\n \033[01;7m*** 7 INT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n INT ...\033[0m  \n \n "
@@ -37,23 +38,118 @@
   }
   trap  '_trap_on_INT $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  INT
 
+
+
+_package_list_installer() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local package packages="${@}"
+  # trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer go" && echo -e "${RESET}" && return 0' ERR
+
+  if ! install_requirements "linux" "${packages}" ; then
+  {
+    warning "installing requirements. ${CYAN} attempting to install one by one"
+    while read package; do
+    {
+      [ -z ${package} ] && continue
+      if ! install_requirements "linux" "${package}" ; then
+      {
+        _err=$?
+        if [ ${_err} -gt 0 ] ; then
+        {
+          echo -e "${RED}"
+          echo failed to install requirements "${package}"
+          echo -e "${RESET}"
+        }
+        fi
+      }
+      fi
+    }
+    done <<< "${packages}"
+  }
+  fi
+} # end _package_list_installer
+
+
+_git_clone() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local _source="${1}"
+  local _target="${2}"
+  Checking "${SUDO_USER}" "${_target}"
+  pwd
+  if  it_exists_with_spaces "${_target}" && it_exists_with_spaces "${_target}/.git" ; then
+  {
+    cd "${_target}"
+    git config pull.rebase false
+    git fetch
+    git checkout .
+    git pull
+  }
+  else
+  {
+    git clone "${_source}" "${_target}"
+  }
+  fi
+  chown -R "${SUDO_USER}" "${_target}"
+
+} # _git_clone
+
+
+
+_add_variables_to_bashrc_zshrc(){
+  mkdir -p "${USER_HOME}/go"
+  chown -R "${SUDO_USER}" "${USER_HOME}/go"
+  local GO_SH_CONTENT='
+
+# GOLANG
+# Go code lives in a workspace which is defined by the GOPATH
+# environment variable. A common choice among developers,
+# and the default value of GOPATH starting from the
+# Go 1.8 release, is to use $HOME/go:
+export GOPATH="'${USER_HOME}'/go"
+export PATH="'${USER_HOME}'/go/bin:${PATH}"
+
+'
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _add_variables_to_bashrc_zshrc go" && echo -e "${RESET}" && return 0' ERR
+  Checking "${GO_SH_CONTENT}"
+  local INITFILE INITFILES="
+   .bashrc
+   .zshrc
+   .bash_profile
+   .profile
+   .zshenv
+   .zprofile
+  "
+  while read INITFILE; do
+  {
+    [ -z ${INITFILE} ] && continue
+    Checking "${USER_HOME}/${INITFILE}"
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "GOLANG" ||  echo "${GO_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "HOME/go" ||  echo "${GO_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "/go/bin" ||  echo "${GO_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+  }
+  done <<< "${INITFILES}"
+  # type go
+  Checking "export GOPATH=\"${USER_HOME}/go\" "
+  export GOPATH="${USER_HOME}/go"
+  su - "${SUDO_USER}" -c "GOPATH=\"${USER_HOME}/go\" go install github.com/cosmtrek/air@latest"
+} # _add_variables_to_bashrc_zshrc
+
+
 _debian_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
-  if (
-  install_requirements "linux" "
+  # Batch 2 20.04
+  local package packages="
     go
+    openssl
+    gofmt
   "
-  ); then 
-    {
-      apt install base64 -y
-      apt install unzip -y
-      apt install nginx -y
-    }
-  fi
+  _package_list_installer "${packages}"
   verify_is_installed "
     go
+    gofmt
   "
+
+  _add_variables_to_bashrc_zshrc
   # local PB_VERSION=0.16.7
   # local CODENAME="pocketbase_${PB_VERSION}_linux_amd64.zip"
   # local TARGET_URL="https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/${CODENAME}"
@@ -73,20 +169,21 @@ _debian_flavor_install() {
 
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  # echo "_redhat_flavor_install Procedure not yet implemented. I don't know what to do."
-   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  if (
-  install_requirements "linux" "
+  dnf build-dep golang -vy
+  local package packages="
+    golang
     go
+    openssl
+    openssl-devel
   "
-  ); then 
-    {
-      failed to get install golang
-    }
-  fi
+  _package_list_installer "${packages}"
   verify_is_installed "
     go
+    gofmt
   "
+
+  _add_variables_to_bashrc_zshrc
+
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
@@ -176,25 +273,37 @@ _ubuntu__64() {
 
 _darwin__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  echo "_darwin__64 Procedure not yet implemented. I don't know what to do."
+  local package packages="
+    golang
+    go
+    openssl
+    gofmt
+    openssl-devel
+  "
+  _package_list_installer "${packages}"
+  verify_is_installed "
+    go
+    gofmt
+  "
+  _add_variables_to_bashrc_zshrc
 } # end _darwin__64
 
 _darwin__arm64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   # echo "_darwin__arm64 Procedure not yet implemented. I don't know what to do."
-   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  if (
-  install_requirements "linux" "
+  local package packages="
+    golang
     go
+    openssl
+    gofmt
+    openssl-devel
   "
-  ); then 
-    {
-      failed to get install golang
-    }
-  fi
+  _package_list_installer "${packages}"
   verify_is_installed "
     go
+    gofmt
   "
+  _add_variables_to_bashrc_zshrc
 } # end _darwin__arm64
 
 _tar() {
