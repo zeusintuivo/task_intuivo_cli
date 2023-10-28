@@ -544,7 +544,11 @@ _debian_flavor_install() {
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   dnf build-dep rbenv -vy
-  _git_clone "https://github.com/rbenv/rbenv.git" "${USER_HOME}/.rbenv"
+  dnf install  -y openssl-devel
+	ensure brew or "Canceling until brew is installed. try install_brew.bash install_brew.sh"
+	su - "${SUDO_USER}" -c 'brew install readline'
+	su - "${SUDO_USER}" -c 'brew install openssl@1.1'
+	_git_clone "https://github.com/rbenv/rbenv.git" "${USER_HOME}/.rbenv"
   _git_clone "https://github.com/rbenv/ruby-build.git" "${USER_HOME}/.rbenv/plugins/ruby-build"
   _add_variables_to_bashrc_zshrc
   ensure rbenv or "Canceling until rbenv did not install"
