@@ -7,7 +7,7 @@
 set -E -o functrace
 export THISSCRIPTCOMPLETEPATH
 
-${0:-} ${1:-}
+
 echo "0. sudologic $0 Start Checking realpath  "
 if ! ( command -v realpath >/dev/null 2>&1; )  ; then
   echo "... realpath not found. Downloading REF:https://github.com/swarmbox/realpath.git "
@@ -1295,6 +1295,7 @@ _install_dmgs_list() {
   iTerm2-3_4_8.zip|iTerm.app|https://iterm2.com/downloads/stable/iTerm2-3_4_8.zip
   sublime_text_build_4113_mac.zip|Sublime Text.app|https://download.sublimetext.com/sublime_text_build_4113_mac.zip
   Caffeine.dmg|Caffeine/Caffeine.app|https://github.com/IntelliScape/caffeine/releases/download/1.1.3/Caffeine.dmg
+  Docker.dmg|Docker.app|https://desktop.docker.com/mac/main/arm64/Docker.dmg
   Keybase.dmg|Keybase App/Keybase.app|https://prerelease.keybase.io/Keybase.dmg
   Brave-Browser.dmg|Brave Browser/Brave Browser.app|https://referrals.brave.com/latest/Brave-Browser.dmg
   Firefox%20118.0.2.dmg|Firefox/Firefox.app|https://download-installer.cdn.mozilla.net/pub/firefox/releases/118.0.2/mac/en-US/Firefox%20118.0.2.dmg
@@ -1966,6 +1967,23 @@ EOINSERT
   Installing disable spotlight using significant power REF: https://discussions.apple.com/thread/5610674
   syslog -k Sender mdworker -o -k Sender mds | grep -v 'boxd\|Norm' | tail | open -ef
   mdutil -as | open -ef
+  echo " Disable gamed "
+  echo "
+    
+    REF: https://discussions.apple.com/thread/5521495
+
+    You can prevent gamed from running by logging in as an administrative user, running the Terminal application, and typing (or copying and pasting) at the prompt:
+
+      sudo defaults write /System/Library/LaunchAgents/com.apple.gamed Disabled -bool true
+
+    After restarting your computer, gamed will not be running and the Little Snitch network monitor won't be flashing.
+
+
+    To reverse the change, you can type:
+
+      sudo defaults delete /System/Library/LaunchAgents/com.apple.gamed Disabled
+
+  "
   Message disable "Integrity protection" reboot mac . Commnd R Terminal csrutil disable
   Message then reboot
   Message REF: https://cleanmymac.com/faq/how-to-turn-off-spotlight-search-on-mac

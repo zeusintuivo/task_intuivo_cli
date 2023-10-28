@@ -614,7 +614,7 @@ EOF
   "
   cd "${USER_HOME}"
   su - "${SUDO_USER}" -c "git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
-  su - "${SUDO_USER}" -c "git clone https://github.com/zsh-users/zsh-autosuggestions ${USER_HOME}/plugins/zsh-autosuggestions"
+  su - "${SUDO_USER}" -c "git clone https://github.com/zsh-users/zsh-autosuggestions ${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
   rm ./install_powerlevel10k_sub.zsh
   # echo "_darwin__arm64 Procedure not yet implemented. I don't know what to do."
 } # end _darwin__arm64

@@ -1189,16 +1189,3 @@ sudo passwd $SUDO_USER <<< "#
 
 echo "🥦"
 
-
-
- #--------/\/\/\/\-- tasks_templates_sudo/clis …install_clis.bash” -- Custom code-/\/\/\/\-------
-
-
-_main() {
-  determine_os_and_fire_action
-} # end _main
-
-_main
-
-echo "🥦"
-exit 0
