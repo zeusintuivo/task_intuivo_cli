@@ -444,6 +444,7 @@ _git_clone() {
     cd "${_target}"
     git config pull.rebase false    
     git fetch
+    git checkout .
     git checkout master
     git pull
     git fetch --tags origin
