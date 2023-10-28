@@ -154,7 +154,7 @@ _redhat_flavor_install() {
     gnome-tweaks
     breeze-cursor-theme
     oxygen-cursor-themes
-
+    knock
   "
   ); then
     {
