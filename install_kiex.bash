@@ -396,6 +396,25 @@ directory_exists_with_spaces "${USER_HOME}"
   }
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
 
+  function _trap_on_INT(){
+    local -ir __trapped_INT_num="${2:-0}"
+    echo -e "\\n \033[01;7m*** 7 INT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n INT ...\033[0m  \n \n "
+    echo ". ${1}"
+    echo ". INT  ${__trapped_INT_num}  "
+    echo ". caller $(caller) "
+    echo ". ${BASH_COMMAND}"
+    local -r __caller=$(caller)
+    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+
+    # $(eval ${BASH_COMMAND}  2>&1; )
+    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+    exit ${__trapped_INT_num}
+  }
+  trap  '_trap_on_INT $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  INT
+
+
 
 _package_list_installer() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
@@ -428,16 +447,21 @@ _package_list_installer() {
 
 _git_clone() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO  _git_clone EVM" && echo -e "${RESET}" && return 0' ERR
   local _source="${1}"
   local _target="${2}"
   Checking "${SUDO_USER}" "${_target}"
   pwd
-  if  it_exists_with_spaces "${_target}" && it_exists_with_spaces "${_target}/.git" ; then
+  if  it_exists_with_spaces "${_target}" ; then # && it_exists_with_spaces "${_target}/.git" ; then
   {
-    cd "${_target}"
-    git config pull.rebase false
-    git fetch
-    git pull
+    if it_exists_with_spaces "${_target}/.git" ; then
+    {
+      cd "${_target}"
+      git config pull.rebase false
+      git fetch
+      git pull
+    }
+    fi
   }
   else
   {
@@ -451,36 +475,41 @@ _git_clone() {
 
 _install_and_add_variables_to_bashrc_zshrc(){
   trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _install_and_add_variables_to_bashrc_zshrc kiex" && echo -e "${RESET}" && return 0' ERR
-  
+
   local dir DIRS="erlang_tars erlang_versions kiex_config scripts"
   local KIEX_HOME="${USER_HOME}/.kiex"
   # For each dir, check whether it's already exists or not
-  for dir in $DIRS
-  do
-    if [[ ! -d "$KIEX_HOME/$dir" ]]
-    then
+  for dir in $DIRS ; do
+  {
+    if [[ ! -d "$KIEX_HOME/$dir" ]] ; then
+    {
       mkdir -p "$KIEX_HOME/$dir"
       echo "$KIEX_HOME/$dir successfully created"
+    }
     else
+    {
       echo "$KIEX_HOME/$dir already exists and will not be replaced"
+    }
     fi
+  }
   done
   # Create the config file
-  if [[ ! -f "$KIEX_HOME/kiex_config/erlang_default" ]]
-  then 
+  if [[ ! -f "$KIEX_HOME/kiex_config/erlang_default" ]] ; then
+  {
     touch "$KIEX_HOME/kiex_config/erlang_default"
     echo "$KIEX_HOME/kiex_config/erlang_default succesfully created"
+  }
   else
+  {
     echo "$KIEX_HOME/kiex_config/erlang_default already exists and will not be replaced"
+  }
   fi
-
-  # Copy the script
-  # cp "kiex" "$KIEX_HOME/scripts"
 
   local KIEX_SH_CONTENT='
 
 # KIEX
-test -s "'${USER_HOME}'/.kiex/scripts/kiex" && source "'${USER_HOME}'/.kiex/scripts/kiex"
+test -s "'${USER_HOME}'/.kiex/scripts/kiex" && export KIEX_ROOT="'${USER_HOME}'/.kiex/scripts"
+test -s "'${USER_HOME}'/.kiex/scripts/kiex" && export PATH="'${USER_HOME}'/.kiex/scripts:${PATH}"
 
 ' 
   echo "${KIEX_SH_CONTENT}"
@@ -493,14 +522,17 @@ test -s "'${USER_HOME}'/.kiex/scripts/kiex" && source "'${USER_HOME}'/.kiex/scri
    .zprofile
   "
   while read INITFILE; do
-  { 
+  {
     [ -z ${INITFILE} ] && continue
     _if_not_contains "${USER_HOME}/${INITFILE}"  "# KIEX" ||  echo "${KIEX_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
     _if_not_contains "${USER_HOME}/${INITFILE}"  "kiex/scripts" ||  echo "${KIEX_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
   }
   done <<< "${INITFILES}"
   # type kiex
-  source "${USER_HOME}/.kiex/scripts/kiex"
+  test -s "'${USER_HOME}'/.kiex/scripts/kiex" && unlink "${USER_HOME}/.kiex/scripts/kiex"
+	cp "${USER_HOME}/.kiex/kiex"  "${USER_HOME}/.kiex/scripts"
+  export PATH="${USER_HOME}/.kiex/scripts:${PATH}"	
+	source "${USER_HOME}/.kiex/scripts/kiex"
   _finale_message
 
 } # _add_variables_to_bashrc_zshrc
@@ -534,15 +566,16 @@ _finale_message(){
 _debian_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   curl -Lqs https://raw.githubusercontent.com/taylor/kiex/master/install | bash -s
-  _git_clone "https://raw.githubusercontent.com/taylor/kiex.git" "${USER_HOME}/.kiex"
+  _git_clone "https://github.com/taylor/kiex.git" "${USER_HOME}/.kiex"
   local MSG=$(_install_and_add_variables_to_bashrc_zshrc)
   echo "${MSG}"
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+	trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _redhat_flavor_install() Cloning failed kiex" && echo -e "${RESET}" ' ERR
   curl -Lqs https://raw.githubusercontent.com/taylor/kiex/master/install | bash -s
-  _git_clone "https://raw.githubusercontent.com/taylor/kiex.git" "${USER_HOME}/.kiex"
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _git_clone "https://github.com/taylor/kiex.git" "${USER_HOME}/.kiex"
   local MSG=$(_install_and_add_variables_to_bashrc_zshrc)
   echo "${MSG}"
 } # end _redhat_flavor_install
@@ -550,7 +583,7 @@ _redhat_flavor_install() {
 _arch_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   curl -Lqs https://raw.githubusercontent.com/taylor/kiex/master/install | bash -s
-  _git_clone "https://raw.githubusercontent.com/taylor/kiex.git" "${USER_HOME}/.kiex"
+  _git_clone "https://github.com/taylor/kiex.git" "${USER_HOME}/.kiex"
   local MSG=$(_install_and_add_variables_to_bashrc_zshrc)
   echo "${MSG}"
 } # end _readhat_flavor_install
@@ -648,7 +681,7 @@ _darwin__64() {
     libxslt
   "
   _package_list_installer "${packages}"
-  _git_clone "https://raw.githubusercontent.com/taylor/kiex.git" "${USER_HOME}/.kiex"
+  _git_clone "https://github.com/taylor/kiex.git" "${USER_HOME}/.kiex"
   local MSG=$(_install_and_add_variables_to_bashrc_zshrc)
   echo "${MSG}" 
 } # end _darwin__64

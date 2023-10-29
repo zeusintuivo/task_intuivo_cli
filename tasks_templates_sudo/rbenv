@@ -75,12 +75,16 @@ _git_clone() {
   local _target="${2}"
   Checking "${SUDO_USER}" "${_target}"
   pwd
-  if  it_exists_with_spaces "${_target}" && it_exists_with_spaces "${_target}/.git" ; then
+  if  it_exists_with_spaces "${_target}" ; then # && it_exists_with_spaces "${_target}/.git" ; then
   {
-    cd "${_target}"
-    git config pull.rebase false
-    git fetch
-    git pull
+    if it_exists_with_spaces "${_target}/.git" ; then
+    {
+      cd "${_target}"
+      git config pull.rebase false
+      git fetch
+      git pull
+    }
+    fi
   }
   else
   {
