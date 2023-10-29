@@ -394,13 +394,32 @@ directory_exists_with_spaces "${USER_HOME}"
 
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
-    exit 1
+    exit ${__trapped_error_exit_num}
   }
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
 
+  function _trap_on_INT(){
+    local -ir __trapped_INT_num="${2:-0}"
+    echo -e "\\n \033[01;7m*** 7 INT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n INT ...\033[0m  \n \n "
+    echo ". ${1}"
+    echo ". INT  ${__trapped_INT_num}  "
+    echo ". caller $(caller) "
+    echo ". ${BASH_COMMAND}"
+    local -r __caller=$(caller)
+    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+
+    # $(eval ${BASH_COMMAND}  2>&1; )
+    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+    exit ${__trapped_INT_num}
+  }
+  trap  '_trap_on_INT $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  INT
+
+
 
 _package_list_installer() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  # trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   local package packages="${@}"
   trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer evm" && echo -e "${RESET}" && return 0' ERR
 
@@ -430,16 +449,21 @@ _package_list_installer() {
 
 _git_clone() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO  _git_clone EVM" && echo -e "${RESET}" && return 0' ERR
   local _source="${1}"
   local _target="${2}"
   Checking "${SUDO_USER}" "${_target}"
   pwd
-  if  it_exists_with_spaces "${_target}" && it_exists_with_spaces "${_target}/.git" ; then
+  if  it_exists_with_spaces "${_target}" ; then # && it_exists_with_spaces "${_target}/.git" ; then
   {
-    cd "${_target}"
-    git config pull.rebase false
-    git fetch
-    git pull
+		if it_exists_with_spaces "${_target}/.git" ; then
+		{
+      cd "${_target}"
+      git config pull.rebase false
+      git fetch
+      git pull
+		}
+		fi
   }
   else
   {
@@ -498,8 +522,9 @@ _install_and_add_variables_to_bashrc_zshrc(){
    .zprofile
   "
   while read INITFILE; do
-  { 
+  {
     [ -z ${INITFILE} ] && continue
+    Checking "${USER_HOME}/${INITFILE}" 
     # if ! it_exists_with_spaces "${_target}" ; then
     # {
     #   continue
@@ -511,7 +536,7 @@ _install_and_add_variables_to_bashrc_zshrc(){
   }
   done <<< "${INITFILES}"
   # type EVM
-  file_exists_with_spaces "${USER_HOME}/.evm/scripts/evm" 
+  file_exists_with_spaces "${USER_HOME}/.evm/scripts/evm"
   source "${USER_HOME}/.evm/scripts/evm"
   _finale_message
 
@@ -519,6 +544,7 @@ _install_and_add_variables_to_bashrc_zshrc(){
 
 _debian_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _git_clone "https://github.com/robisonsantos/evm.git" "${USER_HOME}/.evm"
   apt update -y
   trap 'echo -e "${RED}" && echo "ERROR err:$_err failed $0:$LINENO _debian_flavor_install evm" && echo -e "${RESET}" && return 0' ERR
   local package packages="
@@ -526,6 +552,11 @@ _debian_flavor_install() {
     openssl
     libssl-dev
     fop
+    flex
+    libxml
+    libxml-dev
+    libxslt
+    libxslt-dev
     xsltproc
     unixodbc-dev
     libxml2-utils
@@ -540,7 +571,6 @@ _debian_flavor_install() {
     wx-common
    "
   _package_list_installer "${packages}"
-  _git_clone "https://github.com/robisonsantos/evm.git" "${USER_HOME}/.evm"
   local MSG=$(_install_and_add_variables_to_bashrc_zshrc)
   echo "${MSG}"
   _finale_message
@@ -548,7 +578,84 @@ _debian_flavor_install() {
 
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-    echo "Procedure not yet implemented. I don't know what to do."
+  _git_clone "https://github.com/robisonsantos/evm.git" "${USER_HOME}/.evm"
+  dnf build-dep erlang -y --allowerasing # --skip-broken
+	# Package make-1:4.3-11.fc37.x86_64 is already installed.
+  # Package gcc-12.3.1-1.fc37.x86_64 is already installed.
+  # Package gcc-c++-12.3.1-1.fc37.x86_64 is already installed.
+  # Package autoconf-2.71-4.fc37.noarch is already installed.
+  # Package automake-1.16.5-9.fc37.noarch is already installed.
+  # Package zlib-devel-1.2.12-5.fc37.x86_64 is already installed.
+  # Package systemd-251.14-2.fc37.x86_64 is already installed.
+  # Package ncurses-devel-6.4-3.20230114.fc37.x86_64 is already installed.
+  # Package systemd-devel-251.14-2.fc37.x86_64 is already installed.
+  # Package flex-2.6.4-11.fc37.x86_64 is already installed.
+  # Package emacs-1:28.3-0.rc1.fc37.x86_64 is already installed.
+  # Package wxGTK-devel-3.2.1-3.fc37.x86_64 is already installed.
+  # Package m4-1.4.19-4.fc37.x86_64 is already installed.
+  # Package unixODBC-devel-2.3.11-1.fc37.x86_64 is already installed.
+  # Package lksctp-tools-devel-1.0.19-2.fc37.x86_64 is already installed.
+  # Package openssl1.1-devel-1:1.1.1q-2.fc37.x86_64 is already installed.
+  # Package ed-1.18-2.fc37.x86_64 is already installed.
+  # Package emacs-common-1:28.3-0.rc1.fc37.x86_64 is already installed
+  _package_list_installer "openssl1.1
+   	openssl1.1-devel-1"
+  local package packages="
+    # Fedora 37
+    wget
+    # openssl
+    # openssl-devel
+    fop
+    libwbxml
+    libwbxml-devel
+    rust-libxml-devel
+    libxslt
+    libxslt-devel
+    # xsltproc
+    flex
+    compat-flex
+    unixODBC-gui-qt
+		unixODBC-devel
+    erlang-odbc
+    erlang-xmlrpc
+    erlang-ssh
+    erlang-tftp
+    erlang-tools
+    erlang-yconf
+    erlang-riaknostic
+    erlang-riak_pb
+    erlang-riak_sysmon
+    erlang-rebar3-pc
+    erlang-ranch
+    erlang-snmp
+    erlang-webmachine
+    # libqt5opengl5-devel
+    ncurses-devel
+    wxGTK3-devel
+		wxGTK3-docs
+		wxGTK-devel
+		wxGTK-docs
+		compat-wxGTK3-gtk2-devel
+		compat-wxGTK3-gtk2-media
+		compat-wxGTK3-gtk2-gl
+		compat-wxGTK3-gtk2
+		wxGTK-webview
+		wxGTK3-gl
+    # gtk3-devel
+    # wx-common
+		wxGTK
+		wxGTK3
+		wxGlade
+		wxBase3
+		wxBase
+		erlang-wx
+		commons-compiler-jdk
+		javac@https://download.oracle.com/java/21/latest/jdk-21_linux-x64_bin.rpm
+   "
+  _package_list_installer "${packages}"
+  local MSG=$(_install_and_add_variables_to_bashrc_zshrc)
+  echo "${MSG}"
+  _finale_message
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {

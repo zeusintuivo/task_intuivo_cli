@@ -41,9 +41,9 @@
 
 
 _package_list_installer() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  # trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   local package packages="${@}"
-  # trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer rbenv" && echo -e "${RESET}" && return 0' ERR
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer rbenv" && echo -e "${RESET}" && return 0' ERR
 
   if ! install_requirements "linux" "${packages}" ; then
   {
@@ -192,7 +192,7 @@ _redhat_flavor_install() {
 	ensure brew or "Canceling until brew is installed. try install_brew.bash install_brew.sh"
 	su - "${SUDO_USER}" -c 'brew install readline'
 	su - "${SUDO_USER}" -c 'brew install openssl@1.1'
-	_git_clone "https://github.com/rbenv/rbenv.git" "${USER_HOME}/.rbenv"
+  _git_clone "https://github.com/rbenv/rbenv.git" "${USER_HOME}/.rbenv"
   _git_clone "https://github.com/rbenv/ruby-build.git" "${USER_HOME}/.rbenv/plugins/ruby-build"
   _add_variables_to_bashrc_zshrc
   ensure rbenv or "Canceling until rbenv did not install"
