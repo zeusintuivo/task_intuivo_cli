@@ -570,6 +570,47 @@ _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   dnf build-dep rbenv -vy
   dnf install  -y openssl-devel
+  # Batch Fedora 37
+  local package packages="
+    libyaml
+    libyaml-devel
+    autoconf
+    bison
+		bison-devel
+    ruby-build-rbenv
+    openssl1.1
+    openssl1.1-devel-1
+		ncurses
+    ncurses-devel
+		ncurses-c++-libs
+		ncurses-compat-libs
+		ncurses-libs
+		ncurses-static
+		ncurses-base
+		ncurses-term
+    readline
+		readline-static
+		readline-devel
+		compat-readline5
+		compat-readline5-devel
+		compat-readline6
+		compat-readline6-devel
+    zlib
+		zlib-devel
+    zlibrary-devel
+    zlibrary		
+		libffi
+    libffi-devel
+		libffi3.1
+    compat-gdbm
+		compat-gdbm-devel
+    compat-gdbm-libs
+		gdbm
+		gdbm-devel
+		gdbm-libs
+  "
+  _package_list_installer "${packages}"
+
 	ensure brew or "Canceling until brew is installed. try install_brew.bash install_brew.sh"
 	su - "${SUDO_USER}" -c 'brew install readline'
 	su - "${SUDO_USER}" -c 'brew install openssl@1.1'

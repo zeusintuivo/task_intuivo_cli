@@ -38,12 +38,38 @@
 
 
 _add_variables_to_bashrc_zshrc(){
-  local BREW_SH_CONTENT="
+  local FINDBREW="/opt/homebrew/bin/brew"
+
+	if [[ -e "/opt/homebrew/bin/brew" ]] ; then 
+	{
+		FINDBREW="/opt/homebrew/bin/brew"
+	}
+  elif [[ -e "${USER_HOME}/.linuxbrew/bin/brew" ]] ; then
+	{
+		FINDBREW="${USER_HOME}/.linuxbrew/bin/brew"
+	}
+  elif [[ -e "/usr/local/opt/bin/brew" ]] ; then
+	{
+		FINDBREW="/usr/local/opt/bin/brew"
+	}
+  elif [[ -e "/usr/local/bin/brew" ]] ; then
+	{
+		FINDBREW="/usr/local/bin/brew"
+	}
+  elif [[ -e "$(brew --prefix)/bin/brew" ]] ; then
+	{
+		FINDBREW="$(brew --prefix)/bin/brew"
+	}
+	fi
+
+	
+	$(brew --prefix)/bin/brew
+	local BREW_SH_CONTENT='
 
 # BREW - HOMEBREW 
-eval \$($(brew --prefix)/bin/brew shellenv)
+eval $("'${FINDBREW}'" shellenv)
 
-"
+'
   # trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _add_variables_to_bashrc_zshrc nvm" && echo -e "${RESET}" && return 0' ERR
   echo "${BREW_SH_CONTENT}"
   local INITFILE INITFILES="
@@ -57,6 +83,7 @@ eval \$($(brew --prefix)/bin/brew shellenv)
   while read INITFILE; do
   {
     [ -z ${INITFILE} ] && continue    
+    Checking "${USER_HOME}/${INITFILE}" 
     (_if_not_contains  "${USER_HOME}/${INITFILE}" "/bin/brew shellenv" ) || Configuring ${INITFILE}
     (_if_not_contains  "${USER_HOME}/${INITFILE}" "/bin/brew shellenv" ) && Skipping configuration for ${INITFILE}
     #                   filename            value      || do this .............
@@ -64,7 +91,13 @@ eval \$($(brew --prefix)/bin/brew shellenv)
     (_if_not_contains  "${USER_HOME}/${INITFILE}" "/bin/brew shellenv" ) || echo -e "${BREW_SH_CONTENT}" >>"${USER_HOME}/${INITFILE}"
   }
   done <<< "${INITFILES}"
-
+  # if it_exists /home/linuxbrew ; then
+  # {
+  #   rm -rf /home/linuxbrew
+  # }
+  # fi
+  file_exists_with_spaces "${FINDBREW}"
+  eval $("${FINDBREW}" shellenv)
 } # _add_variables_to_bashrc_zshrc
 
 _make_linuxbrewfolder() {

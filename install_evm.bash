@@ -621,6 +621,7 @@ _redhat_flavor_install() {
     erlang-ssh
     erlang-tftp
     erlang-tools
+		erlang-ezlib
     erlang-yconf
     erlang-riaknostic
     erlang-riak_pb
