@@ -569,7 +569,7 @@ _debian_flavor_install() {
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   dnf build-dep rbenv -vy
-  dnf install  -y openssl-devel
+  # dnf install  -y openssl-devel
   # Batch Fedora 37
   local package packages="
     libyaml
@@ -586,8 +586,8 @@ _redhat_flavor_install() {
 		ncurses-compat-libs
 		ncurses-libs
 		ncurses-static
-		ncurses-base
-		ncurses-term
+		ncurses-base 
+		# ncurses-term conflicts with foot-terminfo
     readline
 		readline-static
 		readline-devel
@@ -602,9 +602,9 @@ _redhat_flavor_install() {
 		libffi
     libffi-devel
 		libffi3.1
-    compat-gdbm
-		compat-gdbm-devel
-    compat-gdbm-libs
+    # compat-gdbm
+		# compat-gdbm-devel
+    # compat-gdbm-libs
 		gdbm
 		gdbm-devel
 		gdbm-libs
