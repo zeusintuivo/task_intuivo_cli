@@ -152,6 +152,8 @@ _redhat_flavor_install() {
     breeze-cursor-theme
     oxygen-cursor-themes
     knock
+		arandr
+		xrandr
   "
   ); then
     {

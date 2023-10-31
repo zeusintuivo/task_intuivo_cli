@@ -81,6 +81,7 @@ _debian_flavor_install() {
     wget
     ufw
     nginx
+		arandr
   "
   ); then
     {
@@ -142,7 +143,8 @@ _redhat_flavor_install() {
 
   if (
   install_requirements "linux" "
-    task
+    arandr
+  	task
 		gparted
 		gpart
     thunderbird

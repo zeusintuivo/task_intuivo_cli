@@ -456,6 +456,7 @@ _redhat_flavor_install() {
 		py3status
 		# until now no issues with boot or breaking gnome brightness
 		xrandr
+		arandr
     brightnessctl
 		htop
 		polybar
