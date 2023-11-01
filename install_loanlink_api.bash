@@ -393,7 +393,7 @@ set -u
 
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
-    exit ${__trapped_INT_num}
+    exit ${__trapped_error_exit_num}
   }
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   
@@ -828,7 +828,7 @@ _rbenv_check() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
 
   Checking rbenv is installed
-  if ( ! command -v rbenv >/dev/null 2>&1; )  ; then
+  if ( ! su - "${SUDO_USER}" -c 'command -v rbenv' >/dev/null 2>&1; )  ; then
   {
     Installing rbenv 
     local TARGET_URL="https://raw.githubusercontent.com/zeusintuivo/task_intuivo_cli/master/install_rbenv.bash"
