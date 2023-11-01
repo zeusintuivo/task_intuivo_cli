@@ -1758,9 +1758,18 @@ _fedora__64() {
   fi
  # verify_is_installed cf
   _setup_mycd
-  su - "${SUDO_USER}" -c 'brew install the_silver_searcher'
-	su - "${SUDO_USER}" -c 'brew install ag@the_silver_searcher'
-  su - "${SUDO_USER}" -c 'brew install pt@the_platinum_searcher'
+  if ( su - "${SUDO_USER}" -c 'command -v brew' >/dev/null 2>&1; ) ; then # MAC
+  {
+    su - "${SUDO_USER}" -c 'brew install the_silver_searcher'
+    su - "${SUDO_USER}" -c 'brew install ag@the_silver_searcher'
+    su - "${SUDO_USER}" -c 'brew install the_platinum_searcher'
+    su - "${SUDO_USER}" -c 'brew install pt@the_platinum_searcher'
+  }
+  else 
+  {
+    warning "${RED}Brew${ORANGE} is not installed. Or  bashtv and zshrc files are missing" 
+  }
+  fi
 
 } # end _fedora__64
 
@@ -1788,12 +1797,17 @@ _darwin__64() {
   SUDO_GRP='staff'
   [[  -e "${USER_HOME}/.bash_profile" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.bash_profile"
   [[  -e "${USER_HOME}/.bashrc" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.bashrc"
+  [[  -e "${USER_HOME}/.bash_profile" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.bash_profile"
+  [[  -e "${USER_HOME}/.profile" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.profile"
+  [[  -e "${USER_HOME}/.zprofile" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.zprofile"
   [[  -e "${USER_HOME}/.zshrc" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.zshrc"
+  [[  -e "${USER_HOME}/.zshenv" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.zshenv"
   [[  -e "${USER_HOME}/.composer" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.composer"
 
   _add_launchd "${USER_HOME}/Library/LaunchAgents" "${USER_HOME}/Library/LaunchAgents/com.intuivo.clis_pull_all.plist"
   _install_dmgs_list
 
+  # Start a subprocress
   (
     if anounce_command sudo chown -R "${SUDO_USER}" "${USER_HOME}/Library/Caches/" ; then
     {
@@ -1852,14 +1866,14 @@ _darwin__64() {
   #su - "${SUDO_USER}" -c 'pip install --upgrade pip'
   #su - "${SUDO_USER}" -c 'pip3 install --upgrade pip'
   #verify_is_installed pip3
-  if ( ! command -v pygmentize >/dev/null 2>&1; ) ;  then
-    if ( command -v pip >/dev/null 2>&1; ) ; then # MAC
+  if ( ! su - "${SUDO_USER}" -c 'command -v pygmentize' >/dev/null 2>&1; ) ;  then
+    if ( su - "${SUDO_USER}" -c 'command -v pip' >/dev/null 2>&1; ) ; then # MAC
     {
        su - "${SUDO_USER}" -c 'pip install pygments'
        #pip install pygments
     }
     fi
-    if ( command -v pip3 >/dev/null 2>&1; ) ; then # MAC
+    if ( su - "${SUDO_USER}" -c 'command -v pip3' >/dev/null 2>&1; ) ; then # MAC
     {
        su - "${SUDO_USER}" -c 'pip3 install pygments'
        #pip3 install pygments
@@ -1871,7 +1885,16 @@ _darwin__64() {
   #su - "${SUDO_USER}" -c 'pip3 install pygments'
   #su - "${SUDO_USER}" -c 'pip install pygments'
   Comment "relink ag"
-  brew unlink the_silver_searcher && $LINKER the_silver_searcher
+  if ( su - "${SUDO_USER}" -c 'command -v brew' >/dev/null 2>&1; ) ; then # MAC
+  {
+    su - "${SUDO_USER}" -c 'brew unlink the_silver_searcher' && $LINKER the_silver_searcher
+  }
+  else 
+  {
+    warning "${RED}Brew${ORANGE} is not installed. Or  bashtv and zshrc files are missing" 
+  }
+  fi
+  
 
   # verify_is_installed "
   #  wget
@@ -1887,17 +1910,17 @@ _darwin__64() {
   #  gawk
   #  pygmentize
   #  "
-  if  ! command -v pygmentize >/dev/null 2>&1;   then
-    if  command -v pip >/dev/null 2>&1;   then # MAC
+  if  ! su - "${SUDO_USER}" -c 'command -v pygmentize' >/dev/null 2>&1;   then
+    if  su - "${SUDO_USER}" -c 'command -v pip' >/dev/null 2>&1;   then # MAC
     {
        #su - "${SUDO_USER}" -c 'pip install pygments'
-       pip install pygments
+       su - "${SUDO_USER}" -c 'pip install pygments'
     }
     fi
-    if  command -v pip3 >/dev/null 2>&1;  then # MAC
+    if  su - "${SUDO_USER}" -c 'command -v pip3' >/dev/null 2>&1;  then # MAC
     {
        #su - "${SUDO_USER}" -c 'pip3 install pygments'
-       pip3 install pygments
+       su - "${SUDO_USER}" -c 'pip3 install pygments'
     }
     fi
   fi
@@ -1907,7 +1930,7 @@ _darwin__64() {
   # _install_nvm_version 14.16.1
   # _install_nvm_version 16.6.1
   _install_npm_utils
-  if ( ! command -v cf >/dev/null 2>&1; ) ;  then
+  if ( ! su - "${SUDO_USER}" -c 'command -v cf' >/dev/null 2>&1; ) ;  then
     su - "${SUDO_USER}" -c 'npm i -g cloudfoundry/tap/cf-cli@7'
   fi
   # _install_npm_utils
@@ -1930,39 +1953,47 @@ _darwin__64() {
   [[  -e "${USER_HOME}/.bash_profile" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.bash_profile"
   [[  -e "${USER_HOME}/.bashrc" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.bashrc"
   [[  -e "${USER_HOME}/.zshrc" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.zshrc"
+  [[  -e "${USER_HOME}/.zshenv" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.zshenv"
+  [[  -e "${USER_HOME}/.zprofile" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.zprofile"
+  [[  -e "${USER_HOME}/.profile" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.profile"
   [[  -e "${USER_HOME}/.composer" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.composer"
 
   _add_self_cron_update /usr/lib/cron/  /usr/lib/cron/cron.allow
   # _add_launchd "${USER_HOME}/Library/LaunchAgents" "${USER_HOME}/Library/LaunchAgents/com.intuivo.clis_pull_all.plist"
-  Installing composer global require laravel/valet 
-  local php_version="$(major_minor_version "$(php --version  |  head -1 | extract_version )")"
-  if version_lt "$php_version" "7.2.5"; then 
+   
+  if  su - "${SUDO_USER}" -c 'command -v php' >/dev/null 2>&1;  then # MAC
   {
-    Warning PHP Vesion is too old 
-    Comment trying to install version 7.4 
-    if [[ "$(uname)" == "Darwin" ]] ; then
+    Installing composer global require laravel/valet 
+    local php_version="$(major_minor_version "$(php --version  |  head -1 | extract_version )")"
+    if version_lt "$php_version" "7.2.5"; then 
     {
-      #brew install php@7.4
-      su - "${SUDO_USER}" -c 'brew install  php@7.4'
-      su - "${SUDO_USER}" -c 'brew link  php@7.4'
-       (_if_not_contains   "${USER_HOME}/.bashrc" "php@7.4") ||  echo "$(cat <<EOINSERT
+      Warning PHP Vesion is too old 
+      Comment trying to install version 7.4 
+      if [[ "$(uname)" == "Darwin" ]] ; then
+      {
+        #brew install php@7.4
+        su - "${SUDO_USER}" -c 'brew install  php@7.4'
+        su - "${SUDO_USER}" -c 'brew link  php@7.4'
+         (_if_not_contains   "${USER_HOME}/.bashrc" "php@7.4") ||  echo "$(cat <<EOINSERT
 export PATH="/usr/local/opt/php@7.4/bin:$PATH"
 export PATH="/usr/local/opt/php@7.4/sbin:$PATH"
 EOINSERT
 )" >> "${USER_HOME}/.bashrc"
-        (_if_not_contains   "${USER_HOME}/.zshrc" "php@7.4") ||  echo "$(cat <<EOINSERT
+          (_if_not_contains   "${USER_HOME}/.zshrc" "php@7.4") ||  echo "$(cat <<EOINSERT
 export PATH="/usr/local/opt/php@7.4/bin:$PATH"
 export PATH="/usr/local/opt/php@7.4/sbin:$PATH"
 EOINSERT
 )" >> "${USER_HOME}/.zshrc"
-        export PATH="/usr/local/opt/php@7.4/bin:$PATH"
-        export PATH="/usr/local/opt/php@7.4/sbin:$PATH"
+          export PATH="/usr/local/opt/php@7.4/bin:$PATH"
+          export PATH="/usr/local/opt/php@7.4/sbin:$PATH"
+      }
+      fi
     }
     fi
+    su - "${SUDO_USER}" -c 'composer global require laravel/valet'
 
   }
   fi
-  su - "${SUDO_USER}" -c 'composer global require laravel/valet'
   Updating _password_simple
   _password_simple
   Installing disable spotlight using significant power REF: https://discussions.apple.com/thread/5610674
