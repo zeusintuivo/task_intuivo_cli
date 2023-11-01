@@ -628,7 +628,7 @@ _darwin__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   Checking homebrew is installed
-  if ( ! command -v brew >/dev/null 2>&1; )  ; then
+  if ( ! su - "${SUDO_USER}" -c "command -v brew" >/dev/null 2>&1; )  ; then
   {
     Installing homebrew 
     local TARGET_URL="https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh" 
@@ -639,7 +639,7 @@ _darwin__64() {
     chmod a+x "${CODENAME}"
     local NEWNAME=install_brew.sh
     mv "${DOWNLOADFOLDER}/${CODENAME}" "${USER_HOME}/${NEWNAME}"
-    chmod a+x "${NEWNAME}"
+    chmod a+x "${USER_HOME}/${NEWNAME}"
     cd  "${USER_HOME}"
     Installing "${USER_HOME}/${NEWNAME}" 
     su - "${SUDO_USER}" -c "${USER_HOME}/${NEWNAME}"
@@ -652,11 +652,13 @@ _darwin__64() {
 
 _darwin__arm64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  softwareupdate --install-rosetta
   _darwin__64
 } # end _darwin__arm64
 
 _darwin__arm64_13_3() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  softwareupdate --install-rosetta
   _darwin__64
 } # end _darwin__arm64
 
