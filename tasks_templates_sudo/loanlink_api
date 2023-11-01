@@ -451,26 +451,26 @@ _rbenv_check() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
 
   Checking rbenv is installed
-  if ( ! su - "${SUDO_USER}" -c 'command -v rbenv' >/dev/null 2>&1; )  ; then
-  {
-    Installing rbenv 
-    local TARGET_URL="https://raw.githubusercontent.com/zeusintuivo/task_intuivo_cli/master/install_rbenv.bash"
-    Skipping "${CYAN}Based on \n${RED}\n/bin/bash -c \"\$(curl -fsSL "${TARGET_URL}")\"\n${RESET}${CYAN}\n and doing structed tested."
-    local DOWNLOADFOLDER="$(_find_downloads_folder)"
-    local CODENAME=install_rbenv.bash
-    _do_not_downloadtwice   "${TARGET_URL}"  "${DOWNLOADFOLDER}"  "${CODENAME}"
-    chmod a+x "${CODENAME}"
-    local NEWNAME=install_rbenv.bash
-    mv "${DOWNLOADFOLDER}/${CODENAME}" "${USER_HOME}/${NEWNAME}"
-    chmod a+x "${NEWNAME}"
-    cd  "${USER_HOME}"
-    Installing "${USER_HOME}/${NEWNAME}" 
-    su - "${SUDO_USER}" -c "${USER_HOME}/${NEWNAME}"
-    wait    
-  }
-  fi
-  \. "${USER_HOME}/.profile"
-  ensure rbenv or "rbenv ruby version manager is required to continue  [rbenv](https://github.com/sstephenson/rbenv) and Ruby. " 
+  # if ( ! su - "${SUDO_USER}" -c 'command -v rbenv' >/dev/null 2>&1; )  ; then
+  # {
+  #   Installing rbenv 
+  #   local TARGET_URL="https://raw.githubusercontent.com/zeusintuivo/task_intuivo_cli/master/install_rbenv.bash"
+  #   Skipping "${CYAN}Based on \n${RED}\n/bin/bash -c \"\$(curl -fsSL "${TARGET_URL}")\"\n${RESET}${CYAN}\n and doing structed tested."
+  #   local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  #   local CODENAME=install_rbenv.bash
+  #   _do_not_downloadtwice   "${TARGET_URL}"  "${DOWNLOADFOLDER}"  "${CODENAME}"
+  #   chmod a+x "${CODENAME}"
+  #   local NEWNAME=install_rbenv.bash
+  #   mv "${DOWNLOADFOLDER}/${CODENAME}" "${USER_HOME}/${NEWNAME}"
+  #   chmod a+x "${NEWNAME}"
+  #   cd  "${USER_HOME}"
+  #   Installing "${USER_HOME}/${NEWNAME}" 
+  #   su - "${SUDO_USER}" -c "${USER_HOME}/${NEWNAME}"
+  #   wait    
+  # }
+  # fi
+  # \. "${USER_HOME}/.profile"
+  # ensure rbenv or "rbenv ruby version manager is required to continue  [rbenv](https://github.com/sstephenson/rbenv) and Ruby. " 
 } # end _rbenv_check
 
 _ruby_check() {
