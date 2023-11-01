@@ -720,7 +720,7 @@ _darwin__64() {
   _git_clone "https://github.com/rbenv/ruby-build.git" "${USER_HOME}/.rbenv/plugins/ruby-build"
   _add_variables_to_bashrc_zshrc
   ensure "${USER_HOME}/.rbenv/bin/rbenv" or "Canceling until rbenv did not install"
-  su - "${SUDO_USER}" -c "git -C /Users/zeus/.rbenv/plugins/ruby-build pull"
+  su - "${SUDO_USER}" -c "git -C ${USER_HOME}/.rbenv/plugins/ruby-build pull"
   su - "${SUDO_USER}" -c "${USER_HOME}/.rbenv/bin/rbenv install -l"
   su - "${SUDO_USER}" -c "${USER_HOME}/.rbenv/bin/rbenv install 2.6.5"
   su - "${SUDO_USER}" -c "${USER_HOME}/.rbenv/bin/rbenv install 2.7.3"
