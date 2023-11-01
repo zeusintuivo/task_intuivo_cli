@@ -880,10 +880,10 @@ _ruby_check() {
   Checking "ruby installed su - \"${SUDO_USER}\" -c \"bash -c 'rbenv versions'\" "
   Comment LINENO:$LINENO local isrubynotinstalled=
   local isrubynotinstalled="$(su - "${SUDO_USER}" -c "bash -c 'rbenv versions'" | grep 'is not installed')"
-  enforce_variable_with_value isrubynotinstalled "${isrubynotinstalled}"
+  #enforce_variable_with_value isrubynotinstalled "${isrubynotinstalled}"
   Comment LINENO:$LINENO local isrubyinstalled=
   local isrubyinstalled="$(su - "${SUDO_USER}" -c "bash -c 'rbenv versions'" | grep "${_RUBYVERSION}")"
-  enforce_variable_with_value isrubyinstalled "${isrubyinstalled}"
+  #enforce_variable_with_value isrubyinstalled "${isrubyinstalled}"
   Comment LINENO:$LINENO -z \"\${isrubynotinstalled}\"=${isrubyinstalled}
   if [[ -z "${isrubynotinstalled}" ]] && [[ -z "${isrubyinstalled}" ]] ; then
   {
@@ -894,7 +894,7 @@ _ruby_check() {
   }
   fi
   isrubyinstalled="$(su - "${SUDO_USER}" -c "bash -c 'rbenv versions'" | grep "${_RUBYVERSION}")"
-  enforce_variable_with_value isrubyinstalled "${isrubyinstalled}"
+  #enforce_variable_with_value isrubyinstalled "${isrubyinstalled}"
   Comment LINENO:$LINENO -z \"\${isrubynotinstalled}\"=${isrubyinstalled} 
   if [[ -z "${isrubynotinstalled}" ]] && [[ -z "${isrubyinstalled}" ]] ; then
   {
