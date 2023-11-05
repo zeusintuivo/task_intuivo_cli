@@ -569,6 +569,7 @@ _debian_flavor_install() {
     libwxgtk3.0-gtk3-0v5
     libwxgtk3.0-gtk3-dev
     wx-common
+		
    "
   _package_list_installer "${packages}"
   local MSG=$(_install_and_add_variables_to_bashrc_zshrc)
@@ -579,7 +580,9 @@ _debian_flavor_install() {
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _git_clone "https://github.com/robisonsantos/evm.git" "${USER_HOME}/.evm"
-  dnf build-dep erlang -y --allowerasing # --skip-broken
+  dnf groupinstall -y 'Development Tools' 'C Development Tools and Libraries'
+	dnf build-dep erlang -y --allowerasing # --skip-broken
+
 	# Package make-1:4.3-11.fc37.x86_64 is already installed.
   # Package gcc-12.3.1-1.fc37.x86_64 is already installed.
   # Package gcc-c++-12.3.1-1.fc37.x86_64 is already installed.
@@ -652,7 +655,12 @@ _redhat_flavor_install() {
 		erlang-wx
 		commons-compiler-jdk
 		javac@https://download.oracle.com/java/21/latest/jdk-21_linux-x64_bin.rpm
+		glib
+		glib-devel
+		libiodbc
+		libiodbc-devel
    "
+
   _package_list_installer "${packages}"
   local MSG=$(_install_and_add_variables_to_bashrc_zshrc)
   echo "${MSG}"
