@@ -487,7 +487,7 @@ _install_and_add_variables_to_bashrc_zshrc(){
 # KERL
 [[ -f "'${KERL_HOME}'" ]] && export KERL_HOME="'${KERL_HOME}'"
 [[ -d "'${KERL_HOME}'" ]] && export PATH="'${KERL_HOME}':${PATH}"
-[[ -f "'${KERL_HOME}'/kerl" ]] && source "'${KERL_HOME}'/kerl"
+#[[ -f "'${KERL_HOME}'/kerl" ]] && source "'${KERL_HOME}'/kerl"
 [[ -f "'${KERL_HOME}'/bash_completion/kerl" ]] && source "'${KERL_HOME}'/bash_completion/kerl"
 
 ' 
@@ -516,11 +516,12 @@ _install_and_add_variables_to_bashrc_zshrc(){
 # KERL
 [[ -f "'${KERL_HOME}'" ]] && export KERL_HOME="'${KERL_HOME}'"
 [[ -d "'${KERL_HOME}'" ]] && export PATH="'${KERL_HOME}':${PATH}"
-[[ -f "'${KERL_HOME}'/kerl" ]] && source "'${KERL_HOME}'/kerl"
+#[[ -f "'${KERL_HOME}'/kerl" ]] && source "'${KERL_HOME}'/kerl"
 [[ -f "'${KERL_HOME}'/zsh_completion/kerl" ]] && source "'${KERL_HOME}'/zsh_completion/kerl"
 
 ' 
-  local INITFILE INITFILES="
+  INITFILE=""
+ 	INITFILES="
    .zshrc
    .zshenv
    .zprofile
@@ -536,12 +537,12 @@ _install_and_add_variables_to_bashrc_zshrc(){
     # fi
     _if_not_contains "${USER_HOME}/${INITFILE}"  "# KERL" ||  echo "${KERL_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
     _if_not_contains "${USER_HOME}/${INITFILE}"  "KERL_HOME" ||  echo "${KERL_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
-    _if_not_contains "${USER_HOME}/${INITFILE}"  "kerl/kerl" ||  echo "${KERL_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "kerl_install/kerl" ||  echo "${KERL_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
   }
   done <<< "${INITFILES}"
   # type KERL
   file_exists_with_spaces "${KERL_HOME}/kerl"
-  source "${KERL_HOME}/kerl"
+  export PATH="${KERL_HOME}:${PATH}"
   source "${KERL_HOME}/bash_completion/kerl"
 	_finale_message
 
