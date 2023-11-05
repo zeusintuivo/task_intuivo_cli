@@ -8,6 +8,7 @@
 ./generate_installer_with_sudo drogon
 ./generate_installer_with_sudo emacs
 ./generate_installer_with_sudo evm
+./generate_installer_with_sudo kerl
 ./generate_installer_with_sudo go
 ./generate_installer_with_sudo guake
 ./generate_installer_with_sudo i3
