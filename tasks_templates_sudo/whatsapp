@@ -171,7 +171,46 @@ _fedora__32() {
 } # end _fedora__32
 
 _fedora__64() {
-  _redhat_flavor_install
+  # _redhat_flavor_install
+  if directory_exists_with_spaces "/var/lib/snapd" ;  then 
+	{
+
+	}
+  else
+	{
+    dnf builddep snapd -y
+  	dnf install snapd -y
+  	local _target_snapd=""
+  	if directory_exists_with_spaces "/repo" ; then 
+  	{ 
+  		_target_snapd="/repo/snapd"
+    }
+  	elif directory_exists_with_spaces "${USER_HOME}" ; then 
+  	{
+  		_target_snapd="${USER_HOME}/_/snapd"
+  		mkdir -p "${USER_HOME}/_"
+  		chown "${SUDO_USER}" "${USER_HOME}/_"
+  	}
+  	fi
+  
+  	if directory_exists_with_spaces "${_target_snapd}" ; then 
+  	{ 
+      if softlink_exists_with_spaces "/var/lib/snapd>${_target_snapd}" ; then
+  		{
+        passed "${_target_snapd}" Dir is there and softlink "/var/lib/snapd>${_target_snapd}" points
+	  	}
+	  	fi
+  	}
+  	fi
+	
+  if ! softlink_exists_with_spaces "/snap>/var/lib/snapd/snap"
+		
+		ln -s /var/lib/snapd/snap /snap
+
+
+	}
+	fi
+
 } # end _fedora__64
 
 _gentoo__32() {

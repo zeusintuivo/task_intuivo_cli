@@ -46,19 +46,80 @@ _git_clone() {
   if  it_exists_with_spaces "${_target}" && it_exists_with_spaces "${_target}/.git" ; then
   {
     cd "${_target}"
-    git config pull.rebase false    
-    git fetch
-    git pull
-    git fetch --tags origin
+		if ( git config pull.rebase false ) ; then 
+		{
+	    warning "could not git config pull.rebase false"		
+    }
+		fi
+    if ( git fetch -f origin master:master ) ; then 
+		{
+	    warning "could not git fetch -f origin master:master"		
+    }
+		fi
+		if ( git fetch -f origin main:main ) ; then 
+		{
+	    warning "could not git fetch -f origin main:main"		
+    }
+		fi
+		if ( git fetch  ) ; then 
+		{
+	    warning "could not git fetch"		
+    }
+		fi
+		if ( git pull ) ; then 
+		{
+	    warning "could not git pull"		
+    }
+		fi
+		if ( git fetch --tags origin ) ; then 
+		{
+	    warning "could not git fetch --tags origin"		
+    }
+		fi
   }
   else
   {
-    git clone "${_source}" "${_target}"
+		if ( git clone "${_source}" "${_target}" ) ; then
+		{
+      warning "could not git clone \"${_source}\" \"${_target}\"  "
+		}
+		fi
   }
   fi
   chown -R "${SUDO_USER}" "${_target}"
 
 } # end _git_clone
+
+PROJECT_DIR_F=""
+
+_find_project_location_PROJECT_DIR_F() {
+		local _target_project=""
+    Checking "location of project "
+    local _list_posssibles="
+		   ${USER_HOME}/_/work/finlink/projects
+		   ${USER_HOME}/_/work/finlink
+		   /repo/work/finlink/projects
+		"
+		local one=""
+		while read -r one ; do 
+		{
+			[[ -z "${one}" ]] && continue
+ 		  if it_exists_with_spaces "${one}" ; then 
+		  {
+        _target_project="${one}"
+				break
+		  }
+		  fi
+		}
+    done <<< "${_list_posssibles}"
+	
+		[[ -z "${one}" ]] && failed "Could not find/determine location of project" && exit 1
+
+		passed "found of project dir ${_target_project}"
+		PROJECT_DIR_F="${_target_project}"
+		return 0
+	
+} # end _find_project_location_PROJECT_DIR_F
 
 _debian_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
@@ -106,9 +167,10 @@ _debian_flavor_install() {
   # local PATHTOPOCKETBASE="${UNZIPDIR}/pocketbase"
   # local THISIP=$(myip)
 
-  local PROJECTSBASEDIR="${USER_HOME}/_/work/finlink"
-  local PROJECTREPO="${USER_HOME}/_/work/finlink/loanlink-api"
-  local PROJECTGITREPO="git@github.com:LoanLink/loanlink-api.git"
+  _find_project_location_PROJECT_DIR_F
+  local PROJECTSBASEDIR="${PROJECT_DIR_F}"
+  local PROJECTREPO="${PROJECT_DIR_F}/loanlink-api"
+  local PROJECTGITREPO ="git@github.com:LoanLink/loanlink-api.git"
 
   if [[ ! -f "${PROJECTREPO}/.step1_brew_check_requirements_postgress_12_install"  ]] ; then
   {
@@ -179,9 +241,82 @@ _debian_flavor_install() {
 
 } # end _debian_flavor_install
 
+
+
+
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  echo "_redhat_flavor_install Procedure not yet implemented. I don't know what to do."
+
+	Installing "--start"
+  dnf remove openssl1.1-devel-1 openssl-devel-1 openssl-devel -y
+	dnf builddep ruby-devel -y --allowerasing
+  dnf builddep rbenv -y --allowerasing
+
+	_find_project_location_PROJECT_DIR_F
+  local PROJECTSBASEDIR="${PROJECT_DIR_F}"
+  local PROJECTREPO="${PROJECT_DIR_F}/loanlink-api" 
+  local PROJECTGITREPO="git@github.com:LoanLink/loanlink-api.git"
+
+  if [[ ! -f "${PROJECTREPO}/.step1_brew_check_requirements_postgress_12_install"  ]] ; then
+  {
+    Working "Step .step1_brew_check_requirements_postgress_12_install"
+    _brew_check_requirements_postgress_12_install
+    local _touch_name="\"${PROJECTREPO}/.step1_brew_check_requirements_postgress_12_install\"" 
+    _execute_project_command "${PROJECTREPO}" "touch ${_touch_name} "
+  } 
+  fi  
+  if [[ ! -f "${PROJECTREPO}/.step3_rbenv_check"  ]] ; then
+  {
+    Working "Step .step3_rbenv_check"
+    _rbenv_check
+    _execute_project_command "${PROJECTREPO}" "touch \"${PROJECTREPO}/.step3_rbenv_check\" "
+  } 
+  fi  
+  if [[ ! -f "${PROJECTREPO}/.step4_ruby_check"  ]] ; then
+  {
+    Working "Step .step4_ruby_check"
+    _ruby_check "${PROJECTSBASEDIR}" "${PROJECTREPO}" "${PROJECTGITREPO}"
+    _execute_project_command "${PROJECTREPO}" "touch \"${PROJECTREPO}/.step4_ruby_check\" "
+  } 
+  fi  
+  if [[ ! -f "${PROJECTREPO}/.step5_bundle_check"  ]] ; then
+  {
+    Working "Step .step5_bundle_check"
+    _bundle_check "${PROJECTREPO}" 
+    _execute_project_command "${PROJECTREPO}" "touch \"${PROJECTREPO}/.step5_bundle_check\" "
+  } 
+  fi  
+  if [[ ! -f "${PROJECTREPO}/.step6_env_check"  ]] ; then
+  {
+    Working "Step .step6_env_check"
+    _env_check "${PROJECTREPO}" 
+    _execute_project_command "${PROJECTREPO}" "touch \"${PROJECTREPO}/.step6_env_check\" "
+  } 
+  fi  
+  if [[ ! -f "${PROJECTREPO}/.step7_postgres_start_check"  ]] ; then
+  {
+    Working "Step .step7_postgres_start_check"
+    _postgres_start_check "${PROJECTREPO}" 
+    _execute_project_command "${PROJECTREPO}" "touch \"${PROJECTREPO}/.step7_postgres_start_check\" "
+  } 
+  fi  
+  if [[ ! -f "${PROJECTREPO}/.step8_migrate_check"  ]] ; then
+  {
+    Working "Step .step8_migrate_check"
+    _migrate_check "${PROJECTREPO}" 
+    _execute_project_command "${PROJECTREPO}" "touch \"${PROJECTREPO}/.step8_migrate_check\" "
+  } 
+  fi 
+  if [[ ! -f "${PROJECTREPO}/.step9_migrate_development_check"  ]] ; then
+  {
+    Working "Step .step9_migrate_development_check"
+    _migrate_development_check "${PROJECTREPO}" 
+    _execute_project_command "${PROJECTREPO}" "touch \"${PROJECTREPO}/.step9_migrate_development_check\" "
+  } 
+  fi  
+ 
+
+
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
@@ -269,12 +404,81 @@ _ubuntu__64() {
   _debian_flavor_install
 } # end _ubuntu__64
 
+_find_location_brew_files() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local _sub_directory=${1:-}
+  enforce_parameter_with_value           1        _sub_directory     "${_sub_directory:-}"     "var/postgresql@12 | "
+
+  Checking "location of brew ${_sub_directory} "
+	local _result=""
+  local _brew_variations="
+		   /opt/homebrew/${_sub_directory}
+		   /home/linuxbrew/.linuxbrew/${_sub_directory}
+		   /usr/local/${_sub_directory}
+	"
+	local one=""
+	while read -r one ; do 
+	{
+		[[ -z "${one}" ]] && continue
+ 	  if it_exists_with_spaces  "${one}" ; then 
+	  {
+       _result="${one}"
+			break
+	  }
+	  fi
+	}
+  done <<< "${_brew_variations}"
+
+	[[ -z "${_result}" ]] && return 1
+	echo -n "${_result}"
+	return 0	
+} # end _find_location_brew_files
+
+_try_more_times_find() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local _possibles=${*:-}
+  enforce_parameter_with_value           1        _possibles     "${_possibles:-}"     "
+          var/postgresql@12
+          var/postgres
+          var/postgresql
+   "
+
+  local _result=""
+	local -i counter=1
+	local one=""
+	while read -r one ; do 
+	{
+	  [[ -z "${one}" ]] && continue
+		_result="$(_find_location_brew_files "${one}" )"
+	  _err=$?
+    if [ $_err -eq 0 ] ; then 
+  	{
+			break
+		}
+		fi
+    echo "${_result}"
+		warning  "try ${counter} one Could not find/determine location of ${one}"
+		counter=$(( counter + 1 ))
+	}
+  done <<< "${_possibles}"
+
+  if [ $_err -gt 0 ] ; then 
+	{
+		return 1
+	}
+	fi
+	echo -n "${_result}"
+	return 0
+
+
+} # end _try_more_times_find
+
 _brew_check_requirements_postgress_12_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   Comment "### Prerequisites"
   Checking homebrew is installed
-  if ( ! command -v brew >/dev/null 2>&1; )  ; then
+  if ( ! su - "${SUDO_USER}" -c "command -v brew" >/dev/null 2>&1; )  ; then
   {
     Installing homebrew 
     local DOWNLOADFOLDER="$(_find_downloads_folder)"
@@ -292,11 +496,12 @@ _brew_check_requirements_postgress_12_install() {
 
   Comment "### install_requirements  darwin"
   Comment LINENO:$LINENO  local _requirements=
-  local _requirements=" 
+  local -i _err=0
+	local _requirements=" 
       shared-mime-info
       libpq
       redis
-
+      ruby-devel
   "
 
   if ( ! install_requirements "darwin" " ${_requirements}"   ); then 
@@ -318,21 +523,76 @@ _brew_check_requirements_postgress_12_install() {
 
 # # Specify any other custom settings you need
 # EOF
-    su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' brew services"
-    if (brew services 2>&1 | grep "postgresql@12" >/dev/null 2>&1; )  ; then
+    local __pg="postgresql@12"
+    su - "${SUDO_USER}" -c "brew services"
+    if (su - "${SUDO_USER}" -c "brew services" 2>&1 | grep "${__pg}" >/dev/null 2>&1; )  ; then
     {
-      Working "removing" "current version 12"
-      ( su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' brew remove postgresql@12 " )
-      if [ "$(pgrep postgres 2>&1  | wc -l | xargs )" -gt 0 ]  ; then
+			echo -e "${PURPLE_BLUE} === ${__pg} ${BRIGHT_BLUE87}installed. Remove and reinstall${PURPLE_BLUE} ${RESET}?"
+      if yes_or_no ; then
+			{
+        _err=0
+			}
+		  else
+			{
+			  _err=1
+			}
+			fi
+      if [ $_err -gt 0 ] ; then # no
       {
-        killall postgres
+        passed "You said no. So we are keeping the current one"
+				Installing things that might be need it
+        su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' brew reinstall shared-mime-info"
+        su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' brew reinstall libpq"
+        su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' brew reinstall ruby-build"
+        su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' brew reinstall redis"
       }
-      fi
-    }
+		  else
+			{
+				passed "You said yes ERASE Are you sure ?"
+	      if yes_or_no ; then
+  			{
+          _err=0
+		  	}
+		    else
+	  		{
+	  		  _err=1
+	  		}
+	  		fi
+        if [ $_err -gt 0 ] ; then # no
+				{
+					passed "You said no. So we are keeping the current one"
+        }
+        else
+        {
+          Working "removing" "current version ${__pg} "
+          ( su - "${SUDO_USER}" -c "brew remove ${__pg}" )
+          if [ "$(pgrep postgres 2>&1  | wc -l | xargs )" -gt 0 ]  ; then
+          {
+            killall postgres
+          }
+          fi
+			    Installing "${__pg}"
+          su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' brew install shared-mime-info"
+          su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' brew install libpq"
+          su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' brew install ruby-build"
+          su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' brew install redis"
+          su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' brew install  postgresql@12"
+				}
+				fi
+			}
+			fi
+    } 
+	  else
+	  {
+			Installing "${__pg}"
+      su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' brew install shared-mime-info"
+      su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' brew install libpq"
+      su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' brew install ruby-build"
+      su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' brew install redis"
+      su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' brew install postgresql@12"
+	  }
     fi
-    su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' brew install  postgresql@12"
     # echo "# brew install --cask tunnelblick"
-
     # initdb --locale=C -E UTF-8 /opt/homebrew/var/postgresql@12
     # postgresql@14
     # initdb: unrecognized option `--authz=postgresin' in version 12
@@ -354,7 +614,26 @@ _brew_check_requirements_postgress_12_install() {
     # # --lc-collate, --lc-ctype, --lc-messages, --lc-monetary, --lc-numeric, and --lc-time: Set the locale settings as defined in your custom configuration file. ' '
     # # --authz=postgres: Specifies the default authorization identifier. ' '
     # # --pwfile=-: Indicates that the password will be read from stdin. ' '
-    # # '
+    # # 
+		local -i _err=0
+		_target_brew_base_pg="$(_try_more_times_find "
+var/${__pg}
+var/postgres
+var/postgresql
+")"
+    _err=$?
+    if [ $_err -gt 0 ] ; then # failed
+    {
+			echo "${_target_brew_base_pg}"
+      passed "Failed to find brw var"
+		}
+		fi
+		
+		_target_brew_base_pg="$(echo -n "${_target_brew_base_pg}" | tail -1)"
+		
+		passed found of var "${__pg} = ${_target_brew_base_pg}"
+
+		Message "preparing some files inside ${USER_HOME} with some defaults"
 
     # try 2
     cat << EOF > "${USER_HOME}/custom-pg_hba_postgres12.conf"
@@ -387,7 +666,7 @@ EOF
     SHOW config_file;
                        config_file
     -------------------------------------------------
-     /opt/homebrew/var/postgresql@12/postgresql.conf
+     ${_target_brew_base_pg}/postgresql.conf
     (1 row)
     "
     echo "psql -d postgres -h 0.0.0.0 -U ${SUDO_USER} -W
@@ -395,27 +674,94 @@ EOF
     SHOW hba_file;
                       hba_file
     ---------------------------------------------
-     /opt/homebrew/var/postgresql@12/pg_hba.conf
+     ${_target_brew_base_pg}/pg_hba.conf
     (1 row)
     "
     # su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' cat /opt/homebrew/opt/postgresql@12/share/postgresql@12/pg_hba.conf.sample \"${USER_HOME}/custom-pg_hba_postgres12.conf\" >   /opt/homebrew/var/postgresql@12/pg_hba.conf " 
-    su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' cat  \"${USER_HOME}/custom-pg_hba_postgres12.conf\" >   /opt/homebrew/var/postgresql@12/pg_hba.conf " 
-    echo "psql -d postgres -h 0.0.0.0 -U ${SUDO_USER} -W
+
+		local _context="${_target_brew_base_pg}/pg_hba.conf"
+ 		if file_exists_with_spaces "${_context}" ; then
+		{
+  	  Question "File ${_context}  already exists. Overwrite  ?"
+	    if yes_or_no ; then
+  		{
+         _err=0
+		  }
+		  else
+	  	{
+	  	  _err=1
+	  	}
+	  	fi
+      if [ $_err -gt 0 ] ; then # no
+			{
+			  passed "You said no. We are not touching ${_context}"
+      }
+      else
+      {
+			  passed "You said YES. We are reseting file ${_context}"
+				CURRENTDATE=$(date +%Y%m%d)
+				CURRENTTIME="$(date +%H:%M)"
+        cp "${_context}" "${_context}_${CURRENTDATE}_${CURRENTTIME}"
+        su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' cat  \"${USER_HOME}/custom-pg_hba_postgres12.conf\" >   ${_context}" 
+			}
+			fi
+		}
+	  else
+		{
+      passed "Reseting file ${_context}"
+ 			CURRENTDATE=$(date +%Y%m%d)
+			CURRENTTIME="$(date +%H:%M)"
+      cp "${_context}" "${_context}_${CURRENTDATE}_${CURRENTTIME}"
+      su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' cat  \"${USER_HOME}/custom-pg_hba_postgres12.conf\" >   ${_context}" 
+		}
+		fi
+
+		echo "psql -d postgres -h 0.0.0.0 -U ${SUDO_USER} -W
     
     SHOW ident_file;
                       ident_file
     -----------------------------------------------
-     /opt/homebrew/var/postgresql@12/pg_ident.conf
+     ${_target_brew_base_pg}/pg_ident.conf
     (1 row)
     "
     # su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' cat /opt/homebrew/opt/postgresql@12/share/postgresql@12/pg_ident.conf.sample \"${USER_HOME}/custom-pg_hba_postgres12.conf\" >  /opt/homebrew/var/postgresql@12/pg_ident.conf " 
-    su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' cat \"${USER_HOME}/custom-pg_hba_postgres12.conf\" >  /opt/homebrew/var/postgresql@12/pg_ident.conf " 
-
-    su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' brew services restart  postgresql@12 "
-    su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' brew services restart  redis "
-    su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' brew services "
-    ps axt | grep postgres
-
+ 		local _context="${_target_brew_base_pg}/pg_ident.conf"
+ 		if file_exists_with_spaces "${_context}" ; then
+		{
+  	  Question "File ${_context}  already exists. Overwrite  ?"
+	    if yes_or_no ; then
+  		{
+        _err=0
+		  }
+		  else
+	  	{
+	  	  _err=1
+	  	}
+	  	fi
+      if [ $_err -gt 0 ] ; then # no
+			{
+			  passed "You said no. We are not touching ${_context}"
+      }
+      else
+      {
+			  passed "You said YES. We are reseting file ${_context}"
+ 				CURRENTDATE=$(date +%Y%m%d)
+				CURRENTTIME="$(date +%H:%M)"
+        cp "${_context}" "${_context}_${CURRENTDATE}_${CURRENTTIME}"
+        su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' cat \"${USER_HOME}/custom-pg_hba_postgres12.conf\" >  ${_context}" 
+			}
+			fi
+		}
+	  else
+		{
+		  passed "You said YES. We are reseting file ${_context}"
+ 			CURRENTDATE=$(date +%Y%m%d)
+			CURRENTTIME="$(date +%H:%M)"
+      cp "${_context}" "${_context}_${CURRENTDATE}_${CURRENTTIME}"
+      su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' cat \"${USER_HOME}/custom-pg_hba_postgres12.conf\" >  ${_context}" 
+		}
+		fi
+		_brew_postgres_redis_restart
   }
   fi
 
@@ -424,54 +770,127 @@ EOF
   # "
 } # end _brew_check_requirements_postgress_12_install
 
+
+_brew_postgres_redis_restart() {
+
+    Message "brew services restart  postgresql@12 "
+    # anounce_command brew services restart  "postgresql@12" 
+    # anounce_command su - "${SUDO_USER}" -c "brew services restart  postgresql@12 "
+    if su - "${SUDO_USER}" -c "brew services restart  postgresql@12 " ; then
+		{
+			warning failed brew services restart  postgresql@12 
+		}
+		fi
+		Message "brew services restart  redis"
+    # anounce_command brew services restart  redis
+		# anounce_command su - "${SUDO_USER}" -c "brew services restart  redis "
+		if su - "${SUDO_USER}" -c "brew services restart  redis " ; then 
+		{
+			warning failed brew services restart  redis
+		}
+		fi
+		Message "brew services"
+    # anounce_command brew services
+    # anounce_command su - "${SUDO_USER}" -c "brew services "
+    if su - "${SUDO_USER}" -c "brew services " ; then 
+		{
+			warning brew services
+		}
+		fi
+    Message Here is your postgress running
+		ps axt | grep postgres
+		Message Here is your redis running
+    ps axt | grep redis
+
+
+} # end _brew_postgres_redis_restart
+
+_docker_mac() { 
+      Comment "### Downloading docker.dmg ${TARGETSYSTEM}"
+      local DOCKERIN=$(curl -fsSL https://www.docker.com/products/docker-desktop/)
+      enforce_variable_with_value DOCKERIN "${DOCKERIN}"
+      local DMGURL=$(echo "${DOCKERIN}" | sed s/\</\\n\\n\</g | sed "s/&apos;/\'/g" | sed 's/&nbsp;/ /g'  | grep 'docker' | grep 'https://' | grep 'dmg' | sed s/\ /\\n/g | grep 'https://' | cut -d'"' -f2 | sort | uniq | grep "${TARGETSYSTEM}" | xargs)
+      enforce_variable_with_value DMGURL "${DMGURL}"
+      local DOWNLOADFOLDER="${USER_HOME}/Downloads"
+      local TARGET_URL="${DMGURL}"
+      local CODENAME=Docker.dmg
+      Downloading "${CODENAME}" from   "${TARGET_URL}" into  "${DOWNLOADFOLDER}"
+      _do_not_downloadtwice   "${TARGET_URL}"  "${DOWNLOADFOLDER}"  "${CODENAME}"
+      echo ret:$?
+      open  "${DOWNLOADFOLDER}" &
+      echo ret:$?
+      warning "Make sure you install docker if not found in  \"${DOWNLOADFOLDER}\" \n get it from [Install Docker](https://docs.docker.com/get-docker/"
+      echo ret:$?
+
+} # end _docker_mac 
+
+
+
+
+_docker_cygwin() {
+	echo "I do not know how to do _docker_cygwin"
+} # end _docker_cygwin
+
+
+
+_docker_linux() {
+	echo "I do not know how to do _docker_linux"
+} # end _docker_linux
+
+
+
+_docker_msys() {
+	echo "I do not know how to do _docker_msys"
+} # end _docker_msys
+
+
+
 _attempt_to_download_docker() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   local TARGETSYSTEM=${1}
   enforce_parameter_with_value           1        TARGETSYSTEM      "${TARGETSYSTEM}"     "amd64 | arm64"
 
-  Comment "### Downloading docker.dmg ${TARGETSYSTEM}"
-  local DOCKERIN=$(curl -fsSL https://www.docker.com/products/docker-desktop/)
-  enforce_variable_with_value DOCKERIN "${DOCKERIN}"
-  local DMGURL=$(echo "${DOCKERIN}" | sed s/\</\\n\\n\</g | sed "s/&apos;/\'/g" | sed 's/&nbsp;/ /g'  | grep 'docker' | grep 'https://' | grep 'dmg' | sed s/\ /\\n/g | grep 'https://' | cut -d'"' -f2 | sort | uniq | grep "${TARGETSYSTEM}" | xargs)
-  enforce_variable_with_value DMGURL "${DMGURL}"
-  local DOWNLOADFOLDER="${USER_HOME}/Downloads"
-  local TARGET_URL="${DMGURL}"
-  local CODENAME=Docker.dmg
-  Downloading "${CODENAME}" from   "${TARGET_URL}" into  "${DOWNLOADFOLDER}"
-  _do_not_downloadtwice   "${TARGET_URL}"  "${DOWNLOADFOLDER}"  "${CODENAME}"
-  echo ret:$?
-  open  "${DOWNLOADFOLDER}" &
-  echo ret:$?
-  warning "Make sure you install docker if not found in  \"${DOWNLOADFOLDER}\" \n get it from [Install Docker](https://docs.docker.com/get-docker/"
-  echo ret:$?
-
+	case "$OSTYPE" in
+    (darwin*) _docker_mac ;;
+    (cygwin*) _docker_cygwin ;;
+    (linux*) _docker_linux ;;
+    (msys*) _docker_msys  ;;
+    (*) echo "Platform $OSTYPE not supported"
+    return 0 ;;
+  esac
 } # end _attempt_to_download_docker
+
+
+
 
 _rbenv_check() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
 
   Checking rbenv is installed
-  # if ( ! su - "${SUDO_USER}" -c 'command -v rbenv' >/dev/null 2>&1; )  ; then
-  # {
-  #   Installing rbenv 
-  #   local TARGET_URL="https://raw.githubusercontent.com/zeusintuivo/task_intuivo_cli/master/install_rbenv.bash"
-  #   Skipping "${CYAN}Based on \n${RED}\n/bin/bash -c \"\$(curl -fsSL "${TARGET_URL}")\"\n${RESET}${CYAN}\n and doing structed tested."
-  #   local DOWNLOADFOLDER="$(_find_downloads_folder)"
-  #   local CODENAME=install_rbenv.bash
-  #   _do_not_downloadtwice   "${TARGET_URL}"  "${DOWNLOADFOLDER}"  "${CODENAME}"
-  #   chmod a+x "${CODENAME}"
-  #   local NEWNAME=install_rbenv.bash
-  #   mv "${DOWNLOADFOLDER}/${CODENAME}" "${USER_HOME}/${NEWNAME}"
-  #   chmod a+x "${NEWNAME}"
-  #   cd  "${USER_HOME}"
-  #   Installing "${USER_HOME}/${NEWNAME}" 
-  #   su - "${SUDO_USER}" -c "${USER_HOME}/${NEWNAME}"
-  #   wait    
-  # }
-  # fi
-  # \. "${USER_HOME}/.profile"
-  # ensure rbenv or "rbenv ruby version manager is required to continue  [rbenv](https://github.com/sstephenson/rbenv) and Ruby. " 
+  if ( ! su - "${SUDO_USER}" -c 'command -v rbenv' >/dev/null 2>&1; )  ; then
+  {
+    Installing rbenv 
+    local TARGET_URL="https://raw.githubusercontent.com/zeusintuivo/task_intuivo_cli/master/install_rbenv.bash"
+    Skipping "${CYAN}Based on \n${RED}\n/bin/bash -c \"\$(curl -fsSL "${TARGET_URL}")\"\n${RESET}${CYAN}\n and doing structed tested."
+    local DOWNLOADFOLDER="$(_find_downloads_folder)"
+    local CODENAME=install_rbenv.bash
+    _do_not_downloadtwice   "${TARGET_URL}"  "${DOWNLOADFOLDER}"  "${CODENAME}"
+    chmod a+x "${CODENAME}"
+    local NEWNAME=install_rbenv.bash
+    mv "${DOWNLOADFOLDER}/${CODENAME}" "${USER_HOME}/${NEWNAME}"
+    chmod a+x "${NEWNAME}"
+    cd  "${USER_HOME}"
+    Installing "${USER_HOME}/${NEWNAME}" 
+    su - "${SUDO_USER}" -c "${USER_HOME}/${NEWNAME}"
+    wait    
+  }
+  fi
+  \. "${USER_HOME}/.profile"
+  ensure rbenv or "rbenv ruby version manager is required to continue  [rbenv](https://github.com/sstephenson/rbenv) and Ruby. " 
 } # end _rbenv_check
+
+
+
 
 _ruby_check() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
@@ -483,11 +902,42 @@ _ruby_check() {
   enforce_parameter_with_value           3        PROJECTGITREPO      "${PROJECTGITREPO}"     "a git url "
 
 
+  Checking that libpq/bin can be found	
+	local -i _err=0
+	local _libpg_bin=""
+	if _libpg_bin="$(_try_more_times_find "
+opt/libpq/bin")" ; then 
+  {
+	  _err=0
+		passed "Found libpq/bin"
+	}
+  else
+	{
+	  _err=1
+		warning "Failed to find libpq/bin"
+	}
+	fi	
+  
+  if [ $_err -gt 0 ] ; then # failed
+  {
+	  echo "${_libpg_bin}"
+    failed "to find opt/libpq/bin"
+	}
+	fi	
+	_libpg_bin="$(echo -n "${_libpg_bin}" | tail -1)"
+	passed "found of opt/libpq/bin  = ${_libpg_bin}"
+
+
+
+
+	Checking clone "${PROJECTGITREPO}"
   mkdir -p  "${PROJECTSBASEDIR}" 
   cd  "${PROJECTSBASEDIR}" 
   _git_clone  "${PROJECTGITREPO}" "${PROJECTREPO}"
 
-  Checking   Repo loanlink 
+
+
+  Checking   Repo ruby version from  REPO Dir 
   cd "${PROJECTREPO}"
   pwd
   Checking "ruby required in Gemfile   cat \"${PROJECTREPO}/Gemfile\" | grep ruby\\\ \\\'  | cut -d\\\' -f2 "
@@ -513,7 +963,9 @@ _ruby_check() {
     echo "rbenv versions | grep ${_RUBYVERSION}   returned nothing"
     warning to get isrubyinstalled:${isrubyinstalled}
     Working Installing ruby: rbenv install ${_RUBYVERSION}
-    su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&  ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"/opt/homebrew/opt/libpq/bin:$PATH\"  rbenv install ${_RUBYVERSION} ' "
+    su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&  ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"${_libpg_bin}:$PATH\"  rbenv install ${_RUBYVERSION} ' "
+    Working Installing ruby: rbenv install 3.2.2
+    su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&  ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"${_libpg_bin}:$PATH\"  rbenv install 3.2.2 ' "
   }
   fi
   isrubyinstalled="$(su - "${SUDO_USER}" -c "bash -c 'rbenv versions'" | grep "${_RUBYVERSION}")"
@@ -537,9 +989,9 @@ _ruby_check() {
   {
     # set +x
     Comment "LINENO:$LINENO ------ else" 
-    su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&  ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"/opt/homebrew/opt/libpq/bin:$PATH\"  rbenv install ${_RUBYVERSION} ' "
+    su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&  ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"${_libpg_bin}:$PATH\"  rbenv install ${_RUBYVERSION} ' "
   }
-  fi
+	fi
   Comment LINENO:$LINENO local _RUBYLOCATION=
   # set +x
   local _RUBYLOCATION="$(su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" && rbenv which ruby ' ")"
@@ -550,6 +1002,8 @@ _ruby_check() {
 
 } # end _ruby_check
 
+
+
 _bundle_check() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   local PROJECTREPO=${1}
@@ -557,39 +1011,147 @@ _bundle_check() {
 
   cd  "${PROJECTREPO}" 
 
+  Checking that libpq/bin can be found	
+	local -i _err=0
+	local _libpg_bin=""
+	if _libpg_bin="$(_try_more_times_find "
+opt/libpq/bin")" ; then 
+  {
+	  _err=0
+		passed "Found libpq/bin"
+	}
+  else
+	{
+	  _err=1
+		warning "Failed to find libpq/bin"
+	}
+	fi	
+  
+  if [ $_err -gt 0 ] ; then # failed
+  {
+	  echo "${_libpg_bin}"
+    failed "to find opt/libpq/bin"
+	}
+	fi	
+	_libpg_bin="$(echo -n "${_libpg_bin}" | tail -1)"
+	passed "found of opt/libpq/bin  = ${_libpg_bin}"
+
+
+
   Comment "### gem update"
-  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"/opt/homebrew/opt/libpq/bin:$PATH\" gem update --system' "
+  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"${_libpg_bin}:$PATH\" gem update --system' "
   
 
   Comment "### bundle"
 
-  export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
 
-  export LDFLAGS="-L/opt/homebrew/opt/postgresql@12/lib"
-  export CPPFLAGS="-I/opt/homebrew/opt/postgresql@12/include"
 
-  export PKG_CONFIG_PATH="/opt/homebrew/opt/postgresql@12/lib/pkgconfig"
+
+  Checking "that opt/postgresql@12 can be found"	
+	local -i _err=0
+	local _pg_lib=""
+	_pg_lib="$(_try_more_times_find "
+opt/postgresql@12
+opt/postgres
+opt/postgresql
+")"
+  _err=$?
+  if [ $_err -gt 0 ] ; then # failed
+  {
+	  echo "${_pg_lib}"
+    passed "Failed to find opt/postgresql@12"
+	}
+	fi	
+	_pg_lib="$(echo -n "${_pg_lib}" | tail -1)"
+	passed "found of opt/postgresql@12  = ${_pg_lib}"
+
+
+
+  export PATH="${_libpg_bin}:$PATH"
+
+
+
+  export LDFLAGS="-L${_pg_lib}/lib"
+  export CPPFLAGS="-I${_pg_lib}/include"
+
+  export PKG_CONFIG_PATH="${_pg_lib}/lib/pkgconfig"
 
   Comment "### gem pg"
-  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"/opt/homebrew/opt/libpq/bin:$PATH\" gem install pg ' "
-  Comment "### gem pg"
-  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"/opt/homebrew/opt/libpq/bin:$PATH\" gem install pg -v 1.2.3' "
+  if su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"${_libpg_bin}:$PATH\" gem install pg ' " ; then 
+	{
+		warning Failed to gem install pg
+	}
+	fi
+
+  Comment "### gem pg -v 1.2.3"
+  if su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"${_libpg_bin}:$PATH\" gem install pg -v 1.2.3' " ; then 
+	{
+		warning Failed to gem install pg -v 1.2.3
+	}
+	fi
   Comment "### gem activerecord-postgres_enum"
-  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"/opt/homebrew/opt/libpq/bin:$PATH\" gem install activerecord-postgres_enum ' "
+  if su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"${_libpg_bin}:$PATH\" gem install activerecord-postgres_enum ' " ; then
+	{
+		warning Failed to gem install activerecord-postgres_enum
+	}
+	fi
   Comment "### gem activerecord-postgres_enum"
-  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"/opt/homebrew/opt/libpq/bin:$PATH\" gem install activerecord-postgres_enum -v 1.6.0 ' "
-  Comment "### gem bundler"
-  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   gem install bundler:2.3.17 ' "
+  if su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"${_libpg_bin}:$PATH\" gem install activerecord-postgres_enum -v 1.6.0 ' " ; then 
+	{
+		warning Failed to gem install activerecord-postgres_enum -v 1.6.0 
+	}
+	fi
+   Comment "### gem bundler 2.4.10"
+  if su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   gem install bundler:2.4.10 ' " ; then
+	{
+		warning Failed to gem install bundler:2.4.10
+	}
+	fi
+  Comment "### gem bundler 2.3.17"
+  if su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   gem install bundler:2.3.17 ' " ; then
+	{
+		warning Failed to gem install bundler:2.3.17
+	}
+	fi
   Comment "### bundle bundle install"
-  bundle config build.pg --with-pg-config=$(brew --prefix)/opt/libpq/bin/pg_config
-  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   bundle install ' "
+  bundle config build.pg --with-pg-config=${_libpg_bin}/pg_config
+  if su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   bundle install ' " ; then 
+	{
+		warning Failed to cd \"${PROJECTREPO}\" &&   bundle install
+	}
+	fi
 } # end _bundle_check
 
+
+
+
 _add_postgress_to_bashrc_zshrc(){
+
+
+  Checking "that opt/postgresql@12 can be found"	
+	local -i _err=0
+	local _pg_lib=""
+	_pg_lib="$(_try_more_times_find "
+opt/postgresql@12
+opt/postgres
+opt/postgresql
+")"
+  _err=$?
+  if [ $_err -gt 0 ] ; then # failed
+  {
+	  echo "${_pg_lib}"
+    passed "Failed to find opt/postgresql@12"
+	}
+	fi	
+	_pg_lib="$(echo -n "${_pg_lib}" | tail -1)"
+	passed "found of opt/postgresql@12  = ${_pg_lib}"
+
+
+
   local SH_CONTENT="
 
 # POSTGRESS 12 - HOMEBREW 
-export PATH=\"/opt/homebrew/opt/postgresql@12/bin:$PATH\"
+export PATH=\"${_pg_lib}/bin:$PATH\"
 
 "
   # trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _add_variables_to_bashrc_zshrc nvm" && echo -e "${RESET}" && return 0' ERR
@@ -605,15 +1167,18 @@ export PATH=\"/opt/homebrew/opt/postgresql@12/bin:$PATH\"
   while read INITFILE; do
   {
     [ -z ${INITFILE} ] && continue    
-    (_if_not_contains  "${USER_HOME}/${INITFILE}" "/opt/homebrew/opt/postgresql@12/bin" ) || Configuring ${INITFILE}
-    (_if_not_contains  "${USER_HOME}/${INITFILE}" "/opt/homebrew/opt/postgresql@12/bin" ) && Skipping configuration for ${INITFILE}
+    (_if_not_contains  "${USER_HOME}/${INITFILE}" "${_pg_lib}/bin" ) || Configuring ${INITFILE}
+    (_if_not_contains  "${USER_HOME}/${INITFILE}" "${_pg_lib}/bin" ) && Skipping configuration for ${INITFILE}
     #                   filename            value      || do this .............
     (_if_not_contains  "${USER_HOME}/${INITFILE}" "# POSTGRESS 12 - HOMEBREW" ) || echo -e "${SH_CONTENT}" >>"${USER_HOME}/${INITFILE}"
-    (_if_not_contains  "${USER_HOME}/${INITFILE}" "/opt/homebrew/opt/postgresql@12/bin" ) || echo -e "${SH_CONTENT}" >>"${USER_HOME}/${INITFILE}"
+    (_if_not_contains  "${USER_HOME}/${INITFILE}" "${_pg_lib}/bin" ) || echo -e "${SH_CONTENT}" >>"${USER_HOME}/${INITFILE}"
   }
   done <<< "${INITFILES}"
 
 } # end _add_postgress_to_bashrc_zshrc
+
+
+
 
 _env_check() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
@@ -626,6 +1191,9 @@ _env_check() {
   Comment Currently and temporary we have \`.env.test\` file as a template 
   su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" && cp .env.test .env '"
 } # end  _env_check
+
+
+
 
 _execute_db() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
@@ -642,6 +1210,7 @@ _execute_db() {
   su - "${SUDO_USER}"  -c "${_command}"
 
 } # end _execute_db
+
 
 
 _make_CREATE_ADVISORS() {
@@ -683,6 +1252,9 @@ _make_CREATE_ADVISORS() {
 
 } # end _make_CREATE_ADVISORS
 
+
+
+
 _execute_project_command() { 
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   local PROJECTREPO=${1}
@@ -693,6 +1265,10 @@ _execute_project_command() {
   echo "_command:${_command}"
   su - "${SUDO_USER}" -c  "bash -c 'cd "${PROJECTREPO}" && ${_command} '"
 } # end _execute_project_command
+
+
+
+
 
 _migrate_development_check() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
@@ -710,6 +1286,9 @@ _migrate_development_check() {
   # _execute_project_command "${PROJECTREPO}" "echo \"${_reset_passwords}\" | RAILS_ENV=production bundle exec rails c"
 
 } # end  _migrate_development_check
+
+
+
 
 _postgres_usercreate_check() {
   local _db_user="${1}"
@@ -763,9 +1342,8 @@ _postgres_start_check() {
 
   cd  "${PROJECTREPO}" 
   Comment "### _postgres_start_check"
+  _brew_postgres_redis_restart
 
-  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" && brew services restart postgresql@12 '"
-  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" && brew services restart redis '"
   _add_postgress_to_bashrc_zshrc
   _postgres_usercreate_check postgres postgres
   ps ax | grep postgres
@@ -779,6 +1357,8 @@ abort() {
   exit 1
 }
 
+
+
 # Fail fast with a concise message when not using bash
 # Single brackets are needed here for POSIX compatibility
 # shellcheck disable=SC2292
@@ -786,6 +1366,8 @@ if [ -z "${BASH_VERSION:-}" ]
 then
   abort "Bash is required to interpret this script."
 fi
+
+
 
 # Check if script is run with force-interactive mode in CI
 if [[ -n "${CI-}" && -n "${INTERACTIVE-}" ]]
@@ -934,6 +1516,8 @@ execute_sudo() {
     execute "${args[@]}"
   fi
 }
+
+
 
 _migrate_check() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
@@ -1158,11 +1742,15 @@ _vpn_check() {
   su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' brew install  --cask tunnelblick"
 } # end _vpn_check
 
+
+
+
 _darwin__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   
-  local PROJECTSBASEDIR="${USER_HOME}/_/work/finlink"
-  local PROJECTREPO="${USER_HOME}/_/work/finlink/loanlink-api"
+	_find_project_location_PROJECT_DIR_F
+  local PROJECTSBASEDIR="${PROJECT_DIR_F}"
+  local PROJECTREPO="${PROJECT_DIR_F}/loanlink-api" 
   local PROJECTGITREPO="git@github.com:LoanLink/loanlink-api.git"
 
   if [[ ! -f "${PROJECTREPO}/.step1_brew_check_requirements_postgress_12_install"  ]] ; then

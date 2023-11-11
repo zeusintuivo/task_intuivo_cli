@@ -457,20 +457,36 @@ _git_clone() {
     if it_exists_with_spaces "${_target}/.git" ; then
     {
       cd "${_target}"
-      git config pull.rebase false
-      git fetch
-      git pull
+      if git config pull.rebase false ; then 
+			{
+				warning Could not git config pull.rebase false
+			}
+			fi
+      if git fetch  ; then 
+			{
+				warning Could not git fetch
+			}
+			fi
+      if git pull  ; then 
+			{
+				warning Could not git pull
+			}
+			fi
     }
     fi
   }
   else
   {
-   git clone "${_source}" "${_target}"
+    if git clone "${_source}" "${_target}"  ; then 
+		{
+			warning Could not git clone "${_source}" "${_target}"
+		}
+		fi
   }
   fi
   chown -R "${SUDO_USER}" "${_target}"
 
-} # _git_clone
+} # end _git_clone
 
 
 
@@ -479,6 +495,7 @@ _add_variables_to_bashrc_zshrc(){
 
 # RBENV
 export RBENV_ROOT="'${USER_HOME}'/.rbenv"
+export PATH="'${USER_HOME}'/bin:${PATH}"
 export PATH="'${USER_HOME}'/.rbenv/bin:${PATH}"
 eval "$(rbenv init -)"
 
@@ -568,7 +585,7 @@ _debian_flavor_install() {
 
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  dnf build-dep rbenv -vy
+  dnf build-dep rbenv -vy --allow-erasing
   # dnf install  -y openssl-devel
   # Batch Fedora 37
   local package packages="
@@ -620,6 +637,8 @@ _redhat_flavor_install() {
   ensure rbenv or "Canceling until rbenv did not install"
   su - "${SUDO_USER}" -c 'rbenv install -l'
   su - "${SUDO_USER}" -c 'rbenv install 2.6.5'
+  su - "${SUDO_USER}" -c 'rbenv install 2.7.3'
+  su - "${SUDO_USER}" -c 'rbenv install 3.2.2'
   su - "${SUDO_USER}" -c 'rbenv global 2.6.5'
   su - "${SUDO_USER}" -c 'rbenv rehash'
   ensure ruby or "Canceling until ruby is not working"
@@ -724,6 +743,7 @@ _darwin__64() {
   su - "${SUDO_USER}" -c "${USER_HOME}/.rbenv/bin/rbenv install -l"
   su - "${SUDO_USER}" -c "${USER_HOME}/.rbenv/bin/rbenv install 2.6.5"
   su - "${SUDO_USER}" -c "${USER_HOME}/.rbenv/bin/rbenv install 2.7.3"
+  su - "${SUDO_USER}" -c "${USER_HOME}/.rbenv/bin/rbenv install 3.2.2"
   su - "${SUDO_USER}" -c "${USER_HOME}/.rbenv/bin/rbenv global 2.7.3"
   su - "${SUDO_USER}" -c "${USER_HOME}/.rbenv/bin/rbenv rehash"
   ensure ruby or "Canceling until ruby is not working"

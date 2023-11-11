@@ -439,19 +439,51 @@ _git_clone() {
   local _target="${2}"
   Checking "${SUDO_USER}" "${_target}"
   pwd
-  if  it_exists_with_spaces "${_target}" && it_exists_with_spaces "${_target}/.git" ; then
+  if  it_exists_with_spaces "${_target}" ; then # && it_exists_with_spaces "${_target}/.git" ; then
   {
-    cd "${_target}"
-    git config pull.rebase false    
-    git fetch
-    git checkout .
-    git checkout master
-    git pull
-    git fetch --tags origin
+    if it_exists_with_spaces "${_target}/.git" ; then
+    {
+      cd "${_target}"
+      if git config pull.rebase false ; then 
+			{
+				warning Could not git config pull.rebase false
+			}
+			fi
+      if git fetch ; then 
+			{
+				warning Could not git fetch
+			}
+			fi
+      if  git checkout .  ; then 
+			{
+				warning Could not git checkout . 
+			}
+			fi
+      if git checkout master ; then 
+			{
+				warning Could not git checkout master
+			}
+			fi
+      if git pull ; then 
+			{
+				warning Could not git pull 
+			}
+			fi
+      if git fetch --tags origin ; then 
+			{
+				warning Could not git fetch --tags origin
+			}
+			fi
+    }
+    fi
   }
   else
   {
-   git clone "${_source}" "${_target}"
+    if git clone "${_source}" "${_target}"  ; then 
+		{
+			warning Could not git clone "${_source}" "${_target}"
+		}
+		fi
   }
   fi
   chown -R "${SUDO_USER}" "${_target}"
@@ -480,7 +512,7 @@ export NVM_DIR="'${USER_HOME}'/.nvm"
   while read INITFILE; do
   {
     [ -z ${INITFILE} ] && continue    
-    Installing ${INITFILE}
+    Checking "${USER_HOME}/${INITFILE}" 
     _if_not_contains "${USER_HOME}/${INITFILE}"  "# NVM" ||  echo "${NVM_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
     _if_not_contains "${USER_HOME}/${INITFILE}"  "nvm.sh" ||  echo "${NVM_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
   }
@@ -719,7 +751,8 @@ _debian_flavor_install() {
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
-  _git_clone "https://github.com/nvm-sh/nvm.git" "${USER_HOME}/.nvm"
+  dnf build-dep nodejs -y --allow-erasing
+	_git_clone "https://github.com/nvm-sh/nvm.git" "${USER_HOME}/.nvm"
   cd "${USER_HOME}/.nvm"
     Installing older version that is compatible with old linux
   git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" $(git rev-list --tags --max-count=1)`
