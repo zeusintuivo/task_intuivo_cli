@@ -1721,7 +1721,7 @@ _postgres_start_check() {
   Comment "### _postgres_start_check"
   _brew_postgres_redis_restart
 
-  _add_postgress_to_bashrc_zshrc
+
   _postgres_usercreate_check postgres postgres
   ps ax | grep postgres
 
@@ -2174,14 +2174,21 @@ _darwin__64() {
     _env_check "${PROJECTREPO}" 
     _execute_project_command "${PROJECTREPO}" "touch \"${PROJECTREPO}/.step6_env_check\" "
   } 
-  fi  
+  fi
+  if [[ ! -f "${PROJECTREPO}/.step71_pre_postgres_start_check"  ]] ; then
+  {
+    Working "Step .step71_pre_postgres_start_check"
+    _add_postgress_to_bashrc_zshrc "${PROJECTREPO}" 
+    _execute_project_command "${PROJECTREPO}" "touch \"${PROJECTREPO}/.step71_pre_postgres_start_check\" "
+  } 
+  fi
   if [[ ! -f "${PROJECTREPO}/.step7_postgres_start_check"  ]] ; then
   {
     Working "Step .step7_postgres_start_check"
     _postgres_start_check "${PROJECTREPO}" 
     _execute_project_command "${PROJECTREPO}" "touch \"${PROJECTREPO}/.step7_postgres_start_check\" "
   } 
-  fi  
+  fi
   if [[ ! -f "${PROJECTREPO}/.step8_migrate_check"  ]] ; then
   {
     Working "Step .step8_migrate_check"
