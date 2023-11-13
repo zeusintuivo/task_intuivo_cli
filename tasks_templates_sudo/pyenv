@@ -189,10 +189,15 @@ _add_variables_to_bashrc_zshrc(){
   local PYENV_SH_CONTENT='
 
 # PYENV
-export PYENV_ROOT="'${USER_HOME}'/.pyenv"
-export PATH="'${USER_HOME}'/.pyenv/bin:${PATH}"
-eval "$(pyenv init -)"
-eval "$(pyenv virtualenv-init -)"
+if [[ -e "'${USER_HOME}'/.pyenv/bin" ]] ; then
+{
+  # export PATH="'${USER_HOME}'/.pyenv/bin/shims:$PATH"
+  export PYENV_ROOT="'${USER_HOME}'/.pyenv"
+  export PATH="'${USER_HOME}'/.pyenv/bin:${PATH}"
+  eval "$("'${USER_HOME}'/.pyenv/bin/pyenv" init -)"
+  eval "$("'${USER_HOME}'/.pyenv/bin/pyenv" virtualenv-init -)"
+}
+fi
 
 '
   trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _add_variables_to_bashrc_zshrc pyenv" && echo -e "${RESET}" && return 0' ERR
@@ -210,10 +215,13 @@ eval "$(pyenv virtualenv-init -)"
     [ -z ${INITFILE} ] && continue
     _if_not_contains "${USER_HOME}/${INITFILE}"  "# PYENV" ||  echo "${PYENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
     _if_not_contains "${USER_HOME}/${INITFILE}"  "PYENV_ROOT" ||  echo "${PYENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
-    _if_not_contains "${USER_HOME}/${INITFILE}"  "pyenv init" ||  echo "${PYENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "pyenv/bin" ||  echo "${PYENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
   }
   done <<< "${INITFILES}"
-  "${USER_HOME}/.pyenv/bin/pyenv" doctor
+	export PYENV_ROOT="${USER_HOME}/.pyenv"
+  export PATH="${USER_HOME}/.pyenv/bin:${PATH}"
+	eval "$("${USER_HOME}/.pyenv/bin/pyenv" init -)"
+	"${USER_HOME}/.pyenv/bin/pyenv" doctor
 } # _add_variables_to_bashrc_zshrc
 
 _arch_flavor_install() {
