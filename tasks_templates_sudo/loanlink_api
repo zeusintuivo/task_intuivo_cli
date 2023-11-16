@@ -855,7 +855,7 @@ _attempt_to_download_docker() {
     (cygwin*) _docker_cygwin ;;
     (linux*) _docker_linux ;;
     (msys*) _docker_msys  ;;
-    (*) echo "Platform $OSTYPE not supported"
+    (*) failed "Platform $OSTYPE not supported"
     return 0 ;;
   esac
 } # end _attempt_to_download_docker
@@ -1460,7 +1460,7 @@ fi
 
 unset HAVE_SUDO_ACCESS # unset this from the environment
 
-have_sudo_access() {
+_user_has_have_sudo_access() {
   if [[ ! -x "/usr/bin/sudo" ]]
   then
     return 1
@@ -1503,7 +1503,7 @@ execute() {
 
 execute_sudo() {
   local -a args=("$@")
-  if have_sudo_access
+  if _user_has_have_sudo_access
   then
     if [[ -n "${SUDO_ASKPASS-}" ]]
     then
