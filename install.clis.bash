@@ -181,10 +181,10 @@ fi
 # exit 0
 COMANDDER=""
 _checka_node_commander() {
-    local COMANDDER="$1"
-    is_not_installed npm &&  $COMANDDER install -y npm             # Ubuntu only
-    is_not_installed node && $COMANDDER install -y nodejs          # In Fedora installs npm and node
-    is_not_installed node && $COMANDDER install -y nodejs-legacy   # Ubuntu only
+    local _commander="$1"
+    is_not_installed npm &&  $_commander install -y npm             # Ubuntu only
+    is_not_installed node && $_commander install -y nodejs          # In Fedora installs npm and node
+    is_not_installed node && $_commander install -y nodejs-legacy   # Ubuntu only
     #verify_is_installed npm
     #verify_is_installed node
 } # end _checka_node_commander
@@ -507,7 +507,7 @@ _add_launchd(){
      fi
      if /bin/launchctl bootstrap gui/501 "${launchfile}" ; then 
      {
-        warning service pull clis failed
+        warning  bootstrap gui/501 has failed
      }
      else
      {
@@ -533,12 +533,12 @@ _add_launchd(){
      fi
      if su - "${SUDO_USER}" -c "launchctl load  \"${launchfile}\"" ; then 
      {
-        warning service pull clis failed
+        warning su -  launchctl load failed
      }
      fi
      if launchctl load  "${launchfile}" ; then 
      {
-        warning service pull clis failed
+        warninglaunchctl load failed
      }
      fi
      
@@ -803,6 +803,83 @@ _install_nerd_fonts(){
   }
   fi
 } # end _install_nerd_fonts
+
+
+
+        function _find_executable_for() {
+          trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+
+          local _executable_test="${1:-}" 
+          enforce_parameter_with_value           1:-        _executable_test     "${_executable_test:-}"     "nothing|brew"
+          if [[ "${_executable_test:-}" == "nothing" ]] ; then
+          {
+            _executable_test=""
+          }
+          fi
+          local _argumentexecutable_test="${2:-}" 
+          if [[ "${_argumentexecutable_test:-}" == "nothing" ]] ; then
+          {
+            _argumentexecutable_test=""
+          }
+          fi
+          if [[ -z "${_executable_test}" ]] ; then
+          {
+            _argumentexecutable_test=""
+          }
+          fi
+          enforce_parameter_with_value           2:-        _argumentexecutable_test     "${_argumentexecutable_test:-}"     "nothing|--prefix"
+          local _possibles="${*:3}"
+          enforce_parameter_with_value           *:3++        _possibles     "${_possibles:-}"     "
+                  bin/brew
+                  brew
+          "
+          local -i _err=0
+          local _try_returned_echo=""
+          _try_returned_echo="$(_try_more_times_find "${_possibles}")"
+          _err=$?
+          if [ $_err -gt 0 ] ; then # failed
+          {
+            echo "${_try_returned_echo}"
+            failed "to find any ${_executable_test} of ${_possibles}"
+          }
+          fi
+          local _target_found=""
+          _target_found="$(echo -n "${_try_returned_echo:-}" | tail -1)"
+          passed "found ${_executable_test} of ${_possibles} one = ${_target_found:-}"
+          if [[ -n "${_target_found:-}" ]] ; then 
+          {
+            Checking "if ${_executable_test} is responds to command -v ${_executable_test} since \$_target_found  var is empty"
+            if ( su - "${SUDO_USER}" -c "command -v ${_executable_test}" >/dev/null 2>&1; )  ; then
+            {
+              if [[ -z "${_argumentexecutable_test:-}" ]] ; then
+              {
+                _target_found="$(su - "${SUDO_USER}" -c "${_executable_test}")"
+              }
+              else 
+              {
+                _target_found="$(su - "${SUDO_USER}" -c "${_executable_test} ${_argumentexecutable_test}")"
+              }
+              fi
+            }
+            fi
+          }
+          fi
+          enforce_variable_with_value _target_found "${_target_found}"
+  
+          if [[ -n "${_target_found:-}" ]] ; then 
+          {
+            echo "${_target_found}"
+            return 0
+          }
+          fi
+          failed "Not found ${_executable_test} ${_argumentexecutable_test} or of ${_possibles} "
+          return 1
+          # if ( command -v ${_target_found} >/dev/null 2>&1; ) ; then
+          # {
+          # }
+          # fi
+        } # end _find_executable_for 
+
 
 _setup_ohmy(){
     if  it_does_not_exist_with_spaces "${USER_HOME}/.oh-my-zsh/" ; then
@@ -1519,6 +1596,7 @@ _install_dmgs_list() {
       continue
     }
     fi
+    
     echo -e " ${BRIGHT_BLUE87} === ${ORANGE}Install "${app_name}" ❓${RESET} [y/n] ? " 
       if yes_or_no ; then
       {
@@ -1546,6 +1624,7 @@ _install_dmgs_list() {
     {
       _err=$?
       warning "could not install ${app_name}"
+      touch "${SUDO_USER}/.___${app_name}" 
     }
     else 
     {
@@ -1977,6 +2056,8 @@ _darwin__arm64() {
   _darwin__64
 } # end _darwin__arm64
 _darwin__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+
   Installing "## macOS Preferences"
 
   Comment "# Set a blazingly fast keyboard repeat rate ms"
@@ -2004,18 +2085,7 @@ _darwin__64() {
   [[  -e "${USER_HOME}/.zshenv" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.zshenv"
   [[  -e "${USER_HOME}/.composer" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.composer"
 
-  _add_launchd "${USER_HOME}/Library/LaunchAgents" "${USER_HOME}/Library/LaunchAgents/com.intuivo.clis_pull_all.plist"
-  _install_dmgs_list
 
-  # Start a subprocress
-  (
-    if anounce_command sudo chown -R "${SUDO_USER}" "${USER_HOME}/Library/Caches/" ; then
-    {
-      mkdir -p "${USER_HOME}/Library/Caches/"
-      Comment ${ORANGE} WARNING! ${YELLOW_OVER_DARKBLUE} failed chown -R "${SUDO_USER}" "${USER_HOME}/Library/Caches/" ${YELLOW_OVER_GRAY241}"${APPDIR}"${RESET}
-    }
-    fi
-  )
 
 
   local Answer
@@ -2054,7 +2124,7 @@ _darwin__64() {
                       echo "${_target_bin_brew} install"
                     fi
                     # install=$(/opt/homebrew/bin/brew install "${missing}")
-                    su - "${SUDO_USER}" -c "${_target_bin_brew} install ${missing} "
+                    # su - "${SUDO_USER}" -c "${_target_bin_brew} install ${missing} "
                     err_buff=$?
                     # su - "${SUDO_USER}" -c "brew install ${missing} "
                   }
@@ -2066,10 +2136,25 @@ _darwin__64() {
 
   # COMANDDER="_run_command /usr/local/bin/brew install "
   # COMANDDER="_run_command /opt/homebrew/bin/brew install "
-  COMANDDER="_run_command ${_target_bin_brew} install "
+  # COMANDDER="_run_command ${_target_bin_brew} install "
+  COMANDDER="su - \"${SUDO_USER}\" -c \" \"${_target_bin_brew}\"  install "
   # LINKER="_run_command /opt/homebrew/bin/brew link "
-  LINKER="_run_command ${_target_bin_brew} link "
+  # LINKER="_run_command ${_target_bin_brew} link "
+  LINKER="su - \"${SUDO_USER}\" -c \" \"${_target_bin_brew}\"  link "
   $COMANDDER  node
+
+  _add_launchd "${USER_HOME}/Library/LaunchAgents" "${USER_HOME}/Library/LaunchAgents/com.intuivo.clis_pull_all.plist"
+  _install_dmgs_list
+
+  # Start a subprocress
+  (
+    if anounce_command sudo chown -R "${SUDO_USER}" "${USER_HOME}/Library/Caches/" ; then
+    {
+      mkdir -p "${USER_HOME}/Library/Caches/"
+      Comment ${ORANGE} WARNING! ${YELLOW_OVER_DARKBLUE} failed chown -R "${SUDO_USER}" "${USER_HOME}/Library/Caches/" ${YELLOW_OVER_GRAY241}"${APPDIR}"${RESET}
+    }
+    fi
+  )
 
   # su - "${SUDO_USER}" -c 'brew install the_silver_searcher'
   install_requirements "darwin" "
