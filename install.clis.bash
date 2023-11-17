@@ -864,12 +864,7 @@ _setup_ohmy(){
 
         Testing ohmyzsh
         directory_exists_with_spaces "${USER_HOME}/.oh-my-zsh"
-    }
-    else
-    {
         passed that: ohmy is installed
-    }
-    fi
 
 
   if it_does_not_exist_with_spaces "${USER_HOME}/.oh-my-zsh/themes/powerlevel10k" ; then
