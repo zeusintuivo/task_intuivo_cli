@@ -189,6 +189,43 @@ _checka_node_commander() {
     #verify_is_installed node
 } # end _checka_node_commander
 
+  function _trap_on_error(){
+    local -ir __trapped_error_exit_num="${2:-0}"
+    echo -e "\\n \033[01;7m*** 2 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+    echo ". ${1}"
+    echo ". exit  ${__trapped_error_exit_num}  "
+    echo ". caller $(caller) "
+    echo ". ${BASH_COMMAND}"
+    local -r __caller=$(caller)
+    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+
+    # $(eval ${BASH_COMMAND}  2>&1; )
+    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+    exit ${__trapped_error_exit_num}
+  }
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  
+  function _trap_on_INT(){
+    local -ir __trapped_INT_num="${2:-0}"
+    echo -e "\\n \033[01;7m*** 7 INT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n INT ...\033[0m  \n \n "
+    echo ". ${1}"
+    echo ". INT  ${__trapped_INT_num}  "
+    echo ". caller $(caller) "
+    echo ". ${BASH_COMMAND}"
+    local -r __caller=$(caller)
+    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+
+    # $(eval ${BASH_COMMAND}  2>&1; )
+    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+    exit ${__trapped_INT_num}
+  }
+  trap  '_trap_on_INT $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  INT
+
+
 _checka_tools_commander(){
     # install_requirements "linux" "
     # xclip
@@ -1417,6 +1454,8 @@ _install_dmg__64() {
 } # end _install_dmg__64
 
 _install_dmgs_list() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+
   Comment start ${0:-} ${1:-}  _install_dmgs_list
   # Iris.dmg|
   # 1Password.pkg|https://c.1password.com/dist/1P/mac7/1Password-7.7.pkg
@@ -1470,19 +1509,27 @@ _install_dmgs_list() {
     [[ -z "${target_url}" ]] && continue
     if [[  -d "/Applications/${app_name}" ]] ; then
     {
-      passed  "/Applications/${app_name}"  --skipping already installed
+      passed  "/Applications/${app_name}" ${ORANGE} --skipping ${YELLOW_OVER_DARKBLUE} already installed ${RESET}
       continue
     }
     fi
     if  it_exists "${SUDO_USER}/.___${app_name}" ; then
     {
-      passed skipping ${app_name}  --skipping because "${SUDO_USER}/.___${app_name}" lock exists
+      passed skipping ${app_name} ${ORANGE} --skipping ${YELLOW_OVER_DARKBLUE} because ${RESET}"${SUDO_USER}/.___${app_name}" ${ORANGE} lock exists${RESET}
       continue
     }
     fi
-    echo -e "${PURPLE_BLUE} === Install "${app_name}" ❓? ${RESET}"
-    yes_or_no
-    _err=$?
+    echo -e " ${BRIGHT_BLUE87} === ${ORANGE}Install "${app_name}" ❓${RESET} [y/n] ? " 
+      if yes_or_no ; then
+      {
+        _err=0
+      }
+      else
+      {
+        _err=1
+      }
+      fi
+
     # [ $_err -eq 0 ] &&  # yes
     # [ $_err -gt 0 ] &&  # no
     if [ $_err -gt 0 ] ; then # no
@@ -1958,9 +2005,6 @@ _darwin__64() {
   [[  -e "${USER_HOME}/.composer" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.composer"
 
   _add_launchd "${USER_HOME}/Library/LaunchAgents" "${USER_HOME}/Library/LaunchAgents/com.intuivo.clis_pull_all.plist"
-  echo "hola gud"
-  set -xu 
- 
   _install_dmgs_list
 
   # Start a subprocress
