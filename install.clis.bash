@@ -370,10 +370,10 @@ _add_launchd(){
   _ensure_touch_dir_and_file "${USER_HOME}/_/clis" "${USER_HOME}/_/clis/updateall.bash"
   launchname="${launchfile##*/}"
   enforce_variable_with_value launchname "${launchname}"
-  Installing launchd "${launchdir}" "${launchfile}"
-  Installing  /Library/LaunchDaemons - run when no users are logged in. run as 'administrator'
-  Installing  /Library/LaunchAgents - when users are logged in. run as 'administrator'
-  Installing  "${USER_HOME}/Library/LaunchAgents -  when as user when user is logged."
+  Installing  $0:$LINENO launchd "${launchdir}" "${launchfile}"
+  Installing  $0:$LINENO /Library/LaunchDaemons - run when no users are logged in. run as 'administrator'
+  Installing  $0:$LINENO /Library/LaunchAgents - when users are logged in. run as 'administrator'
+  Installing  $0:$LINENO"${USER_HOME}/Library/LaunchAgents -  when as user when user is logged."
   su - "${SUDO_USER}" -c "echo '#!/usr/bin/env bash
   THISDIR=\"\$( cd \"\$( dirname \"\${BASH_SOURCE[0]}\" )\" && pwd )\" # Getting the source directory of a Bash script from within REF: https://stackoverflow.com/questions/59895/how-can-i-get-the-source-directory-of-a-bash-script-from-within-the-script-itsel/246128#246128
   cd \"\${THISDIR}\"
@@ -432,7 +432,7 @@ _add_launchd(){
 ' > "${launchfile}"
    #(( DEBUG )) && cat "${launchfile}"
 
-   Checking "${launchfile}"
+   Checking $0:$LINENO "${launchfile}"
    # Set correct permissions REF: https://stackoverflow.com/questions/28063598/error-while-executing-plist-file-path-had-bad-ownership-permissions
    # sudo chown root "${launchfile}"
    chown "${SUDO_USER}"  "${launchfile}"
@@ -442,7 +442,7 @@ _add_launchd(){
    # if ( launchctl list "${launchservice}" | grep "${launchservice}" ) ; then
    {
      wait
-     Comment exists "${launchfile}"
+     Comment $0:$LINENO exists "${launchfile}"
      su - "${SUDO_USER}" -c "launchctl unload \"${launchfile}\" "
      wait
      # launchctl unload "${launchservice}"
@@ -451,19 +451,64 @@ _add_launchd(){
    }
    else
    {
-     Comment exists not "${launchfile}"
+     Comment $0:$LINENO exists not "${launchfile}"
    }
    fi
 
    wait
-   Installing "${launchfile}"
-   su - "${SUDO_USER}" -c "launchctl load \"${launchfile}\""
-   wait
-   # launchctl load "${launchfile}"
-   # _err=$?
-  # [ ${_err} -ne 0 ] || failed "${_err} -err launchctl load \"${launchfile}\""
-  # exit 0
+   Installing "$0:$LINENO ${launchfile}"
+   if [[ "$(uname -m)" == "arm64" ]] ; then
+   {
+     Installing  $0:$LINENO launchctl bootstrap gui/501 "${launchfile}"
+     echo "LEGACY launchctl load "${launchfile}" "
+     echo " now we need to make it owned by root"
+     chown root "${launchfile}"
+     if /bin/launchctl bootout gui/501 "${launchfile}" ; then 
+     {
+        warning it did not exists, no worries installing again
+     }
+     fi
+     if /bin/launchctl bootstrap gui/501 "${launchfile}" ; then 
+     {
+        warning service pull clis failed
+     }
+     else
+     {
+        passed to load "${launchfile}"
+     }
+     fi
 
+      passed "done using bootstrap attempting to install launchctl for ${launchfile}"
+
+   }
+   else 
+   {
+     Installing before mac 10.15 we need LEGACY launchctl 
+     if su - "${SUDO_USER}" -c "launchctl load  -w  \"${launchfile}\"" ; then 
+     {
+        warning it did not exists, no worries installing again
+     }
+     fi
+     if launchctl load  -w "${launchfile}" ; then 
+        warning it did not exists, no worries installing again
+     }
+     fi
+     if su - "${SUDO_USER}" -c "launchctl load  \"${launchfile}\"" ; then 
+     {
+        warning service pull clis failed
+     }
+     fi
+     if launchctl load  "${launchfile}" ; then 
+     {
+        warning service pull clis failed
+     }
+     fi
+     
+     passed "done  LEGACY attempting to install launchctl for ${launchfile}"
+     
+   }
+   fi
+   echo "end $0:$LINENO _add_launchd "
 } # end _add_launchd
 
 _configure_git(){
@@ -1912,6 +1957,9 @@ _darwin__64() {
   [[  -e "${USER_HOME}/.composer" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.composer"
 
   _add_launchd "${USER_HOME}/Library/LaunchAgents" "${USER_HOME}/Library/LaunchAgents/com.intuivo.clis_pull_all.plist"
+  echo "hola gud"
+  set -xu 
+ 
   _install_dmgs_list
 
   # Start a subprocress
