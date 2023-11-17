@@ -728,60 +728,140 @@ _setup_ohmy(){
         if [[ "$COMANDDER" == *"apt-get"* ]]  ; then
         {
            wget -q -O - https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | apt-key add -
+            _if_not_is_installed fontawesome-fonts && $COMANDDER fontawesome-fonts
+            _if_not_is_installed powerline && $COMANDDER powerline vim-powerline tmux-powerline powerline-fonts
+            echo REF: https://fedoramagazine.org/tuning-your-bash-or-zsh-shell-in-workstation-and-silverblue/
+            if [ -f `which powerline-daemon` ]; then
+            {
+              powerline-daemon -q
+              POWERLINE_BASH_CONTINUATION=1
+              POWERLINE_BASH_SELECT=1
+              . /usr/share/powerline/bash/powerline.sh
+
+            }
+            fi
         }
         elif [[ "$COMANDDER" == *"dnf"* ]]  ; then
         {
          $COMANDDER git wget curl ruby ruby-devel zsh util-linux-user redhat-rpm-config gcc gcc-c++ make
+            _if_not_is_installed fontawesome-fonts && $COMANDDER fontawesome-fonts
+            _if_not_is_installed powerline && $COMANDDER powerline vim-powerline tmux-powerline powerline-fonts
+            if [ -f `which powerline-daemon` ]; then
+            {
+              powerline-daemon -q
+              POWERLINE_BASH_CONTINUATION=1
+              POWERLINE_BASH_SELECT=1
+              . /usr/share/powerline/bash/powerline.sh
+            }
+            fi
+
         }
         fi
 
 
     _install_nerd_fonts
-    if ( command -v brew >/dev/null 2>&1; ) ; then # MAC
+    if [[ "$COMANDDER" == *"brew"* ]]  ; then # MAC and linux 
     {
-      # su - "${SUDO_USER}" -c "brew install --cask font-fontawesome" # This was fontawesome 4, new 6 is gone
-      err_buff=$?
-    }
-    else # NOT Mac...made it for linux..
-    {
-      _if_not_is_installed fontawesome-fonts && $COMANDDER fontawesome-fonts
-      _if_not_is_installed powerline && $COMANDDER powerline vim-powerline tmux-powerline powerline-fonts
-      echo REF: https://fedoramagazine.org/tuning-your-bash-or-zsh-shell-in-workstation-and-silverblue/
-      if [ -f `which powerline-daemon` ]; then
-      {
-        powerline-daemon -q
-        POWERLINE_BASH_CONTINUATION=1
-        POWERLINE_BASH_SELECT=1
-        . /usr/share/powerline/bash/powerline.sh
+                  local -i _err=0
+                  ensure_brew_in_linux_mac
+                        # su - "${SUDO_USER}" -c "brew install --cask font-fontawesome" # This was fontawesome 4, new 6 is gone
+      $COMANDDER tap homebrew/cask-fonts         # You only need to do this once!
+      $COMANDDER install font-inconsolata
+      $COMANDDER install font-awesome-terminal-fonts 
+      $COMANDDER install font-fontawesome 
+      $COMANDDER install python3
+
+
+      local missing="powerline-status"
+      local -i err_buff=0
+      local _powerline_sh=""
+
+                  local _target_pip3=""
+                  _target_pip3="$(_find_executable_for "which" "pip3"  "pip3
+                     bin/pip3")"
+                  _err=$?
+                  if [ $_err -gt 0 ] ; then # failed
+                  {
+                    echo "${_target_pip3}"
+                    failed "to find pip3"
+                  }
+                  fi
+                  _target_pip3="$(echo -n "${_target_pip3}" | tail -1)"
+                  enforce_variable_with_value _target_pip3 "${_target_pip3}"
+                 
+                  if ( command -v "${_target_pip3}" >/dev/null 2>&1; ) ; then
+                  {
+                    # _run_command pip3 install ${missing}
+                    if (( DEBUG )) ; then
+                      echo "pip3 install"
+                      echo "${_target_pip3} install ....${missing}"
+                    fi
+                    # install=$($HOME/.pyenv/shims/pip3 install "${missing}")
+                    su - "${SUDO_USER}" -c "${_target_pip3} install ${missing} "
+                    err_buff=$?
+                    _powerline_sh=$(su - "${SUDO_USER}" -c "${_target_pip3} show ${missing} " | grep "Location:" |  cut -d: -f2- | xargs)
+                   
+                    err_buff=$?
+                    # su - "${SUDO_USER}" -c "pip3 install ${missing} "
+                  }
+                  else 
+                  {
+                    failed "to find get command -v ${_target_pip3} to respond"
+                  }
+                  fi
+
+
+      $COMANDDER install powerline vim-powerline tmux-powerline powerline-fonts
+          if [[ -n "${_powerline_sh}" ]] ; then
+          {
+            powerline-daemon -q
+            POWERLINE_BASH_CONTINUATION=1
+            POWERLINE_BASH_SELECT=1
+            \. "${_powerline_sh}"
+          }
+          fi
+
       }
       fi
     }
     fi
-        Testing zsh
-        # install ohmyzsh
-        su - "${SUDO_USER}" -c 'sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"'
-        chown -R "${SUDO_USER}" "${USER_HOME}/.oh-my-zsh"
-        if [ -e /opt/homebrew/bin/zsh ] ; then 
-        {
-          chsh -s /opt/homebrew/bin/zsh "${SUDO_USER}"
-          su - "${SUDO_USER}" -c 'chsh -s /opt/homebrew/bin/zsh "'${SUDO_USER}'"'
-        }
-        elif [ -e /usr/local/bin/zsh ] ; then 
-        {
-          chsh -s /usr/local/bin/zsh "${SUDO_USER}"
-          su - "${SUDO_USER}" -c 'chsh -s /usr/local/bin/zsh "'${SUDO_USER}'"'
-        }
-        elif [ -e /usr/bin/zsh ] ; then 
-        {
-          chsh -s /usr/bin/zsh "${SUDO_USER}"
-          su - "${SUDO_USER}" -c 'chsh -s /usr/bin/zsh "'${SUDO_USER}'"'
-        }
-        elif [ -e /bin/zsh ] ; then 
-        {
-          chsh -s /bin/zsh "${SUDO_USER}"
-          su - "${SUDO_USER}" -c 'chsh -s /bin/zsh "'${SUDO_USER}'"'
-        }
-        fi
+
+                  Testing zsh
+                  # install ohmyzsh
+                  su - "${SUDO_USER}" -c 'sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"'
+                  chown -R "${SUDO_USER}" "${USER_HOME}/.oh-my-zsh"
+
+                  local -i _err=0
+                  local _target_zsh=""
+                  _target_zsh="$(_find_executable_for "which" "zsh"  "bin/zsh")"
+                  _err=$?
+                  if [ $_err -gt 0 ] ; then # failed
+                  {
+                    echo "${_target_zsh}"
+                    failed "to find zsh"
+                  }
+                  fi
+                  _target_zsh="$(echo -n "${_target_zsh}" | tail -1)"
+                  enforce_variable_with_value _target_zsh "${_target_zsh}"
+                 
+                  if ( command -v "${_target_zsh}" >/dev/null 2>&1; ) ; then
+                  {
+                    # _run_command zsh install ${missing}
+                    if (( DEBUG )) ; then
+                      echo "zsh chsh"
+                      echo "${_target_zsh} install ....${missing}"
+                    fi
+                    chsh -s "${_target_zsh}" "${SUDO_USER}"
+                    su - "${SUDO_USER}" -c "chsh -s \"${_target_zsh}\" \"${SUDO_USER}\""                  
+                    err_buff=$?
+                  }
+                  else 
+                  {
+                    failed "to find get command -v ${_target_zsh} to respond so chsh -s zsh ${SUDO_USER} ...was not run and not changed "
+                  }
+                  fi
+
+
         Testing ohmyzsh
         directory_exists_with_spaces "${USER_HOME}/.oh-my-zsh"
     }
@@ -805,6 +885,7 @@ _setup_ohmy(){
   if it_does_not_exist_with_spaces "${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting" ; then
   {
     su - "${SUDO_USER}" -c "git clone https://github.com/zsh-users/zsh-syntax-highlighting.git \"${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting\""
+    _if_not_contains "${USER_HOME}/.zshrc" "zsh-highlighting" || echo "plugins=(git zsh-syntax-highlighting)"   >> "${USER_HOME}/.zshrc"
   }
   else
   {
@@ -814,7 +895,17 @@ _setup_ohmy(){
   if it_does_not_exist_with_spaces "${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions" ; then
   {
     su - "${SUDO_USER}" -c "git clone https://github.com/zsh-users/zsh-autosuggestions \"${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions\""
-    _if_not_contains "${USER_HOME}/.zshrc" "zsh-syntax-highlighting" || echo "plugins=(git zsh-syntax-highlighting zsh-autosuggestions)"   >> "${USER_HOME}/.zshrc"
+    _if_not_contains "${USER_HOME}/.zshrc" "zsh-autosuggestions" || echo "plugins=(git zsh-syntax-highlighting zsh-autosuggestions)"   >> "${USER_HOME}/.zshrc"
+  }
+  else
+  {
+    passed zsh-autosuggestions  already there
+  }
+  fi
+  if it_does_not_exist_with_spaces "${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions" ; then
+  {
+    su - "${SUDO_USER}" -c "git clone clone --depth 1 https://github.com/unixorn/fzf-zsh-plugin.git  \"${USER_HOME}/.oh-my-zsh/custom/plugins/fzf-zsh-plugin\""
+    _if_not_contains "${USER_HOME}/.zshrc" "fzf-zsh-plugin" || echo "plugins=(git zsh-syntax-highlighting zsh-autosuggestions fzf-zsh-plugin)"   >> "${USER_HOME}/.zshrc"
   }
   else
   {
@@ -1292,68 +1383,89 @@ _install_dmgs_list() {
   # KekaExternalHelper-v1.1.1.zip|KekaExternalHelper.app|https://github-releases.githubusercontent.com/73220421/dfb73d80-582e-11eb-80f7-180c8f11844b?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIWNJYAX4CSVEH53A%2F20210809%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20210809T155831Z&X-Amz-Expires=300&X-Amz-Signature=4360cc8d4b2cce8843548c0fcd52a188acd74ce764df82a24f3de7807a6cfa37&X-Amz-SignedHeaders=host&actor_id=0&key_id=0&repo_id=73220421&response-content-disposition=attachment%3B%20filename%3DKekaExternalHelper-v1.1.1.zip&response-content-type=application%2Foctet-stream
   local installlist one  target_name target_url target_app app_name extension
   installlist="
-  iTerm2-3_4_8.zip|iTerm.app|https://iterm2.com/downloads/stable/iTerm2-3_4_8.zip
-  sublime_text_build_4113_mac.zip|Sublime Text.app|https://download.sublimetext.com/sublime_text_build_4113_mac.zip
+  iTerm2-3_4_8.zip|iTerm.app|https://iterm2.com/downloads/stable/iTerm2-3_4_22.zip
+  sublime_text_build_4113_mac.zip|Sublime Text.app|https://download.sublimetext.com/sublime_text_build_4152_mac.zip
   Caffeine.dmg|Caffeine/Caffeine.app|https://github.com/IntelliScape/caffeine/releases/download/1.1.3/Caffeine.dmg
-  Docker.dmg|Docker.app|https://desktop.docker.com/mac/main/arm64/Docker.dmg
+  Docker.dmg|Docker.app|https://desktop.docker.com/mac/main/$(uname -m)/Docker.dmg
   Keybase.dmg|Keybase App/Keybase.app|https://prerelease.keybase.io/Keybase.dmg
   Brave-Browser.dmg|Brave Browser/Brave Browser.app|https://referrals.brave.com/latest/Brave-Browser.dmg
-  Firefox%20118.0.2.dmg|Firefox/Firefox.app|https://download-installer.cdn.mozilla.net/pub/firefox/releases/118.0.2/mac/en-US/Firefox%20118.0.2.dmg
+  Firefox%20118.0.2.dmg|Firefox/Firefox.app|https://download-installer.cdn.mozilla.net/pub/firefox/releases/118.0.2/mac/en-US/Firefox%20119.0.1.dmg
+  # Firefox%20118.0.2.dmg|Firefox/Firefox.app|https://download-installer.cdn.mozilla.net/pub/firefox/releases/118.0.2/mac/en-US/Firefox%20118.0.2.dmg
   # Firefox%2098.0.1.dmg|Firefox/Firefox.app|https://download-installer.cdn.mozilla.net/pub/firefox/releases/98.0.1/mac/en-US/Firefox%2098.0.1.dmg
   MFF2_latest.dmg|MultiFirefox/MultiFirefox.app|http://mff.s3.amazonaws.com/MFF2_latest.dmg
   vlc-3.0.11.dmg|VLC media player/VLC.app|https://download.vlc.de/vlc/macosx/vlc-3.0.11.dmg
   Slack.dmg|Slack.app|https://downloads.slack-edge.com/releases/macos/4.35.121/prod/universal/Slack-4.35.121-macOS.dmg
   mattermost-desktop-4.6.2-mac.dmg|Mattermost 4.6.2/Mattermost.app|https://releases.mattermost.com/desktop/4.6.2/mattermost-desktop-4.6.2-mac.dmg
-  # gimp-2.10.22-x86_64-2.dmg|GIMP 2.10 Install/GIMP-2.10.app|https://ftp.lysator.liu.se/pub/gimp/v2.10/osx/gimp-2.10.22-x86_64-2.dmg
+  gimp-2.10.22-x86_64-2.dmg|GIMP 2.10 Install/GIMP-2.10.app|https://ftp.lysator.liu.se/pub/gimp/v2.10/osx/gimp-2.10.22-x86_64-2.dmg
   sketch-70.3-109109.zip|Sketch.app|https://download.sketch.com/sketch-70.3-109109.zip
   Iris-1.2.0-OSX.zip|Iris.app|https://raw.githubusercontent.com/danielng01/product-builds/master/iris/macos/Iris-1.2.0-OSX.zip
   BetterTouchTool.zip|BetterTouchTool.app|https://folivora.ai/releases/BetterTouchTool.zip
-  # Options_8.36.76.zip|LogiMgr Installer 8.36.76.app|https://download01.logi.com/web/ftp/pub/techsupport/options/Options_8.36.76.zip
-  # tsetup.3.5.1.dmg|Telegram Desktop/Telegram.app|https://updates.tdesktop.com/tmac/tsetup.3.5.1.dmg
-  # VSCode-darwin.zip|Visual Studio Code.app|https://az764295.vo.msecnd.net/stable/ea3859d4ba2f3e577a159bc91e3074c5d85c0523/VSCode-darwin.zip
+  Options_8.36.76.zip|LogiMgr Installer 8.36.76.app|https://download01.logi.com/web/ftp/pub/techsupport/options/Options_8.36.76.zip
+  tsetup.3.5.1.dmg|Telegram Desktop/Telegram.app|https://updates.tdesktop.com/tmac/tsetup.3.5.1.dmg
+  VSCode-darwin.zip|Visual Studio Code.app|https://az764295.vo.msecnd.net/stable/ea3859d4ba2f3e577a159bc91e3074c5d85c0523/VSCode-darwin.zip
   # VSCode-darwin.zip|Visual Studio Code.app|https://code.visualstudio.com/sha/download?build=stable&os=darwin
   # VSCode-darwin.zip|Visual Studio Code.app|https://az764295.vo.msecnd.net/insider/5a52bc29d5e9bc419077552d336ea26d904299fa/VSCode-darwin.zip
   # VSCode-darwin.zip|Visual Studio Code.app|https://code.visualstudio.com/sha/download?build=insider&os=darwin
   # BCompareOSX-4.3.7.25118.zip|Beyond Compare.app|https://www.scootersoftware.com/BCompareOSX-4.3.7.25118.zip
   dbeaver-ce-latest-macos-x86_64.dmg|DBeaver Community/DBeaver.app|https://dbeaver.io/files/dbeaver-ce-latest-macos-x86_64.dmg
   Inkscape-1.0.2.dmg|Inkscape/Inkscape.app|https://media.inkscape.org/dl/resources/file/Inkscape-1.0.2.dmg
-  # LittleSnitch-5.3.2.dmg|Little Snitch 5.3.2/Little Snitch.app|https://www.obdev.at/ftp/pub/Products/littlesnitch/LittleSnitch-5.3.2.dmg
-  # Postgres-2.5.6-10-11-12-13-14.dmg|Postgres-2.5.6-10-11-12-13-14/Postgres.app|https://objects.githubusercontent.com/github-production-release-asset-2e65be/3946572/fca30b05-f1f0-47e7-ab2b-a53feb55c76e?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIWNJYAX4CSVEH53A%2F20220216%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20220216T162004Z&X-Amz-Expires=300&X-Amz-Signature=5e36ddb945a897c7d34367c1f63668442f668bc97a3a4dff4771f9e78ee4fe4c&X-Amz-SignedHeaders=host&actor_id=0&key_id=0&repo_id=3946572&response-content-disposition=attachment%3B%20filename%3DPostgres-2.5.6-10-11-12-13-14.dmg&response-content-type=application%2Foctet-stream
-  # mysql-workbench-community-8.0.28-macos-x86_64.dmg|MySQL Workbench community-8.0.28/MySQLWorkbench.app|https://cdn.mysql.com//Downloads/MySQLGUITools/mysql-workbench-community-8.0.28-macos-x86_64.dmg
+  LittleSnitch-5.3.2.dmg|Little Snitch 5.3.2/Little Snitch.app|https://www.obdev.at/ftp/pub/Products/littlesnitch/LittleSnitch-5.3.2.dmg
+  Postgres-2.5.6-10-11-12-13-14.dmg|Postgres-2.5.6-10-11-12-13-14/Postgres.app|https://objects.githubusercontent.com/github-production-release-asset-2e65be/3946572/fca30b05-f1f0-47e7-ab2b-a53feb55c76e?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIWNJYAX4CSVEH53A%2F20220216%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20220216T162004Z&X-Amz-Expires=300&X-Amz-Signature=5e36ddb945a897c7d34367c1f63668442f668bc97a3a4dff4771f9e78ee4fe4c&X-Amz-SignedHeaders=host&actor_id=0&key_id=0&repo_id=3946572&response-content-disposition=attachment%3B%20filename%3DPostgres-2.5.6-10-11-12-13-14.dmg&response-content-type=application%2Foctet-stream
+  mysql-workbench-community-8.0.28-macos-x86_64.dmg|MySQL Workbench community-8.0.28/MySQLWorkbench.app|https://cdn.mysql.com//Downloads/MySQLGUITools/mysql-workbench-community-8.0.28-macos-x86_64.dmg
   Red+1.7.8.zip|Red.app|https://s3.amazonaws.com/echodot/red/Red+1.7.8.zip
   Unlox.zip|https://unlox.it/download/
-  # mysql-8.0.28-macos11-x86_64.dmg|mysql-8.0.28-macos11-x86_64/mysql-8.0.28-macos11-x86_64.pkg|https://cdn.mysql.com//Downloads/MySQL-8.0/mysql-8.0.28-macos11-x86_64.dmg"
+  mysql-8.0.28-macos11-x86_64.dmg|mysql-8.0.28-macos11-x86_64/mysql-8.0.28-macos11-x86_64.pkg|https://cdn.mysql.com//Downloads/MySQL-8.0/mysql-8.0.28-macos11-x86_64.dmg"
   Checking dmgs apps
+  local -i _err=0
   while read -r one ; do
   {
-    if [[ -n "${one}" ]] ; then
+    [[ -z "${one}" ]] && continue
+    target_name="$(echo "${one}" | cut -d'|' -f1)"
+    extension="$(echo "${target_name}" | rev | cut -d'.' -f 1 | rev)"
+    target_app="$(echo "${one}" | cut -d'|' -f2)"
+    app_name="$(echo "$(basename "${target_app}")")"
+    target_url="$(echo "${one}" | cut -d'|' -f3-)"
+    [[ -z "${target_name}" ]] && continue
+    [[ -z "${target_url}" ]] && continue
+    if [[  -d "/Applications/${app_name}" ]] ; then
     {
-
-      target_name="$(echo "${one}" | cut -d'|' -f1)"
-      extension="$(echo "${target_name}" | rev | cut -d'.' -f 1 | rev)"
-      target_app="$(echo "${one}" | cut -d'|' -f2)"
-      app_name="$(echo "$(basename "${target_app}")")"
-      target_url="$(echo "${one}" | cut -d'|' -f3-)"
-      if [[ -n "${target_name}" ]] ; then
-      {
-        if [[ -n "${target_url}" ]] ; then
-        {
-          if [[ ! -d "/Applications/${app_name}" ]] ; then
-          {
-            Installing "${app_name}"
-            _install_dmgs_dmg__64 "${target_name}" "${target_app}" "${target_url}"
-          }
-          else
-          {
-            passed  "/Applications/${app_name}"  --skipping already installed
-          }
-          fi
-        }
-        fi
-      }
-      fi
+      passed  "/Applications/${app_name}"  --skipping already installed
+      continue
     }
     fi
+    if  it_exists "${SUDO_USER}/.___${app_name}" ; then
+    {
+      passed skipping ${app_name}  --skipping because "${SUDO_USER}/.___${app_name}" lock exists
+      continue
+    }
+    fi
+    echo -e "${PURPLE_BLUE} === Install "${app_name}" ❓? ${RESET}"
+    yes_or_no
+    _err=$?
+    # [ $_err -eq 0 ] &&  # yes
+    # [ $_err -gt 0 ] &&  # no
+    if [ $_err -gt 0 ] ; then # no
+    {
+      passed you said no 
+      touch "${SUDO_USER}/.___${app_name}" 
+      continue
+    }
+    fi
+    # yes
+    passed you said yes 
+    Installing "${app_name}" 
+    if  _install_dmgs_dmg__64 "${target_name}" "${target_app}" "${target_url}" ; then
+    {
+      _err=$?
+      warning "could not install ${app_name}"
+    }
+    else 
+    {
+      passed installed ${app_name}
+      touch "${SUDO_USER}/.___${app_name}" 
+    }
+    fi
+   
   }
   done <<< "$(echo "${installlist}" | grep -vE '^#' | grep -vE '^\s+#')"
   _sublime_softlink_command_line "/Applications/Sublime\\ Text.app"
@@ -1832,9 +1944,43 @@ _darwin__64() {
       echo Please click lettes Y,y or N,n only or CTRL +C to cancel all script.
   esac
 
-  COMANDDER="_run_command /usr/local/bin/brew install "
-  COMANDDER="_run_command /opt/homebrew/bin/brew install "
-  LINKER="_run_command /opt/homebrew/bin/brew link "
+                  local -i _err=0
+                  ensure_brew_in_linux_mac
+                  local _target_bin_brew=""
+                  _target_bin_brew="$(_find_executable_for "brew" "--prefix"  "bin/brew")"
+                  _err=$?
+                  if [ $_err -gt 0 ] ; then # failed
+                  {
+                    echo "${_target_bin_brew}"
+                    failed "to find brew"
+                  }
+                  fi
+                  _target_bin_brew="$(echo -n "${_target_bin_brew}" | tail -1)"
+                  enforce_variable_with_value _target_bin_brew "${_target_bin_brew}"
+                 
+                  if ( command -v "${_target_bin_brew}" >/dev/null 2>&1; ) ; then
+                  {
+                    # _run_command brew install ${missing}
+                    if (( DEBUG )) ; then
+                      echo "brew install"
+                      echo "${_target_bin_brew} install"
+                    fi
+                    # install=$(/opt/homebrew/bin/brew install "${missing}")
+                    su - "${SUDO_USER}" -c "${_target_bin_brew} install ${missing} "
+                    err_buff=$?
+                    # su - "${SUDO_USER}" -c "brew install ${missing} "
+                  }
+                  else 
+                  {
+                    failed "to find get command -v ${_target_bin_brew} to respond"
+                  }
+                  fi
+
+  # COMANDDER="_run_command /usr/local/bin/brew install "
+  # COMANDDER="_run_command /opt/homebrew/bin/brew install "
+  COMANDDER="_run_command ${_target_bin_brew} install "
+  # LINKER="_run_command /opt/homebrew/bin/brew link "
+  LINKER="_run_command ${_target_bin_brew} link "
   $COMANDDER  node
 
   # su - "${SUDO_USER}" -c 'brew install the_silver_searcher'
