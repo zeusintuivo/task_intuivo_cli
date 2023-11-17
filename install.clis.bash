@@ -550,9 +550,11 @@ _add_launchd(){
 } # end _add_launchd
 
 _configure_git(){
+  echo "$0:$LINENO "
   ensure git or "Canceling Install. Could not find git"
   local CURRENTGITUSER=$(su - "${SUDO_USER}" -c 'git config --global --get user.name')
   local CURRENTGITEMAIL=$(su - "${SUDO_USER}" -c 'git config --global --get user.email')
+  echo "$0:$LINENO "
   # exit 0
 
   if [[ -z "$CURRENTGITEMAIL" ]] ; then
@@ -571,15 +573,66 @@ _configure_git(){
 } # end _configure_git
 
 _install_npm_utils() {
+  echo "$0:$LINENO "
     mkdir -p "${USER_HOME}/.npm"
+echo "$0:$LINENO "
     mkdir -p "${USER_HOME}/.nvm"
+echo "$0:$LINENO "
     chown -R "${SUDO_USER}" "${USER_HOME}/.npm"
+echo "$0:$LINENO "
     chown -R "${SUDO_USER}" "${USER_HOME}/.nvm"
+echo "$0:$LINENO "
+
+
+                  local -i _err=0
+                  
+                  local _target_bin_npm=""
+echo "$0:$LINENO "
+                  _target_bin_npm="$(su - "${SUDO_USER}" -c "which npm")"
+                  _err=$?
+echo "$0:$LINENO "
+                  echo "_target_bin_npm:${_target_bin_npm}"
+echo "$0:$LINENO "
+                  if [ $_err -gt 0 ] ; then # failed
+                  {
+echo "$0:$LINENO "
+                    echo "${_target_bin_npm}"
+                    failed "to find npm"
+                  }
+                  fi
+echo "$0:$LINENO "
+                  enforce_variable_with_value _target_bin_npm "${_target_bin_npm}"
+echo "$0:$LINENO "
+                 
+                  if ( command -v "${_target_bin_npm}" >/dev/null 2>&1; ) ; then
+                  {
+                    # _run_command npm install ${missing}
+                    if (( DEBUG )) ; then
+                      echo "npm install"
+                      echo "${_target_bin_npm} install"
+                    fi
+                    # install=$(/opt/homenpm/bin/npm install "${missing}")
+                    # su - "${SUDO_USER}" -c "${_target_bin_npm} install ${missing} "
+                    err_buff=$?
+                    # su - "${SUDO_USER}" -c "npm install ${missing} "
+                  }
+                  else 
+                  {
+                    warning failed "to find get command -v ${_target_bin_npm} to respond"
+
+                  }
+                  fi
+
+
     # Global node utils
-    is_not_installed nodemon  && npm i -g nodemon
+    if is_not_installed nodemon ; then 
+    {
+      su - "${SUDO_USER}" -c "${_target_bin_npm}  i -g nodemon"
+    }
+    fi
     if  is_not_installed live-server  ; then
     {
-        npm i -g live-server
+      su - "${SUDO_USER}" -c "${_target_bin_npm}  i -g nodemon" i -g live-server
     }
     fi
    # verify_is_installed live-server
@@ -587,18 +640,18 @@ _install_npm_utils() {
     # is_not_installed jest &&  npm i -g jest
     # verify_is_installed jest
     #CHAINSTALLED=$(su - "${SUDO_USER}" -c 'npm -g info chai >/dev/null 2>&1')
-    CHAINSTALLED=$(npm -g info chai >/dev/null 2>&1)
+    CHAINSTALLED=$(su - "${SUDO_USER}" -c "${_target_bin_npm} -g info chai" >/dev/null 2>&1)
     if [[ -n "$CHAINSTALLED" ]] &&  [[ "$CHAINSTALLED" == *"npm ERR"* ]]  ; then
     {
         Installing npm chai
-        npm i -g chai
+        su - "${SUDO_USER}" -c "${_target_bin_npm}   i -g chai"
     }
     fi
     #MOCHAINSTALLED=$(su - "${SUDO_USER}" -c 'npm -g info mocha >/dev/null 2>&1')
-    MOCHAINSTALLED=$(npm -g info mocha >/dev/null 2>&1)
+    MOCHAINSTALLED=$(su - "${SUDO_USER}" -c "${_target_bin_npm} -g info mocha" >/dev/null 2>&1)
     if [[ -n "$MOCHAINSTALLED" ]] &&  [[ "$MOCHAINSTALLED" == *"npm ERR"* ]]  ; then
     {
-        npm i -g mocha
+        su - "${SUDO_USER}" -c "${_target_bin_npm} i -g mocha"
     }
     fi
     local ret msg
@@ -846,7 +899,7 @@ _install_nerd_fonts(){
           local _target_found=""
           _target_found="$(echo -n "${_try_returned_echo:-}" | tail -1)"
           passed "found ${_executable_test} of ${_possibles} one = ${_target_found:-}"
-          if [[ -n "${_target_found:-}" ]] ; then 
+          if [[ -z "${_target_found:-}" ]] ; then 
           {
             Checking "if ${_executable_test} is responds to command -v ${_executable_test} since \$_target_found  var is empty"
             if ( su - "${SUDO_USER}" -c "command -v ${_executable_test}" >/dev/null 2>&1; )  ; then
@@ -882,9 +935,6 @@ _install_nerd_fonts(){
 
 
 _setup_ohmy(){
-    if  it_does_not_exist_with_spaces "${USER_HOME}/.oh-my-zsh/" ; then
-    {
-        Installing ohmy
         if [[ "$COMANDDER" == *"apt-get"* ]]  ; then
         {
            wget -q -O - https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | apt-key add -
@@ -919,27 +969,64 @@ _setup_ohmy(){
         fi
 
 
-    _install_nerd_fonts
-    if [[ "$COMANDDER" == *"brew"* ]]  ; then # MAC and linux 
-    {
+                  _install_nerd_fonts
+
+                  local -i _err=0
+                  ensure_brew_in_linux_mac
+                  local _target_bin_brew=""
+                  _target_bin_brew="$(_find_executable_for "which" "brew"  "bin/brew")"
+                  _err=$?
+                  echo "_target_bin_brew:${_target_bin_brew}"                  
+                  if [ $_err -gt 0 ] ; then # failed
+                  {
+                    echo "${_target_bin_brew}"
+                    failed "to find brew"
+                  }
+                  fi
+                  _target_bin_brew="$(echo -n "${_target_bin_brew}" | tail -1)"
+                  enforce_variable_with_value _target_bin_brew "${_target_bin_brew}"
+                 
+                  if ( command -v "${_target_bin_brew}" >/dev/null 2>&1; ) ; then
+                  {
+                    # _run_command brew install ${missing}
+                    if (( DEBUG )) ; then
+                      echo "brew install"
+                      echo "${_target_bin_brew} install"
+                    fi
+                    # install=$(/opt/homebrew/bin/brew install "${missing}")
+                    # su - "${SUDO_USER}" -c "${_target_bin_brew} install ${missing} "
+                    err_buff=$?
+                    # su - "${SUDO_USER}" -c "brew install ${missing} "
+                  }
+                  else 
+                  {
+                    failed "to find get command -v ${_target_bin_brew} to respond"
+                  }
+                  fi
+
+
+          if [[ "$COMANDDER" == *"brew"* ]]  ; then # MAC and linux 
+          {
                   local -i _err=0
                   ensure_brew_in_linux_mac
                         # su - "${SUDO_USER}" -c "brew install --cask font-fontawesome" # This was fontawesome 4, new 6 is gone
-      $COMANDDER tap homebrew/cask-fonts         # You only need to do this once!
-      $COMANDDER install font-inconsolata
-      $COMANDDER install font-awesome-terminal-fonts 
-      $COMANDDER install font-fontawesome 
-      $COMANDDER install python3
+       
+                  su - "${SUDO_USER}" -c "${_target_bin_brew} tap homebrew/cask-fonts "       # You only need to do this once!
+                  su - "${SUDO_USER}" -c "${_target_bin_brew} install font-inconsolata"
+                  su - "${SUDO_USER}" -c "${_target_bin_brew} install font-awesome-terminal-fonts "
+                  su - "${SUDO_USER}" -c "${_target_bin_brew} install font-fontawesome "
+                  su - "${SUDO_USER}" -c "${_target_bin_brew} install python3"
 
 
-      local missing="powerline-status"
-      local -i err_buff=0
-      local _powerline_sh=""
+                  local missing="powerline-status"
+                  local -i err_buff=0
+                  local _powerline_sh=""
 
                   local _target_pip3=""
                   _target_pip3="$(_find_executable_for "which" "pip3"  "pip3
                      bin/pip3")"
                   _err=$?
+                  echo "_target_pip3:${_target_pip3}"
                   if [ $_err -gt 0 ] ; then # failed
                   {
                     echo "${_target_pip3}"
@@ -971,30 +1058,41 @@ _setup_ohmy(){
                   fi
 
 
-      $COMANDDER install powerline vim-powerline tmux-powerline powerline-fonts
-          if [[ -n "${_powerline_sh}" ]] ; then
-          {
-            powerline-daemon -q
-            POWERLINE_BASH_CONTINUATION=1
-            POWERLINE_BASH_SELECT=1
-            \. "${_powerline_sh}"
+                   su - "${SUDO_USER}" -c "${_target_bin_brew}  install powerline vim-powerline tmux-powerline powerline-fonts"
+                    if [[ -n "${_powerline_sh}" ]] ; then
+                    {
+                      powerline-daemon -q
+                      POWERLINE_BASH_CONTINUATION=1
+                      POWERLINE_BASH_SELECT=1
+                      \. "${_powerline_sh}"
+                    }
+                    fi
+
           }
           fi
 
-      }
-      fi
-    }
-    fi
+echo  "$0:$LINENO"
+  Testing oh-my-zsh
+  if  it_does_not_exist_with_spaces "${USER_HOME}/.oh-my-zsh/" ; then
+  {
+echo  "$0:$LINENO"
 
-                  Testing zsh
+        Installing ohmy
+echo  "$0:$LINENO"
+
                   # install ohmyzsh
                   su - "${SUDO_USER}" -c 'sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"'
+echo  "$0:$LINENO"
                   chown -R "${SUDO_USER}" "${USER_HOME}/.oh-my-zsh"
+  }
+  fi
 
+echo  "$0:$LINENO"
                   local -i _err=0
                   local _target_zsh=""
                   _target_zsh="$(_find_executable_for "which" "zsh"  "bin/zsh")"
                   _err=$?
+                  echo "_target_zsh:${_target_zsh}"
                   if [ $_err -gt 0 ] ; then # failed
                   {
                     echo "${_target_zsh}"
@@ -1020,12 +1118,15 @@ _setup_ohmy(){
                     failed "to find get command -v ${_target_zsh} to respond so chsh -s zsh ${SUDO_USER} ...was not run and not changed "
                   }
                   fi
+echo  "$0:$LINENO"
 
 
         Testing ohmyzsh
+echo  "$0:$LINENO"
         directory_exists_with_spaces "${USER_HOME}/.oh-my-zsh"
         passed that: ohmy is installed
 
+echo  "$0:$LINENO"
 
   if it_does_not_exist_with_spaces "${USER_HOME}/.oh-my-zsh/themes/powerlevel10k" ; then
   {
@@ -1034,9 +1135,11 @@ _setup_ohmy(){
   }
   else
   {
+echo  "$0:$LINENO"
     passed powerlevel10k already there
   }
   fi
+echo  "$0:$LINENO"
   if it_does_not_exist_with_spaces "${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting" ; then
   {
     su - "${SUDO_USER}" -c "git clone https://github.com/zsh-users/zsh-syntax-highlighting.git \"${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting\""
@@ -1047,6 +1150,7 @@ _setup_ohmy(){
     passed zsh-syntax-highlighting already there
   }
   fi
+echo  "$0:$LINENO"
   if it_does_not_exist_with_spaces "${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions" ; then
   {
     su - "${SUDO_USER}" -c "git clone https://github.com/zsh-users/zsh-autosuggestions \"${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions\""
@@ -1057,6 +1161,7 @@ _setup_ohmy(){
     passed zsh-autosuggestions  already there
   }
   fi
+echo  "$0:$LINENO"
   if it_does_not_exist_with_spaces "${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions" ; then
   {
     su - "${SUDO_USER}" -c "git clone clone --depth 1 https://github.com/unixorn/fzf-zsh-plugin.git  \"${USER_HOME}/.oh-my-zsh/custom/plugins/fzf-zsh-plugin\""
@@ -1439,96 +1544,6 @@ _setup_mycd(){
   # return 0
 } # end _setup_mycd
 
-_install_dmg__64() {
-  local CODENAME="${1}"
-  local extension="$(echo "${CODENAME}" | rev | cut -d'.' -f 1 | rev)"
-  local APPDIR="${2}"
-  local TARGET_URL="${3}"
-  Comment start $0$1 _install_dmg__64
-  # CODENAME="$(basename "${TARGET_URL}" )"
-  echo "${CODENAME}";
-  echo "Extension:${extension}"
-  # local VERSION="$(echo -en "${CODENAME}" | sed 's/RubyMine-//g' | sed 's/.dmg//g' )"
-  # enforce_variable_with_value VERSION "${VERSION}"
-  # local UNZIPDIR="$(echo -en "${CODENAME}" | sed 's/.dmg//g'| sed 's/-//g')"
-  # local UNZIPDIR="$(echo -en "${APPDIR}" | sed 's/.app//g')"
-  # echo "$(pwd)"
-  local UNZIPDIR="$(dirname  "${APPDIR}")"
-  local APPDIR="${APPDIR##*/}"    # same as  $(basename "${APPDIR}")
-  # local APPDIR="$(echo -en "${CODENAME}" | sed 's/.dmg//g'| sed 's/-//g').app"
-  # echo "${CODENAME}";
-  # echo "${URL}";
-  echo "CODENAME: ${CODENAME}"
-  enforce_variable_with_value CODENAME "${CODENAME}"
-  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
-  enforce_variable_with_value HOME "${HOME}"
-  echo "UNZIPDIR: ${UNZIPDIR}"
-  enforce_variable_with_value UNZIPDIR "${UNZIPDIR}"
-  echo "APPDIR: ${APPDIR}"
-  enforce_variable_with_value APPDIR "${APPDIR}"
-  local DOWNLOADFOLDER="${HOME}/Downloads"
-  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-  directory_exists_with_spaces "${DOWNLOADFOLDER}"
-
-  if it_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}" ; then
-  {
-    file_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
-  }
-  else
-  {
-    cd "${DOWNLOADFOLDER}"
-    _download "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
-    file_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
-  }
-  fi
-  if  it_exists_with_spaces "/Applications/${APPDIR}" ; then
-  {
-    echo Remove installed "/Applications/${APPDIR}"
-    sudo rm -rf  "/Applications/${APPDIR}"
-    directory_does_not_exist_with_spaces  "/Applications/${APPDIR}"
-  }
-  fi
-  if [[ -n "${extension}" ]] && [[ "${extension}"  == "zip" ]] ; then
-  {
-    echo Unzipping downloaded
-    unzip "${DOWNLOADFOLDER}/${CODENAME}"
-    directory_exists_with_spaces "${DOWNLOADFOLDER}/${APPDIR}"
-    echo "sudo  cp -R \"${DOWNLOADFOLDER}/${APPDIR}\" \"/Applications/\""
-    cp -R "${DOWNLOADFOLDER}/${APPDIR}" "/Applications/"
-  }
-  else # elif [[ -n "${extension}" ]] && [[ "${extension}"  == "dmg" ]] ; then
-  {
-    echo Attaching dmg downloaded
-    hdiutil attach "${DOWNLOADFOLDER}/${CODENAME}"
-    ls "/Volumes"
-    directory_exists_with_spaces "/Volumes/${UNZIPDIR}"
-    directory_exists_with_spaces "/Volumes/${UNZIPDIR}/${APPDIR}"
-    echo "sudo  cp -R \"/Volumes/${UNZIPDIR}/${APPDIR}\" \"/Applications/\""
-    cp -R "/Volumes/${UNZIPDIR}/${APPDIR}" "/Applications/"
-    hdiutil detach "/Volumes/${UNZIPDIR}"
-  }
-  fi
-    directory_exists_with_spaces "/Applications/${APPDIR}"
-    ls -d "/Applications/${APPDIR}"
-    echo  Removing macOS gatekeeper quarantine attribute
-    chown  -R "${SUDO_USER}" "/Applications/${APPDIR}"
-    chgrp  -R staff "/Applications/${APPDIR}"
-    #echo xattr "/Applications/${APPDIR}"
-   # if xattr "/Applications/${APPDIR}" ; then
-   # {
-   #   if [[ "$(xattr "/Applications/${APPDIR}")" == *"com.apple.quarantine"* ]] ; then
-   #   {
-   #     if xattr -d com.apple.quarantine  "/Applications/${APPDIR}" ; then
-   #     {
-   #     Comment ${ORANGE} WARNING! ${YELLOW_OVER_DARKBLUE} failed xattr -d com.apple.quarantine  "/Applications/${APPDIR}" ${YELLOW_OVER_GRAY241}"${APPDIR}"${RESET}
-   #     }
-   #     fi
-   #   }
-   #   fi
-   # }
-   # fi
-  Comment end ${0:-} ${1:-} _install_dmg__64
-} # end _install_dmg__64
 
 _install_dmgs_list() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
@@ -1590,14 +1605,14 @@ _install_dmgs_list() {
       continue
     }
     fi
-    if  it_exists "${SUDO_USER}/.___${app_name}" ; then
+    if ! it_exists "${USER_HOME}/.___${app_name}" ; then
     {
       passed skipping ${app_name} ${ORANGE} --skipping ${YELLOW_OVER_DARKBLUE} because ${RESET}"${SUDO_USER}/.___${app_name}" ${ORANGE} lock exists${RESET}
       continue
     }
     fi
     
-    echo -e " ${BRIGHT_BLUE87} === ${ORANGE}Install "${app_name}" ❓${RESET} [y/n] ? " 
+      echo -e " ${BRIGHT_BLUE87} === ${ORANGE}Install "${app_name}" ❓${RESET} [y/n] ? " 
       if yes_or_no ; then
       {
         _err=0
@@ -1613,23 +1628,24 @@ _install_dmgs_list() {
     if [ $_err -gt 0 ] ; then # no
     {
       passed you said no 
-      touch "${SUDO_USER}/.___${app_name}" 
+      touch "${USER_HOME}/.___${app_name}" 
       continue
     }
     fi
     # yes
     passed you said yes 
     Installing "${app_name}" 
+    touch "${USER_HOME}/.___${app_name}" 
+
     if  _install_dmgs_dmg__64 "${target_name}" "${target_app}" "${target_url}" ; then
     {
       _err=$?
       warning "could not install ${app_name}"
-      touch "${SUDO_USER}/.___${app_name}" 
     }
     else 
     {
       passed installed ${app_name}
-      touch "${SUDO_USER}/.___${app_name}" 
+      touch "${USER_HOME}/.___${app_name}" 
     }
     fi
    
@@ -2037,12 +2053,47 @@ _fedora__64() {
   fi
  # verify_is_installed cf
   _setup_mycd
-  if ( su - "${SUDO_USER}" -c 'command -v brew' >/dev/null 2>&1; ) ; then # MAC
+
+                  local -i _err=0
+                  ensure_brew_in_linux_mac
+                  local _target_bin_brew=""
+                  _target_bin_brew="$(_find_executable_for "which" "brew"  "bin/brew")"
+                  _err=$?
+                  echo "_target_bin_brew:${_target_bin_brew}"                  
+                  if [ $_err -gt 0 ] ; then # failed
+                  {
+                    echo "${_target_bin_brew}"
+                    failed "to find brew"
+                  }
+                  fi
+                  _target_bin_brew="$(echo -n "${_target_bin_brew}" | tail -1)"
+                  enforce_variable_with_value _target_bin_brew "${_target_bin_brew}"
+                 
+                  if ( command -v "${_target_bin_brew}" >/dev/null 2>&1; ) ; then
+                  {
+                    # _run_command brew install ${missing}
+                    if (( DEBUG )) ; then
+                      echo "brew install"
+                      echo "${_target_bin_brew} install"
+                    fi
+                    # install=$(/opt/homebrew/bin/brew install "${missing}")
+                    # su - "${SUDO_USER}" -c "${_target_bin_brew} install ${missing} "
+                    err_buff=$?
+                    # su - "${SUDO_USER}" -c "brew install ${missing} "
+                  }
+                  else 
+                  {
+                    failed "to find get command -v ${_target_bin_brew} to respond"
+                  }
+                  fi
+
+
+  if ( su - "${SUDO_USER}" -c "command -v ${_target_bin_brew}" >/dev/null 2>&1; ) ; then # MAC
   {
-    su - "${SUDO_USER}" -c 'brew install the_silver_searcher'
-    su - "${SUDO_USER}" -c 'brew install ag@the_silver_searcher'
-    su - "${SUDO_USER}" -c 'brew install the_platinum_searcher'
-    su - "${SUDO_USER}" -c 'brew install pt@the_platinum_searcher'
+    su - "${SUDO_USER}" -c "${_target_bin_brew} install the_silver_searcher"
+    su - "${SUDO_USER}" -c "${_target_bin_brew} install ag@the_silver_searcher"
+    su - "${SUDO_USER}" -c "${_target_bin_brew} install the_platinum_searcher"
+    su - "${SUDO_USER}" -c "${_target_bin_brew} install pt@the_platinum_searcher"
   }
   else 
   {
@@ -2052,9 +2103,14 @@ _fedora__64() {
 
 } # end _fedora__64
 
+
+
 _darwin__arm64() {
   _darwin__64
 } # end _darwin__arm64
+
+
+
 _darwin__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
 
@@ -2088,25 +2144,42 @@ _darwin__64() {
 
 
 
-  local Answer
+  local Answer=""
   read -p 'Continue with more brew installs.clis....etc ? [Y/n] (Enter Defaults to - No/N/n - No exits )' Answer
-  case $Answer in
-    '' | [Nn]* )
-      passed you said no "Skip more installs"
-      exit 0
-      ;;
-    [Yy]* )
-      passed you said Yes
-      ;;
-    * )
-      echo Please click lettes Y,y or N,n only or CTRL +C to cancel all script.
-  esac
+  while true; do
+    case $Answer in
+      '' | [Nn]* )
+        passed you said no "Skip more installs"
+        exit 0
+        ;;
+      [Yy]* )
+        passed you said Yes
+        break
+        ;;
+      * )
+        echo Please click lettes y or CTRL +C to cancel all script.
+        Answer=""
+        continue
+    esac
+  done
+
+  _setup_clis
+  # _setup_mycd
+  [[  -e "${USER_HOME}/.bash_profile" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.bash_profile"
+  [[  -e "${USER_HOME}/.bashrc" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.bashrc"
+  [[  -e "${USER_HOME}/.zshrc" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.zshrc"
+  [[  -e "${USER_HOME}/.zshenv" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.zshenv"
+  [[  -e "${USER_HOME}/.zprofile" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.zprofile"
+  [[  -e "${USER_HOME}/.profile" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.profile"
+  [[  -e "${USER_HOME}/.composer" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.composer"
+
 
                   local -i _err=0
                   ensure_brew_in_linux_mac
                   local _target_bin_brew=""
                   _target_bin_brew="$(_find_executable_for "brew" "--prefix"  "bin/brew")"
                   _err=$?
+                  echo "$0:$LINENO _target_bin_brew:${_target_bin_brew}"
                   if [ $_err -gt 0 ] ; then # failed
                   {
                     echo "${_target_bin_brew}"
@@ -2141,7 +2214,7 @@ _darwin__64() {
   # LINKER="_run_command /opt/homebrew/bin/brew link "
   # LINKER="_run_command ${_target_bin_brew} link "
   LINKER="su - \"${SUDO_USER}\" -c \" \"${_target_bin_brew}\"  link "
-  $COMANDDER  node
+ su - "${SUDO_USER}" -c "${_target_bin_brew} install node"
 
   _add_launchd "${USER_HOME}/Library/LaunchAgents" "${USER_HOME}/Library/LaunchAgents/com.intuivo.clis_pull_all.plist"
   _install_dmgs_list
@@ -2204,12 +2277,18 @@ _darwin__64() {
   #su - "${SUDO_USER}" -c 'pip3 install pygments'
   #su - "${SUDO_USER}" -c 'pip install pygments'
   Comment "relink ag"
-  if ( su - "${SUDO_USER}" -c 'command -v brew' >/dev/null 2>&1; ) ; then # MAC
+  echo "$0:$LINENO"
+  if su - "${SUDO_USER}" -c "command -v ${_target_bin_brew}" >/dev/null 2>&1   ; then # MAC
   {
-    su - "${SUDO_USER}" -c 'brew unlink the_silver_searcher' && $LINKER the_silver_searcher
+  echo "$0:$LINENO"
+    su - "${SUDO_USER}" -c "${_target_bin_brew} unlink the_silver_searcher" 
+  echo "$0:$LINENO"
+    su - "${SUDO_USER}" -c "${_target_bin_brew} link the_silver_searcher" 
+     # $LINKER the_silver_searcher
   }
   else 
   {
+  echo "$0:$LINENO"
     warning "${RED}Brew${ORANGE} is not installed. Or  bashtv and zshrc files are missing" 
   }
   fi
@@ -2229,27 +2308,43 @@ _darwin__64() {
   #  gawk
   #  pygmentize
   #  "
+  echo "$0:$LINENO"
   if  ! su - "${SUDO_USER}" -c 'command -v pygmentize' >/dev/null 2>&1;   then
+  echo "$0:$LINENO"
     if  su - "${SUDO_USER}" -c 'command -v pip' >/dev/null 2>&1;   then # MAC
     {
+  echo "$0:$LINENO"
        #su - "${SUDO_USER}" -c 'pip install pygments'
        su - "${SUDO_USER}" -c 'pip install pygments'
     }
     fi
+  echo "$0:$LINENO"
     if  su - "${SUDO_USER}" -c 'command -v pip3' >/dev/null 2>&1;  then # MAC
     {
+  echo "$0:$LINENO"
        #su - "${SUDO_USER}" -c 'pip3 install pygments'
        su - "${SUDO_USER}" -c 'pip3 install pygments'
     }
     fi
   fi
+  echo "$0:$LINENO "
 
   _configure_git
-  # _install_nvm
-  # _install_nvm_version 14.16.1
-  # _install_nvm_version 16.6.1
+  echo "$0:$LINENO "
+  _install_nvm
+  echo "$0:$LINENO "
+  _install_nvm_version 14.16.1
+  echo "$0:$LINENO "
+  _install_nvm_version 16.6.1
+  echo "$0:$LINENO "
+  _install_nvm_version 18.18.2
+  echo "$0:$LINENO "
+  _install_nvm_version 20.9.0
+  echo "$0:$LINENO "
   _install_npm_utils
+  echo "$0:$LINENO "
   if ( ! su - "${SUDO_USER}" -c 'command -v cf' >/dev/null 2>&1; ) ;  then
+  echo "$0:$LINENO "
     su - "${SUDO_USER}" -c 'npm i -g cloudfoundry/tap/cf-cli@7'
   fi
   # _install_npm_utils
@@ -2264,18 +2359,13 @@ _darwin__64() {
   #_install_nvm_version 14
   #_install_npm_utils
 
+  echo "$0:$LINENO "
   _setup_ohmy
+  echo "$0:$LINENO "
   chown -R "${SUDO_USER}" "/Library/Ruby"
+  echo "$0:$LINENO "
   _install_colorls
-  _setup_clis
-  # _setup_mycd
-  [[  -e "${USER_HOME}/.bash_profile" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.bash_profile"
-  [[  -e "${USER_HOME}/.bashrc" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.bashrc"
-  [[  -e "${USER_HOME}/.zshrc" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.zshrc"
-  [[  -e "${USER_HOME}/.zshenv" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.zshenv"
-  [[  -e "${USER_HOME}/.zprofile" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.zprofile"
-  [[  -e "${USER_HOME}/.profile" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.profile"
-  [[  -e "${USER_HOME}/.composer" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.composer"
+  echo "$0:$LINENO "
 
   _add_self_cron_update /usr/lib/cron/  /usr/lib/cron/cron.allow
   # _add_launchd "${USER_HOME}/Library/LaunchAgents" "${USER_HOME}/Library/LaunchAgents/com.intuivo.clis_pull_all.plist"
@@ -2348,6 +2438,8 @@ EOINSERT
   return 0
   # _password_simple2
 } # end _darwin__64
+
+
 
 determine_os_and_fire_action
 # exit 0
