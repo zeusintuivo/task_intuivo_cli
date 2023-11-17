@@ -490,6 +490,7 @@ _add_launchd(){
      }
      fi
      if launchctl load  -w "${launchfile}" ; then 
+     {
         warning it did not exists, no worries installing again
      }
      fi
