@@ -141,7 +141,6 @@ _debian_flavor_install() {
   ); then 
     {
       wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
-      # apt-get update -qq && apt-get install -y postgresql-client-12 || true
     }
   fi
   verify_is_installed "
@@ -152,21 +151,6 @@ _debian_flavor_install() {
     tar
     wget
   "
-  # local PB_VERSION=0.16.7
-  # local CODENAME="pocketbase_${PB_VERSION}_linux_amd64.zip"
-  # local TARGET_URL="https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/${CODENAME}"
-  # local DOWNLOADFOLDER="$(_find_downloads_folder)"
-  # enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-  # directory_exists_with_spaces "${DOWNLOADFOLDER}"
-  # cd "${DOWNLOADFOLDER}"
-  # _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
-  # # unzip "${DOWNLOADFOLDER}/${CODENAME}" -d $HOME/pb/
-  # local UNZIPDIR="${USER_HOME}/_/software"
-  # mkdir -p "${UNZIPDIR}"
-  # _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
-  # local PATHTOPOCKETBASE="${UNZIPDIR}/pocketbase"
-  # local THISIP=$(myip)
-
   _find_project_location_PROJECT_DIR_F
   local PROJECTSBASEDIR="${PROJECT_DIR_F}"
   local PROJECTREPO="${PROJECT_DIR_F}/loanlink-api"
@@ -406,15 +390,18 @@ _ubuntu__64() {
 
 _find_location_brew_files() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  local _sub_directory=${1:-}
+  local _sub_directory="${1:-}"
   enforce_parameter_with_value           1        _sub_directory     "${_sub_directory:-}"     "var/postgresql@12 | "
 
   Checking "location of brew ${_sub_directory} "
 	local _result=""
   local _brew_variations="
-		   /opt/homebrew/${_sub_directory}
-		   /home/linuxbrew/.linuxbrew/${_sub_directory}
-		   /usr/local/${_sub_directory}
+                   ${USER_HOME}/bin/${_sub_directory}
+                   /opt/homebrew/${_sub_directory}
+                   /home/linuxbrew/.linuxbrew/${_sub_directory}
+                   /usr/local/${_sub_directory}
+                   /usr/${_sub_directory}
+                   /${_sub_directory}
 	"
 	local one=""
 	while read -r one ; do 
@@ -436,7 +423,7 @@ _find_location_brew_files() {
 
 _try_more_times_find() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  local _possibles=${*:-}
+  local _possibles="${*:-}"
   enforce_parameter_with_value           1        _possibles     "${_possibles:-}"     "
           var/postgresql@12
           var/postgres
@@ -592,19 +579,6 @@ _brew_check_requirements_postgress_12_install() {
       su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' brew install postgresql@12"
 	  }
     fi
-    # echo "# brew install --cask tunnelblick"
-    # initdb --locale=C -E UTF-8 /opt/homebrew/var/postgresql@12
-    # postgresql@14
-    # initdb: unrecognized option `--authz=postgresin' in version 12
-    # su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' initdb --username=postgres --pgdata=/opt/homebrew/var/postgresql@14 --auth-host=md5 --auth-local=md5 --lc-collate=en_US.UTF-8 --lc-ctype=en_US.UTF-8 --lc-messages=en_US.UTF-8 --lc-monetary=en_US.UTF-8 --lc-numeric=en_US.UTF-8 --lc-time=en_US.UTF-8 --authz=postgres --pwfile=- "
-    # initdb --username=postgres --pgdata=/usr/local/var/postgres --auth-host=md5 --auth-local=md5 --lc-collate=en_US.UTF-8 --lc-ctype=en_US.UTF-8 --lc-messages=en_US.UTF-8 --lc-monetary=en_US.UTF-8 --lc-numeric=en_US.UTF-8 --lc-time=en_US.UTF-8 --authz=postgres --pwfile=-
-    # postgresql@12
-    # initdb --username=postgres --pgdata=/usr/local/var/postgres --auth-host=md5 --auth-local=md5 --lc-collate=en_US.UTF-8 --lc-ctype=en_US.UTF-8 --lc-messages=en_US.UTF-8 --lc-monetary=en_US.UTF-8 --lc-numeric=en_US.UTF-8 --lc-time=en_US.UTF-8 --pwfile=-
-    
-    # tried:
-    # inidb initdb: error: directory "/opt/homebrew/var/postgresql@12" exists but is not empty   when running this line
-    # su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' initdb --username=postgres --pgdata=/opt/homebrew/var/postgresql@12 --auth-host=md5 --auth-local=md5 --lc-collate=en_US.UTF-8 --lc-ctype=en_US.UTF-8 --lc-messages=en_US.UTF-8 --lc-monetary=en_US.UTF-8 --lc-numeric=en_US.UTF-8 --lc-time=en_US.UTF-8 --pwfile=\"${USER_HOME}/custom-initdb.conf\" "
-
     # Working "initdb" "--username=postgres --pgdata=/opt/homebrew/var/postgresql@12 --auth-host=md5 --auth-local=md5 --lc-collate=en_US.UTF-8 --lc-ctype=en_US.UTF-8 --lc-messages=en_US.UTF-8 --lc-monetary=en_US.UTF-8 --lc-numeric=en_US.UTF-8 --lc-time=en_US.UTF-8 --pwfile=\"${USER_HOME}/custom-initdb.conf\" "
     # Comment "Here's what this command does:" '
 
@@ -630,7 +604,8 @@ var/postgresql
 		fi
 		
 		_target_brew_base_pg="$(echo -n "${_target_brew_base_pg}" | tail -1)"
-		
+		enforce_variable_with_value _target_brew_base_pg "${_target_brew_base_pg}"
+    
 		passed found of var "${__pg} = ${_target_brew_base_pg}"
 
 		Message "preparing some files inside ${USER_HOME} with some defaults"
