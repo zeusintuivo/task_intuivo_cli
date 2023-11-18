@@ -842,16 +842,24 @@ _install_nvm_version(){
 } # end _install_nvm_version
 
 _install_nerd_fonts(){
+           echo "$0:$LINENO _setup_ohmy"
 
   if  it_does_not_exist_with_spaces "${USER_HOME}/.nerd-fonts" ; then
   {
+           echo "$0:$LINENO _setup_ohmy"
     cd "${USER_HOME}"
+           echo "$0:$LINENO _setup_ohmy"
     su - "${SUDO_USER}" -c  "git clone --depth=1 https://github.com/ryanoasis/nerd-fonts \"${USER_HOME}/.nerd-fonts\""
+           echo "$0:$LINENO _setup_ohmy"
     directory_exists_with_spaces "${USER_HOME}/.nerd-fonts"
+           echo "$0:$LINENO _setup_ohmy"
     file_exists_with_spaces "${USER_HOME}/.nerd-fonts/install.sh"
+           echo "$0:$LINENO _setup_ohmy"
     chown -R "${SUDO_USER}" "${USER_HOME}/.nerd-fonts"
 
+           echo "$0:$LINENO _setup_ohmy"
     cd "${USER_HOME}/.nerd-fonts"
+           echo "$0:$LINENO _setup_ohmy"
     su - "${SUDO_USER}" -c  "bash -c \"${USER_HOME}/.nerd-fonts/install.sh\""
   }
   fi
@@ -935,17 +943,22 @@ _install_nerd_fonts(){
 
 
 _setup_ohmy(){
+        echo "$0:$LINENO _setup_ohmy"
         if [[ "$COMANDDER" == *"apt-get"* ]]  ; then
         {
+        echo "$0:$LINENO _setup_ohmy"
            wget -q -O - https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | apt-key add -
             _if_not_is_installed fontawesome-fonts && $COMANDDER fontawesome-fonts
             _if_not_is_installed powerline && $COMANDDER powerline vim-powerline tmux-powerline powerline-fonts
+        echo "$0:$LINENO _setup_ohmy"
             echo REF: https://fedoramagazine.org/tuning-your-bash-or-zsh-shell-in-workstation-and-silverblue/
             if [ -f `which powerline-daemon` ]; then
             {
+        echo "$0:$LINENO _setup_ohmy"
               powerline-daemon -q
               POWERLINE_BASH_CONTINUATION=1
               POWERLINE_BASH_SELECT=1
+        echo "$0:$LINENO _setup_ohmy"
               . /usr/share/powerline/bash/powerline.sh
 
             }
@@ -953,14 +966,18 @@ _setup_ohmy(){
         }
         elif [[ "$COMANDDER" == *"dnf"* ]]  ; then
         {
-         $COMANDDER git wget curl ruby ruby-devel zsh util-linux-user redhat-rpm-config gcc gcc-c++ make
+           echo "$0:$LINENO _setup_ohmy"
+            $COMANDDER git wget curl ruby ruby-devel zsh util-linux-user redhat-rpm-config gcc gcc-c++ make
+           echo "$0:$LINENO _setup_ohmy"
             _if_not_is_installed fontawesome-fonts && $COMANDDER fontawesome-fonts
             _if_not_is_installed powerline && $COMANDDER powerline vim-powerline tmux-powerline powerline-fonts
+           echo "$0:$LINENO _setup_ohmy"
             if [ -f `which powerline-daemon` ]; then
             {
               powerline-daemon -q
               POWERLINE_BASH_CONTINUATION=1
               POWERLINE_BASH_SELECT=1
+           echo "$0:$LINENO _setup_ohmy"
               . /usr/share/powerline/bash/powerline.sh
             }
             fi
@@ -969,16 +986,26 @@ _setup_ohmy(){
         fi
 
 
+           echo "$0:$LINENO _setup_ohmy"
                   _install_nerd_fonts
+           echo "$0:$LINENO _setup_ohmy"
+           echo "$0:$LINENO _setup_ohmy"
 
                   local -i _err=0
+           echo "$0:$LINENO _setup_ohmy"
                   ensure_brew_in_linux_mac
+           echo "$0:$LINENO _setup_ohmy"
                   local _target_bin_brew=""
+           echo "$0:$LINENO _setup_ohmy"
                   _target_bin_brew="$(_find_executable_for "which" "brew"  "bin/brew")"
+           echo "$0:$LINENO _setup_ohmy"
                   _err=$?
+           echo "$0:$LINENO _setup_ohmy"
                   echo "_target_bin_brew:${_target_bin_brew}"                  
                   if [ $_err -gt 0 ] ; then # failed
+           echo "$0:$LINENO _setup_ohmy"
                   {
+           echo "$0:$LINENO _setup_ohmy"
                     echo "${_target_bin_brew}"
                     failed "to find brew"
                   }
@@ -1005,6 +1032,7 @@ _setup_ohmy(){
                   fi
 
 
+           echo "$0:$LINENO _setup_ohmy"
           if [[ "$COMANDDER" == *"brew"* ]]  ; then # MAC and linux 
           {
                   local -i _err=0
@@ -1019,6 +1047,7 @@ _setup_ohmy(){
 
 
                   local missing="powerline-status"
+           echo "$0:$LINENO _setup_ohmy"
                   local -i err_buff=0
                   local _powerline_sh=""
 
@@ -1058,10 +1087,16 @@ _setup_ohmy(){
                   fi
 
 
-                   su - "${SUDO_USER}" -c "${_target_bin_brew}  install powerline vim-powerline tmux-powerline powerline-fonts"
+          echo "$0:$LINENO _setup_ohmy"
+          su - "${SUDO_USER}" -c "${_target_bin_brew} install powerline-go"
+          echo "$0:$LINENO _setup_ohmy"
+          su - "${SUDO_USER}" -c "${_target_bin_brew} tmux-powerline" 
+          echo "$0:$LINENO _setup_ohmy"
+          su - "${SUDO_USER}" -c "${_target_bin_brew} powerline-fonts"
                     if [[ -n "${_powerline_sh}" ]] ; then
                     {
                       powerline-daemon -q
+           echo "$0:$LINENO _setup_ohmy"
                       POWERLINE_BASH_CONTINUATION=1
                       POWERLINE_BASH_SELECT=1
                       \. "${_powerline_sh}"
@@ -1173,6 +1208,8 @@ echo  "$0:$LINENO"
   }
   fi
   return 0
+           echo "$0:$LINENO _setup_ohmy"
+
 } # end _setup_ohmy
 
 _install_colorls(){
@@ -2106,12 +2143,16 @@ _fedora__64() {
 
 
 _darwin__arm64() {
-  _darwin__64
+  _darwin_flavor_1
+  _darwin_flavor_2
 } # end _darwin__arm64
 
-
-
 _darwin__64() {
+  _darwin_flavor_1
+  _darwin_flavor_2
+} # end _darwin__64
+
+_darwin_flavor_1() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
 
   Installing "## macOS Preferences"
@@ -2358,7 +2399,9 @@ _darwin__64() {
 
   #_install_nvm_version 14
   #_install_npm_utils
+} # end _darwin_flavor_1
 
+_darwin_flavor_2() {
   echo "$0:$LINENO "
   _setup_ohmy
   echo "$0:$LINENO "
@@ -2437,7 +2480,7 @@ EOINSERT
   _setup_mycd
   return 0
   # _password_simple2
-} # end _darwin__64
+} # end _darwin_flavor_2
 
 
 
