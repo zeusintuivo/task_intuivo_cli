@@ -117,11 +117,14 @@ _add_variables_to_bashrc_zshrc(){
   local RBENV_SH_CONTENT='
 
 # RBENV
-export RBENV_ROOT="'${USER_HOME}'/.rbenv"
-export PATH="'${USER_HOME}'/bin:${PATH}"
-export PATH="'${USER_HOME}'/.rbenv/bin:${PATH}"
-eval "$(rbenv init -)"
-
+if [[ -e "'${USER_HOME}'/.rbenv" ]] ; then
+{
+  export RBENV_ROOT="'${USER_HOME}'/.rbenv"
+  export PATH="'${USER_HOME}'/bin:${PATH}"
+  export PATH="'${USER_HOME}'/.rbenv/bin:${PATH}"
+  eval "$(rbenv init -)"
+}
+fi
 ' 
   trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _add_variables_to_bashrc_zshrc rbenv" && echo -e "${RESET}" && return 0' ERR
   Checking "${RBENV_SH_CONTENT}"

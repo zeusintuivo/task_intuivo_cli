@@ -114,12 +114,27 @@ _git_clone() {
 } # end _git_clone
 
 _add_variables_to_bashrc_zshrc(){
+  cd "${USER_HOME}/.nvm"
+  mkdir -p "${USER_HOME}/.nvm/scripts"
+  cp "${USER_HOME}/.nvm/nvm.sh" "$EVM_HOME/scripts/nvm"
+
   local NVM_SH_CONTENT='
 
 # NVM
-export NVM_DIR="'${USER_HOME}'/.nvm"
-[ -s "${NVM_DIR}/nvm.sh" ] && . "${NVM_DIR}/nvm.sh"  # This loads nvm
-[ -s "${NVM_DIR}/bash_completion" ] && . "${NVM_DIR}/bash_completion"  # This loads nvm bash_completion
+_find_nvm_node(){
+  echo "'${USER_HOME}'/.nvm/versions/node/v$(<"'${USER_HOME}'/.nvm/alias/default")/bin"
+} 
+if [[ -e "'${USER_HOME}'/.nvm" ]] ; then
+{
+  export NVM_DIR="'${USER_HOME}'/.nvm"
+  [[ -d "'${USER_HOME}'/.nvm" ]] && export PATH="'${USER_HOME}'/.nvm:${PATH}"
+  [[ -d "'${USER_HOME}'/.nvm/scripts" ]] && export PATH="'${USER_HOME}'/.nvm/scripts:${PATH}"
+  [[ -d "'${USER_HOME}'/.nvm/versions/node" ]] && export PATH="$(_find_nvm_node):${PATH}"
+  # [ -s "${NVM_DIR}/nvm.sh" ] && . "${NVM_DIR}/nvm.sh"  # This loads nvm
+  # bash_completion clashes with evm"s bash_completion enable if not using nvm
+  # [ -s "${NVM_DIR}/bash_completion" ] && . "${NVM_DIR}/bash_completion"  # This loads nvm bash_completion
+}
+fi
 
 '
   # trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _add_variables_to_bashrc_zshrc nvm" && echo -e "${RESET}" && return 0' ERR

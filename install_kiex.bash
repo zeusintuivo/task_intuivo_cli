@@ -508,9 +508,12 @@ _install_and_add_variables_to_bashrc_zshrc(){
   local KIEX_SH_CONTENT='
 
 # KIEX
-test -s "'${USER_HOME}'/.kiex/scripts/kiex" && export KIEX_ROOT="'${USER_HOME}'/.kiex/scripts"
-test -s "'${USER_HOME}'/.kiex/scripts/kiex" && export PATH="'${USER_HOME}'/.kiex/scripts:${PATH}"
-
+if [[ -e "'${USER_HOME}'/.kiex" ]] ; then
+{
+  test -s "'${USER_HOME}'/.kiex/scripts/kiex" && export KIEX_ROOT="'${USER_HOME}'/.kiex/scripts"
+  test -s "'${USER_HOME}'/.kiex/scripts/kiex" && export PATH="'${USER_HOME}'/.kiex/scripts:${PATH}"
+}
+fi
 ' 
   echo "${KIEX_SH_CONTENT}"
   local INITFILE INITFILES="

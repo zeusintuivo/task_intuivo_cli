@@ -506,12 +506,22 @@ _install_and_add_variables_to_bashrc_zshrc(){
 
   local EVM_SH_CONTENT='
 
+
 # EVM
-[[ -f "'${USER_HOME}'/.evm" ]] && export EVM_HOME="'${USER_HOME}'/.evm"
-[[ -d "'${USER_HOME}'/.evm/scripts" ]] && export PATH="'${USER_HOME}'/.evm/scripts:${PATH}"
-[[ -f "'${USER_HOME}'/.evm" ]] && source "'${USER_HOME}'/.evm/scripts/evm"
+_find_evm_erlang(){
+  echo "'${USER_HOME}'/.evm/erlang_versions/otp_src_$(<"'${USER_HOME}'/.evm/evm_config/erlang_default")/bin"
+} 
+if [[ -e "'${USER_HOME}'/.evm" ]] ; then
+{
+  [[ -f "'${USER_HOME}'/.evm" ]] && export EVM_HOME="'${USER_HOME}'/.evm"
+  [[ -d "'${USER_HOME}'/.evm/scripts" ]] && export PATH="'${USER_HOME}'/.evm/scripts:${PATH}"
+  [[ -d "'${USER_HOME}'/.evm/scripts" ]] && export PATH="$(_find_evm_erlang):${PATH}"
+  #[[ -f "'${USER_HOME}'/.evm/scripts/evm" ]] && source "'${USER_HOME}'/.evm/scripts/evm"
+}
+fi
 
 ' 
+
   echo "${EVM_SH_CONTENT}"
   local INITFILE INITFILES="
    .bashrc
