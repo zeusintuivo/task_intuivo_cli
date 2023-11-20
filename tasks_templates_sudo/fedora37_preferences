@@ -86,6 +86,8 @@ _redhat_flavor_install() {
     breeze-cursor-theme
     oxygen-cursor-themes
     knock
+		htop
+		btop
   "
   ); then
     {
