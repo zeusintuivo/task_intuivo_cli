@@ -766,7 +766,7 @@ _debian_flavor_install() {
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
-  dnf build-dep nodejs -y --allow-erasing
+  dnf build-dep nodejs -y --allowerasing
 	_git_clone "https://github.com/nvm-sh/nvm.git" "${USER_HOME}/.nvm"
   cd "${USER_HOME}/.nvm"
     Installing older version that is compatible with old linux
