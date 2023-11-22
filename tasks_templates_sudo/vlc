@@ -85,10 +85,10 @@ _debian_flavor_install() {
 
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  dnf install -y --allow-erasing https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
-  dnf install -y --allow-erasing https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
-  dnf install -y --allow-erasing vlc
-  dnf install -y --allow-erasing python-vlc
+  dnf install -y --allowerasing https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
+  dnf install -y --allowerasing https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+  dnf install -y --allowerasing vlc
+  dnf install -y --allowerasing python-vlc
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {

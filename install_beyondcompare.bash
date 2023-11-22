@@ -506,7 +506,7 @@ _ubuntu__64() {
 } # end _ubuntu__64
 
 _ubuntu__32() {
-  sudo_it
+  #sudo_it
   # export USER_HOME="/Users/${SUDO_USER}"
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   # _linux_prepare
@@ -524,7 +524,7 @@ _ubuntu__32() {
 } # end _ubuntu__32
 
 _fedora__32() {
-  sudo_it
+  #sudo_it
   # export USER_HOME="/Users/${SUDO_USER}"
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   # _linux_prepare
@@ -564,7 +564,7 @@ _centos__64() {
 } # end _centos__64
 
 _fedora__64() {
-  sudo_it
+  #sudo_it
   # export USER_HOME="/Users/${SUDO_USER}"
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   # _linux_prepare

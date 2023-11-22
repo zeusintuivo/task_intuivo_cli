@@ -46,24 +46,42 @@ _debian_flavor_install() {
 
 _redhat_flavor_install() {
   # enforce_variable_with_value USER_HOME "${USER_HOME}"
-  install_brew.sh
-  install_rbenv.bash
-  install_nvm.bash
-	install.clis.bash
-	install_clis.bash
-	install_1password.bash
+sudo updatedb &
+  ./install_brew.bash
+  ./install_rbenv.bash
+  ./install_nvm.bash
+  ./install.clis.bash
+  ./install_clis.bash
+  install_1password.bash
   install_zoom.bash
   install_keybase.bash
   install_drogon.bash
   install_sublime_dev.sh.bash
+install_sublimemerge_dev.bash
+install_sublime4.bash
   install_taskwarrior.bash
   compile_nano.bash
   install_evm.bash
+  install_pyenv.bash
   install_kiex.bash
   install_emacs.bash
   install_masterpdf.bash
   install_i3.bash
   install_beyondcompare.bash
+  install_vlc.bash
+  install_go.bash
+  install_discord.bash
+  install_signal.bash
+  install_skype.bash
+  install_kerl.bash
+install_planner.bash
+install_powerlevel10k.bash
+install_telegram.bash
+install_valet.bash
+# install_code.bash
+wget --max-redirect=10 --mirror --directory-prefix="/home/zeus/Downloads/20231122/" -O "code-1.84.2-20231122.el7.x86_64.rpm" --no-check-certificate https://update.code.visualstudio.com/1.84.2/linux-rpm-x64/stable
+sudo dnf install -vy code-1.84.2-20231122.el7.x86_64.rpm
+ rm code-1.84.2-20231122.el7.x86_64.rpm
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 	dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
 	dnf groupupdate core -y
@@ -73,9 +91,9 @@ _redhat_flavor_install() {
   if (
   install_requirements "linux" "
     arandr
-  	task
-		gparted
-		gpart
+    task
+    gparted
+    gpart
     thunderbird
     boxes
     firefox
@@ -86,8 +104,8 @@ _redhat_flavor_install() {
     breeze-cursor-theme
     oxygen-cursor-themes
     knock
-		htop
-		btop
+    htop
+    btop
   "
   ); then
     {

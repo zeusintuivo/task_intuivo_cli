@@ -477,7 +477,6 @@ _git_clone() {
 
 _install_and_add_variables_to_bashrc_zshrc(){
   trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _install_and_add_variables_to_bashrc_zshrc EVM" && echo -e "${RESET}" && return 0' ERR
-  
   local dir DIRS="erlang_tars erlang_versions evm_config scripts"
   local EVM_HOME="${USER_HOME}/.evm"
   # For each dir, check whether it's already exists or not
@@ -493,7 +492,7 @@ _install_and_add_variables_to_bashrc_zshrc(){
   done
   # Create the config file
   if [[ ! -f "$EVM_HOME/evm_config/erlang_default" ]]
-  then 
+  then
     touch "$EVM_HOME/evm_config/erlang_default"
     echo "$EVM_HOME/evm_config/erlang_default succesfully created"
   else
@@ -510,7 +509,7 @@ _install_and_add_variables_to_bashrc_zshrc(){
 # EVM
 _find_evm_erlang(){
   echo "'${USER_HOME}'/.evm/erlang_versions/otp_src_$(<"'${USER_HOME}'/.evm/evm_config/erlang_default")/bin"
-} 
+}
 if [[ -e "'${USER_HOME}'/.evm" ]] ; then
 {
   [[ -f "'${USER_HOME}'/.evm" ]] && export EVM_HOME="'${USER_HOME}'/.evm"
@@ -520,7 +519,7 @@ if [[ -e "'${USER_HOME}'/.evm" ]] ; then
 }
 fi
 
-' 
+'
 
   echo "${EVM_SH_CONTENT}"
   local INITFILE INITFILES="
@@ -534,7 +533,7 @@ fi
   while read INITFILE; do
   {
     [ -z ${INITFILE} ] && continue
-    Checking "${USER_HOME}/${INITFILE}" 
+    Checking "${USER_HOME}/${INITFILE}"
     # if ! it_exists_with_spaces "${_target}" ; then
     # {
     #   continue
@@ -579,7 +578,7 @@ _debian_flavor_install() {
     libwxgtk3.0-gtk3-0v5
     libwxgtk3.0-gtk3-dev
     wx-common
-		
+
    "
   _package_list_installer "${packages}"
   local MSG=$(_install_and_add_variables_to_bashrc_zshrc)
@@ -591,9 +590,9 @@ _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _git_clone "https://github.com/robisonsantos/evm.git" "${USER_HOME}/.evm"
   dnf groupinstall -y 'Development Tools' 'C Development Tools and Libraries'
-	dnf build-dep erlang -y --allowerasing # --skip-broken
+  dnf build-dep erlang -y --allowerasing # --skip-broken
 
-	# Package make-1:4.3-11.fc37.x86_64 is already installed.
+  # Package make-1:4.3-11.fc37.x86_64 is already installed.
   # Package gcc-12.3.1-1.fc37.x86_64 is already installed.
   # Package gcc-c++-12.3.1-1.fc37.x86_64 is already installed.
   # Package autoconf-2.71-4.fc37.noarch is already installed.
@@ -612,7 +611,7 @@ _redhat_flavor_install() {
   # Package ed-1.18-2.fc37.x86_64 is already installed.
   # Package emacs-common-1:28.3-0.rc1.fc37.x86_64 is already installed
   _package_list_installer "openssl1.1
-   	openssl1.1-devel-1"
+   openssl1.1-devel-1"
   local package packages="
     # Fedora 37
     wget

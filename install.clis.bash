@@ -967,20 +967,20 @@ _setup_ohmy(){
         elif [[ "$COMANDDER" == *"dnf"* ]]  ; then
         {
            echo "$0:$LINENO _setup_ohmy"
-            $COMANDDER git wget curl ruby ruby-devel zsh util-linux-user redhat-rpm-config gcc gcc-c++ make
+           $COMANDDER git wget curl ruby ruby-devel zsh util-linux-user redhat-rpm-config gcc gcc-c++ make
+					 echo "$0:$LINENO _setup_ohmy"
+					 _if_not_is_installed fontawesome-fonts && $COMANDDER fontawesome-fonts
+					 _if_not_is_installed powerline && $COMANDDER powerline-go  tmux-xpanes
            echo "$0:$LINENO _setup_ohmy"
-            _if_not_is_installed fontawesome-fonts && $COMANDDER fontawesome-fonts
-            _if_not_is_installed powerline && $COMANDDER powerline vim-powerline tmux-powerline powerline-fonts
-           echo "$0:$LINENO _setup_ohmy"
-            if [ -f `which powerline-daemon` ]; then
-            {
-              powerline-daemon -q
-              POWERLINE_BASH_CONTINUATION=1
-              POWERLINE_BASH_SELECT=1
-           echo "$0:$LINENO _setup_ohmy"
-              . /usr/share/powerline/bash/powerline.sh
-            }
-            fi
+           # if [ -f `which powerline-daemon` ]; then
+           # {
+           #   powerline-daemon -q
+           #   POWERLINE_BASH_CONTINUATION=1
+           #   POWERLINE_BASH_SELECT=1
+           # echo "$0:$LINENO _setup_ohmy"
+           #   . /usr/share/powerline/bash/powerline.sh
+           # }
+           # fi
 
         }
         fi
@@ -2056,15 +2056,46 @@ _fedora__64() {
   # autoreconf ubuntu
 
    cd
-   git clone https://github.com/astrand/xclip.git
-   cd xclip
-    ./bootstrap
-    ./configure
-    make
-    make install
-
+   if ( su - "${SUDO_USER}" -c "command -v xclip" >/dev/null 2>&1; ) ; then
+   {
+     passed xclip exists and passes
+   }
+   else
+   {
+     warning xclip for user "${SUDO_USER}" not found. attempting to compile manually
+     if [[ -d xclip ]] ; then
+     {
+       passed xclip already cloned, attempting to recompile
+       cd xclip
+       ./bootstrap
+       ./configure
+       make
+       make install
+     }
+     else
+     {
+       warning cloning
+       if ! git clone https://github.com/astrand/xclip.git ; then
+       {
+         warning cloning xclip failed
+       }
+       else
+       {
+         passed cloned xclip, attempting to compile
+         cd xclip
+         ./bootstrap
+         ./configure
+         make
+         make install
+       }
+       fi
+     }
+     fi
+   }
+   fi
    #systemctl enable --now snapd.socket
-   sudo snap install tree
+   # ln -s /var/lib/snapd/snap /snap
+   #sudo snap install tree
   _checka_tools_commander
   _configure_git
   _install_nvm

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
@@ -22,7 +22,7 @@
     exit ${__trapped_error_exit_num}
   }
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  
+
   function _trap_on_INT(){
     local -ir __trapped_INT_num="${2:-0}"
     echo -e "\\n \033[01;7m*** 7 INT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n INT ...\033[0m  \n \n "
@@ -87,7 +87,40 @@ _debian_flavor_install() {
 
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  echo "_redhat_flavor_install Procedure not yet implemented. I don't know what to do."
+  Message REF:https://gist.github.com/Dreameh/86562b83410db6151e871d811a70c470
+  Comment Dependencies for development
+  dnf group install "Development Tools" -y --allowerasing
+  Comment Dependencies specific to emacs
+  dnf builddep emacs -y --allowerasing
+
+  Comment Download the latest stable release from emacs website
+  wget http://mirrors.kernel.org/gnu/emacs/emacs-26.3.tar.xz
+  wget http://mirrors.kernel.org/gnu/emacs/emacs-26.3.tar.xz.sig
+
+  Comment Verify the tar.xz file
+  Comment out gpg --verify emacs-26.3.tar.xz.sig emacs-26.3.tar.xz
+
+  Comment Once that has been taken care of, extract the tar.xz archive.
+  tar -xvf emacs-26.3.tar.xz
+
+  Comment Go into the newly made folder
+  cd emacs-26.3
+
+  Configure the source
+  ./configure
+
+  Comment Compile the source
+  make
+
+  Checking the binary to see that it runs smoothly
+  src/emacs -Q
+
+  Installing the binary emacs
+  Comment out make install
+  cd ..
+  rm -rf emacs-26.3
+  dnf install emacs -f
+  # echo "_redhat_flavor_install Procedure not yet implemented. I don't know what to do."
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {

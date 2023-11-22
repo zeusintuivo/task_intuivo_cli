@@ -385,6 +385,42 @@ directory_exists_with_spaces "${USER_HOME}"
 # REF: https://stackoverflow.com/questions/7358611/get-users-home-directory-when-they-run-a-script-as-root
 # Global:
 
+  function _trap_on_error(){
+    local -ir __trapped_error_exit_num="${2:-0}"
+    echo -e "\\n \033[01;7m*** 2 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+    echo ". ${1}"
+    echo ". exit  ${__trapped_error_exit_num}  "
+    echo ". caller $(caller) "
+    echo ". ${BASH_COMMAND}"
+    local -r __caller=$(caller)
+    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+
+    # $(eval ${BASH_COMMAND}  2>&1; )
+    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+    exit ${__trapped_error_exit_num}
+  }
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+
+  function _trap_on_INT(){
+    local -ir __trapped_INT_num="${2:-0}"
+    echo -e "\\n \033[01;7m*** 7 INT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n INT ...\033[0m  \n \n "
+    echo ". ${1}"
+    echo ". INT  ${__trapped_INT_num}  "
+    echo ". caller $(caller) "
+    echo ". ${BASH_COMMAND}"
+    local -r __caller=$(caller)
+    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+
+    # $(eval ${BASH_COMMAND}  2>&1; )
+    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+    exit ${__trapped_INT_num}
+  }
+  trap  '_trap_on_INT $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  INT
+
 echo enforce_variable_with_value SUDO_USER "${SUDO_USER}"
 enforce_variable_with_value SUDO_USER "${SUDO_USER}"
 passed Caller user identified:$SUDO_USER
@@ -396,11 +432,12 @@ directory_exists_with_spaces "$USER_HOME"
 
 # https://code.visualstudio.com/docs/?dv=linux64_rpm
 get_lastest_studio_code_version() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
     local WEBPAGE_TO_READ_VERSION_NUMBER=$(curl -sSLo -  https://code.visualstudio.com/docs/?dv=linux32_deb&build=insiders  2>&1;) # suppress only wget download messages, but keep wget output for variable
     echo "${WEBPAGE_TO_READ_VERSION_NUMBER}" | grep 'facebook'  | head -3
     local VERSION_NUMBER=$(echo "${VERSION_NUMBER}" | grep 'direct download link ....' )
     wait
-	    [[ -z "${VERSION_NUMBER}" ]] && failed "Master PDF Editor Version not found! :${VERSION_NUMBER}:"
+    [[ -z "${VERSION_NUMBER}" ]] && failed "Master PDF Editor Version not found! :${VERSION_NUMBER}:"
     echo "${VERSION_NUMBER}"
     if [ -z "${VERSION_NUMBER}" ] ; then  # if empty
     {
@@ -411,6 +448,7 @@ get_lastest_studio_code_version() {
 } # end get_lastest_studio_code_version
 
 _download_just_download() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   #  url  https://code-industry.net/public/master-pdf-editor-3133_amd64.deb
   _trap_try_start
   local target_url="${1}"
@@ -453,6 +491,7 @@ _download_just_download() {
 }
 
 _darwin__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
     local CODENAME="MasterPDFEditor.dmg"
     local URL="https://code-industry.net/public/"
     cd $USER_HOME/Downloads/
@@ -463,6 +502,7 @@ _darwin__64() {
 } # end _darwin__64
 
 _ubuntu__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
     local CODENAME="master-pdf-editor-${VERSION_NUMBER}-qt5.amd64.deb"
     local URL="https://code-industry.net/public/"
     cd $USER_HOME/Downloads/
@@ -471,6 +511,7 @@ _ubuntu__64() {
 } # end _ubuntu__64
 
 _ubuntu__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
     local CODENAME="master-pdf-editor-${VERSION_NUMBER}.i386.deb"
     local URL="https://code-industry.net/public/"
     cd $USER_HOME/Downloads/
@@ -483,6 +524,7 @@ _centos__64() {
 } # end _centos__64
 
 _fedora__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
    # https://code-industry.net/public/master-pdf-editor-5.4.38-qt5.x86_64.rpm
   # get download link
   # https://code.visualstudio.com/docs/?dv=linux64_rpm
@@ -527,69 +569,17 @@ _fedora__64() {
   echo enforce_variable_with_value VERSION_NUMBER "${VERSION_NUMBER}"
   enforce_variable_with_value VERSION_NUMBER "${VERSION_NUMBER}"
   local TARGET_DOWNLOAD_PATH="$USER_HOME/Downloads/${LASTEST_DOWNLOAD_FILE}"
-  function download_part() {
-    if  it_exists_with_spaces "${TARGET_DOWNLOAD_PATH}" ; then
-    {
-      file_exists_with_spaces "${TARGET_DOWNLOAD_PATH}"
-    }
-    else
-    {
-      file_exists_with_spaces $USER_HOME/Downloads
-      cd $USER_HOME/Downloads
-      _download "${TARGET_URL}" $USER_HOME/Downloads  ${LASTEST_DOWNLOAD_FILE}
-      file_exists_with_spaces "${TARGET_DOWNLOAD_PATH}"
-    }
-    fi
-    } # end download_part
-  download_part
 
-  function install_rpm_part() {
-    if  it_exists_with_spaces "${TARGET_DOWNLOAD_PATH}" ; then
-    {
-      echo Attempting to install "${TARGET_DOWNLOAD_PATH}"
-    } else {
-      return
-    }
-    fi
-    ensure rpm or "Canceling Install. Could not find rpm command to execute install"
-    _trap_try_start # _trap_catch_check
-    local msg=$(rpm -ivh "${TARGET_DOWNLOAD_PATH}")
-    _trap_catch_check
-    echo "${msg}"
-    if [[ "${msg}" == *"not an rpm package"* ]] ; then
-    {
-      download_part
-      install_rpm_part
-    }
-    elif [[ "${msg}" == *"Failed dependencies"* ]] && [[ "${msg}" == *"is needed"* ]] ; then
-    {
+  _do_not_downloadtwice "${TARGET_URL}" $USER_HOME/Downloads  ${LASTEST_DOWNLOAD_FILE}
+  _install_rpm "${TARGET_URL}" "$USER_HOME/Downloads"  "${LASTEST_DOWNLOAD_FILE}"  0
 
-      echo "Suggested Fix "
-      echo "# when error error: Failed dependencies:
-            #	     libQt5Svg.so.5()(64bit) is needed by master-pdf-editor-5.4.38-1.x86_64
-            # then correct with
-            # fix with
-            # then fix with
-            # sudo dnf -y install qt5-devel qt-creator qt5-qtbase qt5-qtbase-devel
-            # rpm again"
-      failed "ERROR MSG:\n ${msg}"
-    }
-    else
-    {
-      passed "Seems there were no errors"
-    }
-    fi
-
-    rm -f "${TARGET_DOWNLOAD_PATH}"
-  } # end install_rpm_part
-  install_rpm_part
-
-}
+} # end _fedora__64
 
 _mingw__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
     local CODENAME="MasterPDFEditor-setup.exe"
     cd $HOMEDIR
-	    cd Downloads
+    cd Downloads
     curl -O https://code-industry.net/public/${CODENAME}
     ${CODENAME}
 } # end _mingw__64
@@ -598,8 +588,8 @@ _mingw__32() {
     local CODENAME="MasterPDFEditor-setup.exe"
     cd $HOMEDIR
     cd Downloads
-	    curl -O https://code-industry.net/public/${CODENAME}
-	    ${CODENAME}
+    curl -O https://code-industry.net/public/${CODENAME}
+    ${CODENAME}
 } # end
 
 _main() {

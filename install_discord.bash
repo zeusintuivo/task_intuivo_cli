@@ -253,7 +253,7 @@ _fedora__64() {
   }
   fi
   directory_does_not_exist_with_spaces "/usr/lib64/discord"
-  if ! it_exists_with_spaces "/usr/bin/Discord" ; then
+  if it_exists_with_spaces "/usr/bin/Discord" ; then
   {
     unlink "/usr/bin/Discord"
     _err=$?

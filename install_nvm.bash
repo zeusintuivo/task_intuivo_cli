@@ -493,7 +493,7 @@ _git_clone() {
 _add_variables_to_bashrc_zshrc(){
   cd "${USER_HOME}/.nvm"
   mkdir -p "${USER_HOME}/.nvm/scripts"
-  cp "${USER_HOME}/.nvm/nvm.sh" "$EVM_HOME/scripts/nvm"
+  cp "${USER_HOME}/.nvm/nvm.sh" "${USER_HOME}/.nvm/scripts/nvm"
 
   local NVM_SH_CONTENT='
 
@@ -766,7 +766,7 @@ _debian_flavor_install() {
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
-  dnf build-dep nodejs -y --allow-erasing
+  dnf build-dep nodejs -y --allowerasing
 	_git_clone "https://github.com/nvm-sh/nvm.git" "${USER_HOME}/.nvm"
   cd "${USER_HOME}/.nvm"
     Installing older version that is compatible with old linux

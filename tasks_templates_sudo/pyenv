@@ -20,7 +20,7 @@
     exit ${__trapped_error_exit_num}
   }
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  
+
   function _trap_on_INT(){
     local -ir __trapped_INT_num="${2:-0}"
     echo -e "\\n \033[01;7m*** 7 INT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n INT ...\033[0m  \n \n "
@@ -39,7 +39,7 @@
   }
   trap  '_trap_on_INT $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  INT
 
-  
+
 _package_list_installer() {
   local package packages="${@}"
   trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer rbenv" && echo -e "${RESET}" && return 0' ERR
@@ -89,7 +89,7 @@ _debian_flavor_install() {
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
-
+  dnf builddep python -y --allowerasing
   # export USER_HOME="/home/${SUDO_USER}"
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   enforce_variable_with_value SUDO_USER "${SUDO_USER}"
@@ -98,6 +98,8 @@ _redhat_flavor_install() {
       python
   "
   # RedHat Flavor only
+  #_package_list_installer "openssl1.1
+  # openssl1.1-devel-1"
   local package packages="
     sqlite
     sqlite-devel
@@ -109,7 +111,7 @@ _redhat_flavor_install() {
     git
     zlib-devel
     bzip2
-    openssl-devel
+    # openssl-devel
     xz
     xz-devel
     libffi
@@ -131,7 +133,7 @@ _redhat_flavor_install() {
   }
   else
   {
-    dnf groupinstall 'Development Tools' -y
+    dnf groupinstall 'Development Tools' -y --allowerasing
   }
   fi
   #  verify_is_installed "

@@ -588,7 +588,7 @@ _debian_flavor_install() {
 
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  dnf build-dep rbenv -vy --allow-erasing
+  dnf build-dep rbenv -vy --allowerasing
   # dnf install  -y openssl-devel
   # Batch Fedora 37
   local package packages="
@@ -598,8 +598,8 @@ _redhat_flavor_install() {
     bison
 		bison-devel
     ruby-build-rbenv
-    openssl1.1
-    openssl1.1-devel-1
+    #openssl1.1
+    #openssl1.1-devel-1
 		ncurses
     ncurses-devel
 		ncurses-c++-libs
@@ -631,21 +631,23 @@ _redhat_flavor_install() {
   "
   _package_list_installer "${packages}"
 
-	ensure brew or "Canceling until brew is installed. try install_brew.bash install_brew.sh"
+	#ensure brew or "Canceling until brew is installed. try install_brew.bash install_brew.sh"
 	su - "${SUDO_USER}" -c 'brew install readline'
 	su - "${SUDO_USER}" -c 'brew install openssl@1.1'
   _git_clone "https://github.com/rbenv/rbenv.git" "${USER_HOME}/.rbenv"
   _git_clone "https://github.com/rbenv/ruby-build.git" "${USER_HOME}/.rbenv/plugins/ruby-build"
   _add_variables_to_bashrc_zshrc
-  ensure rbenv or "Canceling until rbenv did not install"
+  #ensure rbenv or "Canceling until rbenv did not install"
   su - "${SUDO_USER}" -c 'rbenv install -l'
   su - "${SUDO_USER}" -c 'rbenv install 2.6.5'
   su - "${SUDO_USER}" -c 'rbenv install 2.7.3'
   su - "${SUDO_USER}" -c 'rbenv install 3.2.2'
   su - "${SUDO_USER}" -c 'rbenv global 2.6.5'
   su - "${SUDO_USER}" -c 'rbenv rehash'
-  ensure ruby or "Canceling until ruby is not working"
+  #ensure ruby or "Canceling until ruby is not working"
   su - "${SUDO_USER}" -c 'ruby -v'
+echo "subl  ~/.{bashrc,bash_profile,profile,zshrc,zsh_profile,zshenv,zprofile}"
+
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
