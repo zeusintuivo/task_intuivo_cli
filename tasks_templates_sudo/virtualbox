@@ -105,16 +105,33 @@ _fedora__64() {
   #verify_is_installed "
   #VirtualBox
   #"
-	wget -P /etc/yum.repos.d/ https://download.virtualbox.org/virtualbox/rpm/fedora/virtualbox.repo
-  yes | dnf search virtualbox -y
+	if wget -P /etc/yum.repos.d/ https://download.virtualbox.org/virtualbox/rpm/fedora/virtualbox.repo ; then 
+		{
+		yes | dnf search virtualbox -y
 	dnf install VirtualBox-7.0 -y
+  }
+	fi
 	usermod -aG vboxusers $USER
   cd  "${USER_HOME}"
-  [ ! -f  "${USER_HOME}/.virtualboxinstallreboot" ] && echo System will reboot now, after you press any key
-  [ ! -f  "${USER_HOME}/.virtualboxinstallreboot" ] &&  touch "${USER_HOME}/.virtualboxinstallreboot" && _pause  "reboot 1" && reboot
+  if [ ! -f  "${USER_HOME}/.virtualboxinstallreboot" ] ; then
+	{	
+		[ ! -f  "${USER_HOME}/.virtualboxinstallreboot" ] && echo System will reboot now, after youpress any key
+    [ ! -f  "${USER_HOME}/.virtualboxinstallreboot" ] &&  touch "${USER_HOME}/.virtualboxinstallreboot" && _pause  "reboot 1" && reboot
+		echo System will reboot now, after you press any key
+	  touch "${USER_HOME}/.virtualboxinstallreboot"
+	  _pause  "reboot 1" 
+		reboot
+	  exit 0
+	}
+	fi
   export KERN_DIR=/usr/src/kernels/`uname -r`
   echo $KERN_DIR
   cd  "${USER_HOME}"
+	if [ -f  "${USER_HOME}/.virtualboxinstallrebootsigned" ] && [ ! -d /root/signed-modules ] ; then 
+	{
+		rm -rf "${USER_HOME}/.virtualboxinstallrebootsigned"
+	}
+	fi
   if [ ! -f  "${USER_HOME}/.virtualboxinstallrebootsigned" ] ; then
   {
     mkdir -p /root/signed-modules
