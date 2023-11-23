@@ -439,10 +439,16 @@ _package_list_installer() {
 } # end _package_list_installer
 
 _debian_flavor_install() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  anounce_command snap install whatsdesk
+	# anounce_command flatpak install flathub io.github.mimbrero.WhatsAppDesktop
+
+	# echo "Procedure not yet implemented. I don't know what to do."
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
+  anounce_command snap install whatsdesk
+	# anounce_command flatpak install flathub io.github.mimbrero.WhatsAppDesktop
+  exit 0 
   sudo_it
   local -i _err
   enforce_variable_with_value USER_HOME "${USER_HOME}"
@@ -547,7 +553,7 @@ _fedora__32() {
 } # end _fedora__32
 
 _fedora__64() {
-  # _redhat_flavor_install
+  _redhat_flavor_install
     local _target_snapd=""
     if it_exists_with_spaces "/repo" ; then
     {

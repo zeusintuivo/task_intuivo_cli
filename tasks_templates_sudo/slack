@@ -40,7 +40,16 @@
 _debian_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  if (
+	apt remove slack-desktop -y
+	wget https://downloads.slack-edge.com/releases/linux/4.27.154/prod/x64/slack-desktop-4.27.154-amd64.deb
+	dpkg -I slack-desktop-4.27.154-amd64.deb
+	dpkg -i slack-desktop-4.27.154-amd64.deb
+	snap install slack
+	echo to remove snap remove slack
+	# flatpak install flathub com.slack.Slack
+	exit 0
+	# echo to remove flatpak uninstall flathub com.slack.Slack
+	if (
   install_requirements "linux" "
     base64
     unzip
@@ -83,7 +92,13 @@ _debian_flavor_install() {
 
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  echo "_redhat_flavor_install Procedure not yet implemented. I don't know what to do."
+  snap refresh
+	echo This was old command snap install slack-classic
+  anounce_command snap install slack
+	echo to remove snap remove slack
+	# anounce_command flatpak install flathub com.slack.Slack
+	# echo to remove flatpak uninstall flathub com.slack.Slack
+	# echo "_redhat_flavor_install Procedure not yet implemented. I don't know what to do."
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
