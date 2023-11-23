@@ -117,6 +117,7 @@ _debian_flavor_install() {
 
 _redhat_flavor_install() {
   # enforce_variable_with_value USER_HOME "${USER_HOME}"
+sudo updatedb &
   ./install_brew.bash
   ./install_rbenv.bash
   ./install_nvm.bash

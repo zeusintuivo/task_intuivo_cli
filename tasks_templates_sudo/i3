@@ -42,7 +42,8 @@ _redhat_flavor_install() {
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   echo "REF: https://fedoraproject.org/wiki/I3_guide#First_Login"
 	echo "REF: https://fedoramagazine.org/getting-started-i3-window-manager/"
-  if (
+  dnf builddep i3 -y --allowerasing
+	if (
   install_requirements "linux" "
     bzip2-devel
 		libzip-devel
