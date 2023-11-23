@@ -43,6 +43,7 @@ _redhat_flavor_install() {
   echo "REF: https://fedoraproject.org/wiki/I3_guide#First_Login"
 	echo "REF: https://fedoramagazine.org/getting-started-i3-window-manager/"
   dnf builddep i3 -y --allowerasing
+	dnf builddep kitty -y --allowerasing
 	if (
   install_requirements "linux" "
     bzip2-devel

@@ -406,7 +406,9 @@ _fedora__64() {
   echo Fedora 29 REF: https://computingforgeeks.com/how-to-install-virtualbox-on-fedora-linux/
   echo Fedora 32 REF: https://tecadmin.net/install-oracle-virtualbox-on-fedora/
   echo Fedora 33 https://www.if-not-true-then-false.com/2010/install-virtualbox-with-yum-on-fedora-centos-red-hat-rhel/
-
+	dnf builddep libvpx-devel -y  --allowerasing
+	dnf builddep dkms -y  --allowerasing 
+  dnf builddep kernel-devel  -y  --allowerasing 
 	if it_exists_with_spaces "/etc/yum.repos.d/virtualbox.repo" ; then
   {
     file_exists_with_spaces "/etc/yum.repos.d/virtualbox.repo"
