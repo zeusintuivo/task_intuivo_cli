@@ -1171,10 +1171,10 @@ opt/postgresql
 	}
 	fi
   Comment "### bundle bundle install"
-  bundle config build.pg --with-pg-config=${_libpg_bin}/pg_config
+  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" && bundle config build.pg --with-pg-config=${_libpg_bin}/pg_config ' " 
   if su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   bundle install ' " ; then 
 	{
-		warning Failed to cd \"${PROJECTREPO}\" &&   bundle install
+		warning "Failed to cd \"${PROJECTREPO}\" &&   bundle install"
 	}
 	fi
 } # end _bundle_check
