@@ -388,98 +388,163 @@ _ubuntu__64() {
   _debian_flavor_install
 } # end _ubuntu__64
 
-_find_location_brew_files() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  local _sub_directory="${1:-}"
-  enforce_parameter_with_value           1        _sub_directory     "${_sub_directory:-}"     "var/postgresql@12 | "
+_brew_you_said_no() {
+		  warning "You said no. So we are keeping the current one"
+			echo -e  "Try to run :
+			\ncurl -O - https://raw.githubusercontent.com/zeusintuivo/task_intuivo_cli/master/install_brew.bash 
+			\nchmod -x install_brew.bash
+			\n./install_brew.bash
+			\n		"
+			failed "You said no. install brew first then, or Check your .dot files"
+			exit 1 # flow should stop
+  
+} # end _brew_you_said_no
 
-  Checking "location of brew ${_sub_directory} "
-	local _result=""
-  local _brew_variations="
-                   ${USER_HOME}/bin/${_sub_directory}
-                   /opt/homebrew/${_sub_directory}
-                   /home/linuxbrew/.linuxbrew/${_sub_directory}
-                   /usr/local/${_sub_directory}
-                   /usr/${_sub_directory}
-                   /${_sub_directory}
-	"
-	local one=""
-	while read -r one ; do 
-	{
-		[[ -z "${one}" ]] && continue
- 	  if it_exists_with_spaces  "${one}" ; then 
-	  {
-       _result="${one}"
-			break
-	  }
-	  fi
-	}
-  done <<< "${_brew_variations}"
+_brew_source_profiles(){
+  if [[ -f "${USER_HOME}/.profile" ]] ; then
+	{  
+		if ! 	\. "${USER_HOME}/.profile" ; then 
+		{
+			echo " 
+			If it complains about ''Begin Root or sudo'' on a certain line 
+			exclude that command with this code:
 
-	[[ -z "${_result}" ]] && return 1
-	echo -n "${_result}"
-	return 0	
-} # end _find_location_brew_files
-
-_try_more_times_find() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  local _possibles="${*:-}"
-  enforce_parameter_with_value           1        _possibles     "${_possibles:-}"     "
-          var/postgresql@12
-          var/postgres
-          var/postgresql
-   "
-
-  local _result=""
-	local -i counter=1
-	local one=""
-	while read -r one ; do 
-	{
-	  [[ -z "${one}" ]] && continue
-		_result="$(_find_location_brew_files "${one}" )"
-	  _err=$?
-    if [ $_err -eq 0 ] ; then 
-  	{
-			break
+			if [ -n "${SUDO_USER:-}" ] ; then 
+			{
+				 ...line to exclude from sudo /root user
+			}
+		  fi	 
+      "
+			failed something is wrong with file:"${USER_HOME}/.profile" 
 		}
 		fi
-    echo "${_result}"
-		warning  "try ${counter} one Could not find/determine location of ${one}"
-		counter=$(( counter + 1 ))
-	}
-  done <<< "${_possibles}"
-
-  if [ $_err -gt 0 ] ; then 
-	{
-		return 1
 	}
 	fi
-	echo -n "${_result}"
+  if [[ -f "${USER_HOME}/.bash_profile" ]] ; then
+	{
+	  if ! 	\. "${USER_HOME}/.bash_profile" ; then 
+		{
+			echo " 
+			If it complains about ''Begin Root or sudo'' on a certain line 
+			exclude that command with this code:
+
+			if [ -n "${SUDO_USER:-}" ] ; then 
+			{
+				 ...line to exclude from sudo /root user
+			}
+		  fi	 
+      "
+			failed something is wrong with file:"${USER_HOME}/.bash_profile" 
+		}
+		fi
+	}
+	fi
 	return 0
-
-
-} # end _try_more_times_find
+} # end _brew_source_profiles
 
 _brew_check_requirements_postgress_12_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   Comment "### Prerequisites"
+
   Checking homebrew is installed
-  if ( ! su - "${SUDO_USER}" -c "command -v brew" >/dev/null 2>&1; )  ; then
+	_brew_source_profiles
+	if (!  su - "${SUDO_USER}" -c "command -v brew" >/dev/null 2>&1; )  ; then
+	{
+	ensure_brew_in_linux_mac
+  local -i _err=0
+	local -i ret=0
+	local -i found=0
+	local _msg_info_list=""
+	local _target_bin_brew=""
+  _target_bin_brew="$(_find_executable_for "brew" "--prefix"  "bin/brew")"
+  _err=$?
+  if [ $_err -gt 0 ] ; then # failed
   {
-    Installing homebrew 
+    echo "${_target_bin_brew}"
+    warning "failed to find brew"
+		found=1
+  }
+  else 
+	{
+		found=0
+    _target_bin_brew="$(echo -n "${_target_bin_brew}" | tail -1)"
+    enforce_variable_with_value _target_bin_brew "${_target_bin_brew}"
+	  Checking "the found ${RED}${_target_bin_brew}${CYAN} to respond to ${YELLOW}brew list"
+    # _msg_info_list="$(su - "${SUDO_USER}" -c "${_target_bin_brew} list  >/dev/null 2>&1")"
+    #
+		# ret=$?
+    # [ $ret -gt 0 ] && found=1
+    # [[ "$_msg_info_list" == *"No such"* ]] && found=1
+    # [[ "$_msg_info_list" == *"nicht gefunden"* ]] && found=1
+    # [[ "$_msg_info_list" == *"Error"*   ]] && found=1
+	}
+	fi
+
+	
+	if [ ${found} -eq 1  ]  ; then
+  {
+	  passed "Seems like brew is not installed. Should I attempt to RESET and resintall brew. WARNING this will remove the brew folder and all its installations [Y/n] ?"
+	  if yes_or_no ; then  # using then so that return 1 will not trigger trap
+  	{   
+			_err=0 # yes
+		}
+		else
+	  {
+	    _err=1 # no
+	  }
+	  fi
+    if [ $_err -gt 0 ] ; then # no
+		{
+			_brew_you_said_no
+			exit 1 # added in case the above function fails
+    }
+		fi
+		# else yes erase brew
+  	passed "You said ${RED} YES ERASE BREW ${YELLOW} Confirm again please [Y/n] ?"
+	  if yes_or_no ; then  # using then so that return 1 will not trigger trap
+  	{
+      _err=0 # yes
+		}
+		else
+		{
+	    _err=1 # no
+	  }
+	  fi
+    if [ $_err -gt 0 ] ; then # no
+		{
+			_brew_you_said_no
+			exit 1 # added in case the above function fails
+    }
+		fi
+		# else yes 
+  	passed "You said ${RED} YES ${CYAN} twice ${YELLOW} "
+    Installing Erasing, Reseting and Re installing homebrew / linuxBrew
     local DOWNLOADFOLDER="$(_find_downloads_folder)"
     local TARGET_URL="https://raw.githubusercontent.com/zeusintuivo/task_intuivo_cli/master/install_brew.bash"
     local CODENAME=install_brew.bash
     _do_not_downloadtwice   "${TARGET_URL}"  "${DOWNLOADFOLDER}"  "${CODENAME}"
     chmod a+x "${CODENAME}"
     cd  "${DOWNLOADFOLDER}"
-    su - "${SUDO_USER}" -c "${DOWNLOADFOLDER}/${CODENAME}"
-    wait
-  }
+		# Cannot run as su - because it will complain not having tty for sudo
+    # su - "${SUDO_USER}" -c "${DOWNLOADFOLDER}/${CODENAME}"
+    export NONINTERACTIVE=1
+		export HAVE_SUDO_ACCESS=1
+		if ! "${DOWNLOADFOLDER}/${CODENAME}" ; then
+		{
+			echo "${RED} ERROR ${CYAN}Failed to run installer, is as if you said no"
+			_brew_you_said_no
+			exit 1 # added in case the above function fails
+		}
+		fi
+		_brew_source_profiles
+ 	
+		wait
+  } # not found
   fi
-  \. "${USER_HOME}/.profile"
-  ensure brew or "Homebrew is required to continue " 
+  } # not command -v brew
+	fi
+  # ensure brew or "Homebrew is required to continue " 
 
   Comment "### install_requirements  darwin"
   Comment LINENO:$LINENO  local _requirements=
@@ -488,15 +553,18 @@ _brew_check_requirements_postgress_12_install() {
       shared-mime-info
       libpq
       redis
-      ruby-devel
+      ruby-build
   "
-
-  if ( ! install_requirements "darwin" " ${_requirements}"   ); then 
+  Comment LINENO:$LINENO install_requirements
+  if ( ! install_requirements "brew" " ${_requirements}"   ); then 
   {
+    Comment LINENO:$LINENO failed install_requirements
     failed "to install some or one of ::\" ${_requirements}\":: "
   }
   else
   {
+
+    Comment LINENO:$LINENO else install_requirements
     # postgresql@14
 #     cat << EOF > "${USER_HOME}/custom-initdb.conf"
 # # Set the default user and role name to "postgres"
@@ -511,8 +579,9 @@ _brew_check_requirements_postgress_12_install() {
 # # Specify any other custom settings you need
 # EOF
     local __pg="postgresql@12"
-    su - "${SUDO_USER}" -c "brew services"
-    if (su - "${SUDO_USER}" -c "brew services" 2>&1 | grep "${__pg}" >/dev/null 2>&1; )  ; then
+    # su - "${SUDO_USER}" -c "brew services"
+    su - "${SUDO_USER}" -c "${_target_bin_brew} services"
+    if (su - "${SUDO_USER}" -c "${_target_bin_brew}  services" 2>&1 | grep "${__pg}" >/dev/null 2>&1; )  ; then
     {
 			echo -e "${PURPLE_BLUE} === ${__pg} ${BRIGHT_BLUE87}installed. Remove and reinstall${PURPLE_BLUE} ${RESET}?"
       if yes_or_no ; then
@@ -528,10 +597,10 @@ _brew_check_requirements_postgress_12_install() {
       {
         passed "You said no. So we are keeping the current one"
 				Installing things that might be need it
-        su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' brew reinstall shared-mime-info"
-        su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' brew reinstall libpq"
-        su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' brew reinstall ruby-build"
-        su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' brew reinstall redis"
+        su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' ${_target_bin_brew} reinstall shared-mime-info"
+        su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' ${_target_bin_brew} reinstall libpq"
+        su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' ${_target_bin_brew} reinstall ruby-build"
+        su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' ${_target_bin_brew} reinstall redis"
       }
 		  else
 			{
@@ -552,18 +621,18 @@ _brew_check_requirements_postgress_12_install() {
         else
         {
           Working "removing" "current version ${__pg} "
-          ( su - "${SUDO_USER}" -c "brew remove ${__pg}" )
+          ( su - "${SUDO_USER}" -c "${_target_bin_brew} remove ${__pg}" )
           if [ "$(pgrep postgres 2>&1  | wc -l | xargs )" -gt 0 ]  ; then
           {
             killall postgres
           }
           fi
 			    Installing "${__pg}"
-          su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' brew install shared-mime-info"
-          su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' brew install libpq"
-          su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' brew install ruby-build"
-          su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' brew install redis"
-          su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' brew install  postgresql@12"
+          su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' ${_target_bin_brew} install shared-mime-info"
+          su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' ${_target_bin_brew} install libpq"
+          su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' ${_target_bin_brew} install ruby-build"
+          su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' ${_target_bin_brew} install redis"
+          su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' ${_target_bin_brew} install  postgresql@12"
 				}
 				fi
 			}
@@ -572,11 +641,11 @@ _brew_check_requirements_postgress_12_install() {
 	  else
 	  {
 			Installing "${__pg}"
-      su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' brew install shared-mime-info"
-      su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' brew install libpq"
-      su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' brew install ruby-build"
-      su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' brew install redis"
-      su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' brew install postgresql@12"
+      su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' ${_target_bin_brew} install shared-mime-info"
+      su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' ${_target_bin_brew} install libpq"
+      su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' ${_target_bin_brew} install ruby-build"
+      su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' ${_target_bin_brew} install redis"
+      su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' ${_target_bin_brew} install postgresql@12"
 	  }
     fi
     # Working "initdb" "--username=postgres --pgdata=/opt/homebrew/var/postgresql@12 --auth-host=md5 --auth-local=md5 --lc-collate=en_US.UTF-8 --lc-ctype=en_US.UTF-8 --lc-messages=en_US.UTF-8 --lc-monetary=en_US.UTF-8 --lc-numeric=en_US.UTF-8 --lc-time=en_US.UTF-8 --pwfile=\"${USER_HOME}/custom-initdb.conf\" "
@@ -751,25 +820,38 @@ _brew_postgres_redis_restart() {
     Message "brew services restart  postgresql@12 "
     # anounce_command brew services restart  "postgresql@12" 
     # anounce_command su - "${SUDO_USER}" -c "brew services restart  postgresql@12 "
-    if su - "${SUDO_USER}" -c "brew services restart  postgresql@12 " ; then
+    local -i _err=0
+		local _target_bin_brew=""
+    _target_bin_brew="$(_find_executable_for "brew" "--prefix"  "bin/brew")"
+    _err=$?
+    if [ $_err -gt 0 ] ; then # failed
+    {
+      echo "${_target_bin_brew}"
+      failed "to find brew"
+    }
+    fi
+    _target_bin_brew="$(echo -n "${_target_bin_brew}" | tail -1)"
+    enforce_variable_with_value _target_bin_brew "${_target_bin_brew}"
+
+		if su - "${SUDO_USER}" -c "${_target_bin_brew} services restart  postgresql@12 " ; then
 		{
 			warning failed brew services restart  postgresql@12 
 		}
 		fi
-		Message "brew services restart  redis"
+		Message "LINE:$LINENO ${_target_bin_brew} services restart  redis"
     # anounce_command brew services restart  redis
 		# anounce_command su - "${SUDO_USER}" -c "brew services restart  redis "
-		if su - "${SUDO_USER}" -c "brew services restart  redis " ; then 
+		if su - "${SUDO_USER}" -c "${_target_bin_brew} services restart  redis " ; then 
 		{
-			warning failed brew services restart  redis
+			warning failed brew ${_target_bin_brew} services restart  redis
 		}
 		fi
-		Message "brew services"
+		Message "${_target_bin_brew} services"
     # anounce_command brew services
     # anounce_command su - "${SUDO_USER}" -c "brew services "
-    if su - "${SUDO_USER}" -c "brew services " ; then 
+    if su - "${SUDO_USER}" -c "${_target_bin_brew} services " ; then 
 		{
-			warning brew services
+			warning brew ${_target_bin_brew} services
 		}
 		fi
     Message Here is your postgress running
