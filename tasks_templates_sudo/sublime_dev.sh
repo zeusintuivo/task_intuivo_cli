@@ -3,80 +3,46 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 #
-  export THISSCRIPTCOMPLETEPATH
-  typeset -r THISSCRIPTCOMPLETEPATH="$(realpath $(which $(basename "$0")))"  # updated realpath macos 20210902 # updated realpath macos 20210902 # § This goes in the FATHER-MOTHER script
-  export _err
-  typeset -i _err=0
-load_struct_testing_wget(){
-    local provider="$HOME/_/clis/execute_command_intuivo_cli/struct_testing"
-    [   -e "${provider}"  ] && source "${provider}"
-    [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
-    ( ( ! command -v passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
-} # end load_struct_testing_wget
-load_struct_testing_wget
 
-function _linux_prepare(){
-  export  THISSCRIPTNAME
-  typeset -gr THISSCRIPTNAME="$(pwd)/$(basename "$0")"
-  export _err
-  typeset -i _err=0
-  load_execute_boot_basic_with_sudo(){
-    # shellcheck disable=SC2030
-    if ( typeset -p "SUDO_USER"  &>/dev/null ) ; then
-    {
-      export USER_HOME
-      # typeset -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)  # Get the caller's of sudo home dir Just Linux
-      # shellcheck disable=SC2046
-      # shellcheck disable=SC2031
-      typeset -rg USER_HOME="$(echo -n $(bash -c "cd ~${SUDO_USER} && pwd"))"  # Get the caller's of sudo home dir LINUX and MAC
-    }
-    else
-    {
-      local USER_HOME=$HOME
-    }
-    fi
-    local -r provider="$USER_HOME/_/clis/execute_command_intuivo_cli/execute_boot_basic.sh"
-    echo source "${provider}"
-    # shellcheck disable=SC1090
-    [   -e "${provider}"  ] && source "${provider}"
-    [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/execute_boot_basic.sh -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
-    if ( command -v failed >/dev/null 2>&1; ) ; then
-    {
-      return 0
-    }
-    else
-    {
-      echo -e "\n \n  ERROR! Loading execute_boot_basic.sh \n \n "
-      exit 1;
-    }
-    fi
-    return 0
-  } # end load_execute_boot_basic_with_sudo
+  function _trap_on_error(){
+    local -ir __trapped_error_exit_num="${2:-0}"
+    echo -e "\\n \033[01;7m*** 2 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+    echo ". ${1}"
+    echo ". exit  ${__trapped_error_exit_num}  "
+    echo ". caller $(caller) "
+    echo ". ${BASH_COMMAND}"
+    local -r __caller=$(caller)
+    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
 
-  load_execute_boot_basic_with_sudo
-  _err=$?
-  if [ $_err -ne 0 ] ;  then
-  {
-    >&2 echo -e "ERROR There was an error loading load_execute_boot_basic_with_sudo Err:$_err "
-    exit $_err
+    # $(eval ${BASH_COMMAND}  2>&1; )
+    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+    exit ${__trapped_error_exit_num}
   }
-  fi
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  
+  function _trap_on_INT(){
+    local -ir __trapped_INT_num="${2:-0}"
+    echo -e "\\n \033[01;7m*** 7 INT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n INT ...\033[0m  \n \n "
+    echo ". ${1}"
+    echo ". INT  ${__trapped_INT_num}  "
+    echo ". caller $(caller) "
+    echo ". ${BASH_COMMAND}"
+    local -r __caller=$(caller)
+    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
 
-  function _trap_on_exit(){
-    echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME EXITS ...\033[0m"
-    ls -lad /opt/sublime_text/Packages
-    tree /opt/sublime_text/Packages
-    ls -lad $HOME/.config
-    # ls -lad $HOME/.config/sublime-text-3/Installed\ Packages/Package\ Control.sublime-package
-    tree $HOME/.config
-    # tree $HOME/.config/sublime-text-3/Installed\ Packages/Package\ Control.sublime-package
+    # $(eval ${BASH_COMMAND}  2>&1; )
+    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+    exit ${__trapped_INT_num}
   }
-  #trap kill ERR
-  trap _trap_on_exit EXIT
-  #trap kill INT
-} # end function _linux_prepare
+  trap  '_trap_on_INT $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  INT
+
 
 _version() {
+    trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
     local -i _err
     # local _sublime_version_page=$(curl -L https://www.sublimetext.com/3dev  2>/dev/null )  # suppress only wget download messages, but keep wget output for variable
     # set -x
@@ -123,9 +89,10 @@ _version() {
     fi
     # exit 0
     return 0
-}
+} # end _version
 
 download_sublime(){
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   # sample https://download.sublimetext.com/sublime-text_build-3133_amd64.deb
   # sample https://download.sublimetext.com/sublime_text_3_build_3211_x64.tar.bz2
   # https://download.sublimetext.com/sublime-text-3210-1.x86_64.rpm
@@ -159,12 +126,14 @@ download_sublime(){
 }
 
 download_install_package_control(){
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   # Package Control - The Sublime Text Package Manager: https://sublime.wbond.net
   local __pc_dir_opt_s_p__=/opt/sublime_text/Packages/
-  local __pc_dir_config_s_ip__=$USER_HOME/.config/sublime-text-3/Installed\ Packages/
+  local __pc_dir_config_s_ip__="${USER_HOME}"/.config/sublime-text-3/Installed\ Packages/
   local __pc_download_filename__=Package\ Control.sublime-package
-  local __pc_download_filepath__=$USER_HOME/$__pc_download_filename__
   local target_url="https://packagecontrol.io/Package%20Control.sublime-package"
+	local CODENAME="Package Control.sublime-package"
+	local CODENAMECHECK="Package\ Control.sublime-package"
   it_does_not_exist_with_spaces "${__pc_dir_opt_s_p__}" && mkdir  -p "${__pc_dir_opt_s_p__}"
   it_does_not_exist_with_spaces "${__pc_dir_opt_s_p__}" && mkdir -p "${__pc_dir_config_s_ip__}"
   directory_exists_with_spaces "${__pc_dir_opt_s_p__}"
@@ -173,41 +142,39 @@ download_install_package_control(){
   if [ ! -e "${__pc_dir_opt_s_p__}" ] ; then
     failed "I cannot find target directory where sublime is installed or Packages folder! ${__pc_dir_opt_s_p__}"
   fi
-  if ( command -v wget >/dev/null 2>&1; ) ; then
-    wget --directory-prefix="${__pc_download_filepath__}" --quiet --no-check-certificate "${target_url}" 2>/dev/null   # suppress only wget download messages, but keep wget output for variable
-  elif ( command -v curl >/dev/null 2>&1; ); then
-    curl -o "${__pc_download_filepath__}" "${target_url}" 2>/dev/null   # suppress only wget download messages, but keep wget output for variable
-  else
-    failed "I cannot find wget or curl to download! ${target_url}"
-  fi
-  directory_does_not_exist_with_spaces "${__pc_download_filepath__}"
-  if [ ! -e "${__pc_download_filepath__}" ] ; then
+  local DOWNLOADFOLDER="$(_find_downloads_folder)"
+	_do_not_downloadtwice "${target_url}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+  
+  local __pc_download_filepath__="${DOWNLOADFOLDER}/${CODENAME}"
+	# directory_does_not_exist_with_spaces "${__pc_download_filepath__}"
+  if it_does_not_exist_with_spaces "${__pc_download_filepath__}" ; then
     failed "I cannot find target downloaded where the Packages was supposed to be! ${__pc_download_filepath__}"
   fi
   file_exists_with_spaces "${__pc_download_filepath__}"
+  
 
-exit 0
   if it_exists_with_spaces "${__pc_dir_config_s_ip__}/${__pc_download_filename__}" ; then
     rm -rf "${__pc_dir_config_s_ip__}/${__pc_download_filename__}"
   fi
-  sudo cp -R "${__pc_download_filepath__}"  "${__pc_dir_config_s_ip__}"
+  cp -R "${__pc_download_filepath__}"  "${__pc_dir_config_s_ip__}"
 
   if it_exists_with_spaces "${__pc_dir_opt_s_p__}/${__pc_download_filename__}" ; then
     rm -rf "${__pc_dir_opt_s_p__}/${__pc_download_filename__}"
   fi
-  sudo cp -R "${__pc_download_filepath__}"  "${__pc_dir_opt_s_p__}"
+  cp -R "${__pc_download_filepath__}"  "${__pc_dir_opt_s_p__}"
   rm -rf "${__pc_download_filepath__}"
   if it_exists_with_spaces "${__pc_dir_config_s_ip__}/${__pc_download_filename__}/${__pc_download_filename__}" ; then
-    sudo mv "${__pc_dir_config_s_ip__}/${__pc_download_filename__}/${__pc_download_filename__}" "${__pc_dir_config_s_ip__}/${__pc_download_filename__}/${__pc_download_filename__}m"
-    sudo mv "${__pc_dir_config_s_ip__}/${__pc_download_filename__}/${__pc_download_filename__}m" "${__pc_dir_config_s_ip__}/"
-    sudo rm -rf "${__pc_dir_config_s_ip__}/${__pc_download_filename__}m"
-    sudo mv "${__pc_dir_config_s_ip__}/${__pc_download_filename__}m" "${__pc_dir_config_s_ip__}/${__pc_download_filename__}"
+    mv "${__pc_dir_config_s_ip__}/${__pc_download_filename__}/${__pc_download_filename__}" "${__pc_dir_config_s_ip__}/${__pc_download_filename__}/${__pc_download_filename__}m"
+    mv "${__pc_dir_config_s_ip__}/${__pc_download_filename__}/${__pc_download_filename__}m" "${__pc_dir_config_s_ip__}/"
+    rm -rf "${__pc_dir_config_s_ip__}/${__pc_download_filename__}m"
+    mv "${__pc_dir_config_s_ip__}/${__pc_download_filename__}m" "${__pc_dir_config_s_ip__}/${__pc_download_filename__}"
 
   fi
-  sudo chown -R "${SUDO_USER}" "${__pc_dir_config_s_ip__}"
-}
+  chown -R "${SUDO_USER}" "${__pc_dir_config_s_ip__}"
+} # end download_install_package_control
 
 add_to_applications_list(){
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   # Add to applications list
   directory_exists "
   ${USER_HOME}/.local/share/applications/
@@ -251,9 +218,14 @@ add_to_applications_list(){
   Icon=/opt/sublime_text/Icon/128x128/sublime-text.png
   Categories=Utility;TextEditor;Development;
 EOF
-}
+} # end add_to_applications_list
+
+_darwin__arm64() {
+  _darwin__64
+} # end _darwin__arm64
 
 _darwin__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
     local __online_version_from_page=$(_version)
     local SUBLIMENAME="Sublime%20Text%20Build%20${__online_version_from_page}.dmg"
     local SUBLIMENAME_4_HDUTIL="Sublime Text Build ${__online_version_from_page}.dmg"
@@ -289,7 +261,7 @@ _centos__64() {
 } # end _centos__64
 
 _fedora__64() {
-  _linux_prepare
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   local -i __online_version_from_page=$(_version)
   passed $__online_version_from_page
   if command -v "subl" >/dev/null 2>&1 ; then
@@ -354,7 +326,7 @@ exit 0
 } # end _fedora__64
 
 _fedora__32() {
-    execute_as_sudo
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
     local __online_version_from_page=$(_version)
     local SUBLIMENAME="sublime_text_3_build_${__online_version_from_page}_x32.tar.bz2"
     wait
@@ -386,7 +358,7 @@ _fedora__32() {
 } # end _fedora__32
 
 _ubuntu__64() {
-    execute_as_sudo
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
     local __online_version_from_page=$(_version)
     echo " version ${__online_version_from_page}"
     local SUBLIMENAME="sublime-text_build-${__online_version_from_page}_amd64.deb"
@@ -403,7 +375,7 @@ _ubuntu__64() {
 } # end _ubuntu__64
 
 _linux__32() {
-    execute_as_sudo
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
     local __online_version_from_page=$(_version)
     local SUBLIMENAME="sublime-text_build-${__online_version_from_page}_i386.deb"
     wait
@@ -415,6 +387,7 @@ _linux__32() {
 } # end _linux__32
 
 _windows__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
     local __online_version_from_page=$(curl -L https://www.sublimetext.com/3dev | sed -n "/<p\ class=\"latest\">/,/<\/div>/p" | head -1 | grep 'Build ....' | cut -c42-45)
     wait
     local SUBLIMENAME="Sublime%20Text%20Build%20${__online_version_from_page}%20x64%20Setup.exe"
@@ -427,6 +400,7 @@ _windows__64() {
 } # end _windows__64
 
 _windows__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
     local __online_version_from_page=$(curl -L https://www.sublimetext.com/3dev | sed -n "/<p\ class=\"latest\">/,/<\/div>/p" | head -1 | grep 'Build ....' | cut -c42-45)
     wait
     local SUBLIMENAME="Sublime%20Text%20Build%20${__online_version_from_page}%20Setup.exe"
@@ -438,6 +412,5 @@ _windows__32() {
     wait
 } # end _windows__32
 
-determine_os_and_fire_action
 
 

@@ -47,7 +47,11 @@ function just_download_it(){
 } # end _just_download_it
 
 _fedora__64() {
-  raise_to_sudo_and_user_home
+  anounce_command snap install discord
+	# anounce_command flatpak install flathub com.discordapp.Discord
+  exit 0
+	
+	raise_to_sudo_and_user_home
   [ $? -gt 0 ] && failed to raise_to_sudo_and_user_home
   # [ $? -gt 0 ] && exit 1
   enforce_variable_with_value USER_HOME "${USER_HOME}"

@@ -86,6 +86,7 @@ _ubuntu__64() {
 
 _darwin__64() {
   echo "Procedure not yet implemented. I don't know what to do."
+  sysctl -n hw.physicalcpu
 } # end _darwin__64
 
 _tar() {

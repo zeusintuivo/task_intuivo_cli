@@ -3,12 +3,45 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 #
+#colors
+[[ -z "${CYAN:-}" ]] && CYAN="\\033[38;5;123m"
+[[ -z "${PURPLE_BLUE:-}" ]] && PURPLE_BLUE="\\033[38;5;93m"
+[[ -z "${GRAY241:-}" ]] && GRAY241="\\033[38;5;241m"
+[[ -z "${YELLOW226:-}" ]] && YELLOW226="\\033[38;5;226m"
+[[ -z "${YELLOW214:-}" ]] && YELLOW214="\\033[38;5;214m"
+[[ -z "${RESET:-}" ]] && RESET="\\033[0m"
+[[ -z "${RED:-}" ]] && RED="\\033[38;5;1m"
+[[ -z "${BRIGHT_BLUE87:-}" ]] && BRIGHT_BLUE87="\\033[38;5;87m"
+LIGHTPINK="\\033[1;204m"
+TO_LIGHTPINK="\\o033[1;204m\\o033[48;5;0m"    # Notice the only the \\o changes NOT \\[]
+LIGHTPINK_OVER_DARKBLUE="\\033[38;5;204m\\033[48;5;21m"
+YELLOW_OVER_DARKBLUE="\\033[38;5;220m\\033[48;5;20m"
+TO_YELLOW_OVER_DARKBLUE="\\o033[38;5;220m\\o033[48;5;20m"   # Notice the only the \\o changes NOT \\[]
+# Change RED_NOT_VISIBLE to LIGHTPINK
+    RED_NOT_VISIBLE="\\033[39m \\033[38;5;124m"
+FROM_RED_NOT_VISIBLE="\\o33\\[39;00m\\o033\\[38;5;124m" # NOtice the \\o \\[ changes
+#          \\o033\\[39m \\o033\\[38;5;124m
+# Change BLUE_NOT_VISIBLE to YELLOW_OVER_DARKBLUE
+BLUE_NOT_VISIBLE="\\033[39;00m\\033[38;5;18m"
+FROM_BLUE_NOT_VISIBLE="\\o33\\[39;00m\\o033\\[38;5;18m"  # Notice the \\o \\[ changes
+FROM_BLUE_NOT_VISIBLE2="\\o033\\[38;5;18m"  # NOtice the \\o \\[ changes
+# Change BLURRY_PINK to YELLOW_OVER_DARKBLUE
+FROM_BLURRY_PINK="\\o33\\[39m\\o33\\[38;5;132;01m"
+DARK_PEACH="\\033[38;5;202m"
+TO_DARK_PEACH="\\o033[38;5;202m\\o033[48;5;0m"
+# Change MAGENTA_NOT_VISIBLE to TO_DARK_BLUE_OVER_PEACH
+FROM_MAGENTA_NOT_VISIBLE="\\o033\\[39m\\o033\\[38;5;124m"
+FROM_MAGENTA_NOT_VISIBLE2="\\o033\\[38;5;124m"
+TO_DARK_BLUE_OVER_PEACH="\\o033[38;5;20m\\o033[48;5;208m"
+DARK_BLUE_OVER_PEACH="\\033[38;5;20m\\033[48;5;208m"
+ LIGHTYELLOW="\\033[38;5;227m"
+ LIGHTGREEN="\\033[38;5;83m"
 # SUDO_USER only exists during execution of sudo
 # REF: https://stackoverflow.com/questions/7358611/get-users-home-directory-when-they-run-a-script-as-root
 # Global:
-if [[ -n "${1-x}" ]] ; then
+if [[ -n "${1:-x}" ]] ; then
 {
-  if [[ "$1" == "--test" ]]; then
+  if [[ "${1:-}" == "--test" ]]; then
   {
     DEBUG=1
     set -xE -o functrace   # Strict and Report Errors
@@ -79,8 +112,9 @@ fi
 # # fi
 
 function execute_as_sudo(){
-  if [ -z $SUDO_USER ] ; then
-    if [ -z "${THISSCRIPTCOMPLETEPATH+x}" ] ; then
+  local -i _DEBUG=${DEBUG:-0}
+  if [ -z ${SUDO_USER:-} ] ; then
+    if [[ -z "${THISSCRIPTCOMPLETEPATH+x}" ]] ; then
     {
         echo "error You need to add THISSCRIPTCOMPLETEPATH variable like this:"
         echo "  export THISSCRIPTCOMPLETEPATH "
@@ -101,20 +135,20 @@ function execute_as_sudo(){
     }
     else
     {
-        if [ -e "./$THISSCRIPTCOMPLETEPATH" ] ; then
+        if [[ -e "./${THISSCRIPTCOMPLETEPATH:-}" ]] ; then
         {
-          echo -e "4.1 sudologic execute_as_sudo.sh ${RED} ¿? ${LIGHTYELLOW} Attempting to reload:sudo \"./$THISSCRIPTCOMPLETEPATH\" \"${*}\" " 
-          sudo "./$THISSCRIPTCOMPLETEPATH" "${*}"
+          echo -e "4.1 sudologic execute_as_sudo.sh ${RED} ¿? ${LIGHTYELLOW} Attempting to reload:sudo \"./${THISSCRIPTCOMPLETEPATH:-}\" \"${*:-}\" " 
+          sudo "./${THISSCRIPTCOMPLETEPATH:-}" "${*:-}"
         }
-        elif ( command -v "$THISSCRIPTCOMPLETEPATH" >/dev/null 2>&1 );  then
+        elif ( command -v "${THISSCRIPTCOMPLETEPATH:-}" >/dev/null 2>&1 );  then
         {
           # echo "sudo sudo sudo "
-          echo -e "4.2 sudologic execute_as_sudo.sh ${RED} ¿? ${LIGHTYELLOW} Attempting to reload:sudo \"$THISSCRIPTCOMPLETEPATH\" \"${*}\" " 
-          sudo "$THISSCRIPTCOMPLETEPATH" "${*}"
+          echo -e "4.2 sudologic execute_as_sudo.sh ${RED} ¿? ${LIGHTYELLOW} Attempting to reload:sudo \"${THISSCRIPTCOMPLETEPATH:-}\" \"${*:-}\" " 
+          sudo "${THISSCRIPTCOMPLETEPATH:-}" "${*:-}"
         }
         else
         {
-          echo -e "\033[05;7m*** Failed to find script to recall it as sudo ...\033[0m $THISSCRIPTCOMPLETEPATH"
+          echo -e "\033[05;7m*** Failed to find script to recall it as sudo ...\033[0m ${THISSCRIPTCOMPLETEPATH:-}"
           exit 1
         }
         fi
@@ -127,7 +161,7 @@ function execute_as_sudo(){
   # REF: http://superuser.com/questions/195781/sudo-is-there-a-command-to-check-if-i-have-sudo-and-or-how-much-time-is-left
   local -i CAN_I_RUN_SUDO=$(sudo -n uptime 2>&1|grep "load"|wc -l)
   if [ ${CAN_I_RUN_SUDO} -gt 0 ]; then
-    (( DEBUG )) && echo -e "\033[01;7m*** Running as sudo ...\033[0m"
+    (( _DEBUG )) && echo -e "\033[01;7m*** Running as sudo ...\033[0m"
   else
     echo "Needs to run as sudo ... ${0}"
   fi
@@ -135,6 +169,7 @@ function execute_as_sudo(){
 }
 
 function enforce_variable_with_value(){
+  local -i _DEBUG=${DEBUG:-0}
   # repeated in struct_testing
   # Sample use
   # enforce_variable_with_value HOME $HOME
@@ -154,13 +189,13 @@ function enforce_variable_with_value(){
   # [ -n "${SUDO_USER+x}" ] && echo "SUDO_USER 111"
   # ( declare -p "HOME" ) && echo "HOME 2"
   typeset -r TESTING="that variable is listed and: ${CYAN}${1}${LIGHTYELLOW} and has value: ${RESET}<${YELLOW_OVER_DARKBLUE}${2}${RESET}>"
-  (( DEBUG )) && echo -e "${FUNCNAME[0]}"
-  (( DEBUG )) && echo ${@} -assume existing variable for this part
-  (( DEBUG )) && ( typeset -p "${1}"  &>/dev/null  ) && echo "1 defined 1"
-  (( DEBUG )) && [ -n "${2+x}" ]  && echo "1 defined 2"
-  (( DEBUG )) && ( typeset -p "${1}"  &>/dev/null ) &&  [ -n "${2+x}" ]  && echo "1 declared,defined and with value not empty 3"
-  (( DEBUG )) && ( ( typeset -p "${1}"  &>/dev/null  ) || echo "1 not defined 1")
-  (( DEBUG )) && ( ! typeset -p "${1}"  &>/dev/null  ) && echo "1 not defined 2"
+  (( _DEBUG )) && echo -e "${FUNCNAME[0]}"
+  (( _DEBUG )) && echo ${@} -assume existing variable for this part
+  (( _DEBUG )) && ( typeset -p "${1}"  &>/dev/null  ) && echo "1 defined 1"
+  (( _DEBUG )) && [ -n "${2+x}" ]  && echo "1 defined 2"
+  (( _DEBUG )) && ( typeset -p "${1}"  &>/dev/null ) &&  [ -n "${2+x}" ]  && echo "1 declared,defined and with value not empty 3"
+  (( _DEBUG )) && ( ( typeset -p "${1}"  &>/dev/null  ) || echo "1 not defined 1")
+  (( _DEBUG )) && ( ! typeset -p "${1}"  &>/dev/null  ) && echo "1 not defined 2"
   # echo QWER - assume non existant variable for this part
   # ( typeset -p "QWER"  &>/dev/null  ) && echo "QWER defined 1"
   # [ -n "${QWER+x}" ]  && echo "QWER defined 2"
@@ -171,7 +206,7 @@ function enforce_variable_with_value(){
   # exit 0
   if ( typeset -p "${1}"  &>/dev/null ) &&  [ -n "${2+x}" ] ; then
   {
-      (( DEBUG )) && echo -e "${LIGHTGREEN} ✔ ${LIGHTYELLOW} ${TESTING} has passed "
+      (( _DEBUG )) && echo -e "${LIGHTGREEN} ✔ ${LIGHTYELLOW} ${TESTING} has passed "
       return 0
   } 
   else 

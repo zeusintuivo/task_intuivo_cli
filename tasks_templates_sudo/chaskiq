@@ -1,0 +1,478 @@
+#!/usr/bin/bash
+
+
+  function _trap_on_error(){
+    local -ir __trapped_error_exit_num="${2:-0}"
+    echo -e "\\n \033[01;7m*** 2 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+    echo ". ${1}"
+    echo ". exit  ${__trapped_error_exit_num}  "
+    echo ". caller $(caller) "
+    echo ". ${BASH_COMMAND}"
+    local -r __caller=$(caller)
+    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+
+    # $(eval ${BASH_COMMAND}  2>&1; )
+    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+    exit ${__trapped_error_exit_num}
+  }
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  
+  function _trap_on_INT(){
+    local -ir __trapped_INT_num="${2:-0}"
+    echo -e "\\n \033[01;7m*** 7 INT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n INT ...\033[0m  \n \n "
+    echo ". ${1}"
+    echo ". INT  ${__trapped_INT_num}  "
+    echo ". caller $(caller) "
+    echo ". ${BASH_COMMAND}"
+    local -r __caller=$(caller)
+    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+
+    # $(eval ${BASH_COMMAND}  2>&1; )
+    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+    exit ${__trapped_INT_num}
+  }
+  trap  '_trap_on_INT $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  INT
+
+_git_clone() {
+  local _source="${1}"
+  local _target="${2}"
+  Checking "${SUDO_USER}" "${_target}"
+  pwd
+  if  it_exists_with_spaces "${_target}" && it_exists_with_spaces "${_target}/.git" ; then
+  {
+    cd "${_target}"
+    git config pull.rebase false    
+    git fetch
+    git checkout main
+    git pull
+    git fetch --tags origin
+  }
+  else
+  {
+   git clone "${_source}" "${_target}"
+  }
+  fi
+  chown -R "${SUDO_USER}" "${_target}"
+
+} # end _git_clone
+
+
+_debian_flavor_install() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  if (
+  install_requirements "linux" "
+    base64
+    unzip
+    curl
+    wget
+    ufw
+    nginx
+  "
+  ); then 
+    {
+      apt install base64 -y
+      apt install unzip -y
+      apt install nginx -y
+    }
+  fi
+  verify_is_installed "
+    unzip
+    curl
+    wget
+    tar
+    ufw
+    nginx
+  "
+  local PB_VERSION=0.16.7
+  local CODENAME="pocketbase_${PB_VERSION}_linux_amd64.zip"
+  local TARGET_URL="https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/${CODENAME}"
+  local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  directory_exists_with_spaces "${DOWNLOADFOLDER}"
+  cd "${DOWNLOADFOLDER}"
+  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+  # unzip "${DOWNLOADFOLDER}/${CODENAME}" -d $HOME/pb/
+  local UNZIPDIR="${USER_HOME}/_/software"
+  mkdir -p "${UNZIPDIR}"
+  _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
+  local PATHTOPOCKETBASE="${UNZIPDIR}/pocketbase"
+  local THISIP=$(myip)
+
+} # end _debian_flavor_install
+
+_redhat_flavor_install() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_redhat_flavor_install Procedure not yet implemented. I don't know what to do."
+} # end _redhat_flavor_install
+
+_arch_flavor_install() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_arch_flavor_install Procedure not yet implemented. I don't know what to do."
+} # end _readhat_flavor_install
+
+_arch__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _arch_flavor_install
+} # end _arch__32
+
+_arch__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _arch_flavor_install
+} # end _arch__64
+
+_centos__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _centos__32
+
+_centos__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _centos__64
+
+_debian__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _debian__32
+
+_debian__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _debian__64
+
+_fedora__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _fedora__32
+
+_fedora__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _fedora__64
+
+_gentoo__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _gentoo__32
+
+_gentoo__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _gentoo__64
+
+_madriva__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _madriva__32
+
+_madriva__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _madriva__64
+
+_suse__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _suse__32
+
+_suse__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _suse__64
+
+_ubuntu__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _ubuntu__32
+
+_ubuntu__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _ubuntu__64
+
+_rbenv_check() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+
+  Checking rbenv is installed
+  if ( ! command -v rbenv >/dev/null 2>&1; )  ; then
+  {
+    Installing rbenv 
+    local TARGET_URL="https://raw.githubusercontent.com/zeusintuivo/task_intuivo_cli/master/install_rbenv.bash"
+    Skipping "${CYAN}Based on \n${RED}\n/bin/bash -c \"\$(curl -fsSL "${TARGET_URL}")\"\n${RESET}${CYAN}\n and doing structed tested."
+    local DOWNLOADFOLDER="$(_find_downloads_folder)"
+    local CODENAME=install_rbenv.bash
+    _do_not_downloadtwice   "${TARGET_URL}"  "${DOWNLOADFOLDER}"  "${CODENAME}"
+    chmod a+x "${CODENAME}"
+    local NEWNAME=install_rbenv.bash
+    mv "${DOWNLOADFOLDER}/${CODENAME}" "${USER_HOME}/${NEWNAME}"
+    chmod a+x "${NEWNAME}"
+    cd  "${USER_HOME}"
+    Installing "${USER_HOME}/${NEWNAME}" 
+    su - "${SUDO_USER}" -c "${USER_HOME}/${NEWNAME}"
+    wait    
+  }
+  fi
+  \. "${USER_HOME}/.profile"
+  ensure rbenv or "rbenv ruby version manager is required to continue  [rbenv](https://github.com/sstephenson/rbenv) and Ruby. " 
+} # end _rbenv_check
+
+
+_ruby_check() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local PROJECTSBASEDIR=${1}
+  enforce_parameter_with_value           1        PROJECTSBASEDIR     "${PROJECTSBASEDIR}"    "one dir before clone to"
+  local PROJECTREPO=${2}
+  enforce_parameter_with_value           2        PROJECTREPO         "${PROJECTREPO}"        "path folder to clone to"
+  local PROJECTGITREPO=${3}
+  enforce_parameter_with_value           3        PROJECTGITREPO      "${PROJECTGITREPO}"     "a git url "
+
+
+  mkdir -p  "${PROJECTSBASEDIR}" 
+  cd  "${PROJECTSBASEDIR}" 
+  _git_clone  "${PROJECTGITREPO}" "${PROJECTREPO}"
+
+  Checking   Repo loanlink 
+  cd "${PROJECTREPO}"
+  pwd
+  Checking "ruby required in Gemfile   cat \"${PROJECTREPO}/Gemfile\" | grep ruby\\\ \\\"  | cut -d\\\" -f2 "
+  local _RUBYVERSION=$(cat "${PROJECTREPO}/Gemfile" | grep ruby\ \"  | cut -d\" -f2)
+  # set -x
+  enforce_variable_with_value _RUBYVERSION "${_RUBYVERSION}"
+  if [[ -z "${_RUBYVERSION}" ]] ; then
+  {
+    failed to get _RUBYVERSION:${_RUBYVERSION}
+  }
+  fi
+  Comment "Required ruby:${_RUBYVERSION}"
+  Checking "ruby installed su - \"${SUDO_USER}\" -c \"bash -c 'rbenv versions'\" "
+  Comment LINENO:$LINENO local isrubynotinstalled=
+  local isrubynotinstalled="$(su - "${SUDO_USER}" -c "bash -c 'rbenv versions'" | grep 'is not installed')"
+  enforce_variable_with_value isrubynotinstalled "${isrubynotinstalled}"
+  Comment LINENO:$LINENO local isrubyinstalled=
+  local isrubyinstalled="$(su - "${SUDO_USER}" -c "bash -c 'rbenv versions'" | grep "${_RUBYVERSION}")"
+  enforce_variable_with_value isrubyinstalled "${isrubyinstalled}"
+  Comment LINENO:$LINENO -z \"\${isrubynotinstalled}\"=${isrubyinstalled}
+  if [[ -z "${isrubynotinstalled}" ]] && [[ -z "${isrubyinstalled}" ]] ; then
+  {
+    echo "rbenv versions | grep ${_RUBYVERSION}   returned nothing"
+    warning to get isrubyinstalled:${isrubyinstalled}
+    Working Installing ruby: rbenv install ${_RUBYVERSION}
+    su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&  ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"/opt/homebrew/opt/libpq/bin:$PATH\"  rbenv install ${_RUBYVERSION} ' "
+  }
+  fi
+  isrubyinstalled="$(su - "${SUDO_USER}" -c "bash -c 'rbenv versions'" | grep "${_RUBYVERSION}")"
+  enforce_variable_with_value isrubyinstalled "${isrubyinstalled}"
+  Comment LINENO:$LINENO -z \"\${isrubynotinstalled}\"=${isrubyinstalled} 
+  if [[ -z "${isrubynotinstalled}" ]] && [[ -z "${isrubyinstalled}" ]] ; then
+  {
+    echo "rbenv versions | grep ${_RUBYVERSION}   returned nothing"
+    failed to get isrubyinstalled:${isrubyinstalled}
+  }
+  fi
+  Comment LINENO:$LINENO \\t \"\${_RUBYVERSION}\" \\t == \*\"\${isrubyinstalled}\"\* 
+  Comment LINENO:$LINENO \\t \\t \\t   "${_RUBYVERSION}"  \\t == \* \\t "${isrubyinstalled}" \\t \*
+  Comment LINENO:$LINENO -n \"\${isrubyinstalled}\" 
+  if [[ -n "${isrubyinstalled}" ]] &&  (echo ${isrubyinstalled} | grep "${_RUBYVERSION}" >/dev/null 2>&1; )  ; then
+  {
+    # set +x
+    Comment "ruby installed appears to be installed  "
+  }
+  else 
+  {
+    # set +x
+    Comment "LINENO:$LINENO ------ else" 
+    su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&  ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"/opt/homebrew/opt/libpq/bin:$PATH\"  rbenv install ${_RUBYVERSION} ' "
+  }
+  fi
+  Comment LINENO:$LINENO local _RUBYLOCATION=
+  # set +x
+  local _RUBYLOCATION="$(su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" && rbenv which ruby ' ")"
+  Comment LINENO:$LINENO  local _RUBYLOCATION="${_RUBYLOCATION}"
+  enforce_variable_with_value _RUBYLOCATION "${_RUBYLOCATION}"
+  "${_RUBYLOCATION}" -v
+} # end _rbenv_bundle
+
+
+_bundle_check() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local PROJECTREPO=${1}
+  enforce_parameter_with_value           1        PROJECTREPO         "${PROJECTREPO}"        "path folder to clone to"
+
+  cd  "${PROJECTREPO}" 
+  
+  Comment "### gem update"
+  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"/opt/homebrew/opt/libpq/bin:$PATH\" gem update --system' "
+  
+  
+  Comment "### bundle"
+  export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
+  Comment "### gem pg"
+  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"/opt/homebrew/opt/libpq/bin:$PATH\" gem install pg ' "
+  # Comment "### gem pg"
+  # su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"/opt/homebrew/opt/libpq/bin:$PATH\" gem install pg -v 1.2.3' "
+  Comment "### gem activerecord-postgres_enum"
+  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"/opt/homebrew/opt/libpq/bin:$PATH\" gem install activerecord-postgres_enum ' "
+  # Comment "### gem activerecord-postgres_enum"
+  # su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"/opt/homebrew/opt/libpq/bin:$PATH\" gem install activerecord-postgres_enum -v 1.6.0 ' "
+  Comment "### gem bundler"
+  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   gem install bundler ' "
+  # su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   gem install bundler:2.3.17 ' "
+  Comment "### bundle bundle install"
+  bundle config build.pg --with-pg-config=$(brew --prefix)/opt/libpq/bin/pg_config
+  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   bundle install ' "
+} # end _bundle_check
+
+
+_env_check() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local PROJECTREPO=${1}
+  enforce_parameter_with_value           1        PROJECTREPO         "${PROJECTREPO}"        "path folder to clone to"
+
+  cd  "${PROJECTREPO}" 
+  Comment "### _env_check"
+  echo "
+HOST=http://localhost:3000
+ASSET_HOST=http://localhost:3000
+WS=ws://localhost:3000/cable
+
+HOST=http://app.chaskiq.test:3000
+ASSET_HOST=http://app.chaskiq.test:3000
+WS=ws://app.chaskiq.test/cable
+
+
+SES_ADDRESS=
+SES_USER_NAME=
+SES_PASSWORD=
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_S3_BUCKET=
+AWS_S3_REGION=
+ADMIN_EMAIL=your@email.com
+ADMIN_PASSWORD=123456
+SNS_CONFIGURATION_SET=metrics
+DEFAULT_SENDER_EMAIL=
+  "  >> .env
+  chown "${SUDO_USER}" .env
+} # end  _env_check
+
+
+_migrate_check() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local PROJECTREPO=${1}
+  enforce_parameter_with_value           1        PROJECTREPO         "${PROJECTREPO}"        "path folder to clone to"
+
+  cd  "${PROJECTREPO}" 
+  Comment "### _migrate_check"
+
+  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" && bundle exec rake db:reset  '"
+  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" && bundle exec rake db:create db:migrate  '" 
+  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" && bundle exec rake db:seed data:migrate '"
+  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" && RAILS_ENV=test bundle exec rake db:resest '"
+  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" && RAILS_ENV=test bundle exec rake db:test:prepare '"
+} # end  _migrate_check
+
+_etc_hosts_file_check(){
+  local SH_CONTENT="
+127.0.0.1 app.chaskiq.test
+"
+  # trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _add_variables_to_bashrc_zshrc nvm" && echo -e "${RESET}" && return 0' ERR
+  echo "${SH_CONTENT}"
+  local INITFILE INITFILES="
+   /etc/hosts
+  "
+  while read INITFILE; do
+  {
+    [ -z ${INITFILE} ] && continue    
+    (_if_not_contains  "${INITFILE}" "app.chaskiq.test" ) || Configuring ${INITFILE}
+    (_if_not_contains  "${INITFILE}" "app.chaskiq.test" ) && Skipping configuration for ${INITFILE}
+    #                   filename            value      || do this .............
+    (_if_not_contains  "${INITFILE}" "app.chaskiq.test" ) || echo -e "${SH_CONTENT}" >>"${INITFILE}"
+  }
+  done <<< "${INITFILES}"
+
+} # end _etc_hosts_file_check
+
+_darwin__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  
+  Installing REF: https://dev.chaskiq.io/getting-started/installation-on-mac-for-development
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  
+
+
+  Comment "### install_requirements  darwin"
+  Comment LINENO:$LINENO  local _requirements=
+  local _requirements=" 
+    rbenv
+    redis
+    git
+    ghostscript
+    imagemagick
+  "
+  if ( ! install_requirements "darwin" " ${_requirements}"   ); then 
+  {
+    failed "to install some or one of ::\" ${_requirements}\":: "
+  }
+  else
+  {
+    # postgresql@12
+    su - "${SUDO_USER}" -c "brew install  postgresql@15"
+  }
+  fi
+  
+  _rbenv_check
+
+
+  local PROJECTSBASEDIR="${USER_HOME}/_/rnd/"
+  local PROJECTREPO="${USER_HOME}/_/rnd/chaskiq"
+  local PROJECTGITREPO="https://github.com/chaskiq/chaskiq.git"
+  
+  _ruby_check "${PROJECTSBASEDIR}" "${PROJECTREPO}" "${PROJECTGITREPO}"
+  _env_check "${PROJECTREPO}" 
+  _etc_hosts_file_check
+  _bundle_check "${PROJECTREPO}" 
+  _migrate_check "${PROJECTREPO}"   
+
+  Comment "
+  # tests
+  bundle exec rspec
+  # server
+  bundle exec rails server
+  # assets precompilation
+  yarn start
+  # backround tasks
+  bundle exec sidekiq
+  # generate new admin password
+  # The rails admin_generator task will create an admin user for you, 
+  # you will need to have an ADMIN_EMAIL and ADMIN_PASSWORD on your .env try these credentials:
+  rails admin_generator
+  "
+
+  # echo "_darwin__64 Procedure not yet implemented. I don't know what to do."
+} # end _darwin__64
+
+_darwin__arm64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _darwin__64
+  # echo "_darwin__arm64 Procedure not yet implemented. I don't know what to do."
+} # end _darwin__arm64
+
+_tar() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_tar Procedure not yet implemented. I don't know what to do."
+} # end tar
+
+_windows__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_windows__64 Procedure not yet implemented. I don't know what to do."
+} # end _windows__64
+
+_windows__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_windows__32 Procedure not yet implemented. I don't know what to do."
+} # end _windows__32
