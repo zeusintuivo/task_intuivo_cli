@@ -481,6 +481,10 @@ _darwin__64() {
   su - "${SUDO_USER}" -c 'ruby -v'
 } # end _darwin__64
 
+_darwin__arm64() {
+  _darwin__64
+} # end _darwin__arm64
+  
 _tar() {
   echo "Procedure not yet implemented. I don't know what to do."
 } # end tar

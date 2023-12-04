@@ -243,6 +243,10 @@ directory_exists_with_spaces "${USER_HOME}"
 
 
 #!/usr/bin/bash
+echo "REF: https://github.com/sonyarianto/pocketbase-docker"
+echo "REF: php install https://www.digitalocean.com/community/tutorials/how-to-install-linux-nginx-mysql-php-lemp-stack-on-ubuntu-22-04"
+echo "REF: php install https://ubuntu.com/server/docs/programming-php"
+echo "REF: nginx failed https://stackoverflow.com/questions/55698042/certbot-misconfigurationerror-nginx-restart-failed"
 
 _debian_flavor_install() {
   if ( ! install_requirements "linux" "
