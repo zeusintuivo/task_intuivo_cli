@@ -135,7 +135,7 @@ if [[ -e "'${USER_HOME}'/.kiex" ]] ; then
 {
   test -s "'${USER_HOME}'/.kiex/scripts/kiex" && export KIEX_ROOT="'${USER_HOME}'/.kiex/scripts"
   test -s "'${USER_HOME}'/.kiex/scripts/kiex" && export PATH="'${USER_HOME}'/.kiex/scripts:${PATH}"
-  test -s "'${USER_HOME}'/.kiex/scripts/kiex" && source "'${USER_HOME}'/.kiex/scripts:${PATH}"
+  test -s "'${USER_HOME}'/.kiex/scripts/kiex" && source "'${USER_HOME}'/.kiex/scripts/kiex"
 }
 fi
 '
