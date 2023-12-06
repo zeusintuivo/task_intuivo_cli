@@ -432,7 +432,7 @@ _package_list_installer() {
         _err=$?
         if [ ${_err} -gt 0 ] ; then
         {
-          echo -e "${RED}" 
+          echo -e "${RED}"
           echo failed to install requirements "${package}"
           echo -e "${RESET}"
         }
@@ -512,9 +512,10 @@ if [[ -e "'${USER_HOME}'/.kiex" ]] ; then
 {
   test -s "'${USER_HOME}'/.kiex/scripts/kiex" && export KIEX_ROOT="'${USER_HOME}'/.kiex/scripts"
   test -s "'${USER_HOME}'/.kiex/scripts/kiex" && export PATH="'${USER_HOME}'/.kiex/scripts:${PATH}"
+  test -s "'${USER_HOME}'/.kiex/scripts/kiex" && source "'${USER_HOME}'/.kiex/scripts:${PATH}"
 }
 fi
-' 
+'
   echo "${KIEX_SH_CONTENT}"
   local INITFILE INITFILES="
    .bashrc
@@ -534,7 +535,7 @@ fi
   # type kiex
   test -s "'${USER_HOME}'/.kiex/scripts/kiex" && unlink "${USER_HOME}/.kiex/scripts/kiex"
 	cp "${USER_HOME}/.kiex/kiex"  "${USER_HOME}/.kiex/scripts"
-  export PATH="${USER_HOME}/.kiex/scripts:${PATH}"	
+  export PATH="${USER_HOME}/.kiex/scripts:${PATH}"
 	source "${USER_HOME}/.kiex/scripts/kiex"
   _finale_message
 
@@ -543,26 +544,26 @@ fi
 _finale_message(){
   echo
   echo "
-   ___________        .__   <>           <>                    
-   \_   _____/_______ |  |  ___ __    __ __. _______          
-    |    __)_ \_  __ \|  |  \ | \ \  / / \ | \\\_  __ \\ 
-    |        \ |  | \/|  |__| |  \_|/_/  | |  |  | \\/        
-   /_______  / |__|   |____/|_|  / /\ \  |_|  |__|             
+   ___________        .__   <>           <>
+   \_   _____/_______ |  |  ___ __    __ __. _______
+    |    __)_ \_  __ \|  |  \ | \ \  / / \ | \\\_  __ \\
+    |        \ |  | \/|  |__| |  \_|/_/  | |  |  | \\/
+   /_______  / |__|   |____/|_|  / /\ \  |_|  |__|
            \/                   /_/  \_\
 
 
-   ____   ____                     .__                       
-   \   \ /   / ____ _______  ______|__|  ____    ____        
+   ____   ____                     .__
+   \   \ /   / ____ _______  ______|__|  ____    ____
     \   Y   /_/ __ \\\\_  __ \/  ___/|  | /  _ \\  /    \\
-     \     / \  ___/ |  | \/\___ \ |  |(  <_> )|   |  \\ 
-      \___/   \___  >|__|  /____  >|__| \____/ |___|  /      
-                  \/            \/                  \/       
-      _____                                                  
-     /     \  _____     ____  _____     ____    ____ _______ 
+     \     / \  ___/ |  | \/\___ \ |  |(  <_> )|   |  \\
+      \___/   \___  >|__|  /____  >|__| \____/ |___|  /
+                  \/            \/                  \/
+      _____
+     /     \  _____     ____  _____     ____    ____ _______
     /  \ /  \ \__  \   /    \ \__  \   / ___\ _/ __ \\\\_  __ \\
    /    Y    \ / __ \_|   |  \ / __ \_/ /_/  >\  ___/ |  | \/
-   \____|__  /(____  /|___|  /(____  /\___  /  \___  >|__|   
-           \/      \/      \/      \//_____/       \/       
+   \____|__  /(____  /|___|  /(____  /\___  /  \___  >|__|
+           \/      \/      \/      \//_____/       \/
   "
 } # end _finale_message
 
@@ -686,7 +687,7 @@ _darwin__64() {
   _package_list_installer "${packages}"
   _git_clone "https://github.com/taylor/kiex.git" "${USER_HOME}/.kiex"
   local MSG=$(_install_and_add_variables_to_bashrc_zshrc)
-  echo "${MSG}" 
+  echo "${MSG}"
 } # end _darwin__64
 
 _darwin__arm64() {
