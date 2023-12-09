@@ -141,6 +141,10 @@ _ubuntu__64() {
   make && sudo make install
 } # end _ubuntu__64
 
+_darwin__arm64() {
+  _darwin__64
+} # end _darwin__arm64
+
 _darwin__64() {
   Comment 'REF: https://terminalroot.com/drogon-cpp-the-fastest-web-framework-in-the-world/'
   export HOMEBREW_NO_AUTO_UPDATE=1
@@ -183,33 +187,6 @@ _darwin__64() {
   make && sudo make install
 
 } # end _darwin__64
-
-test_speed () {
-  url=https://velophil.berlin
-  benchrequest -r2 -c15 -s1 "${url}"
-  ab -n 100 -c 10 "${url}"
-  siege -v -r 2 -c 15 "${url}"
-
-  port=8083
-  url=https://velophil.berlin
-  oha -n 10000 "${url}"
-  reset 
-  oha -n 1000000 -c 100 --latency-correction --disable-keepalive "${url}"
-  oha -n 1000000 -c 100 --latency-correction --disable-keepalive https://unsaferust.org/
-  oha -n 1000000 -c 100 --latency-correction --disable-keepalive https://velophil.berlin
-  oha -n 1000000 -c 100 --latency-correction --disable-keepalive https://pixum.de
-
-
-  port=8083
-  url=https://velophil.berlin
-  duration=30
-  wrk -t 6 -c 1000 -d 3s "${url}"
-  reset 
-  wrk -t 6 -c 1000 -d ${duration}s "${url}"
-  echo "Url tested: ${url}"
-
-
-}
 
 _tar() {
   echo "Procedure not yet implemented. I don't know what to do."
