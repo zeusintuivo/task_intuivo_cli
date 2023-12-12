@@ -1586,6 +1586,7 @@ _migrate_check() {
   Working "Dropping DBS and recreating, create"
 
   local _one _databases="
+    coba-sap-archiving
     coba-loanlink-api
     coba-loanlink-emails
     coba-loanlink-credit_check
