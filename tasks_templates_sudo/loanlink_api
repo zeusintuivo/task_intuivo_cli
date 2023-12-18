@@ -19,7 +19,7 @@ set -u
     exit ${__trapped_error_exit_num}
   }
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  
+
   function _trap_on_INT(){
     local -ir __trapped_INT_num="${2:-0}"
     echo -e "\\n \033[01;7m*** 7 INT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n INT ...\033[0m  \n \n "
@@ -46,34 +46,34 @@ _git_clone() {
   if  it_exists_with_spaces "${_target}" && it_exists_with_spaces "${_target}/.git" ; then
   {
     cd "${_target}"
-		if ( git config pull.rebase false ) ; then 
+		if ( git config pull.rebase false ) ; then
 		{
-	    warning "could not git config pull.rebase false"		
+	    warning "could not git config pull.rebase false"
     }
 		fi
-    if ( git fetch -f origin master:master ) ; then 
+    if ( git fetch -f origin master:master ) ; then
 		{
-	    warning "could not git fetch -f origin master:master"		
+	    warning "could not git fetch -f origin master:master"
     }
 		fi
-		if ( git fetch -f origin main:main ) ; then 
+		if ( git fetch -f origin main:main ) ; then
 		{
-	    warning "could not git fetch -f origin main:main"		
+	    warning "could not git fetch -f origin main:main"
     }
 		fi
-		if ( git fetch  ) ; then 
+		if ( git fetch  ) ; then
 		{
-	    warning "could not git fetch"		
+	    warning "could not git fetch"
     }
 		fi
-		if ( git pull ) ; then 
+		if ( git pull ) ; then
 		{
-	    warning "could not git pull"		
+	    warning "could not git pull"
     }
 		fi
-		if ( git fetch --tags origin ) ; then 
+		if ( git fetch --tags origin ) ; then
 		{
-	    warning "could not git fetch --tags origin"		
+	    warning "could not git fetch --tags origin"
     }
 		fi
   }
@@ -101,10 +101,10 @@ _find_project_location_PROJECT_DIR_F() {
 		   /repo/work/finlink/projects
 		"
 		local one=""
-		while read -r one ; do 
+		while read -r one ; do
 		{
 			[[ -z "${one}" ]] && continue
- 		  if it_exists_with_spaces "${one}" ; then 
+ 		  if it_exists_with_spaces "${one}" ; then
 		  {
         _target_project="${one}"
 				break
@@ -112,13 +112,13 @@ _find_project_location_PROJECT_DIR_F() {
 		  fi
 		}
     done <<< "${_list_posssibles}"
-	
+
 		[[ -z "${one}" ]] && failed "Could not find/determine location of project" && exit 1
 
 		passed "found of project dir ${_target_project}"
 		PROJECT_DIR_F="${_target_project}"
 		return 0
-	
+
 } # end _find_project_location_PROJECT_DIR_F
 
 _debian_flavor_install() {
@@ -131,14 +131,14 @@ _debian_flavor_install() {
     curl
     tar
     wget
-    build-essential 
+    build-essential
     libpq-dev
     nodejs
-    # postgresql-client-12 
+    # postgresql-client-12
     shared-mime-info
     redis
   "
-  ); then 
+  ); then
     {
       wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
     }
@@ -161,8 +161,8 @@ _debian_flavor_install() {
     Working "Step .step1_brew_check_requirements_postgress_12_install"
     _brew_check_requirements_postgress_12_install
     _execute_project_command "${PROJECTREPO}" "touch \"${PROJECTREPO}/.step1_brew_check_requirements_postgress_12_install\" "
-  } 
-  fi  
+  }
+  fi
   if [[ ! -f "${PROJECTREPO}/.step2_attempt_to_download_docker"  ]] ; then
   {
     # _attempt_to_download_docker amd64
@@ -170,57 +170,57 @@ _debian_flavor_install() {
     Working "Step .step2_attempt_to_download_docker"
     _attempt_to_download_docker $(uname -m)
     _execute_project_command "${PROJECTREPO}" "touch \"${PROJECTREPO}/.step2_attempt_to_download_docker\" "
-  } 
-  fi  
+  }
+  fi
   if [[ ! -f "${PROJECTREPO}/.step3_rbenv_check"  ]] ; then
   {
     Working "Step .step3_rbenv_check"
     _rbenv_check
     _execute_project_command "${PROJECTREPO}" "touch \"${PROJECTREPO}/.step3_rbenv_check\" "
-  } 
-  fi  
+  }
+  fi
   if [[ ! -f "${PROJECTREPO}/.step4_ruby_check"  ]] ; then
   {
     Working "Step .step4_ruby_check"
     _ruby_check "${PROJECTSBASEDIR}" "${PROJECTREPO}" "${PROJECTGITREPO}"
     _execute_project_command "${PROJECTREPO}" "touch \"${PROJECTREPO}/.step4_ruby_check\" "
-  } 
-  fi  
+  }
+  fi
   if [[ ! -f "${PROJECTREPO}/.step5_bundle_check"  ]] ; then
   {
     Working "Step .step5_bundle_check"
-    _bundle_check "${PROJECTREPO}" 
+    _bundle_check "${PROJECTREPO}"
     _execute_project_command "${PROJECTREPO}" "touch \"${PROJECTREPO}/.step5_bundle_check\" "
-  } 
-  fi  
+  }
+  fi
   if [[ ! -f "${PROJECTREPO}/.step6_env_check"  ]] ; then
   {
     Working "Step .step6_env_check"
-    _env_check "${PROJECTREPO}" 
+    _env_check "${PROJECTREPO}"
     _execute_project_command "${PROJECTREPO}" "touch \"${PROJECTREPO}/.step6_env_check\" "
-  } 
-  fi  
+  }
+  fi
   if [[ ! -f "${PROJECTREPO}/.step7_postgres_start_check"  ]] ; then
   {
     Working "Step .step7_postgres_start_check"
-    _postgres_start_check "${PROJECTREPO}" 
+    _postgres_start_check "${PROJECTREPO}"
     _execute_project_command "${PROJECTREPO}" "touch \"${PROJECTREPO}/.step7_postgres_start_check\" "
-  } 
-  fi  
+  }
+  fi
   if [[ ! -f "${PROJECTREPO}/.step8_migrate_check"  ]] ; then
   {
     Working "Step .step8_migrate_check"
-    _migrate_check "${PROJECTREPO}" 
+    _migrate_check "${PROJECTREPO}"
     _execute_project_command "${PROJECTREPO}" "touch \"${PROJECTREPO}/.step8_migrate_check\" "
-  } 
-  fi  
+  }
+  fi
   if [[ ! -f "${PROJECTREPO}/.step9_vpn_check"  ]] ; then
   {
     Working "Step .step9_vpn_check"
-    _vpn_check "${PROJECTREPO}" 
+    _vpn_check "${PROJECTREPO}"
     _execute_project_command "${PROJECTREPO}" "touch \"${PROJECTREPO}/.step9_vpn_check\" "
-  } 
-  fi  
+  }
+  fi
 
 
 } # end _debian_flavor_install
@@ -238,67 +238,67 @@ _redhat_flavor_install() {
 
 	_find_project_location_PROJECT_DIR_F
   local PROJECTSBASEDIR="${PROJECT_DIR_F}"
-  local PROJECTREPO="${PROJECT_DIR_F}/loanlink-api" 
+  local PROJECTREPO="${PROJECT_DIR_F}/loanlink-api"
   local PROJECTGITREPO="git@github.com:LoanLink/loanlink-api.git"
 
   if [[ ! -f "${PROJECTREPO}/.step1_brew_check_requirements_postgress_12_install"  ]] ; then
   {
     Working "Step .step1_brew_check_requirements_postgress_12_install"
     _brew_check_requirements_postgress_12_install
-    local _touch_name="\"${PROJECTREPO}/.step1_brew_check_requirements_postgress_12_install\"" 
+    local _touch_name="\"${PROJECTREPO}/.step1_brew_check_requirements_postgress_12_install\""
     _execute_project_command "${PROJECTREPO}" "touch ${_touch_name} "
-  } 
-  fi  
+  }
+  fi
   if [[ ! -f "${PROJECTREPO}/.step3_rbenv_check"  ]] ; then
   {
     Working "Step .step3_rbenv_check"
     _rbenv_check
     _execute_project_command "${PROJECTREPO}" "touch \"${PROJECTREPO}/.step3_rbenv_check\" "
-  } 
-  fi  
+  }
+  fi
   if [[ ! -f "${PROJECTREPO}/.step4_ruby_check"  ]] ; then
   {
     Working "Step .step4_ruby_check"
     _ruby_check "${PROJECTSBASEDIR}" "${PROJECTREPO}" "${PROJECTGITREPO}"
     _execute_project_command "${PROJECTREPO}" "touch \"${PROJECTREPO}/.step4_ruby_check\" "
-  } 
-  fi  
+  }
+  fi
   if [[ ! -f "${PROJECTREPO}/.step5_bundle_check"  ]] ; then
   {
     Working "Step .step5_bundle_check"
-    _bundle_check "${PROJECTREPO}" 
+    _bundle_check "${PROJECTREPO}"
     _execute_project_command "${PROJECTREPO}" "touch \"${PROJECTREPO}/.step5_bundle_check\" "
-  } 
-  fi  
+  }
+  fi
   if [[ ! -f "${PROJECTREPO}/.step6_env_check"  ]] ; then
   {
     Working "Step .step6_env_check"
-    _env_check "${PROJECTREPO}" 
+    _env_check "${PROJECTREPO}"
     _execute_project_command "${PROJECTREPO}" "touch \"${PROJECTREPO}/.step6_env_check\" "
-  } 
-  fi  
+  }
+  fi
   if [[ ! -f "${PROJECTREPO}/.step7_postgres_start_check"  ]] ; then
   {
     Working "Step .step7_postgres_start_check"
-    _postgres_start_check "${PROJECTREPO}" 
+    _postgres_start_check "${PROJECTREPO}"
     _execute_project_command "${PROJECTREPO}" "touch \"${PROJECTREPO}/.step7_postgres_start_check\" "
-  } 
-  fi  
+  }
+  fi
   if [[ ! -f "${PROJECTREPO}/.step8_migrate_check"  ]] ; then
   {
     Working "Step .step8_migrate_check"
-    _migrate_check "${PROJECTREPO}" 
+    _migrate_check "${PROJECTREPO}"
     _execute_project_command "${PROJECTREPO}" "touch \"${PROJECTREPO}/.step8_migrate_check\" "
-  } 
-  fi 
+  }
+  fi
   if [[ ! -f "${PROJECTREPO}/.step9_migrate_development_check"  ]] ; then
   {
     Working "Step .step9_migrate_development_check"
-    _migrate_development_check "${PROJECTREPO}" 
+    _migrate_development_check "${PROJECTREPO}"
     _execute_project_command "${PROJECTREPO}" "touch \"${PROJECTREPO}/.step9_migrate_development_check\" "
-  } 
-  fi  
- 
+  }
+  fi
+
 
 
 } # end _redhat_flavor_install
@@ -391,50 +391,50 @@ _ubuntu__64() {
 _brew_you_said_no() {
 		  warning "You said no. So we are keeping the current one"
 			echo -e  "Try to run :
-			\ncurl -O - https://raw.githubusercontent.com/zeusintuivo/task_intuivo_cli/master/install_brew.bash 
+			\ncurl -O - https://raw.githubusercontent.com/zeusintuivo/task_intuivo_cli/master/install_brew.bash
 			\nchmod -x install_brew.bash
 			\n./install_brew.bash
 			\n		"
 			failed "You said no. install brew first then, or Check your .dot files"
 			exit 1 # flow should stop
-  
+
 } # end _brew_you_said_no
 
 _brew_source_profiles(){
   if [[ -f "${USER_HOME}/.profile" ]] ; then
-	{  
-		if ! 	\. "${USER_HOME}/.profile" ; then 
+	{
+		if ! 	\. "${USER_HOME}/.profile" ; then
 		{
-			echo " 
-			If it complains about ''Begin Root or sudo'' on a certain line 
+			echo "
+			If it complains about ''Begin Root or sudo'' on a certain line
 			exclude that command with this code:
 
-			if [ -n "${SUDO_USER:-}" ] ; then 
+			if [ -n "${SUDO_USER:-}" ] ; then
 			{
 				 ...line to exclude from sudo /root user
 			}
-		  fi	 
+		  fi
       "
-			failed something is wrong with file:"${USER_HOME}/.profile" 
+			failed something is wrong with file:"${USER_HOME}/.profile"
 		}
 		fi
 	}
 	fi
   if [[ -f "${USER_HOME}/.bash_profile" ]] ; then
 	{
-	  if ! 	\. "${USER_HOME}/.bash_profile" ; then 
+	  if ! 	\. "${USER_HOME}/.bash_profile" ; then
 		{
-			echo " 
-			If it complains about ''Begin Root or sudo'' on a certain line 
+			echo "
+			If it complains about ''Begin Root or sudo'' on a certain line
 			exclude that command with this code:
 
-			if [ -n "${SUDO_USER:-}" ] ; then 
+			if [ -n "${SUDO_USER:-}" ] ; then
 			{
 				 ...line to exclude from sudo /root user
 			}
-		  fi	 
+		  fi
       "
-			failed something is wrong with file:"${USER_HOME}/.bash_profile" 
+			failed something is wrong with file:"${USER_HOME}/.bash_profile"
 		}
 		fi
 	}
@@ -465,7 +465,7 @@ _brew_check_requirements_postgress_12_install() {
     warning "failed to find brew"
 		found=1
   }
-  else 
+  else
 	{
 		found=0
     _target_bin_brew="$(echo -n "${_target_bin_brew}" | tail -1)"
@@ -481,12 +481,12 @@ _brew_check_requirements_postgress_12_install() {
 	}
 	fi
 
-	
+
 	if [ ${found} -eq 1  ]  ; then
   {
 	  passed "Seems like brew is not installed. Should I attempt to RESET and resintall brew. WARNING this will remove the brew folder and all its installations [Y/n] ?"
 	  if yes_or_no ; then  # using then so that return 1 will not trigger trap
-  	{   
+  	{
 			_err=0 # yes
 		}
 		else
@@ -517,7 +517,7 @@ _brew_check_requirements_postgress_12_install() {
 			exit 1 # added in case the above function fails
     }
 		fi
-		# else yes 
+		# else yes
   	passed "You said ${RED} YES ${CYAN} twice ${YELLOW} "
     Installing Erasing, Reseting and Re installing homebrew / linuxBrew
     local DOWNLOADFOLDER="$(_find_downloads_folder)"
@@ -538,25 +538,25 @@ _brew_check_requirements_postgress_12_install() {
 		}
 		fi
 		_brew_source_profiles
- 	
+
 		wait
   } # not found
   fi
   } # not command -v brew
 	fi
-  # ensure brew or "Homebrew is required to continue " 
+  # ensure brew or "Homebrew is required to continue "
 
   Comment "### install_requirements  darwin"
   Comment LINENO:$LINENO  local _requirements=
   local -i _err=0
-	local _requirements=" 
+	local _requirements="
       shared-mime-info
       libpq
       redis
       ruby-build
   "
   Comment LINENO:$LINENO install_requirements
-  if ( ! install_requirements "brew" " ${_requirements}"   ); then 
+  if ( ! install_requirements "brew" " ${_requirements}"   ); then
   {
     Comment LINENO:$LINENO failed install_requirements
     failed "to install some or one of ::\" ${_requirements}\":: "
@@ -637,7 +637,7 @@ _brew_check_requirements_postgress_12_install() {
 				fi
 			}
 			fi
-    } 
+    }
 	  else
 	  {
 			Installing "${__pg}"
@@ -657,7 +657,7 @@ _brew_check_requirements_postgress_12_install() {
     # # --lc-collate, --lc-ctype, --lc-messages, --lc-monetary, --lc-numeric, and --lc-time: Set the locale settings as defined in your custom configuration file. ' '
     # # --authz=postgres: Specifies the default authorization identifier. ' '
     # # --pwfile=-: Indicates that the password will be read from stdin. ' '
-    # # 
+    # #
 		local -i _err=0
 		_target_brew_base_pg="$(_try_more_times_find "
 var/${__pg}
@@ -671,10 +671,10 @@ var/postgresql
       passed "Failed to find brw var"
 		}
 		fi
-		
+
 		_target_brew_base_pg="$(echo -n "${_target_brew_base_pg}" | tail -1)"
 		enforce_variable_with_value _target_brew_base_pg "${_target_brew_base_pg}"
-    
+
 		passed found of var "${__pg} = ${_target_brew_base_pg}"
 
 		Message "preparing some files inside ${USER_HOME} with some defaults"
@@ -706,7 +706,7 @@ EOF
 postgres       postgres              postgres
 EOF
     echo "psql -d postgres -h 0.0.0.0 -U ${SUDO_USER}  -W
-    
+
     SHOW config_file;
                        config_file
     -------------------------------------------------
@@ -714,14 +714,14 @@ EOF
     (1 row)
     "
     echo "psql -d postgres -h 0.0.0.0 -U ${SUDO_USER} -W
-    
+
     SHOW hba_file;
                       hba_file
     ---------------------------------------------
      ${_target_brew_base_pg}/pg_hba.conf
     (1 row)
     "
-    # su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' cat /opt/homebrew/opt/postgresql@12/share/postgresql@12/pg_hba.conf.sample \"${USER_HOME}/custom-pg_hba_postgres12.conf\" >   /opt/homebrew/var/postgresql@12/pg_hba.conf " 
+    # su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' cat /opt/homebrew/opt/postgresql@12/share/postgresql@12/pg_hba.conf.sample \"${USER_HOME}/custom-pg_hba_postgres12.conf\" >   /opt/homebrew/var/postgresql@12/pg_hba.conf "
 
 		local _context="${_target_brew_base_pg}/pg_hba.conf"
  		if file_exists_with_spaces "${_context}" ; then
@@ -746,7 +746,7 @@ EOF
 				CURRENTDATE=$(date +%Y%m%d)
 				CURRENTTIME="$(date +%H:%M)"
         cp "${_context}" "${_context}_${CURRENTDATE}_${CURRENTTIME}"
-        su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' cat  \"${USER_HOME}/custom-pg_hba_postgres12.conf\" >   ${_context}" 
+        su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' cat  \"${USER_HOME}/custom-pg_hba_postgres12.conf\" >   ${_context}"
 			}
 			fi
 		}
@@ -756,19 +756,19 @@ EOF
  			CURRENTDATE=$(date +%Y%m%d)
 			CURRENTTIME="$(date +%H:%M)"
       cp "${_context}" "${_context}_${CURRENTDATE}_${CURRENTTIME}"
-      su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' cat  \"${USER_HOME}/custom-pg_hba_postgres12.conf\" >   ${_context}" 
+      su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' cat  \"${USER_HOME}/custom-pg_hba_postgres12.conf\" >   ${_context}"
 		}
 		fi
 
 		echo "psql -d postgres -h 0.0.0.0 -U ${SUDO_USER} -W
-    
+
     SHOW ident_file;
                       ident_file
     -----------------------------------------------
      ${_target_brew_base_pg}/pg_ident.conf
     (1 row)
     "
-    # su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' cat /opt/homebrew/opt/postgresql@12/share/postgresql@12/pg_ident.conf.sample \"${USER_HOME}/custom-pg_hba_postgres12.conf\" >  /opt/homebrew/var/postgresql@12/pg_ident.conf " 
+    # su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' cat /opt/homebrew/opt/postgresql@12/share/postgresql@12/pg_ident.conf.sample \"${USER_HOME}/custom-pg_hba_postgres12.conf\" >  /opt/homebrew/var/postgresql@12/pg_ident.conf "
  		local _context="${_target_brew_base_pg}/pg_ident.conf"
  		if file_exists_with_spaces "${_context}" ; then
 		{
@@ -792,7 +792,7 @@ EOF
  				CURRENTDATE=$(date +%Y%m%d)
 				CURRENTTIME="$(date +%H:%M)"
         cp "${_context}" "${_context}_${CURRENTDATE}_${CURRENTTIME}"
-        su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' cat \"${USER_HOME}/custom-pg_hba_postgres12.conf\" >  ${_context}" 
+        su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' cat \"${USER_HOME}/custom-pg_hba_postgres12.conf\" >  ${_context}"
 			}
 			fi
 		}
@@ -802,7 +802,7 @@ EOF
  			CURRENTDATE=$(date +%Y%m%d)
 			CURRENTTIME="$(date +%H:%M)"
       cp "${_context}" "${_context}_${CURRENTDATE}_${CURRENTTIME}"
-      su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' cat \"${USER_HOME}/custom-pg_hba_postgres12.conf\" >  ${_context}" 
+      su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' cat \"${USER_HOME}/custom-pg_hba_postgres12.conf\" >  ${_context}"
 		}
 		fi
 		_brew_postgres_redis_restart
@@ -818,7 +818,7 @@ EOF
 _brew_postgres_redis_restart() {
 
     Message "brew services restart  postgresql@12 "
-    # anounce_command brew services restart  "postgresql@12" 
+    # anounce_command brew services restart  "postgresql@12"
     # anounce_command su - "${SUDO_USER}" -c "brew services restart  postgresql@12 "
     local -i _err=0
 		local _target_bin_brew=""
@@ -835,13 +835,13 @@ _brew_postgres_redis_restart() {
 
 		if su - "${SUDO_USER}" -c "${_target_bin_brew} services restart  postgresql@12 " ; then
 		{
-			warning failed brew services restart  postgresql@12 
+			warning failed brew services restart  postgresql@12
 		}
 		fi
 		Message "LINE:$LINENO ${_target_bin_brew} services restart  redis"
     # anounce_command brew services restart  redis
 		# anounce_command su - "${SUDO_USER}" -c "brew services restart  redis "
-		if su - "${SUDO_USER}" -c "${_target_bin_brew} services restart  redis " ; then 
+		if su - "${SUDO_USER}" -c "${_target_bin_brew} services restart  redis " ; then
 		{
 			warning failed brew ${_target_bin_brew} services restart  redis
 		}
@@ -849,7 +849,7 @@ _brew_postgres_redis_restart() {
 		Message "${_target_bin_brew} services"
     # anounce_command brew services
     # anounce_command su - "${SUDO_USER}" -c "brew services "
-    if su - "${SUDO_USER}" -c "${_target_bin_brew} services " ; then 
+    if su - "${SUDO_USER}" -c "${_target_bin_brew} services " ; then
 		{
 			warning brew ${_target_bin_brew} services
 		}
@@ -862,7 +862,7 @@ _brew_postgres_redis_restart() {
 
 } # end _brew_postgres_redis_restart
 
-_docker_mac() { 
+_docker_mac() {
       Comment "### Downloading docker.dmg ${TARGETSYSTEM}"
       local DOCKERIN=$(curl -fsSL https://www.docker.com/products/docker-desktop/)
       enforce_variable_with_value DOCKERIN "${DOCKERIN}"
@@ -879,7 +879,7 @@ _docker_mac() {
       warning "Make sure you install docker if not found in  \"${DOWNLOADFOLDER}\" \n get it from [Install Docker](https://docs.docker.com/get-docker/"
       echo ret:$?
 
-} # end _docker_mac 
+} # end _docker_mac
 
 
 
@@ -926,7 +926,7 @@ _rbenv_check() {
   Checking rbenv is installed
   if ( ! su - "${SUDO_USER}" -c 'command -v rbenv' >/dev/null 2>&1; )  ; then
   {
-    Installing rbenv 
+    Installing rbenv
     local TARGET_URL="https://raw.githubusercontent.com/zeusintuivo/task_intuivo_cli/master/install_rbenv.bash"
     Skipping "${CYAN}Based on \n${RED}\n/bin/bash -c \"\$(curl -fsSL "${TARGET_URL}")\"\n${RESET}${CYAN}\n and doing structed tested."
     local DOWNLOADFOLDER="$(_find_downloads_folder)"
@@ -937,13 +937,13 @@ _rbenv_check() {
     mv "${DOWNLOADFOLDER}/${CODENAME}" "${USER_HOME}/${NEWNAME}"
     chmod a+x "${NEWNAME}"
     cd  "${USER_HOME}"
-    Installing "${USER_HOME}/${NEWNAME}" 
+    Installing "${USER_HOME}/${NEWNAME}"
     su - "${SUDO_USER}" -c "${USER_HOME}/${NEWNAME}"
-    wait    
+    wait
   }
   fi
   \. "${USER_HOME}/.profile"
-  ensure rbenv or "rbenv ruby version manager is required to continue  [rbenv](https://github.com/sstephenson/rbenv) and Ruby. " 
+  ensure rbenv or "rbenv ruby version manager is required to continue  [rbenv](https://github.com/sstephenson/rbenv) and Ruby. "
 } # end _rbenv_check
 
 
@@ -959,11 +959,11 @@ _ruby_check() {
   enforce_parameter_with_value           3        PROJECTGITREPO      "${PROJECTGITREPO}"     "a git url "
 
 
-  Checking that libpq/bin can be found	
+  Checking that libpq/bin can be found
 	local -i _err=0
 	local _libpg_bin=""
 	if _libpg_bin="$(_try_more_times_find "
-opt/libpq/bin")" ; then 
+opt/libpq/bin")" ; then
   {
 	  _err=0
 		passed "Found libpq/bin"
@@ -973,14 +973,14 @@ opt/libpq/bin")" ; then
 	  _err=1
 		warning "Failed to find libpq/bin"
 	}
-	fi	
-  
+	fi
+
   if [ $_err -gt 0 ] ; then # failed
   {
 	  echo "${_libpg_bin}"
     failed "to find opt/libpq/bin"
 	}
-	fi	
+	fi
 	_libpg_bin="$(echo -n "${_libpg_bin}" | tail -1)"
 	passed "found of opt/libpq/bin  = ${_libpg_bin}"
 
@@ -988,13 +988,13 @@ opt/libpq/bin")" ; then
 
 
 	Checking clone "${PROJECTGITREPO}"
-  mkdir -p  "${PROJECTSBASEDIR}" 
-  cd  "${PROJECTSBASEDIR}" 
+  mkdir -p  "${PROJECTSBASEDIR}"
+  cd  "${PROJECTSBASEDIR}"
   _git_clone  "${PROJECTGITREPO}" "${PROJECTREPO}"
 
 
 
-  Checking   Repo ruby version from  REPO Dir 
+  Checking   Repo ruby version from  REPO Dir
   cd "${PROJECTREPO}"
   pwd
   Checking "ruby required in Gemfile   cat \"${PROJECTREPO}/Gemfile\" | grep ruby\\\ \\\'  | cut -d\\\' -f2 "
@@ -1027,25 +1027,25 @@ opt/libpq/bin")" ; then
   fi
   isrubyinstalled="$(su - "${SUDO_USER}" -c "bash -c 'rbenv versions'" | grep "${_RUBYVERSION}")"
   #enforce_variable_with_value isrubyinstalled "${isrubyinstalled}"
-  Comment LINENO:$LINENO -z \"\${isrubynotinstalled}\"=${isrubyinstalled} 
+  Comment LINENO:$LINENO -z \"\${isrubynotinstalled}\"=${isrubyinstalled}
   if [[ -z "${isrubynotinstalled}" ]] && [[ -z "${isrubyinstalled}" ]] ; then
   {
     echo "rbenv versions | grep ${_RUBYVERSION}   returned nothing"
     failed to get isrubyinstalled:${isrubyinstalled}
   }
   fi
-  Comment LINENO:$LINENO \\t \"\${_RUBYVERSION}\" \\t == \*\"\${isrubyinstalled}\"\* 
+  Comment LINENO:$LINENO \\t \"\${_RUBYVERSION}\" \\t == \*\"\${isrubyinstalled}\"\*
   Comment LINENO:$LINENO \\t \\t \\t   "${_RUBYVERSION}"  \\t == \* \\t "${isrubyinstalled}" \\t \*
-  Comment LINENO:$LINENO -n \"\${isrubyinstalled}\" 
+  Comment LINENO:$LINENO -n \"\${isrubyinstalled}\"
   if [[ -n "${isrubyinstalled}" ]] &&  (echo ${isrubyinstalled} | grep "${_RUBYVERSION}" >/dev/null 2>&1; )  ; then
   {
     # set +x
     Comment "ruby installed appears to be installed  "
   }
-  else 
+  else
   {
     # set +x
-    Comment "LINENO:$LINENO ------ else" 
+    Comment "LINENO:$LINENO ------ else"
     su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&  ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"${_libpg_bin}:$PATH\"  rbenv install ${_RUBYVERSION} ' "
   }
 	fi
@@ -1066,13 +1066,13 @@ _bundle_check() {
   local PROJECTREPO=${1}
   enforce_parameter_with_value           1        PROJECTREPO         "${PROJECTREPO}"        "path folder to clone to"
 
-  cd  "${PROJECTREPO}" 
+  cd  "${PROJECTREPO}"
 
-  Checking that libpq/bin can be found	
+  Checking that libpq/bin can be found
 	local -i _err=0
 	local _libpg_bin=""
 	if _libpg_bin="$(_try_more_times_find "
-opt/libpq/bin")" ; then 
+opt/libpq/bin")" ; then
   {
 	  _err=0
 		passed "Found libpq/bin"
@@ -1082,14 +1082,14 @@ opt/libpq/bin")" ; then
 	  _err=1
 		warning "Failed to find libpq/bin"
 	}
-	fi	
-  
+	fi
+
   if [ $_err -gt 0 ] ; then # failed
   {
 	  echo "${_libpg_bin}"
     failed "to find opt/libpq/bin"
 	}
-	fi	
+	fi
 	_libpg_bin="$(echo -n "${_libpg_bin}" | tail -1)"
 	passed "found of opt/libpq/bin  = ${_libpg_bin}"
 
@@ -1097,14 +1097,14 @@ opt/libpq/bin")" ; then
 
   Comment "### gem update"
   su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"${_libpg_bin}:$PATH\" gem update --system' "
-  
+
 
   Comment "### bundle"
 
 
 
 
-  Checking "that opt/postgresql@12 can be found"	
+  Checking "that opt/postgresql@12 can be found"
 	local -i _err=0
 	local _pg_lib=""
 	_pg_lib="$(_try_more_times_find "
@@ -1118,7 +1118,7 @@ opt/postgresql
 	  echo "${_pg_lib}"
     passed "Failed to find opt/postgresql@12"
 	}
-	fi	
+	fi
 	_pg_lib="$(echo -n "${_pg_lib}" | tail -1)"
 	passed "found of opt/postgresql@12  = ${_pg_lib}"
 
@@ -1134,14 +1134,14 @@ opt/postgresql
   export PKG_CONFIG_PATH="${_pg_lib}/lib/pkgconfig"
 
   Comment "### gem pg"
-  if su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"${_libpg_bin}:$PATH\" gem install pg ' " ; then 
+  if su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"${_libpg_bin}:$PATH\" gem install pg ' " ; then
 	{
 		warning Failed to gem install pg
 	}
 	fi
 
   Comment "### gem pg -v 1.2.3"
-  if su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"${_libpg_bin}:$PATH\" gem install pg -v 1.2.3' " ; then 
+  if su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"${_libpg_bin}:$PATH\" gem install pg -v 1.2.3' " ; then
 	{
 		warning Failed to gem install pg -v 1.2.3
 	}
@@ -1153,9 +1153,9 @@ opt/postgresql
 	}
 	fi
   Comment "### gem activerecord-postgres_enum"
-  if su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"${_libpg_bin}:$PATH\" gem install activerecord-postgres_enum -v 1.6.0 ' " ; then 
+  if su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"${_libpg_bin}:$PATH\" gem install activerecord-postgres_enum -v 1.6.0 ' " ; then
 	{
-		warning Failed to gem install activerecord-postgres_enum -v 1.6.0 
+		warning Failed to gem install activerecord-postgres_enum -v 1.6.0
 	}
 	fi
    Comment "### gem bundler 2.4.10"
@@ -1171,8 +1171,8 @@ opt/postgresql
 	}
 	fi
   Comment "### bundle bundle install"
-  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" && bundle config build.pg --with-pg-config=${_libpg_bin}/pg_config ' " 
-  if su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   bundle install ' " ; then 
+  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" && bundle config build.pg --with-pg-config=${_libpg_bin}/pg_config ' "
+  if su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   bundle install ' " ; then
 	{
 		warning "Failed to cd \"${PROJECTREPO}\" &&   bundle install"
 	}
@@ -1185,7 +1185,7 @@ opt/postgresql
 _add_postgress_to_bashrc_zshrc(){
 
 
-  Checking "that opt/postgresql@12 can be found"	
+  Checking "that opt/postgresql@12 can be found"
 	local -i _err=0
 	local _pg_lib=""
 	_pg_lib="$(_try_more_times_find "
@@ -1199,7 +1199,7 @@ opt/postgresql
 	  echo "${_pg_lib}"
     passed "Failed to find opt/postgresql@12"
 	}
-	fi	
+	fi
 	_pg_lib="$(echo -n "${_pg_lib}" | tail -1)"
 	passed "found of opt/postgresql@12  = ${_pg_lib}"
 
@@ -1207,7 +1207,7 @@ opt/postgresql
 
   local SH_CONTENT="
 
-# POSTGRESS 12 - HOMEBREW 
+# POSTGRESS 12 - HOMEBREW
 export PATH=\"${_pg_lib}/bin:\$PATH\"
 
 "
@@ -1223,7 +1223,7 @@ export PATH=\"${_pg_lib}/bin:\$PATH\"
   "
   while read INITFILE; do
   {
-    [ -z ${INITFILE} ] && continue    
+    [ -z ${INITFILE} ] && continue
     (_if_not_contains  "${USER_HOME}/${INITFILE}" "${_pg_lib}/bin" ) || Configuring ${INITFILE}
     (_if_not_contains  "${USER_HOME}/${INITFILE}" "${_pg_lib}/bin" ) && Skipping configuration for ${INITFILE}
     #                   filename            value      || do this .............
@@ -1242,10 +1242,10 @@ _env_check() {
   local PROJECTREPO=${1}
   enforce_parameter_with_value           1        PROJECTREPO         "${PROJECTREPO}"        "path folder to clone to"
 
-  cd  "${PROJECTREPO}" 
+  cd  "${PROJECTREPO}"
   Comment "### _env_check"
   Comment "Create (copy) application environment file: "
-  Comment Currently and temporary we have \`.env.test\` file as a template 
+  Comment Currently and temporary we have \`.env.test\` file as a template
   su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" && cp .env.test .env '"
 } # end  _env_check
 
@@ -1299,12 +1299,12 @@ _make_CREATE_ADVISORS() {
           adv.enabled_features = { \"acts_as_advisor\"=> true };
           adv.name = \"Johann Friedrich Boettger\"
       end
-      Advisor.all.each do |adv| 
+      Advisor.all.each do |adv|
           adv.update!(password: \"password1\", password_confirmation: \"password1\")
           puts \"end\"
       end
       puts \"zuEnde\"
-  " > _make_CREATE_ADVISORS.rb 
+  " > _make_CREATE_ADVISORS.rb
   # export CREATE_ADVISORS
 
 } # end _make_CREATE_ADVISORS
@@ -1312,7 +1312,7 @@ _make_CREATE_ADVISORS() {
 
 
 
-_execute_project_command() { 
+_execute_project_command() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   local PROJECTREPO=${1}
   enforce_parameter_with_value           1        PROJECTREPO      "${PROJECTREPO}"     "path folder where Gemfile or project is located "
@@ -1331,7 +1331,7 @@ _migrate_development_check() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   local PROJECTREPO=${1}
   enforce_parameter_with_value           1        PROJECTREPO      "${PROJECTREPO}"     "path folder where Gemfile or project is located "
- 
+
   Message DEVELOPMENT
 
   local _advisors="$(cd "${PROJECTREPO}" && _make_CREATE_ADVISORS)"
@@ -1368,8 +1368,8 @@ _postgres_usercreate_check() {
     if [ ${_user_e} -eq 1 ]; then
       echo "User ${_db_user} already exists."
     else
-      echo "psql -d postgres -h 0.0.0.0 -U ${SUDO_USER}  -W 
-      psql -d postgres -h 0.0.0.0 -U ${SUDO_USER}  -W -c \"CREATE ROLE ${_db_user} WITH LOGIN PASSWORD '${_db_pass}';\" 
+      echo "psql -d postgres -h 0.0.0.0 -U ${SUDO_USER}  -W
+      psql -d postgres -h 0.0.0.0 -U ${SUDO_USER}  -W -c \"CREATE ROLE ${_db_user} WITH LOGIN PASSWORD '${_db_pass}';\"
       "
       _execute_db postgres "CREATE ROLE ${_db_user} WITH LOGIN PASSWORD '${_db_pass}' CREATEDB;"
       _execute_db postgres "ALTER USER ${_db_user} WITH SUPERUSER;"
@@ -1397,7 +1397,7 @@ _postgres_start_check() {
   local PROJECTREPO=${1}
   enforce_parameter_with_value           1        PROJECTREPO         "${PROJECTREPO}"        "path folder to clone to"
 
-  cd  "${PROJECTREPO}" 
+  cd  "${PROJECTREPO}"
   Comment "### _postgres_start_check"
   _brew_postgres_redis_restart
 
@@ -1581,7 +1581,7 @@ _migrate_check() {
   local PROJECTREPO=${1}
   enforce_parameter_with_value           1        PROJECTREPO         "${PROJECTREPO}"        "path folder to clone to"
 
-  cd  "${PROJECTREPO}" 
+  cd  "${PROJECTREPO}"
   Comment "### _migrate_check"
   Working "Dropping DBS and recreating, create"
 
@@ -1606,7 +1606,7 @@ _migrate_check() {
     while read -r _one ; do
     {
       [[ -z "${_one}" ]] && continue;
-      local _db_name="\"${_one}_${_two}\"" 
+      local _db_name="\"${_one}_${_two}\""
       _execute_db postgres "DROP DATABASE IF EXISTS ${_db_name};"
       _execute_db postgres "CREATE DATABASE ${_db_name} ENCODING = 'unicode' ;"
       _execute_db "${_db_name}" "ALTER USER ${_db_user} WITH SUPERUSER;"
@@ -1628,13 +1628,13 @@ _migrate_check() {
 
   Message DEVELOPMENT
 
-  
+
   Working "db:migrate"
   _execute_project_command "${PROJECTREPO}" "bundle exec rake db:migrate db:migrate:emails db:migrate:credit_check "
-  # su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" && bundle exec rake db:migrate  '" 
-  # su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" && bundle exec rake db:create db:migrate  '" 
+  # su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" && bundle exec rake db:migrate  '"
+  # su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" && bundle exec rake db:create db:migrate  '"
   Working "db:seed db:migrate"
-  
+
   _execute_project_command "${PROJECTREPO}" "bundle exec rails db:seed || bundle exec rails db:seed"
   _execute_project_command "${PROJECTREPO}" "bundle exec rails data:migrate"
    # bundle exec rails db:create db:migrate db:migrate:emails db:migrate:credit_check db:seed
@@ -1668,17 +1668,35 @@ _migrate_check() {
 
   Working COBA MODE
 
-  ersetzeindatei "${PROJECTREPO}/.env" "COBA_DEVELOPMENT_MODE=false" "COBA_DEVELOPMENT_MODE=mocked"  
+  # ersetzeindatei "${PROJECTREPO}/.env" "COBA_DEVELOPMENT_MODE=false" "COBA_DEVELOPMENT_MODE=mocked"
+  Working "COBA MODE"
+  if (  command -v gsed >/dev/null 2>&1 ; ) ; then
+  {
+    gsed -i -e s/"COBA_DEVELOPMENT_MODE=false"/"COBA_DEVELOPMENT_MODE=mocked"/g .env
+  }
+  elif ( !  su - "${SUDO_USER}" -c "command -v gsed" >/dev/null 2>&1; ) ; then
+  {
+    su - "${SUDO_USER}" -c 'gsed -i -e s/"COBA_DEVELOPMENT_MODE=false"/"COBA_DEVELOPMENT_MODE=mocked"/g .env'
+  }
+  elif (  command -v sed >/dev/null 2>&1 ; ) ; then
+  {
+    sed -i -e s/"COBA_DEVELOPMENT_MODE=false"/"COBA_DEVELOPMENT_MODE=mocked"/g .env
+  }
+  elif ( !  su - "${SUDO_USER}" -c "command -v sed" >/dev/null 2>&1; ) ; then
+  {
+    su - "${SUDO_USER}" -c 'sed -i -e s/"COBA_DEVELOPMENT_MODE=false"/"COBA_DEVELOPMENT_MODE=mocked"/g .env'
+  }
+  fi
 
   Message COBA DEVELOPMENT
 
-  
+
   Working COBA "db:migrate"
   _execute_project_command "${PROJECTREPO}" "bundle exec rake db:migrate db:migrate:emails db:migrate:credit_check "
-  # su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" && bundle exec rake db:migrate  '" 
-  # su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" && bundle exec rake db:create db:migrate  '" 
+  # su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" && bundle exec rake db:migrate  '"
+  # su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" && bundle exec rake db:create db:migrate  '"
   Working COBA "db:seed db:migrate"
-  
+
   _execute_project_command "${PROJECTREPO}" "bundle exec rails db:seed || bundle exec rails db:seed"
   _execute_project_command "${PROJECTREPO}" "bundle exec rails data:migrate"
    # bundle exec rails db:create db:migrate db:migrate:emails db:migrate:credit_check db:seed
@@ -1695,6 +1713,130 @@ _migrate_check() {
 
 
 } # end  _migrate_check
+
+
+_migrate_check_doc_center() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local PROJECTREPO=${1}
+  enforce_parameter_with_value           1        PROJECTREPO         "${PROJECTREPO}"        "path folder to clone to"
+
+  cd  "${PROJECTREPO}"
+  Comment "### _migrate_check web"
+  Working "Dropping DBS and recreating, create"
+
+  local _one _databases="
+    document-center
+  "
+  local _two _environments="
+     development
+     test
+     production
+  "
+  local _db_user=postgres
+  while read -r _two ; do
+  {
+    [[ -z "${_two}" ]] && continue;
+    while read -r _one ; do
+    {
+      [[ -z "${_one}" ]] && continue;
+      local _db_name="\"${_one}_${_two}\""
+      _execute_db postgres "DROP DATABASE IF EXISTS ${_db_name};"
+      _execute_db postgres "CREATE DATABASE ${_db_name} ENCODING = 'unicode' ;"
+      _execute_db "${_db_name}" "ALTER USER ${_db_user} WITH SUPERUSER;"
+      _execute_db "${_db_name}" "ALTER USER ${_db_user} WITH Createrole;"
+      _execute_db "${_db_name}" "ALTER USER ${_db_user} WITH Createdb;"
+      _execute_db "${_db_name}" "ALTER USER ${_db_user} WITH replication;"
+      _execute_db "${_db_name}" "ALTER USER ${_db_user} WITH bypassrls;"
+      _execute_db "${_db_name}" "ALTER DATABASE  ${_db_name} OWNER TO ${_db_user};"
+      _execute_db "${_db_name}" "CREATE EXTENSION IF NOT EXISTS hstore;"
+      _execute_db "${_db_name}" "CREATE EXTENSION IF NOT EXISTS pgcrypto;"
+      _execute_db "${_db_name}" "CREATE EXTENSION IF NOT EXISTS plpgsql;"
+    }
+    done <<< "${_databases}"
+  }
+  done <<< "${_environments}"
+
+
+  Message doc-center DEVELOPMENT "${PROJECTREPO}"
+  if [[ ! -f "${PROJECTREPO}/.env" ]] ; then
+  {
+    Working "cp .example.env .env"
+    _execute_project_command "${PROJECTREPO}" "cp .example.env .env"
+  }
+  fi
+
+  Message doc-client DEVELOPMENT "${PROJECTREPO}"
+  if [[ ! -f "${PROJECTREPO}/config.local.json" ]] ; then
+  {
+    Working "cp config.development.json config.local.json"
+    _execute_project_command "${PROJECTREPO}" "cp config.development.json config.local.json"
+  }
+  fi
+  if [[ ! -f "${PROJECTREPO}/apps/client/document/src/assets/app-config/config.local.json" ]] ; then
+  {
+    Working "cp apps/client/document/src/assets/app-config/config.development.json apps/client/document/src/assets/app-config/config.local.json"
+    _execute_project_command "${PROJECTREPO}" "cp apps/client/document/src/assets/app-config/config.development.json apps/client/document/src/assets/app-config/config.local.json"
+  }
+  fi
+
+
+
+  Working "npm run migration:up:document-center-server "
+  _execute_project_command "${PROJECTREPO}" "npm run migration:up:document-center-server  "
+
+  Working "npm run azurite"
+  _execute_project_command "${PROJECTREPO}" "npm run azurite"
+
+  Working npm run start:document:development
+
+  _execute_project_command "${PROJECTREPO}" "bundle exec rails data:migrate"
+  _execute_project_command "${PROJECTREPO}" "bundle exec rails users:update_roles"
+  _execute_project_command "${PROJECTREPO}" "bundle exec rails transactional_emails:create_or_update_templates"
+
+
+  Message TEST
+  Working "test db:test:prepare"
+  _execute_project_command "${PROJECTREPO}" "RAILS_ENV=test bundle exec rake db:test:prepare"
+npm run start:document:development
+
+  # ersetzeindatei "${PROJECTREPO}/.env" "COBA_DEVELOPMENT_MODE=false" "COBA_DEVELOPMENT_MODE=mocked"
+  Working "COBA MODE"
+  if (  command -v gsed >/dev/null 2>&1 ; ) ; then
+  {
+    gsed -i -e s/"COBA_DEVELOPMENT_MODE=false"/"COBA_DEVELOPMENT_MODE=mocked"/g .env
+  }
+  elif ( !  su - "${SUDO_USER}" -c "command -v gsed" >/dev/null 2>&1; ) ; then
+  {
+    su - "${SUDO_USER}" -c 'gsed -i -e s/"COBA_DEVELOPMENT_MODE=false"/"COBA_DEVELOPMENT_MODE=mocked"/g .env'
+  }
+  elif (  command -v sed >/dev/null 2>&1 ; ) ; then
+  {
+    sed -i -e s/"COBA_DEVELOPMENT_MODE=false"/"COBA_DEVELOPMENT_MODE=mocked"/g .env
+  }
+  elif ( !  su - "${SUDO_USER}" -c "command -v sed" >/dev/null 2>&1; ) ; then
+  {
+    su - "${SUDO_USER}" -c 'sed -i -e s/"COBA_DEVELOPMENT_MODE=false"/"COBA_DEVELOPMENT_MODE=mocked"/g .env'
+  }
+  fi
+
+  Message COBA DEVELOPMENT
+
+
+  Working COBA "db:migrate"
+  _execute_project_command "${PROJECTREPO}" "bundle exec rake db:migrate db:migrate:emails db:migrate:credit_check "
+  Working COBA "db:seed db:migrate"
+
+  _execute_project_command "${PROJECTREPO}" "bundle exec rails db:seed || bundle exec rails db:seed"
+  _execute_project_command "${PROJECTREPO}" "bundle exec rails data:migrate"
+  _execute_project_command "${PROJECTREPO}" "bundle exec rails users:update_roles"
+  _execute_project_command "${PROJECTREPO}" "bundle exec rails transactional_emails:create_or_update_templates"
+
+
+  Message COBA TEST
+  Working "test db:test:prepare"
+  _execute_project_command "${PROJECTREPO}" "RAILS_ENV=test bundle exec rake db:test:prepare"
+
+} # end  _migrate_check_doc_center
 
 
 _make_up() {
@@ -1738,27 +1880,27 @@ _make_migrate() {
 
 } # end _make_migrate
 
-_make_seed() { 
+_make_seed() {
     bundle exec rails db:seed
 
 } # end _make_seed
 
-_make_reseed() { 
+_make_reseed() {
     bundle exec rails db:seed:replant
 
 } # end _make_reseed
 
-_make_tasks() { 
+_make_tasks() {
     bundle exec rails --tasks > tasks.txt
 
 } # end _make_tasks
 
-_make_routes() { 
+_make_routes() {
     bundle exec rails routes > routes.txt
 
 } # end _make_routes
 
-_make_db_reset() { 
+_make_db_reset() {
     bundle exec rails db:drop
     bundle exec rails db:create db:migrate db:migrate:emails
     bundle exec rails db:seed || bundle exec rails db:seed
@@ -1768,12 +1910,12 @@ _make_db_reset() {
 
 } # end _make_db_reset
 
-_make_reset_passwords() { 
+_make_reset_passwords() {
     echo 'Advisor.all.each { |adv| adv.update!(password: "password1", password_confirmation: "password1")}; 0' | bundle exec rails console
 
 } # end _make_reset_passwords
 
-_make_create_users() { 
+_make_create_users() {
     @echo "$$CREATE_ADVISORS" | bundle exec rails c
 set_coba:
     sed -i -e 's/^COBA_DEVELOPMENT_MODE=false$$/COBA_DEVELOPMENT_MODE=mocked/' .env
@@ -1781,13 +1923,13 @@ set_finlink:
     sed -i -e 's/^COBA_DEVELOPMENT_MODE=mock.*$$/COBA_DEVELOPMENT_MODE=false/' .env
 # set_coba:
 #   sed -i -e 's/^CURRENT_LENDER=Default$$/CURRENT_LENDER=Coba/' .env
-# 
+#
 # set_finlink:
 #   sed -i -e 's/^CURRENT_LENDER=Coba$$/CURRENT_LENDER=Default/' .env
 
 } # end _make_create_users
 
-_make_database_console() { 
+_make_database_console() {
     psql -d 'loanlink-api_development' -h 0.0.0.0 -U postgres -W
 
 } # end _make_database_console
@@ -1796,7 +1938,7 @@ _vpn_check() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   local PROJECTREPO=${1}
   enforce_parameter_with_value           1        PROJECTREPO         "${PROJECTREPO}"        "path folder to clone to"
-  
+
   su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' brew install  --cask tunnelblick"
 } # end _vpn_check
 
@@ -1805,20 +1947,20 @@ _vpn_check() {
 
 _darwin__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  
+
 	_find_project_location_PROJECT_DIR_F
   local PROJECTSBASEDIR="${PROJECT_DIR_F}"
-  local PROJECTREPO="${PROJECT_DIR_F}/loanlink-api" 
+  local PROJECTREPO="${PROJECT_DIR_F}/loanlink-api"
   local PROJECTGITREPO="git@github.com:LoanLink/loanlink-api.git"
 
   if [[ ! -f "${PROJECTREPO}/.step1_brew_check_requirements_postgress_12_install"  ]] ; then
   {
     Working "Step .step1_brew_check_requirements_postgress_12_install"
     _brew_check_requirements_postgress_12_install
-    local _touch_name="\"${PROJECTREPO}/.step1_brew_check_requirements_postgress_12_install\"" 
+    local _touch_name="\"${PROJECTREPO}/.step1_brew_check_requirements_postgress_12_install\""
     _execute_project_command "${PROJECTREPO}" "touch ${_touch_name} "
-  } 
-  fi  
+  }
+  fi
   if [[ ! -f "${PROJECTREPO}/.step2_attempt_to_download_docker"  ]] ; then
   {
     # _attempt_to_download_docker amd64
@@ -1826,74 +1968,74 @@ _darwin__64() {
     Working "Step .step2_attempt_to_download_docker"
     _attempt_to_download_docker $(uname -m)
     _execute_project_command "${PROJECTREPO}" "touch \"${PROJECTREPO}/.step2_attempt_to_download_docker\" "
-  } 
-  fi  
+  }
+  fi
   if [[ ! -f "${PROJECTREPO}/.step3_rbenv_check"  ]] ; then
   {
     Working "Step .step3_rbenv_check"
     _rbenv_check
     _execute_project_command "${PROJECTREPO}" "touch \"${PROJECTREPO}/.step3_rbenv_check\" "
-  } 
-  fi  
+  }
+  fi
   if [[ ! -f "${PROJECTREPO}/.step4_ruby_check"  ]] ; then
   {
     Working "Step .step4_ruby_check"
     _ruby_check "${PROJECTSBASEDIR}" "${PROJECTREPO}" "${PROJECTGITREPO}"
     _execute_project_command "${PROJECTREPO}" "touch \"${PROJECTREPO}/.step4_ruby_check\" "
-  } 
-  fi  
+  }
+  fi
   if [[ ! -f "${PROJECTREPO}/.step5_bundle_check"  ]] ; then
   {
     Working "Step .step5_bundle_check"
-    _bundle_check "${PROJECTREPO}" 
+    _bundle_check "${PROJECTREPO}"
     _execute_project_command "${PROJECTREPO}" "touch \"${PROJECTREPO}/.step5_bundle_check\" "
-  } 
-  fi  
+  }
+  fi
   if [[ ! -f "${PROJECTREPO}/.step6_env_check"  ]] ; then
   {
     Working "Step .step6_env_check"
-    _env_check "${PROJECTREPO}" 
+    _env_check "${PROJECTREPO}"
     _execute_project_command "${PROJECTREPO}" "touch \"${PROJECTREPO}/.step6_env_check\" "
-  } 
+  }
   fi
   if [[ ! -f "${PROJECTREPO}/.step71_pre_postgres_start_check"  ]] ; then
   {
     Working "Step .step71_pre_postgres_start_check"
-    _add_postgress_to_bashrc_zshrc "${PROJECTREPO}" 
+    _add_postgress_to_bashrc_zshrc "${PROJECTREPO}"
     _execute_project_command "${PROJECTREPO}" "touch \"${PROJECTREPO}/.step71_pre_postgres_start_check\" "
-  } 
+  }
   fi
   if [[ ! -f "${PROJECTREPO}/.step7_postgres_start_check"  ]] ; then
   {
     Working "Step .step7_postgres_start_check"
-    _postgres_start_check "${PROJECTREPO}" 
+    _postgres_start_check "${PROJECTREPO}"
     _execute_project_command "${PROJECTREPO}" "touch \"${PROJECTREPO}/.step7_postgres_start_check\" "
-  } 
+  }
   fi
   if [[ ! -f "${PROJECTREPO}/.step8_migrate_check"  ]] ; then
   {
     Working "Step .step8_migrate_check"
-    _migrate_check "${PROJECTREPO}" 
+    _migrate_check "${PROJECTREPO}"
     _execute_project_command "${PROJECTREPO}" "touch \"${PROJECTREPO}/.step8_migrate_check\" "
-  } 
-  fi 
+  }
+  fi
   if [[ ! -f "${PROJECTREPO}/.step9_migrate_development_check"  ]] ; then
   {
     Working "Step .step9_migrate_development_check"
-    _migrate_development_check "${PROJECTREPO}" 
+    _migrate_development_check "${PROJECTREPO}"
     _execute_project_command "${PROJECTREPO}" "touch \"${PROJECTREPO}/.step9_migrate_development_check\" "
-  } 
-  fi  
+  }
+  fi
   if [[ ! -f "${PROJECTREPO}/.step10_vpn_check"  ]] ; then
   {
     Working "Step .step10_vpn_check"
-    _vpn_check "${PROJECTREPO}" 
+    _vpn_check "${PROJECTREPO}"
     _execute_project_command "${PROJECTREPO}" "touch \"${PROJECTREPO}/.step10_vpn_check\" "
-  } 
-  fi  
+  }
+  fi
 
 
- 
+
   # echo "_darwin__64 Procedure not yet implemented. I don't know what to do."
 } # end _darwin__64
 
