@@ -3,8 +3,9 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 # 20200415 Compatible with Fedora, Mac, Ubuntu "sudo_up" "load_struct" "#
-#set -u
+# set -u
 set -E -o functrace
+# export USER_HOME="$USER"
 export THISSCRIPTCOMPLETEPATH
 
 echo "0. sudologic $0:$LINENO           SUDO_COMMAND:${SUDO_COMMAND:-}"
@@ -406,6 +407,17 @@ _fedora__64() {
   echo Fedora 29 REF: https://computingforgeeks.com/how-to-install-virtualbox-on-fedora-linux/
   echo Fedora 32 REF: https://tecadmin.net/install-oracle-virtualbox-on-fedora/
   echo Fedora 33 https://www.if-not-true-then-false.com/2010/install-virtualbox-with-yum-on-fedora-centos-red-hat-rhel/
+  if [[ "${*-}" == *"--reset"* ]] || [[ "${*-}" == *"--startover"* ]] || [[ "${*-}" == *"--restart"* ]] then 
+	{
+		echo "--reset --startover --restart " 
+		echo "reseting now"
+    rm "${USER_HOME}/.virtualboxinstallrebootsigned"
+    rm "${USER_HOME}/.virtualboxinstallrebootsigned2"
+    rm "${USER_HOME}/.virtualboxinstallreboot"
+    rm /root/signed-modules
+    rm /root/module-signing
+  }
+	fi
 	dnf builddep libvpx-devel -y  --allowerasing
 	dnf builddep dkms -y  --allowerasing 
   dnf builddep kernel-devel  -y  --allowerasing 
@@ -451,7 +463,7 @@ _fedora__64() {
   else
   {
     dnf groupinstall 'Development Tools' -y
-	  dnf install @development-tools -y
+    dnf install @development-tools -y
   }
   fi
   # dnf install libxcrypt-compat -y # needed by Fedora 30 and up
@@ -485,10 +497,13 @@ _fedora__64() {
 	if wget -P /etc/yum.repos.d/ https://download.virtualbox.org/virtualbox/rpm/fedora/virtualbox.repo ; then 
 		{
 		yes | dnf search virtualbox -y
-	dnf install VirtualBox-7.0 -y
+	  dnf install VirtualBox-7.0 -y
   }
 	fi
-	usermod -aG vboxusers $USER
+	Installing "usermod -aG vboxusers "\${USER}:${USER}" "
+	usermod -aG vboxusers "${USER}"
+	Installing "usermod -aG vboxusers "\${SUDO_USER}:${SUDO_USER}" "
+	usermod -aG vboxusers "${SUDO_USER}"
   cd  "${USER_HOME}"
   if [ ! -f  "${USER_HOME}/.virtualboxinstallreboot" ] ; then
 	{	
@@ -515,14 +530,46 @@ _fedora__64() {
     cd /root/signed-modules
     openssl req -new -x509 -newkey rsa:2048 -keyout MOK.priv -outform DER -out MOK.der -nodes -days 36500 -subj "/CN=VirtualBox/"
     chmod 600 MOK.priv
-    echo Sign Mok REF: https://stackoverflow.com/questions/61248315/sign-virtual-box-modules-vboxdrv-vboxnetflt-vboxnetadp-vboxpci-centos-8
-    echo 3- This command will ask you to add a password, write 1234678 , you need this password after the next reboot.
-    mokutil --import MOK.der
+		echo 3-
+		echo 3-
+    echo 3- Step number three if everything is going smooth this is the second reboot
+		echo 3-
+		echo Sign Mok REF: https://stackoverflow.com/questions/61248315/sign-virtual-box-modules-vboxdrv-vboxnetflt-vboxnetadp-vboxpci-centos-8
+    echo 3-
+	 	echo 3- NOTE: This command will ask you to 
+		echo 3-                                    add a password, 
+		echo 3-                                                     write 1234678 
+	  echo 3-  	you need this password after the next reboot.
+    echo 3-
+		echo 3- 
+	 	mokutil --import MOK.der
 
     echo REF: https://gist.github.com/reillysiemens/ac6bea1e6c7684d62f544bd79b2182a4
     local name="$(getent passwd $(whoami) | awk -F: '{print $5}')"
     local out_dir=/root/module-signing
     mkdir  -p  "${out_dir}"
+    echo 3-
+		echo 3- This command will ask you to add PEM key, for PEM Just press enter,  and input a password enter asd, you need this password after the next reboot.
+    echo 3-
+		echo 3-                            AGAIN: This command will ask you to
+    echo 3-            add a password,
+ 	  echo 3-                            write 1234678
+    echo 3-                                           you need this password after the next reboot.
+    echo 3-
+    echo 3-
+		echo "3- openssl \
+req \
+-new \
+-x509 \
+-newkey \
+rsa:2048 \
+-keyout ${out_dir}/MOK.priv \
+-outform DER \
+-out ${out_dir}/MOK.der \
+-days 36500 \
+-subj /CN=${name}/"
+		echo 3-
+		echo 3-
     cd "${out_dir}"
     openssl \
         req \
@@ -536,11 +583,15 @@ _fedora__64() {
         -days 36500 \
         -subj "/CN=${name}/"
     chmod 600 ${out_dir}/MOK.*
-    echo 3- This command will ask you to add PEM key, for PEM Just press enter,  and input a password enter asd, you need this password after the next reboot.
+    echo "mokutil --import /root/module-signing/MOK.der"
     mokutil --import /root/module-signing/MOK.der
-
+    echo 4-
     echo 4- Reboot your system and a blue screen appear, select Enroll MOK --> Continue --> put the previous password and your system will start.
-    echo System will reboot now, after you press any key
+    echo 4-
+		echo 4- System will reboot now, after you press any key
+		echo 4-
+		echo 4-
+		
     [ ! -f  "${USER_HOME}/.virtualboxinstallrebootsigned" ] && touch "${USER_HOME}/.virtualboxinstallrebootsigned"  && _pause "sign reboot 4" && reboot
   }
   fi
@@ -548,35 +599,112 @@ _fedora__64() {
   {
       cd /root/signed-modules
       # need to sign the kernel modules (vboxdrv, vboxnetflt, vboxnetadp, vboxpci)
-
+			local modules_to_be_signed_up="
+vboxdrv
+vboxguest
+vboxnetadp
+vboxnetflt
+vboxsf
+vboxvideo
+vboxpci
+"
+    local _fileout=""
     cat <<EOF | tee /root/signed-modules/sign-virtual-box
 #!/bin/bash
-
-for modfile in $(dirname $(modinfo -n vboxdrv))/*.ko; do
-  echo "Signing $modfile"
-  /usr/src/kernels/$(uname -r)/scripts/sign-file sha256 \
-                                /root/signed-modules/MOK.priv \
-                                /root/signed-modules/MOK.der "$modfile"
-done
-for modfile in $(dirname $(modinfo -n vboxnetflt))/*.ko; do
-  echo "Signing $modfile"
-  /usr/src/kernels/$(uname -r)/scripts/sign-file sha256 \
-                                /root/signed-modules/MOK.priv \
-                                /root/signed-modules/MOK.der "$modfile"
-done
-for modfile in $(dirname $(modinfo -n vboxnetadp))/*.ko; do
-  echo "Signing $modfile"
-  /usr/src/kernels/$(uname -r)/scripts/sign-file sha256 \
-                                /root/signed-modules/MOK.priv \
-                                /root/signed-modules/MOK.der "$modfile"
-done
-for modfile in $(dirname $(modinfo -n vboxpci))/*.ko; do
-  echo "Signing $modfile"
-  /usr/src/kernels/$(uname -r)/scripts/sign-file sha256 \
-                                /root/signed-modules/MOK.priv \
-                                /root/signed-modules/MOK.der "$modfile"
-done
+echo "File /root/signed-modules/sign-virtual-box:1"
+echo 'REF: https://superuser.com/questions/1539756/virtualbox-6-fedora-30-efi-secure-boot-you-may-need-to-sign-the-kernel-modules'
+echo 'Running :'\$0
+set -u
+set -E -o functrace
+function _root_signed_modules_sign_virtual_box(){
+  local one_mod_ko_file=""
+  local -i _err=0
+  local modfile=""
 EOF
+    local one=""
+	  local onemod=""
+	  local -i _err	
+		local filenamesko=""
+		local dirko=""
+    while read -r one ; do
+		{
+			onemod=""
+			dirko=""
+			filenamesko=""
+			[[ -z "${one-}" ]] && continue
+			# test module 
+			if modinfo -n "${one}" ; then
+			{
+				echo 'found'
+				onemod="$(modinfo -n "${one}")"
+		    _err=0
+			}
+		  else
+			{
+				echo 'not found'
+				_err=1
+			}
+			fi
+		  [ ${_err} -gt 0 ] && echo "Warning could not find module:${one}" && continue
+      [[ -z "${onemod-}" ]] && continue
+			
+			# test dir
+			if [[ -d "$(dirname "${onemod}")" ]] ; then 
+			{
+				echo 'found'
+				dirko="$(dirname "${onemod}")"
+		    _err=0
+			}
+		  else
+			{
+				echo 'not found'
+				_err=1
+			}
+			fi
+	    [ ${_err} -gt 0 ] && echo "Warning could not find dir for  module:${one}" && continue
+      [[ -z "${dirko-}" ]] && continue
+			
+			# test files
+			if ls "${filenamesko-}"/*.ko ; then
+			{
+				echo 'found'
+			  filenamesko="$(ls "${dirko-}"/*.ko)"
+		    _err=0
+			}
+		  else
+			{
+				echo 'not found'
+				_err=1
+			}
+			fi
+      [ ${_err} -gt 0 ] && echo "Warning could not find *.ko files for module:${one}" && continue
+			[[ -z "${filenamesko-}" ]] && continue
+
+      cat <<EOF | tee -a /root/signed-modules/sign-virtual-box
+  local filenamesko="
+${filenamesko}
+"
+  while read -r one_mod_ko_file ; do
+  {
+    [[ -z "\${one_mod_ko_file-}" ]] && continue
+    echo "Signing \${one_mod_ko_file}"
+    /usr/src/kernels/$(uname -r)/scripts/sign-file sha256 \\
+                                /root/signed-modules/MOK.priv \\
+                                /root/signed-modules/MOK.der "\${one_mod_ko_file}"
+  } 
+  done <<< "\${filenamesko}"
+EOF
+			 
+		}
+	  done <<< "${modules_to_be_signed_up}"
+cat <<EOF | tee -a /root/signed-modules/sign-virtual-box
+} # end _root_signed_modules_sign_virtual_box
+
+_root_signed_modules_sign_virtual_box \${*}
+
+
+EOF
+
     echo REF: https://superuser.com/questions/1539756/virtualbox-6-fedora-30-efi-secure-boot-you-may-need-to-sign-the-kernel-modules
     chmod 700 /root/signed-modules/sign-virtual-box
     /root/signed-modules/sign-virtual-box
@@ -778,10 +906,11 @@ _pause() {
 
 
 _main() {
-  determine_os_and_fire_action
+  _fedora__64 "${*}"
+	#determine_os_and_fire_action "${*}"
 } # end _main
 
-_main
+_main "${*}"
 
 echo "🥦"
 exit 0
