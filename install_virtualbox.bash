@@ -3,9 +3,8 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 # 20200415 Compatible with Fedora, Mac, Ubuntu "sudo_up" "load_struct" "#
-# set -u
+#set -u
 set -E -o functrace
-# export USER_HOME="$USER"
 export THISSCRIPTCOMPLETEPATH
 
 echo "0. sudologic $0:$LINENO           SUDO_COMMAND:${SUDO_COMMAND:-}"
@@ -906,8 +905,7 @@ _pause() {
 
 
 _main() {
-  _fedora__64 "${*}"
-	#determine_os_and_fire_action "${*}"
+  determine_os_and_fire_action "${*}"
 } # end _main
 
 _main "${*}"
