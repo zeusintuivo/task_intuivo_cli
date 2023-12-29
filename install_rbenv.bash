@@ -16,6 +16,7 @@ echo "0. sudologic $0:$LINENO                   USER:${USER:-}"
 echo "0. sudologic $0:$LINENO              USER_HOME:${USER_HOME:-}"
 echo "0. sudologic $0:$LINENO THISSCRIPTCOMPLETEPATH:${THISSCRIPTCOMPLETEPATH:-}"
 echo "0. sudologic $0:$LINENO         THISSCRIPTNAME:${THISSCRIPTNAME:-}"
+echo "0. sudologic $0:$LINENO       THISSCRIPTPARAMS:${THISSCRIPTPARAMS:-}"
 
 echo "0. sudologic $0 Start Checking realpath  "
 if ! ( command -v realpath >/dev/null 2>&1; )  ; then
@@ -39,6 +40,10 @@ typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
 export  THISSCRIPTNAME
 typeset -r THISSCRIPTNAME="$(basename "$0")"
 
+export THISSCRIPTPARAMS
+typeset -r THISSCRIPTPARAMS="${*:-}"
+echo "0. sudologic $0:$LINENO       THISSCRIPTPARAMS:${THISSCRIPTPARAMS:-}"
+
 export _err
 typeset -i _err=0
 
@@ -47,7 +52,7 @@ typeset -i _err=0
     local cero="$0"
     local file1="$(paeth ${BASH_SOURCE})"
     local file2="$(paeth ${cero})"
-    echo -e "ERROR TRAP $THISSCRIPTNAME
+    echo -e "ERROR TRAP $THISSCRIPTNAME $THISSCRIPTPARAMS
 ${file1}:${BASH_LINENO[-0]}     \t ${FUNCNAME[-0]}()
 $file2:${BASH_LINENO[1]}    \t ${FUNCNAME[1]}()
 ERR ..."
@@ -59,7 +64,7 @@ ERR ..."
     local cero="$0"
     local file1="$(paeth ${BASH_SOURCE})"
     local file2="$(paeth ${cero})"
-    echo -e "INTERRUPT TRAP $THISSCRIPTNAME
+    echo -e "INTERRUPT TRAP $THISSCRIPTNAME $THISSCRIPTPARAMS
 ${file1}:${BASH_LINENO[-0]}     \t ${FUNCNAME[-0]}()
 $file2:${BASH_LINENO[1]}    \t ${FUNCNAME[1]}()
 INT ..."
@@ -105,8 +110,8 @@ load_struct_testing(){
         provider="/home/${USER}/_/clis/execute_command_intuivo_cli/${_library}"
       }
       fi
-      echo "$0: ${provider}"
-      echo "$0: SUDO_USER:${SUDO_USER:-nada SUDOUSER}: USER:${USER:-nada USER}: ${SUDO_HOME:-nada SUDO_HOME}: {${HOME:-nada HOME}}"
+      echo "$0: ${provider}" 
+      echo "$0: SUDO_USER:${SUDO_USER:-nada SUDOUSER}: USER:${USER:-nada USER}: ${SUDO_HOME:-nada SUDO_HOME}: {${HOME:-nada HOME}}" 
       local _err=0 structsource
       if [[  -e "${provider}" ]] ; then
         if (( _DEBUG )) ; then
@@ -152,7 +157,7 @@ load_struct_testing(){
       fi
       if [[ -z "${structsource}" ]] ; then
       {
-        echo -e "\n \n 3 ERROR! Loading ${_library} into ${_library}_source did not download or is empty "
+        echo -e "\n \n 3 ERROR! Loading ${_library} into ${_library}_source did not download or is empty " 
         exit 1
       }
       fi
@@ -203,7 +208,7 @@ if [[ -z "${SUDO_COMMAND:-}" ]] && \
    [[ -n "${THISSCRIPTNAME:-}" ]] \
   ; then
 {
-  passed Called from user
+  passed Called from user 
 }
 fi
 
@@ -219,7 +224,7 @@ if [[ -n "${SUDO_COMMAND:-}"  ]] && \
    [[ -n "${THISSCRIPTNAME:-}"  ]] \
   ; then
 {
-  passed Called from user as sudo
+  passed Called from user as sudo 
 }
 else
 {
@@ -228,7 +233,7 @@ if [[ "${SUDO_USER:-}" == 'root'  ]] && \
    [[ "${USER:-}" == 'root' ]] \
   ; then
 {
-  failed This script is has to be called from normal user. Not Root. Abort
+  failed This script is has to be called from normal user. Not Root. Abort 
   exit 69
 }
 fi
@@ -242,7 +247,7 @@ function sudo_it() {
   {
     passed "sudo_it() # Do something under Mac OS X platform "
       # nothing here
-      raise_to_sudo_and_user_home
+      raise_to_sudo_and_user_home "${*-}"
       [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
     SUDO_USER="${USER}"
     SUDO_COMMAND="$0"
@@ -252,7 +257,7 @@ function sudo_it() {
   elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]] ; then
   {
       # Do something under GNU/Linux platform
-      raise_to_sudo_and_user_home
+      raise_to_sudo_and_user_home "${*-}"
       [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
       enforce_variable_with_value SUDO_USER "${SUDO_USER}"
       enforce_variable_with_value SUDO_UID "${SUDO_UID}"
@@ -274,7 +279,7 @@ function sudo_it() {
     SUDO_GID=20
   }
   fi
-
+  
   if (( _DEBUG )) ; then
     Comment _err:${_err}
   fi
@@ -298,7 +303,7 @@ function sudo_it() {
     local cero="$0"
     local file1="$(paeth ${BASH_SOURCE})"
     local file2="$(paeth ${cero})"
-    echo -e " ERROR OR INTERRUPT  TRAP $THISSCRIPTNAME
+    echo -e " ERROR OR INTERRUPT  TRAP $THISSCRIPTNAME $THISSCRIPTPARAMS
 ${file1}:${BASH_LINENO[-0]}     \t ${FUNCNAME[-0]}()
 $file2:${BASH_LINENO[1]}    \t ${FUNCNAME[1]}()
 ERR INT ..."
@@ -308,7 +313,7 @@ ERR INT ..."
 } # end sudo_it
 
 # _linux_prepare(){
-  sudo_it
+  sudo_it "${*}"
   _err=$?
   typeset -i tomporalDEBUG=${DEBUG:-}
   if (( tomporalDEBUG )) ; then
@@ -457,17 +462,17 @@ _git_clone() {
     if it_exists_with_spaces "${_target}/.git" ; then
     {
       cd "${_target}"
-      if git config pull.rebase false ; then
+      if git config pull.rebase false ; then 
 			{
 				warning Could not git config pull.rebase false
 			}
 			fi
-      if git fetch  ; then
+      if git fetch  ; then 
 			{
 				warning Could not git fetch
 			}
 			fi
-      if git pull  ; then
+      if git pull  ; then 
 			{
 				warning Could not git pull
 			}
@@ -477,7 +482,7 @@ _git_clone() {
   }
   else
   {
-    if git clone "${_source}" "${_target}"  ; then
+    if git clone "${_source}" "${_target}"  ; then 
 		{
 			warning Could not git clone "${_source}" "${_target}"
 		}
@@ -516,7 +521,7 @@ fi
   while read INITFILE; do
   { 
     [ -z ${INITFILE} ] && continue
-    Checking "${USER_HOME}/${INITFILE}"
+    Checking "${USER_HOME}/${INITFILE}" 
     _if_not_contains "${USER_HOME}/${INITFILE}"  "# RBENV" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
     _if_not_contains "${USER_HOME}/${INITFILE}"  "RBENV_ROOT" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
     _if_not_contains "${USER_HOME}/${INITFILE}"  "rbenv init" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
@@ -606,7 +611,7 @@ _redhat_flavor_install() {
 		ncurses-compat-libs
 		ncurses-libs
 		ncurses-static
-		ncurses-base
+		ncurses-base 
 		# ncurses-term conflicts with foot-terminfo
     readline
 		readline-static
@@ -618,7 +623,7 @@ _redhat_flavor_install() {
     zlib
 		zlib-devel
     zlibrary-devel
-    zlibrary
+    zlibrary		
 		libffi
     libffi-devel
 		libffi3.1
@@ -780,11 +785,14 @@ _windows__32() {
  #--------/\/\/\/\-- tasks_templates_sudo/rbenv …install_rbenv.bash” -- Custom code-/\/\/\/\-------
 
 
+
+ #--------\/\/\/\/--- tasks_base/main.bash ---\/\/\/\/-------
 _main() {
-  determine_os_and_fire_action
+  determine_os_and_fire_action "${*:-}"
 } # end _main
 
-_main
+echo params "${*:-}"
+_main "${*:-}"
 
 echo "🥦"
 exit 0

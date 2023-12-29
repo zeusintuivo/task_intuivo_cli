@@ -29,7 +29,25 @@ _fedora__64() {
   echo Fedora 29 REF: https://computingforgeeks.com/how-to-install-virtualbox-on-fedora-linux/
   echo Fedora 32 REF: https://tecadmin.net/install-oracle-virtualbox-on-fedora/
   echo Fedora 33 https://www.if-not-true-then-false.com/2010/install-virtualbox-with-yum-on-fedora-centos-red-hat-rhel/
-  if [[ "${*-}" == *"--reset"* ]] || [[ "${*-}" == *"--startover"* ]] || [[ "${*-}" == *"--restart"* ]] then 
+  echo "$0:${LINENO} params ${*:-}"
+	if [[ "${*-}" == *"--extension7"* ]] ; then
+  {
+		wget https://download.virtualbox.org/virtualbox/7.0.6/Oracle_VM_VirtualBox_Extension_Pack-7.0.6a-155176.vbox-extpack
+	  VBoxManage extpack install Oracle_VM_VirtualBox_Extension_Pack-7.0.6a-155176.vbox-extpack
+    wget https://download.virtualbox.org/virtualbox/7.0.6/VBoxGuestAdditions_7.0.6.iso
+		exit 0
+	}
+	fi
+	if [[ "${*-}" == *"--extension6"* ]] ; then
+  {
+	  wget https://download.virtualbox.org/virtualbox/6.1.0_RC1/Oracle_VM_VirtualBox_Extension_Pack-6.1.0_RC1.vbox-extpack
+	  VBoxManage extpack install Oracle_VM_VirtualBox_Extension_Pack-6.1.0_RC1.vbox-extpack
+	  wget https://download.virtualbox.org/virtualbox/6.1.0_RC1/VBoxGuestAdditions_6.1.0_RC1.iso
+		exit 0
+	}
+ 	fi
+	exit 0
+	if [[ "${*-}" == *"--reset"* ]] || [[ "${*-}" == *"--startover"* ]] || [[ "${*-}" == *"--restart"* ]] then 
 	{
 		echo "--reset --startover --restart " 
 		echo "reseting now"
@@ -122,7 +140,7 @@ _fedora__64() {
 	  dnf install VirtualBox-7.0 -y
   }
 	fi
-	Installing "usermod -aG vboxusers "\${USER}:${USER}" "
+  Installing "usermod -aG vboxusers "\${USER}:${USER}" "
 	usermod -aG vboxusers "${USER}"
 	Installing "usermod -aG vboxusers "\${SUDO_USER}:${SUDO_USER}" "
 	usermod -aG vboxusers "${SUDO_USER}"

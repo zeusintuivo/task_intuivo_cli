@@ -19,12 +19,13 @@ execute_as_sudo(){
     {
         if [ -e "./$THISSCRIPTNAME" ] ; then
         {
-          sudo "./$THISSCRIPTNAME"
+          echo "7.2 sudo sudo sudo sudo "$THISSCRIPTNAME" "${*:-}" "
+          sudo "./$THISSCRIPTNAME" "${*:-}"
         }
         elif ( command -v "$THISSCRIPTNAME" >/dev/null 2>&1 );  then
         {
-          echo "sudo sudo sudo "
-          sudo "$THISSCRIPTNAME"
+          echo "7.2 sudo sudo sudo sudo "$THISSCRIPTNAME" "${*:-}" "
+          sudo "$THISSCRIPTNAME" "${*:-}"
         }
         else
         {
@@ -46,7 +47,8 @@ execute_as_sudo(){
     echo "Needs to run as sudo ... ${0}"
   fi
 }
-execute_as_sudo
+execute_as_sudo "${*:-}"
+
 
 export USER_HOME
 # typeset -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)  # Get the caller's of sudo home dir Just Linux
@@ -65,3 +67,5 @@ load_struct_testing_wget
 passed Caller user identified:$SUDO_USER
 passed Home identified:$USER_HOME
 directory_exists_with_spaces "$USER_HOME"
+
+

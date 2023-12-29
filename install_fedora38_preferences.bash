@@ -268,11 +268,14 @@ _windows__32() {
  #--------/\/\/\/\-- tasks_templates_sudo/fedora38_preferences …install_fedora38_preferences.bash” -- Custom code-/\/\/\/\-------
 
 
+
+ #--------\/\/\/\/--- tasks_base/main.bash ---\/\/\/\/-------
 _main() {
-  determine_os_and_fire_action
+  determine_os_and_fire_action "${*:-}"
 } # end _main
 
-_main
+echo params "${*:-}"
+_main "${*:-}"
 
 echo "🥦"
 exit 0

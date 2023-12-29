@@ -16,6 +16,7 @@ echo "0. sudologic $0:$LINENO                   USER:${USER:-}"
 echo "0. sudologic $0:$LINENO              USER_HOME:${USER_HOME:-}"
 echo "0. sudologic $0:$LINENO THISSCRIPTCOMPLETEPATH:${THISSCRIPTCOMPLETEPATH:-}"
 echo "0. sudologic $0:$LINENO         THISSCRIPTNAME:${THISSCRIPTNAME:-}"
+echo "0. sudologic $0:$LINENO       THISSCRIPTPARAMS:${THISSCRIPTPARAMS:-}"
 
 echo "0. sudologic $0 Start Checking realpath  "
 if ! ( command -v realpath >/dev/null 2>&1; )  ; then
@@ -39,6 +40,10 @@ typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
 export  THISSCRIPTNAME
 typeset -r THISSCRIPTNAME="$(basename "$0")"
 
+export THISSCRIPTPARAMS
+typeset -r THISSCRIPTPARAMS="${*:-}"
+echo "0. sudologic $0:$LINENO       THISSCRIPTPARAMS:${THISSCRIPTPARAMS:-}"
+
 export _err
 typeset -i _err=0
 
@@ -47,7 +52,7 @@ typeset -i _err=0
     local cero="$0"
     local file1="$(paeth ${BASH_SOURCE})"
     local file2="$(paeth ${cero})"
-    echo -e "ERROR TRAP $THISSCRIPTNAME
+    echo -e "ERROR TRAP $THISSCRIPTNAME $THISSCRIPTPARAMS
 ${file1}:${BASH_LINENO[-0]}     \t ${FUNCNAME[-0]}()
 $file2:${BASH_LINENO[1]}    \t ${FUNCNAME[1]}()
 ERR ..."
@@ -59,7 +64,7 @@ ERR ..."
     local cero="$0"
     local file1="$(paeth ${BASH_SOURCE})"
     local file2="$(paeth ${cero})"
-    echo -e "INTERRUPT TRAP $THISSCRIPTNAME
+    echo -e "INTERRUPT TRAP $THISSCRIPTNAME $THISSCRIPTPARAMS
 ${file1}:${BASH_LINENO[-0]}     \t ${FUNCNAME[-0]}()
 $file2:${BASH_LINENO[1]}    \t ${FUNCNAME[1]}()
 INT ..."
@@ -242,7 +247,7 @@ function sudo_it() {
   {
     passed "sudo_it() # Do something under Mac OS X platform "
       # nothing here
-      raise_to_sudo_and_user_home
+      raise_to_sudo_and_user_home "${*-}"
       [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
     SUDO_USER="${USER}"
     SUDO_COMMAND="$0"
@@ -252,7 +257,7 @@ function sudo_it() {
   elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]] ; then
   {
       # Do something under GNU/Linux platform
-      raise_to_sudo_and_user_home
+      raise_to_sudo_and_user_home "${*-}"
       [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
       enforce_variable_with_value SUDO_USER "${SUDO_USER}"
       enforce_variable_with_value SUDO_UID "${SUDO_UID}"
@@ -298,7 +303,7 @@ function sudo_it() {
     local cero="$0"
     local file1="$(paeth ${BASH_SOURCE})"
     local file2="$(paeth ${cero})"
-    echo -e " ERROR OR INTERRUPT  TRAP $THISSCRIPTNAME
+    echo -e " ERROR OR INTERRUPT  TRAP $THISSCRIPTNAME $THISSCRIPTPARAMS
 ${file1}:${BASH_LINENO[-0]}     \t ${FUNCNAME[-0]}()
 $file2:${BASH_LINENO[1]}    \t ${FUNCNAME[1]}()
 ERR INT ..."
@@ -308,7 +313,7 @@ ERR INT ..."
 } # end sudo_it
 
 # _linux_prepare(){
-  sudo_it
+  sudo_it "${*}"
   _err=$?
   typeset -i tomporalDEBUG=${DEBUG:-}
   if (( tomporalDEBUG )) ; then
@@ -529,11 +534,14 @@ _tar() {
  #--------/\/\/\/\-- tasks_templates_sudo/1password …install_1password.bash” -- Custom code-/\/\/\/\-------
 
 
+
+ #--------\/\/\/\/--- tasks_base/main.bash ---\/\/\/\/-------
 _main() {
-  determine_os_and_fire_action
+  determine_os_and_fire_action "${*:-}"
 } # end _main
 
-_main
+echo params "${*:-}"
+_main "${*:-}"
 
 echo "🥦"
 exit 0
