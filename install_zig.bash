@@ -432,275 +432,63 @@ directory_exists_with_spaces "${USER_HOME}"
 
 
 
- #--------\/\/\/\/-- tasks_templates_sudo/evm …install_evm.bash” -- Custom code -\/\/\/\/-------
+ #--------\/\/\/\/-- tasks_templates_sudo/zig …install_zig.bash” -- Custom code -\/\/\/\/-------
 
 
-#!/usr/bin/env bash
-#
-# @author Zeus Intuivo <zeus@intuivo.com>
-#
-
-_package_list_installer() {
-  # trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  local package packages="${@}"
-  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer evm" && echo -e "${RESET}" && return 0' ERR
-
-  if ! install_requirements "linux" "${packages}" ; then
-  {
-    warning "installing requirements. ${CYAN} attempting to install one by one"
-    while read package; do
-    {
-      [ -z ${package} ] && continue
-      if ! install_requirements "linux" "${package}" ; then
-      {
-        _err=$?
-        if [ ${_err} -gt 0 ] ; then
-        {
-          echo -e "${RED}"
-          echo failed to install requirements "${package}"
-          echo -e "${RESET}"
-        }
-        fi
-      }
-      fi
-    }
-    done <<< "${packages}"
-  }
-  fi
-} # end _package_list_installer
-
-_git_clone() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO  _git_clone EVM" && echo -e "${RESET}" && return 0' ERR
-  local _source="${1}"
-  local _target="${2}"
-  Checking "${SUDO_USER}" "${_target}"
-  pwd
-  if  it_exists_with_spaces "${_target}" ; then # && it_exists_with_spaces "${_target}/.git" ; then
-  {
-    if it_exists_with_spaces "${_target}/.git" ; then
-    {
-      cd "${_target}"
-      git config pull.rebase false
-      git fetch
-      git pull
-    }
-    fi
-  }
-  else
-  {
-   git clone "${_source}" "${_target}"
-  }
-  fi
-  chown -R "${SUDO_USER}" "${_target}"
-
-} # _git_clone
-
-
-_install_and_add_variables_to_bashrc_zshrc(){
-  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _install_and_add_variables_to_bashrc_zshrc EVM" && echo -e "${RESET}" && return 0' ERR
-  local dir DIRS="erlang_tars erlang_versions evm_config scripts"
-  local EVM_HOME="${USER_HOME}/.evm"
-  # For each dir, check whether it's already exists or not
-  for dir in $DIRS
-  do
-    if [[ ! -d "$EVM_HOME/$dir" ]]
-    then
-      mkdir -p "$EVM_HOME/$dir"
-      echo "$EVM_HOME/$dir successfully created"
-    else
-      echo "$EVM_HOME/$dir already exists and will not be replaced"
-    fi
-  done
-  # Create the config file
-  if [[ ! -f "$EVM_HOME/evm_config/erlang_default" ]]
-  then
-    touch "$EVM_HOME/evm_config/erlang_default"
-    echo "$EVM_HOME/evm_config/erlang_default succesfully created"
-  else
-    echo "$EVM_HOME/evm_config/erlang_default already exists and will not be replaced"
-  fi
-
-  # Copy the script
-  cd "${USER_HOME}/.evm"
-  cp "evm" "$EVM_HOME/scripts"
-
-  local EVM_SH_CONTENT='
-
-
-# EVM
-_find_evm_erlang(){
-  echo "'${USER_HOME}'/.evm/erlang_versions/otp_src_$(<"'${USER_HOME}'/.evm/evm_config/erlang_default")/bin"
-}
-if [[ -e "'${USER_HOME}'/.evm" ]] ; then
-{
-  [[ -f "'${USER_HOME}'/.evm" ]] && export EVM_HOME="'${USER_HOME}'/.evm"
-  [[ -d "'${USER_HOME}'/.evm/scripts" ]] && export PATH="'${USER_HOME}'/.evm/scripts:${PATH}"
-  [[ -d "'${USER_HOME}'/.evm/scripts" ]] && export PATH="$(_find_evm_erlang):${PATH}"
-  #[[ -f "'${USER_HOME}'/.evm/scripts/evm" ]] && source "'${USER_HOME}'/.evm/scripts/evm"
-}
-fi
-
-'
-
-  echo "${EVM_SH_CONTENT}"
-  local INITFILE INITFILES="
-   .bashrc
-   .zshrc
-   .bash_profile
-   .profile
-   .zshenv
-   .zprofile
-  "
-  while read INITFILE; do
-  {
-    [ -z ${INITFILE} ] && continue
-    Checking "${USER_HOME}/${INITFILE}"
-    # if ! it_exists_with_spaces "${_target}" ; then
-    # {
-    #   continue
-    # }
-    # fi
-    _if_not_contains "${USER_HOME}/${INITFILE}"  "# EVM" ||  echo "${EVM_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
-    _if_not_contains "${USER_HOME}/${INITFILE}"  "EVM_HOME" ||  echo "${EVM_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
-    _if_not_contains "${USER_HOME}/${INITFILE}"  "evm/scripts" ||  echo "${EVM_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
-  }
-  done <<< "${INITFILES}"
-  # type EVM
-  file_exists_with_spaces "${USER_HOME}/.evm/scripts/evm"
-  source "${USER_HOME}/.evm/scripts/evm"
-  _finale_message
-
-} # _add_variables_to_bashrc_zshrc
+#!/usr/bin/bash
 
 _debian_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _git_clone "https://github.com/robisonsantos/evm.git" "${USER_HOME}/.evm"
-  apt update -y
-  trap 'echo -e "${RED}" && echo "ERROR err:$_err failed $0:$LINENO _debian_flavor_install evm" && echo -e "${RESET}" && return 0' ERR
-  local package packages="
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  if (
+  install_requirements "linux" "
+    base64
+    unzip
+    curl
     wget
-    openssl
-    libssl-dev
-    fop
-    flex
-    libxml
-    libxml-dev
-    libxslt
-    libxslt-dev
-    xsltproc
-    unixodbc-dev
-    libxml2-utils
-    libqt5opengl5-dev
-    libncurses-dev
-    libwxgtk-media3.0-gtk3-0v5
-    libwxgtk-media3.0-gtk3-dev
-    libwxgtk-webview3.0-gtk3-0v5
-    libwxgtk-webview3.0-gtk3-dev
-    libwxgtk3.0-gtk3-0v5
-    libwxgtk3.0-gtk3-dev
-    wx-common
+    ufw
+    nginx
+  "
+  ); then
+    {
+      apt install base64 -y
+      apt install unzip -y
+      apt install nginx -y
+    }
+  fi
+  verify_is_installed "
+    unzip
+    curl
+    wget
+    tar
+    ufw
+    nginx
+  "
+  local PB_VERSION=0.16.7
+  local CODENAME="pocketbase_${PB_VERSION}_linux_amd64.zip"
+  local TARGET_URL="https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/${CODENAME}"
+  local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  directory_exists_with_spaces "${DOWNLOADFOLDER}"
+  cd "${DOWNLOADFOLDER}"
+  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+  # unzip "${DOWNLOADFOLDER}/${CODENAME}" -d $HOME/pb/
+  local UNZIPDIR="${USER_HOME}/_/software"
+  mkdir -p "${UNZIPDIR}"
+  _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
+  local PATHTOPOCKETBASE="${UNZIPDIR}/pocketbase"
+  local THISIP=$(myip)
 
-   "
-  _package_list_installer "${packages}"
-  local MSG=$(_install_and_add_variables_to_bashrc_zshrc)
-  echo "${MSG}"
-  _finale_message
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _git_clone "https://github.com/robisonsantos/evm.git" "${USER_HOME}/.evm"
-  dnf groupinstall -y 'Development Tools' 'C Development Tools and Libraries'
-  dnf build-dep erlang -y --allowerasing # --skip-broken
-
-  # Package make-1:4.3-11.fc37.x86_64 is already installed.
-  # Package gcc-12.3.1-1.fc37.x86_64 is already installed.
-  # Package gcc-c++-12.3.1-1.fc37.x86_64 is already installed.
-  # Package autoconf-2.71-4.fc37.noarch is already installed.
-  # Package automake-1.16.5-9.fc37.noarch is already installed.
-  # Package zlib-devel-1.2.12-5.fc37.x86_64 is already installed.
-  # Package systemd-251.14-2.fc37.x86_64 is already installed.
-  # Package ncurses-devel-6.4-3.20230114.fc37.x86_64 is already installed.
-  # Package systemd-devel-251.14-2.fc37.x86_64 is already installed.
-  # Package flex-2.6.4-11.fc37.x86_64 is already installed.
-  # Package emacs-1:28.3-0.rc1.fc37.x86_64 is already installed.
-  # Package wxGTK-devel-3.2.1-3.fc37.x86_64 is already installed.
-  # Package m4-1.4.19-4.fc37.x86_64 is already installed.
-  # Package unixODBC-devel-2.3.11-1.fc37.x86_64 is already installed.
-  # Package lksctp-tools-devel-1.0.19-2.fc37.x86_64 is already installed.
-  # Package openssl1.1-devel-1:1.1.1q-2.fc37.x86_64 is already installed.
-  # Package ed-1.18-2.fc37.x86_64 is already installed.
-  # Package emacs-common-1:28.3-0.rc1.fc37.x86_64 is already installed
-  _package_list_installer "openssl1.1
-   openssl1.1-devel-1"
-  local package packages="
-    # Fedora 37
-    wget
-    # openssl
-    # openssl-devel
-    fop
-    libwbxml
-    libwbxml-devel
-    rust-libxml-devel
-    libxslt
-    libxslt-devel
-    # xsltproc
-    flex
-    compat-flex
-    unixODBC-gui-qt
-		unixODBC-devel
-    erlang-odbc
-    erlang-xmlrpc
-    erlang-ssh
-    erlang-tftp
-    erlang-tools
-		erlang-ezlib
-    erlang-yconf
-    erlang-riaknostic
-    erlang-riak_pb
-    erlang-riak_sysmon
-    erlang-rebar3-pc
-    erlang-ranch
-    erlang-snmp
-    erlang-webmachine
-    # libqt5opengl5-devel
-    ncurses-devel
-    wxGTK3-devel
-		wxGTK3-docs
-		wxGTK-devel
-		wxGTK-docs
-		compat-wxGTK3-gtk2-devel
-		compat-wxGTK3-gtk2-media
-		compat-wxGTK3-gtk2-gl
-		compat-wxGTK3-gtk2
-		wxGTK-webview
-		wxGTK3-gl
-    # gtk3-devel
-    # wx-common
-		wxGTK
-		wxGTK3
-		wxGlade
-		wxBase3
-		wxBase
-		erlang-wx
-		commons-compiler-jdk
-		javac@https://download.oracle.com/java/21/latest/jdk-21_linux-x64_bin.rpm
-		glib
-		glib-devel
-		libiodbc
-		libiodbc-devel
-   "
-
-  _package_list_installer "${packages}"
-  local MSG=$(_install_and_add_variables_to_bashrc_zshrc)
-  echo "${MSG}"
-  _finale_message
+  echo "_redhat_flavor_install Procedure not yet implemented. I don't know what to do."
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  echo "Procedure not yet implemented. I don't know what to do."
+  echo "_arch_flavor_install Procedure not yet implemented. I don't know what to do."
 } # end _readhat_flavor_install
 
 _arch__32() {
@@ -785,90 +573,32 @@ _ubuntu__64() {
 
 _darwin__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  export HOMEBREW_NO_AUTO_UPDATE=1
-  trap 'echo -e "${RED}" && echo "ERROR err:$_err failed $0:$LINENO _darwin__64 evm" && echo -e "${RESET}" && return 0' ERR
-  local package packages="
-    wget
-    openssl
-    wxWidgets
-    fop
-    libxslt
-  "
-  _package_list_installer "${packages}"
-  _git_clone "https://github.com/robisonsantos/evm.git" "${USER_HOME}/.evm"
-  local MSG=$(_install_and_add_variables_to_bashrc_zshrc)
-  echo "${MSG}"
-  _finale_message
+  echo "_darwin__64 Procedure not yet implemented. I don't know what to do."
 } # end _darwin__64
-
 
 _darwin__arm64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  export HOMEBREW_NO_AUTO_UPDATE=1
-  trap 'echo -e "${RED}" && echo "ERROR err:$_err failed $0:$LINENO _darwin__arm64 evm" && echo -e "${RESET}" && return 0' ERR
-  local package packages="
-    wget
-    openssl
-    wxWidgets
-    fop
-    libxslt
-  "
-  _package_list_installer "${packages}"
-  _git_clone "https://github.com/robisonsantos/evm.git" "${USER_HOME}/.evm"
-  local MSG=$(_install_and_add_variables_to_bashrc_zshrc)
-  echo "${MSG}"
-  _finale_message
+  echo "_darwin__arm64 Procedure not yet implemented. I don't know what to do."
 } # end _darwin__arm64
-
 
 _tar() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  echo "Procedure not yet implemented. I don't know what to do."
+  echo "_tar Procedure not yet implemented. I don't know what to do."
 } # end tar
 
 _windows__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  echo "Procedure not yet implemented. I don't know what to do."
+  echo "_windows__64 Procedure not yet implemented. I don't know what to do."
 } # end _windows__64
 
 _windows__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  echo "Procedure not yet implemented. I don't know what to do."
+  echo "_windows__32 Procedure not yet implemented. I don't know what to do."
 } # end _windows__32
 
-_finale_message(){
-  echo
-  echo "
-             _______________   ____ _____
-             \_   _____/\   \ /   //     \
-     ______   |    __)_  \   Y   //  \ /  \    ______
-    /_____/   |        \  \     //    Y    \  /_____/
-             /_______  /   \___/ \____|__  /
-                     \/                  \/
-   ___________        .__
-   \_   _____/_______ |  |  _____     ____    ____
-    |    __)_ \_  __ \|  |  \__  \   /    \  / ___\
-    |        \ |  | \/|  |__ / __ \_|   |  \/ /_/  >
-   /_______  / |__|   |____/(____  /|___|  /\___  /
-           \/                    \/      \//_____/
-   ____   ____                     .__
-   \   \ /   / ____ _______  ______|__|  ____    ____
-    \   Y   /_/ __ \\\\_  __ \/  ___/|  | /  _ \  /    \\
-     \     / \  ___/ |  | \/\___ \ |  |(  <_> )|   |  \
-      \___/   \___  >|__|  /____  >|__| \____/ |___|  /
-                  \/            \/                  \/
-      _____
-     /     \  _____     ____  _____     ____    ____ _______
-    /  \ /  \ \__  \   /    \ \__  \   / ___\ _/ __ \\\\_  __ \\
-   /    Y    \ / __ \_|   |  \ / __ \_/ /_/  >\  ___/ |  | \/
-   \____|__  /(____  /|___|  /(____  /\___  /  \___  >|__|
-           \/      \/      \/      \//_____/       \/
-  "
-} # end _finale_message
 
 
-
- #--------/\/\/\/\-- tasks_templates_sudo/evm …install_evm.bash” -- Custom code-/\/\/\/\-------
+ #--------/\/\/\/\-- tasks_templates_sudo/zig …install_zig.bash” -- Custom code-/\/\/\/\-------
 
 
 

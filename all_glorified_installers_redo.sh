@@ -1,7 +1,11 @@
 ./generate_installer_simple fedora37_preferences
 ./generate_installer_simple fedora38_preferences
+./generate_installer_simple dotfiles
 
 ./generate_installer_with_sudo 1password
+./generate_installer_with_sudo zig
+./generate_installer_with_sudo bun
+./generate_installer_with_sudo bum
 ./generate_installer_with_sudo beyondcompare
 ./generate_installer_with_sudo brew
 ./generate_installer_with_sudo chaskiq

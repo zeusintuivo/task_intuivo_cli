@@ -3,44 +3,6 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 
-  function _trap_on_error(){
-    local -ir __trapped_error_exit_num="${2:-0}"
-    echo -e "\\n \033[01;7m*** 2 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
-    echo ". ${1}"
-    echo ". exit  ${__trapped_error_exit_num}  "
-    echo ". caller $(caller) "
-    echo ". ${BASH_COMMAND}"
-    local -r __caller=$(caller)
-    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
-    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
-
-    # $(eval ${BASH_COMMAND}  2>&1; )
-    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
-    exit ${__trapped_error_exit_num}
-  }
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-
-  function _trap_on_INT(){
-    local -ir __trapped_INT_num="${2:-0}"
-    echo -e "\\n \033[01;7m*** 7 INT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n INT ...\033[0m  \n \n "
-    echo ". ${1}"
-    echo ". INT  ${__trapped_INT_num}  "
-    echo ". caller $(caller) "
-    echo ". ${BASH_COMMAND}"
-    local -r __caller=$(caller)
-    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
-    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
-
-    # $(eval ${BASH_COMMAND}  2>&1; )
-    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
-    exit ${__trapped_INT_num}
-  }
-  trap  '_trap_on_INT $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  INT
-
-
-
 _package_list_installer() {
   # trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   local package packages="${@}"
@@ -57,7 +19,7 @@ _package_list_installer() {
         _err=$?
         if [ ${_err} -gt 0 ] ; then
         {
-          echo -e "${RED}" 
+          echo -e "${RED}"
           echo failed to install requirements "${package}"
           echo -e "${RESET}"
         }
@@ -100,7 +62,7 @@ _git_clone() {
 
 _install_and_add_variables_to_bashrc_zshrc(){
   trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _install_and_add_variables_to_bashrc_zshrc KERL" && echo -e "${RESET}" && return 0' ERR
-  
+
   local KERL_HOME="${USER_HOME}/.kerl_install"
   cd "${KERL_HOME}"
 	mkdir -p "${USER_HOME}/.kerl"
@@ -113,7 +75,7 @@ _install_and_add_variables_to_bashrc_zshrc(){
 #[[ -f "'${KERL_HOME}'/kerl" ]] && source "'${KERL_HOME}'/kerl"
 [[ -f "'${KERL_HOME}'/bash_completion/kerl" ]] && source "'${KERL_HOME}'/bash_completion/kerl"
 
-' 
+'
   echo "${KERL_SH_CONTENT}"
   local INITFILE INITFILES="
    .bashrc
@@ -123,7 +85,7 @@ _install_and_add_variables_to_bashrc_zshrc(){
   while read INITFILE; do
   {
     [ -z ${INITFILE} ] && continue
-    Checking "${USER_HOME}/${INITFILE}" 
+    Checking "${USER_HOME}/${INITFILE}"
     # if ! it_exists_with_spaces "${_target}" ; then
     # {
     #   continue
@@ -142,7 +104,7 @@ _install_and_add_variables_to_bashrc_zshrc(){
 #[[ -f "'${KERL_HOME}'/kerl" ]] && source "'${KERL_HOME}'/kerl"
 [[ -f "'${KERL_HOME}'/zsh_completion/kerl" ]] && source "'${KERL_HOME}'/zsh_completion/kerl"
 
-' 
+'
   INITFILE=""
  	INITFILES="
    .zshrc
@@ -152,7 +114,7 @@ _install_and_add_variables_to_bashrc_zshrc(){
   while read INITFILE; do
   {
     [ -z ${INITFILE} ] && continue
-    Checking "${USER_HOME}/${INITFILE}" 
+    Checking "${USER_HOME}/${INITFILE}"
     # if ! it_exists_with_spaces "${_target}" ; then
     # {
     #   continue
@@ -198,7 +160,7 @@ _debian_flavor_install() {
     libwxgtk3.0-gtk3-0v5
     libwxgtk3.0-gtk3-dev
     wx-common
-		
+
    "
   _package_list_installer "${packages}"
 	_git_clone "https://github.com/kerl/kerl.git" "${USER_HOME}/.kerl_install"
@@ -397,7 +359,7 @@ _darwin__64() {
   _package_list_installer "${packages}"
   _git_clone "https://github.com/kerl/kerl.git" "${USER_HOME}/.kerl_install"
   local MSG=$(_install_and_add_variables_to_bashrc_zshrc)
-  echo "${MSG}" 
+  echo "${MSG}"
   _finale_message
 } # end _darwin__64
 
@@ -416,7 +378,7 @@ _darwin__arm64() {
   _package_list_installer "${packages}"
   _git_clone "https://github.com/robisonsantos/kerl.git" "${USER_HOME}/.kerl"
   local MSG=$(_install_and_add_variables_to_bashrc_zshrc)
-  echo "${MSG}" 
+  echo "${MSG}"
   _finale_message
 } # end _darwin__arm64
 
@@ -439,30 +401,30 @@ _windows__32() {
 _finale_message(){
   echo
   echo "
-   ___   ____ ___________          .___.                   
-   \  \  |  | \_   _____/________  |   |                     
-    \  \_|  |  |    __)_ \_   __ \ |   |        
-     \      |  |        \  |  | \/ |   |          
-     /  /\  | /_______  /  |  |    |   |  __..                 
-    /__/  \_|         \/   |__|    |    \/  /                   
-   ___________        .__.         \_______/                           
-   \_   _____/_______ |  |  _____     ____    ____           
-    |    __)_ \_  __ \|  |  \__  \   /    \  / ___\          
-    |        \ |  | \/|  |__ / __ \_|   |  \/ /_/  >         
-   /_______  / |__|   |____/(____  /|___|  /\___  /          
-           \/                    \/      \//_____/           
-   ____   ____                     .__                       
-   \   \ /   / ____ _______  ______|__|  ____    ____        
-    \   Y   /_/ __ \\\\_  __ \/  ___/|  | /  _ \  /    \\       
-     \     / \  ___/ |  | \/\___ \ |  |(  <_> )|   |  \      
-      \___/   \___  >|__|  /____  >|__| \____/ |___|  /      
-                  \/            \/                  \/       
-      _____                                                  
-     /     \  _____     ____  _____     ____    ____ _______ 
+   ___   ____ ___________          .___.
+   \  \  |  | \_   _____/________  |   |
+    \  \_|  |  |    __)_ \_   __ \ |   |
+     \      |  |        \  |  | \/ |   |
+     /  /\  | /_______  /  |  |    |   |  __..
+    /__/  \_|         \/   |__|    |    \/  /
+   ___________        .__.         \_______/
+   \_   _____/_______ |  |  _____     ____    ____
+    |    __)_ \_  __ \|  |  \__  \   /    \  / ___\
+    |        \ |  | \/|  |__ / __ \_|   |  \/ /_/  >
+   /_______  / |__|   |____/(____  /|___|  /\___  /
+           \/                    \/      \//_____/
+   ____   ____                     .__
+   \   \ /   / ____ _______  ______|__|  ____    ____
+    \   Y   /_/ __ \\\\_  __ \/  ___/|  | /  _ \  /    \\
+     \     / \  ___/ |  | \/\___ \ |  |(  <_> )|   |  \
+      \___/   \___  >|__|  /____  >|__| \____/ |___|  /
+                  \/            \/                  \/
+      _____
+     /     \  _____     ____  _____     ____    ____ _______
     /  \ /  \ \__  \   /    \ \__  \   / ___\ _/ __ \\\\_  __ \\
    /    Y    \ / __ \_|   |  \ / __ \_/ /_/  >\  ___/ |  | \/
-   \____|__  /(____  /|___|  /(____  /\___  /  \___  >|__|   
-           \/      \/      \/      \//_____/       \/       
+   \____|__  /(____  /|___|  /(____  /\___  /  \___  >|__|
+           \/      \/      \/      \//_____/       \/
   "
 } # end _finale_message
 
