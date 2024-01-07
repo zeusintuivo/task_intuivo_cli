@@ -422,13 +422,19 @@ _fedora__64() {
 	fi
 	if [[ "${*-}" == *"--extension6"* ]] ; then
   {
-	  wget https://download.virtualbox.org/virtualbox/6.1.0_RC1/Oracle_VM_VirtualBox_Extension_Pack-6.1.0_RC1.vbox-extpack
-	  VBoxManage extpack install Oracle_VM_VirtualBox_Extension_Pack-6.1.0_RC1.vbox-extpack
-	  wget https://download.virtualbox.org/virtualbox/6.1.0_RC1/VBoxGuestAdditions_6.1.0_RC1.iso
+	 # wget https://download.virtualbox.org/virtualbox/6.1.0_RC1/VirtualBox-6.1-6.1.0_RC1_134891_el6-1.x86_64.rpm
+	 # dnf install ./VirtualBox-6.1-6.1.0_RC1_134891_el6-1.x86_64.rpm --allowerasing 
+	 #	wget https://download.virtualbox.org/virtualbox/6.1.0_RC1/VirtualBoxSDK-6.1.0_RC1-134891.zip
+	 # unzip VirtualBoxSDK-6.1.0_RC1-134891.zip
+	 #	wget https://download.virtualbox.org/virtualbox/6.1.0_RC1/VBoxGuestAdditions_6.1.0_RC1.iso
+	 # wget https://download.virtualbox.org/virtualbox/6.1.0_RC1/Oracle_VM_VirtualBox_Extension_Pack-6.1.0_RC1.vbox-extpack
+	  # wget https://download.virtualbox.org/virtualbox/6.1.48/Oracle_VM_VirtualBox_Extension_Pack-6.1.48.vbox-extpack
+		# VBoxManage extpack install Oracle_VM_VirtualBox_Extension_Pack-6.1.0_RC1.vbox-extpack
+		# VBoxManage extpack uninstall Oracle_VM_VirtualBox_Extension_Pack-6.1.0_RC1.vbox-extpack
+		VBoxManage extpack install Oracle_VM_VirtualBox_Extension_Pack-6.1.48.vbox-extpack
 		exit 0
 	}
  	fi
-	exit 0
 	if [[ "${*-}" == *"--reset"* ]] || [[ "${*-}" == *"--startover"* ]] || [[ "${*-}" == *"--restart"* ]] then 
 	{
 		echo "--reset --startover --restart " 

@@ -18,7 +18,7 @@
     exit ${__trapped_error_exit_num}
   }
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  
+
   function _trap_on_INT(){
     local -ir __trapped_INT_num="${2:-0}"
     echo -e "\\n \033[01;7m*** 7 INT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n INT ...\033[0m  \n \n "
@@ -49,7 +49,7 @@ _debian_flavor_install() {
     ufw
     nginx
   "
-  ); then 
+  ); then
     {
       apt install base64 -y
       apt install unzip -y
@@ -124,12 +124,12 @@ B8HCtGjfod0p1A==
   curl -o awscliv2.sig https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip.sig
   gpg --verify awscliv2.sig awscliv2.zip
 	unzip -u awscliv2.zip
-	Comment update install 
+	Comment update install
 	./aws/install --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli --update
   Checking which aws
   which aws
   Checking aws --version
-  aws --version	
+  aws --version
   rm -rf ./aws
 	rm -rf awscli.gpg.key
 	rm -rf awscliv2.sig
