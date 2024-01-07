@@ -1,46 +1,9 @@
 #!/bin/bash
 
-  function _trap_on_error(){
-    local -ir __trapped_error_exit_num="${2:-0}"
-    echo -e "\\n \033[01;7m*** 2 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
-    echo ". ${1}"
-    echo ". exit  ${__trapped_error_exit_num}  "
-    echo ". caller $(caller) "
-    echo ". ${BASH_COMMAND}"
-    local -r __caller=$(caller)
-    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
-    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
-
-    # $(eval ${BASH_COMMAND}  2>&1; )
-    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
-    exit ${__trapped_error_exit_num}
-  }
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  
-  function _trap_on_INT(){
-    local -ir __trapped_INT_num="${2:-0}"
-    echo -e "\\n \033[01;7m*** 7 INT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n INT ...\033[0m  \n \n "
-    echo ". ${1}"
-    echo ". INT  ${__trapped_INT_num}  "
-    echo ". caller $(caller) "
-    echo ". ${BASH_COMMAND}"
-    local -r __caller=$(caller)
-    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
-    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
-
-    # $(eval ${BASH_COMMAND}  2>&1; )
-    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
-    exit ${__trapped_INT_num}
-  }
-  trap  '_trap_on_INT $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  INT
-
-
 _add_variables_to_bashrc_zshrc(){
   local FINDBREW="/opt/homebrew/bin/brew"
 
-	if [[ -e "/opt/homebrew/bin/brew" ]] ; then 
+	if [[ -e "/opt/homebrew/bin/brew" ]] ; then
 	{
 		FINDBREW="/opt/homebrew/bin/brew"
 	}
@@ -62,11 +25,11 @@ _add_variables_to_bashrc_zshrc(){
 	}
 	fi
 
-	
+
 	$(brew --prefix)/bin/brew
 	local BREW_SH_CONTENT='
 
-# BREW - HOMEBREW 
+# BREW - HOMEBREW
 eval $("'${FINDBREW}'" shellenv)
 
 '
@@ -82,8 +45,8 @@ eval $("'${FINDBREW}'" shellenv)
   "
   while read INITFILE; do
   {
-    [ -z ${INITFILE} ] && continue    
-    Checking "${USER_HOME}/${INITFILE}" 
+    [ -z ${INITFILE} ] && continue
+    Checking "${USER_HOME}/${INITFILE}"
     (_if_not_contains  "${USER_HOME}/${INITFILE}" "/bin/brew shellenv" ) || Configuring ${INITFILE}
     (_if_not_contains  "${USER_HOME}/${INITFILE}" "/bin/brew shellenv" ) && Skipping configuration for ${INITFILE}
     #                   filename            value      || do this .............
@@ -253,8 +216,8 @@ _darwin__64() {
   Checking homebrew is installed
   if ( ! su - "${SUDO_USER}" -c "command -v brew" >/dev/null 2>&1; )  ; then
   {
-    Installing homebrew 
-    local TARGET_URL="https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh" 
+    Installing homebrew
+    local TARGET_URL="https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"
     Skipping "${CYAN}Based on \n${RED}\n/bin/bash -c \"\$(curl -fsSL  "${TARGET_URL}")\"\n${RESET}${CYAN}\n and doing structed tested."
     local DOWNLOADFOLDER="$(_find_downloads_folder)"
     local CODENAME=install.sh
@@ -264,12 +227,12 @@ _darwin__64() {
     mv "${DOWNLOADFOLDER}/${CODENAME}" "${USER_HOME}/${NEWNAME}"
     chmod a+x "${USER_HOME}/${NEWNAME}"
     cd  "${USER_HOME}"
-    Installing "${USER_HOME}/${NEWNAME}" 
+    Installing "${USER_HOME}/${NEWNAME}"
     su - "${SUDO_USER}" -c "${USER_HOME}/${NEWNAME}"
-    wait    
+    wait
   }
   fi
-  ensure brew or "Homebrew is required to continue " 
+  ensure brew or "Homebrew is required to continue "
   _add_variables_to_bashrc_zshrc
 } # end _darwin__64
 

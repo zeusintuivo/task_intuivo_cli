@@ -4,43 +4,6 @@
 #
 #
 
-  function _trap_on_error(){
-    local -ir __trapped_error_exit_num="${2:-0}"
-    echo -e "\\n \033[01;7m*** 2 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
-    echo ". ${1}"
-    echo ". exit  ${__trapped_error_exit_num}  "
-    echo ". caller $(caller) "
-    echo ". ${BASH_COMMAND}"
-    local -r __caller=$(caller)
-    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
-    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
-
-    # $(eval ${BASH_COMMAND}  2>&1; )
-    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
-    exit ${__trapped_error_exit_num}
-  }
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  
-  function _trap_on_INT(){
-    local -ir __trapped_INT_num="${2:-0}"
-    echo -e "\\n \033[01;7m*** 7 INT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n INT ...\033[0m  \n \n "
-    echo ". ${1}"
-    echo ". INT  ${__trapped_INT_num}  "
-    echo ". caller $(caller) "
-    echo ". ${BASH_COMMAND}"
-    local -r __caller=$(caller)
-    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
-    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
-
-    # $(eval ${BASH_COMMAND}  2>&1; )
-    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
-    exit ${__trapped_INT_num}
-  }
-  trap  '_trap_on_INT $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  INT
-
-
 _version() {
     trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
     local -i _err
@@ -144,14 +107,14 @@ download_install_package_control(){
   fi
   local DOWNLOADFOLDER="$(_find_downloads_folder)"
 	_do_not_downloadtwice "${target_url}" "${DOWNLOADFOLDER}"  "${CODENAME}"
-  
+
   local __pc_download_filepath__="${DOWNLOADFOLDER}/${CODENAME}"
 	# directory_does_not_exist_with_spaces "${__pc_download_filepath__}"
   if it_does_not_exist_with_spaces "${__pc_download_filepath__}" ; then
     failed "I cannot find target downloaded where the Packages was supposed to be! ${__pc_download_filepath__}"
   fi
   file_exists_with_spaces "${__pc_download_filepath__}"
-  
+
 
   if it_exists_with_spaces "${__pc_dir_config_s_ip__}/${__pc_download_filename__}" ; then
     rm -rf "${__pc_dir_config_s_ip__}/${__pc_download_filename__}"

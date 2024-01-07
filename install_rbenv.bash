@@ -110,8 +110,8 @@ load_struct_testing(){
         provider="/home/${USER}/_/clis/execute_command_intuivo_cli/${_library}"
       }
       fi
-      echo "$0: ${provider}" 
-      echo "$0: SUDO_USER:${SUDO_USER:-nada SUDOUSER}: USER:${USER:-nada USER}: ${SUDO_HOME:-nada SUDO_HOME}: {${HOME:-nada HOME}}" 
+      echo "$0: ${provider}"
+      echo "$0: SUDO_USER:${SUDO_USER:-nada SUDOUSER}: USER:${USER:-nada USER}: ${SUDO_HOME:-nada SUDO_HOME}: {${HOME:-nada HOME}}"
       local _err=0 structsource
       if [[  -e "${provider}" ]] ; then
         if (( _DEBUG )) ; then
@@ -121,7 +121,7 @@ load_struct_testing(){
         _err=$?
         if [ $_err -gt 0 ] ; then
         {
-           echo -e "\n \n  ERROR! Loading ${_library}. running 'source locally' returned error did not download or is empty err:$_err  \n \n  " 
+           echo -e "\n \n  ERROR! Loading ${_library}. running 'source locally' returned error did not download or is empty err:$_err  \n \n  "
            exit 1
         }
         fi
@@ -157,7 +157,7 @@ load_struct_testing(){
       fi
       if [[ -z "${structsource}" ]] ; then
       {
-        echo -e "\n \n 3 ERROR! Loading ${_library} into ${_library}_source did not download or is empty " 
+        echo -e "\n \n 3 ERROR! Loading ${_library} into ${_library}_source did not download or is empty "
         exit 1
       }
       fi
@@ -208,7 +208,7 @@ if [[ -z "${SUDO_COMMAND:-}" ]] && \
    [[ -n "${THISSCRIPTNAME:-}" ]] \
   ; then
 {
-  passed Called from user 
+  passed Called from user
 }
 fi
 
@@ -224,7 +224,7 @@ if [[ -n "${SUDO_COMMAND:-}"  ]] && \
    [[ -n "${THISSCRIPTNAME:-}"  ]] \
   ; then
 {
-  passed Called from user as sudo 
+  passed Called from user as sudo
 }
 else
 {
@@ -233,7 +233,7 @@ if [[ "${SUDO_USER:-}" == 'root'  ]] && \
    [[ "${USER:-}" == 'root' ]] \
   ; then
 {
-  failed This script is has to be called from normal user. Not Root. Abort 
+  failed This script is has to be called from normal user. Not Root. Abort
   exit 69
 }
 fi
@@ -279,7 +279,7 @@ function sudo_it() {
     SUDO_GID=20
   }
   fi
-  
+
   if (( _DEBUG )) ; then
     Comment _err:${_err}
   fi
@@ -370,20 +370,6 @@ fi
 directory_exists_with_spaces "${USER_HOME}"
 
 
-
- #---------/\/\/\-- tasks_base/sudoer.bash -------------/\/\/\--------
-
-
-
-
-
- #--------\/\/\/\/-- tasks_templates_sudo/rbenv …install_rbenv.bash” -- Custom code -\/\/\/\/-------
-
-
-#!/usr/bin/env bash
-#
-# @author Zeus Intuivo <zeus@intuivo.com>
-#
   function _trap_on_error(){
     local -ir __trapped_error_exit_num="${2:-0}"
     echo -e "\\n \033[01;7m*** 2 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
@@ -401,6 +387,24 @@ directory_exists_with_spaces "${USER_HOME}"
     exit ${__trapped_error_exit_num}
   }
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+
+  function _trap_on_exit(){
+    local -ir __trapped_exit_num="${2:-0}"
+    echo -e "\\n \033[01;7m*** 5 EXIT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n EXIT ...\033[0m  \n \n "
+    echo ". ${1}"
+    echo ". exit  ${__trapped_exit_num}  "
+    echo ". caller $(caller) "
+    echo ". ${BASH_COMMAND}"
+    local -r __caller=$(caller)
+    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+
+    # $(eval ${BASH_COMMAND}  2>&1; )
+    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+    exit ${__trapped_INT_num}
+  }
+  # trap  '_trap_on_exit $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  EXIT
 
   function _trap_on_INT(){
     local -ir __trapped_INT_num="${2:-0}"
@@ -422,6 +426,19 @@ directory_exists_with_spaces "${USER_HOME}"
 
 
 
+ #---------/\/\/\-- tasks_base/sudoer.bash -------------/\/\/\--------
+
+
+
+
+
+ #--------\/\/\/\/-- tasks_templates_sudo/rbenv …install_rbenv.bash” -- Custom code -\/\/\/\/-------
+
+
+#!/usr/bin/env bash
+#
+# @author Zeus Intuivo <zeus@intuivo.com>
+#
 _package_list_installer() {
   # trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   local package packages="${@}"
@@ -438,7 +455,7 @@ _package_list_installer() {
         _err=$?
         if [ ${_err} -gt 0 ] ; then
         {
-          echo -e "${RED}" 
+          echo -e "${RED}"
           echo failed to install requirements "${package}"
           echo -e "${RESET}"
         }
@@ -462,17 +479,17 @@ _git_clone() {
     if it_exists_with_spaces "${_target}/.git" ; then
     {
       cd "${_target}"
-      if git config pull.rebase false ; then 
+      if git config pull.rebase false ; then
 			{
 				warning Could not git config pull.rebase false
 			}
 			fi
-      if git fetch  ; then 
+      if git fetch  ; then
 			{
 				warning Could not git fetch
 			}
 			fi
-      if git pull  ; then 
+      if git pull  ; then
 			{
 				warning Could not git pull
 			}
@@ -482,7 +499,7 @@ _git_clone() {
   }
   else
   {
-    if git clone "${_source}" "${_target}"  ; then 
+    if git clone "${_source}" "${_target}"  ; then
 		{
 			warning Could not git clone "${_source}" "${_target}"
 		}
@@ -507,7 +524,7 @@ if [[ -e "'${USER_HOME}'/.rbenv" ]] ; then
   eval "$(rbenv init -)"
 }
 fi
-' 
+'
   trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _add_variables_to_bashrc_zshrc rbenv" && echo -e "${RESET}" && return 0' ERR
   Checking "${RBENV_SH_CONTENT}"
   local INITFILE INITFILES="
@@ -519,9 +536,9 @@ fi
    .zprofile
   "
   while read INITFILE; do
-  { 
+  {
     [ -z ${INITFILE} ] && continue
-    Checking "${USER_HOME}/${INITFILE}" 
+    Checking "${USER_HOME}/${INITFILE}"
     _if_not_contains "${USER_HOME}/${INITFILE}"  "# RBENV" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
     _if_not_contains "${USER_HOME}/${INITFILE}"  "RBENV_ROOT" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
     _if_not_contains "${USER_HOME}/${INITFILE}"  "rbenv init" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
@@ -593,7 +610,7 @@ _debian_flavor_install() {
 
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  dnf build-dep rbenv -vy --allowerasing
+  dnf build-dep rbenv -vy --allow-erasing
   # dnf install  -y openssl-devel
   # Batch Fedora 37
   local package packages="
@@ -603,15 +620,15 @@ _redhat_flavor_install() {
     bison
 		bison-devel
     ruby-build-rbenv
-    #openssl1.1
-    #openssl1.1-devel-1
+    openssl1.1
+    openssl1.1-devel-1
 		ncurses
     ncurses-devel
 		ncurses-c++-libs
 		ncurses-compat-libs
 		ncurses-libs
 		ncurses-static
-		ncurses-base 
+		ncurses-base
 		# ncurses-term conflicts with foot-terminfo
     readline
 		readline-static
@@ -623,7 +640,7 @@ _redhat_flavor_install() {
     zlib
 		zlib-devel
     zlibrary-devel
-    zlibrary		
+    zlibrary
 		libffi
     libffi-devel
 		libffi3.1
@@ -636,23 +653,21 @@ _redhat_flavor_install() {
   "
   _package_list_installer "${packages}"
 
-	#ensure brew or "Canceling until brew is installed. try install_brew.bash install_brew.sh"
+	ensure brew or "Canceling until brew is installed. try install_brew.bash install_brew.sh"
 	su - "${SUDO_USER}" -c 'brew install readline'
 	su - "${SUDO_USER}" -c 'brew install openssl@1.1'
   _git_clone "https://github.com/rbenv/rbenv.git" "${USER_HOME}/.rbenv"
   _git_clone "https://github.com/rbenv/ruby-build.git" "${USER_HOME}/.rbenv/plugins/ruby-build"
   _add_variables_to_bashrc_zshrc
-  #ensure rbenv or "Canceling until rbenv did not install"
+  ensure rbenv or "Canceling until rbenv did not install"
   su - "${SUDO_USER}" -c 'rbenv install -l'
   su - "${SUDO_USER}" -c 'rbenv install 2.6.5'
   su - "${SUDO_USER}" -c 'rbenv install 2.7.3'
   su - "${SUDO_USER}" -c 'rbenv install 3.2.2'
   su - "${SUDO_USER}" -c 'rbenv global 2.6.5'
   su - "${SUDO_USER}" -c 'rbenv rehash'
-  #ensure ruby or "Canceling until ruby is not working"
+  ensure ruby or "Canceling until ruby is not working"
   su - "${SUDO_USER}" -c 'ruby -v'
-echo "subl  ~/.{bashrc,bash_profile,profile,zshrc,zsh_profile,zshenv,zprofile}"
-
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {

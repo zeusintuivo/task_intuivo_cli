@@ -110,8 +110,8 @@ load_struct_testing(){
         provider="/home/${USER}/_/clis/execute_command_intuivo_cli/${_library}"
       }
       fi
-      echo "$0: ${provider}" 
-      echo "$0: SUDO_USER:${SUDO_USER:-nada SUDOUSER}: USER:${USER:-nada USER}: ${SUDO_HOME:-nada SUDO_HOME}: {${HOME:-nada HOME}}" 
+      echo "$0: ${provider}"
+      echo "$0: SUDO_USER:${SUDO_USER:-nada SUDOUSER}: USER:${USER:-nada USER}: ${SUDO_HOME:-nada SUDO_HOME}: {${HOME:-nada HOME}}"
       local _err=0 structsource
       if [[  -e "${provider}" ]] ; then
         if (( _DEBUG )) ; then
@@ -121,7 +121,7 @@ load_struct_testing(){
         _err=$?
         if [ $_err -gt 0 ] ; then
         {
-           echo -e "\n \n  ERROR! Loading ${_library}. running 'source locally' returned error did not download or is empty err:$_err  \n \n  " 
+           echo -e "\n \n  ERROR! Loading ${_library}. running 'source locally' returned error did not download or is empty err:$_err  \n \n  "
            exit 1
         }
         fi
@@ -157,7 +157,7 @@ load_struct_testing(){
       fi
       if [[ -z "${structsource}" ]] ; then
       {
-        echo -e "\n \n 3 ERROR! Loading ${_library} into ${_library}_source did not download or is empty " 
+        echo -e "\n \n 3 ERROR! Loading ${_library} into ${_library}_source did not download or is empty "
         exit 1
       }
       fi
@@ -208,7 +208,7 @@ if [[ -z "${SUDO_COMMAND:-}" ]] && \
    [[ -n "${THISSCRIPTNAME:-}" ]] \
   ; then
 {
-  passed Called from user 
+  passed Called from user
 }
 fi
 
@@ -224,7 +224,7 @@ if [[ -n "${SUDO_COMMAND:-}"  ]] && \
    [[ -n "${THISSCRIPTNAME:-}"  ]] \
   ; then
 {
-  passed Called from user as sudo 
+  passed Called from user as sudo
 }
 else
 {
@@ -233,7 +233,7 @@ if [[ "${SUDO_USER:-}" == 'root'  ]] && \
    [[ "${USER:-}" == 'root' ]] \
   ; then
 {
-  failed This script is has to be called from normal user. Not Root. Abort 
+  failed This script is has to be called from normal user. Not Root. Abort
   exit 69
 }
 fi
@@ -279,7 +279,7 @@ function sudo_it() {
     SUDO_GID=20
   }
   fi
-  
+
   if (( _DEBUG )) ; then
     Comment _err:${_err}
   fi
@@ -368,4 +368,61 @@ fi
     Comment DEBUG_err?:${?}
   fi
 directory_exists_with_spaces "${USER_HOME}"
+
+
+  function _trap_on_error(){
+    local -ir __trapped_error_exit_num="${2:-0}"
+    echo -e "\\n \033[01;7m*** 2 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+    echo ". ${1}"
+    echo ". exit  ${__trapped_error_exit_num}  "
+    echo ". caller $(caller) "
+    echo ". ${BASH_COMMAND}"
+    local -r __caller=$(caller)
+    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+
+    # $(eval ${BASH_COMMAND}  2>&1; )
+    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+    exit ${__trapped_error_exit_num}
+  }
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+
+  function _trap_on_exit(){
+    local -ir __trapped_exit_num="${2:-0}"
+    echo -e "\\n \033[01;7m*** 5 EXIT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n EXIT ...\033[0m  \n \n "
+    echo ". ${1}"
+    echo ". exit  ${__trapped_exit_num}  "
+    echo ". caller $(caller) "
+    echo ". ${BASH_COMMAND}"
+    local -r __caller=$(caller)
+    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+
+    # $(eval ${BASH_COMMAND}  2>&1; )
+    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+    exit ${__trapped_INT_num}
+  }
+  # trap  '_trap_on_exit $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  EXIT
+
+  function _trap_on_INT(){
+    local -ir __trapped_INT_num="${2:-0}"
+    echo -e "\\n \033[01;7m*** 7 INT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n INT ...\033[0m  \n \n "
+    echo ". ${1}"
+    echo ". INT  ${__trapped_INT_num}  "
+    echo ". caller $(caller) "
+    echo ". ${BASH_COMMAND}"
+    local -r __caller=$(caller)
+    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+
+    # $(eval ${BASH_COMMAND}  2>&1; )
+    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+    exit ${__trapped_INT_num}
+  }
+  trap  '_trap_on_INT $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  INT
+
+
 

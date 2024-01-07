@@ -110,8 +110,8 @@ load_struct_testing(){
         provider="/home/${USER}/_/clis/execute_command_intuivo_cli/${_library}"
       }
       fi
-      echo "$0: ${provider}" 
-      echo "$0: SUDO_USER:${SUDO_USER:-nada SUDOUSER}: USER:${USER:-nada USER}: ${SUDO_HOME:-nada SUDO_HOME}: {${HOME:-nada HOME}}" 
+      echo "$0: ${provider}"
+      echo "$0: SUDO_USER:${SUDO_USER:-nada SUDOUSER}: USER:${USER:-nada USER}: ${SUDO_HOME:-nada SUDO_HOME}: {${HOME:-nada HOME}}"
       local _err=0 structsource
       if [[  -e "${provider}" ]] ; then
         if (( _DEBUG )) ; then
@@ -121,7 +121,7 @@ load_struct_testing(){
         _err=$?
         if [ $_err -gt 0 ] ; then
         {
-           echo -e "\n \n  ERROR! Loading ${_library}. running 'source locally' returned error did not download or is empty err:$_err  \n \n  " 
+           echo -e "\n \n  ERROR! Loading ${_library}. running 'source locally' returned error did not download or is empty err:$_err  \n \n  "
            exit 1
         }
         fi
@@ -157,7 +157,7 @@ load_struct_testing(){
       fi
       if [[ -z "${structsource}" ]] ; then
       {
-        echo -e "\n \n 3 ERROR! Loading ${_library} into ${_library}_source did not download or is empty " 
+        echo -e "\n \n 3 ERROR! Loading ${_library} into ${_library}_source did not download or is empty "
         exit 1
       }
       fi
@@ -208,7 +208,7 @@ if [[ -z "${SUDO_COMMAND:-}" ]] && \
    [[ -n "${THISSCRIPTNAME:-}" ]] \
   ; then
 {
-  passed Called from user 
+  passed Called from user
 }
 fi
 
@@ -224,7 +224,7 @@ if [[ -n "${SUDO_COMMAND:-}"  ]] && \
    [[ -n "${THISSCRIPTNAME:-}"  ]] \
   ; then
 {
-  passed Called from user as sudo 
+  passed Called from user as sudo
 }
 else
 {
@@ -233,7 +233,7 @@ if [[ "${SUDO_USER:-}" == 'root'  ]] && \
    [[ "${USER:-}" == 'root' ]] \
   ; then
 {
-  failed This script is has to be called from normal user. Not Root. Abort 
+  failed This script is has to be called from normal user. Not Root. Abort
   exit 69
 }
 fi
@@ -279,7 +279,7 @@ function sudo_it() {
     SUDO_GID=20
   }
   fi
-  
+
   if (( _DEBUG )) ; then
     Comment _err:${_err}
   fi
@@ -370,21 +370,6 @@ fi
 directory_exists_with_spaces "${USER_HOME}"
 
 
-
- #---------/\/\/\-- tasks_base/sudoer.bash -------------/\/\/\--------
-
-
-
-
-
- #--------\/\/\/\/-- tasks_templates_sudo/nvm …install_nvm.bash” -- Custom code -\/\/\/\/-------
-
-
-#!/usr/bin/env bash
-#
-# @author Zeus Intuivo <zeus@intuivo.com>
-#
-
   function _trap_on_error(){
     local -ir __trapped_error_exit_num="${2:-0}"
     echo -e "\\n \033[01;7m*** 2 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
@@ -403,22 +388,22 @@ directory_exists_with_spaces "${USER_HOME}"
   }
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
 
-  # function _trap_on_exit(){
-  #   local -ir __trapped_exit_num="${2:-0}"
-  #   echo -e "\\n \033[01;7m*** 5 EXIT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n EXIT ...\033[0m  \n \n "
-  #   echo ". ${1}"
-  #   echo ". exit  ${__trapped_exit_num}  "
-  #   echo ". caller $(caller) "
-  #   echo ". ${BASH_COMMAND}"
-  #   local -r __caller=$(caller)
-  #   local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
-  #   local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-  #   awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+  function _trap_on_exit(){
+    local -ir __trapped_exit_num="${2:-0}"
+    echo -e "\\n \033[01;7m*** 5 EXIT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n EXIT ...\033[0m  \n \n "
+    echo ". ${1}"
+    echo ". exit  ${__trapped_exit_num}  "
+    echo ". caller $(caller) "
+    echo ". ${BASH_COMMAND}"
+    local -r __caller=$(caller)
+    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
 
-  #   # $(eval ${BASH_COMMAND}  2>&1; )
-  #   # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
-  #   exit ${__trapped_INT_num}
-  # }
+    # $(eval ${BASH_COMMAND}  2>&1; )
+    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+    exit ${__trapped_INT_num}
+  }
   # trap  '_trap_on_exit $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  EXIT
 
   function _trap_on_INT(){
@@ -439,6 +424,22 @@ directory_exists_with_spaces "${USER_HOME}"
   }
   trap  '_trap_on_INT $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  INT
 
+
+
+ #---------/\/\/\-- tasks_base/sudoer.bash -------------/\/\/\--------
+
+
+
+
+
+ #--------\/\/\/\/-- tasks_templates_sudo/nvm …install_nvm.bash” -- Custom code -\/\/\/\/-------
+
+
+#!/usr/bin/env bash
+#
+# @author Zeus Intuivo <zeus@intuivo.com>
+#
+
 _git_clone() {
   local _source="${1}"
   local _target="${2}"
@@ -449,32 +450,32 @@ _git_clone() {
     if it_exists_with_spaces "${_target}/.git" ; then
     {
       cd "${_target}"
-      if git config pull.rebase false ; then 
+      if git config pull.rebase false ; then
 			{
 				warning Could not git config pull.rebase false
 			}
 			fi
-      if git fetch ; then 
+      if git fetch ; then
 			{
 				warning Could not git fetch
 			}
 			fi
-      if  git checkout .  ; then 
+      if  git checkout .  ; then
 			{
-				warning Could not git checkout . 
+				warning Could not git checkout .
 			}
 			fi
-      if git checkout master ; then 
+      if git checkout master ; then
 			{
 				warning Could not git checkout master
 			}
 			fi
-      if git pull ; then 
+      if git pull ; then
 			{
-				warning Could not git pull 
+				warning Could not git pull
 			}
 			fi
-      if git fetch --tags origin ; then 
+      if git fetch --tags origin ; then
 			{
 				warning Could not git fetch --tags origin
 			}
@@ -484,7 +485,7 @@ _git_clone() {
   }
   else
   {
-    if git clone "${_source}" "${_target}"  ; then 
+    if git clone "${_source}" "${_target}"  ; then
 		{
 			warning Could not git clone "${_source}" "${_target}"
 		}
@@ -505,7 +506,7 @@ _add_variables_to_bashrc_zshrc(){
 # NVM
 _find_nvm_node(){
   echo "'${USER_HOME}'/.nvm/versions/node/v$(<"'${USER_HOME}'/.nvm/alias/default")/bin"
-} 
+}
 if [[ -e "'${USER_HOME}'/.nvm" ]] ; then
 {
   export NVM_DIR="'${USER_HOME}'/.nvm"
@@ -531,8 +532,8 @@ fi
   "
   while read INITFILE; do
   {
-    [ -z ${INITFILE} ] && continue    
-    Checking "${USER_HOME}/${INITFILE}" 
+    [ -z ${INITFILE} ] && continue
+    Checking "${USER_HOME}/${INITFILE}"
     _if_not_contains "${USER_HOME}/${INITFILE}"  "# NVM" ||  echo "${NVM_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
     _if_not_contains "${USER_HOME}/${INITFILE}"  "nvm.sh" ||  echo "${NVM_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
   }
@@ -707,7 +708,7 @@ _install_npm_utils() {
   # is_not_installed jest &&  npm i -g jest
   # verify_is_installed jest
   # CHAINSTALLED=$(su - "${SUDO_USER}" -c 'npm -g info chai >/dev/null 2>&1')
-  Checking info chai 
+  Checking info chai
   CHAINSTALLED=$(npm -g info chai >/dev/null 2>&1)
   if [[ -n "$CHAINSTALLED" ]] &&  [[ "$CHAINSTALLED" == *"npm ERR"* ]]  ; then
   {
@@ -753,7 +754,7 @@ _install_npm_utils() {
 _debian_flavor_install() {
   _git_clone "https://github.com/nvm-sh/nvm.git" "${USER_HOME}/.nvm"
   cd "${USER_HOME}/.nvm"
-  Installing older version that is compatible with old linux 
+  Installing older version that is compatible with old linux
   git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" $(git rev-list --tags --max-count=1)`
   \. "${USER_HOME}/.nvm/nvm.sh"
   local MSG=$(_add_variables_to_bashrc_zshrc)

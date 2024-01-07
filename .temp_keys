@@ -5,7 +5,7 @@ export GITUSER="zeusintuivo"          # "user name only 'usename' from the githu
 # export GITTOKEN=""        # generate a token in https://github.com/settings/tokens
 # export GITPROVIDER=""      # default is "git@github.com" but private can be "git@git.company.net"
 # export VPNREQUIRED=""      # empty default will check is the named here vpn name is listed and on
-export EDITOR="nano"           # empty default guake_quick_file_opener will try to guess which editor to use, or use this instead if not found
+export EDITOR="subl"           # empty default guake_quick_file_opener will try to guess which editor to use, or use this instead if not found
 
 # Manually force to change name before commit
 # ( command -v git >/dev/null 2>&1; ) && [ -e .git ] && git config --local user.name "First.Last"

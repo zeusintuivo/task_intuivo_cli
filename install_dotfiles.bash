@@ -1,3 +1,74 @@
+#!/bin/bash
+#
+# @author Zeus Intuivo <zeus@intuivo.com>
+#
+load_struct_testing(){
+  function _trap_on_error(){
+    local -ir __trapped_error_exit_num="${2:-0}"
+    echo -e "\\n \033[01;7m*** ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR ...\033[0m  \n \n "
+    echo ". ${1}"
+    echo ". exit  ${__trapped_error_exit_num}  "
+    echo ". caller $(caller) "
+    echo ". ${BASH_COMMAND}"
+    local -r __caller=$(caller)
+    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+
+    # $(eval ${BASH_COMMAND}  2>&1; )
+    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+    exit 1
+  }
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+    local provider="$HOME/_/clis/execute_command_intuivo_cli/struct_testing"
+    local _err=0 structsource
+    if [   -e "${provider}"  ] ; then
+      (( DEBUG )) && echo "$0 tasks_base/load_struct_testing Loading locally"
+      structsource="""$(<"${provider}")"""
+      _err=$?
+      [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading struct_testing. running 'source locally' returned error did not download or is empty err:$_err  \n \n  " && exit 1
+    else
+      if ( command -v curl >/dev/null 2>&1; )  ; then
+        (( DEBUG )) && echo "$0 tasks_base/load_struct_testing curl Loading struct_testing from the net using curl "
+        structsource="""$(curl https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing  -so -   2>/dev/null )"""  #  2>/dev/null suppress only curl download messages, but keep curl output for variable
+        _err=$?
+        [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading struct_testing. running 'curl' returned error did not download or is empty err:$_err  \n \n  " && exit 1
+      elif ( command -v wget >/dev/null 2>&1; ) ; then
+        (( DEBUG )) && echo "$0 tasks_base/load_struct_testing wget Loading struct_testing from the net using wget "
+        structsource="""$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing -O -   2>/dev/null )"""  #  2>/dev/null suppress only wget download messages, but keep wget output for variable
+        _err=$?
+        [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading struct_testing. running 'wget' returned error did not download or is empty err:$_err  \n \n  " && exit 1
+      else
+        echo -e "\n \n  ERROR! Loading struct_testing could not find wget or curl to download  \n \n "
+        exit 69
+      fi
+    fi
+    [[ -z "${structsource}" ]] && echo -e "\n \n  ERROR! Loading struct_testing. structsource did not download or is empty " && exit 1
+    local _temp_dir="$(mktemp -d 2>/dev/null || mktemp -d -t 'struct_testing_source')"
+    echo "${structsource}">"${_temp_dir}/struct_testing"
+    (( DEBUG )) && echo "$0 tasks_base/load_struct_testing  Temp location ${_temp_dir}/struct_testing"
+    source "${_temp_dir}/struct_testing"
+    _err=$?
+    [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading struct_testing. Occured while running 'source' err:$_err  \n \n  " && exit 1
+    if  ! typeset -f passed >/dev/null 2>&1; then
+      echo -e "\n \n  ERROR! Loading struct_testing. Passed was not loaded !!!  \n \n "
+      exit 69;
+    fi
+    return $_err
+} # end load_struct_testing
+load_struct_testing
+
+
+
+ #---------/\/\/\-- tasks_base/load_struct_testing -------------/\/\/\--------
+
+
+
+
+
+ #--------\/\/\/\/-- tasks_templates_sudo/dotfiles …install_dotfiles.bash” -- Custom code -\/\/\/\/-------
+
+
 #!/usr/bin/bash
 
 _debian_flavor_install() {
@@ -46,59 +117,7 @@ _debian_flavor_install() {
 
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  dnf remove awscli -y
-	curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-  # unzip awscliv2.zip
-  # INSTALL
-  #./aws/install
-	#
-	# UPDATE
-	# ./aws/install --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli --update
-  echo "-----BEGIN PGP PUBLIC KEY BLOCK-----
-
-mQINBF2Cr7UBEADJZHcgusOJl7ENSyumXh85z0TRV0xJorM2B/JL0kHOyigQluUG
-ZMLhENaG0bYatdrKP+3H91lvK050pXwnO/R7fB/FSTouki4ciIx5OuLlnJZIxSzx
-PqGl0mkxImLNbGWoi6Lto0LYxqHN2iQtzlwTVmq9733zd3XfcXrZ3+LblHAgEt5G
-TfNxEKJ8soPLyWmwDH6HWCnjZ/aIQRBTIQ05uVeEoYxSh6wOai7ss/KveoSNBbYz
-gbdzoqI2Y8cgH2nbfgp3DSasaLZEdCSsIsK1u05CinE7k2qZ7KgKAUIcT/cR/grk
-C6VwsnDU0OUCideXcQ8WeHutqvgZH1JgKDbznoIzeQHJD238GEu+eKhRHcz8/jeG
-94zkcgJOz3KbZGYMiTh277Fvj9zzvZsbMBCedV1BTg3TqgvdX4bdkhf5cH+7NtWO
-lrFj6UwAsGukBTAOxC0l/dnSmZhJ7Z1KmEWilro/gOrjtOxqRQutlIqG22TaqoPG
-fYVN+en3Zwbt97kcgZDwqbuykNt64oZWc4XKCa3mprEGC3IbJTBFqglXmZ7l9ywG
-EEUJYOlb2XrSuPWml39beWdKM8kzr1OjnlOm6+lpTRCBfo0wa9F8YZRhHPAkwKkX
-XDeOGpWRj4ohOx0d2GWkyV5xyN14p2tQOCdOODmz80yUTgRpPVQUtOEhXQARAQAB
-tCFBV1MgQ0xJIFRlYW0gPGF3cy1jbGlAYW1hem9uLmNvbT6JAlQEEwEIAD4CGwMF
-CwkIBwIGFQoJCAsCBBYCAwECHgECF4AWIQT7Xbd/1cEYuAURraimMQrMRnJHXAUC
-ZMKcEgUJCSEf3QAKCRCmMQrMRnJHXCilD/4vior9J5tB+icri5WbDudS3ak/ve4q
-XS6ZLm5S8l+CBxy5aLQUlyFhuaaEHDC11fG78OduxatzeHENASYVo3mmKNwrCBza
-NJaeaWKLGQT0MKwBSP5aa3dva8P/4oUP9GsQn0uWoXwNDWfrMbNI8gn+jC/3MigW
-vD3fu6zCOWWLITNv2SJoQlwILmb/uGfha68o4iTBOvcftVRuao6DyqF+CrHX/0j0
-klEDQFMY9M4tsYT7X8NWfI8Vmc89nzpvL9fwda44WwpKIw1FBZP8S0sgDx2xDsxv
-L8kM2GtOiH0cHqFO+V7xtTKZyloliDbJKhu80Kc+YC/TmozD8oeGU2rEFXfLegwS
-zT9N+jB38+dqaP9pRDsi45iGqyA8yavVBabpL0IQ9jU6eIV+kmcjIjcun/Uo8SjJ
-0xQAsm41rxPaKV6vJUn10wVNuhSkKk8mzNOlSZwu7Hua6rdcCaGeB8uJ44AP3QzW
-BNnrjtoN6AlN0D2wFmfE/YL/rHPxU1XwPntubYB/t3rXFL7ENQOOQH0KVXgRCley
-sHMglg46c+nQLRzVTshjDjmtzvh9rcV9RKRoPetEggzCoD89veDA9jPR2Kw6RYkS
-XzYm2fEv16/HRNYt7hJzneFqRIjHW5qAgSs/bcaRWpAU/QQzzJPVKCQNr4y0weyg
-B8HCtGjfod0p1A==
-=gdMc
------END PGP PUBLIC KEY BLOCK-----" > awscli.gpg.key
-  gpg --import awscli.gpg.key
-  curl -o awscliv2.sig https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip.sig
-  gpg --verify awscliv2.sig awscliv2.zip
-	unzip -u awscliv2.zip
-	Comment update install
-	./aws/install --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli --update
-  Checking which aws
-  which aws
-  Checking aws --version
-  aws --version
-  rm -rf ./aws
-	rm -rf awscli.gpg.key
-	rm -rf awscliv2.sig
-	rm -rf awscliv2.zip
-
-# echo "_redhat_flavor_install Procedure not yet implemented. I don't know what to do."
+  echo "_redhat_flavor_install Procedure not yet implemented. I don't know what to do."
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
@@ -193,7 +212,47 @@ _darwin__64() {
 
 _darwin__arm64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  echo "_darwin__arm64 Procedure not yet implemented. I don't know what to do."
+git checkout https://github.com/gennaro-tedesco/dotfiles.git
+make nvim
+make zsh
+make navi
+zsh
+omz update
+omz configure
+subl ~/.p10k.zsh
+p10k configure
+zsh
+ls
+brew file install Brewfile
+brew file install
+brew
+brew list
+brew file
+brew set_repo
+curl -o install.sh -fsSL https://raw.github.com/rcmdnk/homebrew-file/install/install.sh
+ls
+chmod 755 ./install.sh
+./install.sh
+brew file install
+brew file install Brewfile
+ls -la /Users/zeus/.config/brewfile/Brewfile
+ls -la /Users/zeus/.config/brewfile
+mkdir  /Users/zeus/.config/brewfile
+cp Brewfile /Users/zeus/.config/brewfile/
+brew file install
+cat Brewfile
+zsh
+make nvim
+make navi
+zsh <(curl -s https://raw.githubusercontent.com/zap-zsh/zap/master/install.zsh) --branch release-v1
+zsh
+brew install vivid
+brew install navi
+brew install zoxide
+brew install coreutils
+brew install dust
+zsh
+brew install exa
 } # end _darwin__arm64
 
 _tar() {
@@ -210,3 +269,20 @@ _windows__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   echo "_windows__32 Procedure not yet implemented. I don't know what to do."
 } # end _windows__32
+
+
+
+ #--------/\/\/\/\-- tasks_templates_sudo/dotfiles …install_dotfiles.bash” -- Custom code-/\/\/\/\-------
+
+
+
+ #--------\/\/\/\/--- tasks_base/main.bash ---\/\/\/\/-------
+_main() {
+  determine_os_and_fire_action "${*:-}"
+} # end _main
+
+echo params "${*:-}"
+_main "${*:-}"
+
+echo "🥦"
+exit 0

@@ -110,8 +110,8 @@ load_struct_testing(){
         provider="/home/${USER}/_/clis/execute_command_intuivo_cli/${_library}"
       }
       fi
-      echo "$0: ${provider}" 
-      echo "$0: SUDO_USER:${SUDO_USER:-nada SUDOUSER}: USER:${USER:-nada USER}: ${SUDO_HOME:-nada SUDO_HOME}: {${HOME:-nada HOME}}" 
+      echo "$0: ${provider}"
+      echo "$0: SUDO_USER:${SUDO_USER:-nada SUDOUSER}: USER:${USER:-nada USER}: ${SUDO_HOME:-nada SUDO_HOME}: {${HOME:-nada HOME}}"
       local _err=0 structsource
       if [[  -e "${provider}" ]] ; then
         if (( _DEBUG )) ; then
@@ -121,7 +121,7 @@ load_struct_testing(){
         _err=$?
         if [ $_err -gt 0 ] ; then
         {
-           echo -e "\n \n  ERROR! Loading ${_library}. running 'source locally' returned error did not download or is empty err:$_err  \n \n  " 
+           echo -e "\n \n  ERROR! Loading ${_library}. running 'source locally' returned error did not download or is empty err:$_err  \n \n  "
            exit 1
         }
         fi
@@ -157,7 +157,7 @@ load_struct_testing(){
       fi
       if [[ -z "${structsource}" ]] ; then
       {
-        echo -e "\n \n 3 ERROR! Loading ${_library} into ${_library}_source did not download or is empty " 
+        echo -e "\n \n 3 ERROR! Loading ${_library} into ${_library}_source did not download or is empty "
         exit 1
       }
       fi
@@ -208,7 +208,7 @@ if [[ -z "${SUDO_COMMAND:-}" ]] && \
    [[ -n "${THISSCRIPTNAME:-}" ]] \
   ; then
 {
-  passed Called from user 
+  passed Called from user
 }
 fi
 
@@ -224,7 +224,7 @@ if [[ -n "${SUDO_COMMAND:-}"  ]] && \
    [[ -n "${THISSCRIPTNAME:-}"  ]] \
   ; then
 {
-  passed Called from user as sudo 
+  passed Called from user as sudo
 }
 else
 {
@@ -233,7 +233,7 @@ if [[ "${SUDO_USER:-}" == 'root'  ]] && \
    [[ "${USER:-}" == 'root' ]] \
   ; then
 {
-  failed This script is has to be called from normal user. Not Root. Abort 
+  failed This script is has to be called from normal user. Not Root. Abort
   exit 69
 }
 fi
@@ -279,7 +279,7 @@ function sudo_it() {
     SUDO_GID=20
   }
   fi
-  
+
   if (( _DEBUG )) ; then
     Comment _err:${_err}
   fi
@@ -370,19 +370,6 @@ fi
 directory_exists_with_spaces "${USER_HOME}"
 
 
-
- #---------/\/\/\-- tasks_base/sudoer.bash -------------/\/\/\--------
-
-
-
-
-
- #--------\/\/\/\/-- tasks_templates_sudo/chaskiq …install_chaskiq.bash” -- Custom code -\/\/\/\/-------
-
-
-#!/usr/bin/bash
-
-
   function _trap_on_error(){
     local -ir __trapped_error_exit_num="${2:-0}"
     echo -e "\\n \033[01;7m*** 2 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
@@ -400,7 +387,25 @@ directory_exists_with_spaces "${USER_HOME}"
     exit ${__trapped_error_exit_num}
   }
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  
+
+  function _trap_on_exit(){
+    local -ir __trapped_exit_num="${2:-0}"
+    echo -e "\\n \033[01;7m*** 5 EXIT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n EXIT ...\033[0m  \n \n "
+    echo ". ${1}"
+    echo ". exit  ${__trapped_exit_num}  "
+    echo ". caller $(caller) "
+    echo ". ${BASH_COMMAND}"
+    local -r __caller=$(caller)
+    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+
+    # $(eval ${BASH_COMMAND}  2>&1; )
+    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+    exit ${__trapped_INT_num}
+  }
+  # trap  '_trap_on_exit $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  EXIT
+
   function _trap_on_INT(){
     local -ir __trapped_INT_num="${2:-0}"
     echo -e "\\n \033[01;7m*** 7 INT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n INT ...\033[0m  \n \n "
@@ -419,6 +424,19 @@ directory_exists_with_spaces "${USER_HOME}"
   }
   trap  '_trap_on_INT $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  INT
 
+
+
+ #---------/\/\/\-- tasks_base/sudoer.bash -------------/\/\/\--------
+
+
+
+
+
+ #--------\/\/\/\/-- tasks_templates_sudo/chaskiq …install_chaskiq.bash” -- Custom code -\/\/\/\/-------
+
+
+#!/usr/bin/bash
+
 _git_clone() {
   local _source="${1}"
   local _target="${2}"
@@ -427,7 +445,7 @@ _git_clone() {
   if  it_exists_with_spaces "${_target}" && it_exists_with_spaces "${_target}/.git" ; then
   {
     cd "${_target}"
-    git config pull.rebase false    
+    git config pull.rebase false
     git fetch
     git checkout main
     git pull
@@ -455,7 +473,7 @@ _debian_flavor_install() {
     ufw
     nginx
   "
-  ); then 
+  ); then
     {
       apt install base64 -y
       apt install unzip -y
@@ -583,7 +601,7 @@ _rbenv_check() {
   Checking rbenv is installed
   if ( ! command -v rbenv >/dev/null 2>&1; )  ; then
   {
-    Installing rbenv 
+    Installing rbenv
     local TARGET_URL="https://raw.githubusercontent.com/zeusintuivo/task_intuivo_cli/master/install_rbenv.bash"
     Skipping "${CYAN}Based on \n${RED}\n/bin/bash -c \"\$(curl -fsSL "${TARGET_URL}")\"\n${RESET}${CYAN}\n and doing structed tested."
     local DOWNLOADFOLDER="$(_find_downloads_folder)"
@@ -594,13 +612,13 @@ _rbenv_check() {
     mv "${DOWNLOADFOLDER}/${CODENAME}" "${USER_HOME}/${NEWNAME}"
     chmod a+x "${NEWNAME}"
     cd  "${USER_HOME}"
-    Installing "${USER_HOME}/${NEWNAME}" 
+    Installing "${USER_HOME}/${NEWNAME}"
     su - "${SUDO_USER}" -c "${USER_HOME}/${NEWNAME}"
-    wait    
+    wait
   }
   fi
   \. "${USER_HOME}/.profile"
-  ensure rbenv or "rbenv ruby version manager is required to continue  [rbenv](https://github.com/sstephenson/rbenv) and Ruby. " 
+  ensure rbenv or "rbenv ruby version manager is required to continue  [rbenv](https://github.com/sstephenson/rbenv) and Ruby. "
 } # end _rbenv_check
 
 
@@ -614,11 +632,11 @@ _ruby_check() {
   enforce_parameter_with_value           3        PROJECTGITREPO      "${PROJECTGITREPO}"     "a git url "
 
 
-  mkdir -p  "${PROJECTSBASEDIR}" 
-  cd  "${PROJECTSBASEDIR}" 
+  mkdir -p  "${PROJECTSBASEDIR}"
+  cd  "${PROJECTSBASEDIR}"
   _git_clone  "${PROJECTGITREPO}" "${PROJECTREPO}"
 
-  Checking   Repo loanlink 
+  Checking   Repo loanlink
   cd "${PROJECTREPO}"
   pwd
   Checking "ruby required in Gemfile   cat \"${PROJECTREPO}/Gemfile\" | grep ruby\\\ \\\"  | cut -d\\\" -f2 "
@@ -649,25 +667,25 @@ _ruby_check() {
   fi
   isrubyinstalled="$(su - "${SUDO_USER}" -c "bash -c 'rbenv versions'" | grep "${_RUBYVERSION}")"
   enforce_variable_with_value isrubyinstalled "${isrubyinstalled}"
-  Comment LINENO:$LINENO -z \"\${isrubynotinstalled}\"=${isrubyinstalled} 
+  Comment LINENO:$LINENO -z \"\${isrubynotinstalled}\"=${isrubyinstalled}
   if [[ -z "${isrubynotinstalled}" ]] && [[ -z "${isrubyinstalled}" ]] ; then
   {
     echo "rbenv versions | grep ${_RUBYVERSION}   returned nothing"
     failed to get isrubyinstalled:${isrubyinstalled}
   }
   fi
-  Comment LINENO:$LINENO \\t \"\${_RUBYVERSION}\" \\t == \*\"\${isrubyinstalled}\"\* 
+  Comment LINENO:$LINENO \\t \"\${_RUBYVERSION}\" \\t == \*\"\${isrubyinstalled}\"\*
   Comment LINENO:$LINENO \\t \\t \\t   "${_RUBYVERSION}"  \\t == \* \\t "${isrubyinstalled}" \\t \*
-  Comment LINENO:$LINENO -n \"\${isrubyinstalled}\" 
+  Comment LINENO:$LINENO -n \"\${isrubyinstalled}\"
   if [[ -n "${isrubyinstalled}" ]] &&  (echo ${isrubyinstalled} | grep "${_RUBYVERSION}" >/dev/null 2>&1; )  ; then
   {
     # set +x
     Comment "ruby installed appears to be installed  "
   }
-  else 
+  else
   {
     # set +x
-    Comment "LINENO:$LINENO ------ else" 
+    Comment "LINENO:$LINENO ------ else"
     su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&  ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"/opt/homebrew/opt/libpq/bin:$PATH\"  rbenv install ${_RUBYVERSION} ' "
   }
   fi
@@ -685,12 +703,12 @@ _bundle_check() {
   local PROJECTREPO=${1}
   enforce_parameter_with_value           1        PROJECTREPO         "${PROJECTREPO}"        "path folder to clone to"
 
-  cd  "${PROJECTREPO}" 
-  
+  cd  "${PROJECTREPO}"
+
   Comment "### gem update"
   su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"/opt/homebrew/opt/libpq/bin:$PATH\" gem update --system' "
-  
-  
+
+
   Comment "### bundle"
   export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
   Comment "### gem pg"
@@ -715,7 +733,7 @@ _env_check() {
   local PROJECTREPO=${1}
   enforce_parameter_with_value           1        PROJECTREPO         "${PROJECTREPO}"        "path folder to clone to"
 
-  cd  "${PROJECTREPO}" 
+  cd  "${PROJECTREPO}"
   Comment "### _env_check"
   echo "
 HOST=http://localhost:3000
@@ -748,11 +766,11 @@ _migrate_check() {
   local PROJECTREPO=${1}
   enforce_parameter_with_value           1        PROJECTREPO         "${PROJECTREPO}"        "path folder to clone to"
 
-  cd  "${PROJECTREPO}" 
+  cd  "${PROJECTREPO}"
   Comment "### _migrate_check"
 
   su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" && bundle exec rake db:reset  '"
-  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" && bundle exec rake db:create db:migrate  '" 
+  su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" && bundle exec rake db:create db:migrate  '"
   su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" && bundle exec rake db:seed data:migrate '"
   su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" && RAILS_ENV=test bundle exec rake db:resest '"
   su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" && RAILS_ENV=test bundle exec rake db:test:prepare '"
@@ -769,7 +787,7 @@ _etc_hosts_file_check(){
   "
   while read INITFILE; do
   {
-    [ -z ${INITFILE} ] && continue    
+    [ -z ${INITFILE} ] && continue
     (_if_not_contains  "${INITFILE}" "app.chaskiq.test" ) || Configuring ${INITFILE}
     (_if_not_contains  "${INITFILE}" "app.chaskiq.test" ) && Skipping configuration for ${INITFILE}
     #                   filename            value      || do this .............
@@ -781,22 +799,22 @@ _etc_hosts_file_check(){
 
 _darwin__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  
+
   Installing REF: https://dev.chaskiq.io/getting-started/installation-on-mac-for-development
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  
+
 
 
   Comment "### install_requirements  darwin"
   Comment LINENO:$LINENO  local _requirements=
-  local _requirements=" 
+  local _requirements="
     rbenv
     redis
     git
     ghostscript
     imagemagick
   "
-  if ( ! install_requirements "darwin" " ${_requirements}"   ); then 
+  if ( ! install_requirements "darwin" " ${_requirements}"   ); then
   {
     failed "to install some or one of ::\" ${_requirements}\":: "
   }
@@ -806,19 +824,19 @@ _darwin__64() {
     su - "${SUDO_USER}" -c "brew install  postgresql@15"
   }
   fi
-  
+
   _rbenv_check
 
 
   local PROJECTSBASEDIR="${USER_HOME}/_/rnd/"
   local PROJECTREPO="${USER_HOME}/_/rnd/chaskiq"
   local PROJECTGITREPO="https://github.com/chaskiq/chaskiq.git"
-  
+
   _ruby_check "${PROJECTSBASEDIR}" "${PROJECTREPO}" "${PROJECTGITREPO}"
-  _env_check "${PROJECTREPO}" 
+  _env_check "${PROJECTREPO}"
   _etc_hosts_file_check
-  _bundle_check "${PROJECTREPO}" 
-  _migrate_check "${PROJECTREPO}"   
+  _bundle_check "${PROJECTREPO}"
+  _migrate_check "${PROJECTREPO}"
 
   Comment "
   # tests
@@ -830,7 +848,7 @@ _darwin__64() {
   # backround tasks
   bundle exec sidekiq
   # generate new admin password
-  # The rails admin_generator task will create an admin user for you, 
+  # The rails admin_generator task will create an admin user for you,
   # you will need to have an ADMIN_EMAIL and ADMIN_PASSWORD on your .env try these credentials:
   rails admin_generator
   "
