@@ -542,6 +542,8 @@ fi
   Installing "export PATH=\"${USER_HOME}/go/bin:${PATH}\" "
   export PATH="${USER_HOME}/go/bin:${PATH}"
   su - "${SUDO_USER}" -c "GOPATH=\"${USER_HOME}/go\" go install github.com/cosmtrek/air@latest"
+  # su - "${SUDO_USER}" -c "GOPATH=\"${USER_HOME}/go\" go install google.golang.org/grpc@latest"
+  su - "${SUDO_USER}" -c "GOPATH=\"${USER_HOME}/go\" go install github.com/golang/protobuf/protoc-gen-go@latest"
 } # _add_variables_to_bashrc_zshrc
 
 
