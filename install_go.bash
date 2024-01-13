@@ -507,9 +507,13 @@ _add_variables_to_bashrc_zshrc(){
 # environment variable. A common choice among developers,
 # and the default value of GOPATH starting from the
 # Go 1.8 release, is to use $HOME/go:
-export GOPATH="'${USER_HOME}'/go"
-export PATH="'${USER_HOME}'/go/bin:${PATH}"
-
+if [[ -d "'${USER_HOME}'/go" ]] ; then
+{
+  export GOPATH="'${USER_HOME}'/go"
+  export GO_PATH="'${USER_HOME}'/go"
+  export PATH="'${USER_HOME}'/go/bin:${PATH}"
+}
+fi
 '
   trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _add_variables_to_bashrc_zshrc go" && echo -e "${RESET}" && return 0' ERR
   Checking "${GO_SH_CONTENT}"
@@ -531,8 +535,12 @@ export PATH="'${USER_HOME}'/go/bin:${PATH}"
   }
   done <<< "${INITFILES}"
   # type go
-  Checking "export GOPATH=\"${USER_HOME}/go\" "
+  Installing "export GO_PATH=\"${USER_HOME}/go\" "
+  export GO_PATH="${USER_HOME}/go"
+  Installing "export GOPATH=\"${USER_HOME}/go\" "
   export GOPATH="${USER_HOME}/go"
+  Installing "export PATH=\"${USER_HOME}/go/bin:${PATH}\" "
+  export PATH="${USER_HOME}/go/bin:${PATH}"
   su - "${SUDO_USER}" -c "GOPATH=\"${USER_HOME}/go\" go install github.com/cosmtrek/air@latest"
 } # _add_variables_to_bashrc_zshrc
 
