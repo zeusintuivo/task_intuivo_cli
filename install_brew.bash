@@ -620,6 +620,7 @@ _debian_flavor_install() {
   _eval_linuxbrew
   _add_to_file .profile
   _add_to_file .zshrc
+	_add_variables_to_bashrc_zshrc
   return 0
 } # end _debian_flavor_install
 _debian__32() {
@@ -736,6 +737,7 @@ _redhat_flavor_install() {
   _eval_linuxbrew
   _add_to_file .bash_profile
   _add_to_file .zshrc
+	_add_variables_to_bashrc_zshrc
   return 0
 } # end _redhat_flavor_install
 
