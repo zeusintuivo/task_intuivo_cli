@@ -25,8 +25,11 @@ _add_variables_to_bashrc_zshrc(){
 	}
 	fi
 
-
-	$(brew --prefix)/bin/brew
+  local _target_bin_brew=""
+  _target_bin_brew="$(_find_executable_for "brew" "--prefix"  "bin/brew")"
+	
+  su - "${SUDO_USER}" -c "${_target_bin_brew} list --formula"
+	# $(brew --prefix)/bin/brew
 	local BREW_SH_CONTENT='
 
 # BREW - HOMEBREW
