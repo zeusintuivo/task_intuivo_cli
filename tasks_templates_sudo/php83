@@ -1,69 +1,54 @@
-#!/bin/bash
-#
-# @author Zeus Intuivo <zeus@intuivo.com>
-#
-#
+#!/usr/bin/bash
 
-_debian_flavor_install(){
+_debian_flavor_install() {
   # trap  '_trap_on_exit $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  EXIT
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  if (
   install_requirements "linux" "
-    # Debian Ubuntu only
-    network-manager
-    libnss3-tools
-    jq
-    xsel
+    base64
+    unzip
+    curl
+    wget
+    ufw
+    nginx
   "
+  ); then
+    {
+      apt install base64 -y
+      apt install unzip -y
+      apt install nginx -y
+    }
+  fi
   verify_is_installed "
-    network-manager
-    libnss3-tools
-    jq
-    xsel
-    composer
-    php
+    unzip
+    curl
+    wget
+    tar
+    ufw
+    nginx
   "
-    PHPS=$(which php)
-  COMPOSERS=$(which composer)
+  local PB_VERSION=0.16.7
+  local CODENAME="pocketbase_${PB_VERSION}_linux_amd64.zip"
+  local TARGET_URL="https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/${CODENAME}"
+  local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  directory_exists_with_spaces "${DOWNLOADFOLDER}"
+  cd "${DOWNLOADFOLDER}"
+  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+  # unzip "${DOWNLOADFOLDER}/${CODENAME}" -d $HOME/pb/
+  local UNZIPDIR="${USER_HOME}/_/software"
+  mkdir -p "${UNZIPDIR}"
+  _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
+  local PATHTOPOCKETBASE="${UNZIPDIR}/pocketbase"
+  local THISIP=$(myip)
 
-  su - "$SUDO_USER" -c ''"$PHPS"''"$COMPOSERS"' global update'
-  su - "$SUDO_USER" -c ''"$PHPS"''"$COMPOSERS"' global require cpriego/valet-linux'
-  return 0
-}
+} # end _debian_flavor_install
 
-_readhat_flavor_install(){
+_redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  install_requirements "linux" "
-    # RedHat Flavor only
-    nss-tools
-    jq
-    xsel
-		# fedora 37
-		php-intl
-		php-mbstring
-
-  "
-  verify_is_installed "
-    nss-tools
-    jq
-    xsel
-    composer
-    php
-  "
-  setenforce 0
-  echo "Permanent:
-
-    Open /etc/selinux/config
-    Change SELINUX=enforcing to SELINUX=permissive"
-
-  PHPS=$(which php)
-  COMPOSERS=$(which composer)
-	( pecl install phalcon )
-	( pecl install psr  )
-  su - "$SUDO_USER" -c ''"$PHPS"''"$COMPOSERS"' global update'
-  su - "$SUDO_USER" -c ''"$PHPS"''"$COMPOSERS"' global require cpriego/valet-linux'
-  return 0
-}
-
+  echo "_redhat_flavor_install Procedure not yet implemented. I don't know what to do."
+} # end _redhat_flavor_install
 
 _arch_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
@@ -152,30 +137,12 @@ _ubuntu__64() {
 
 _darwin__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  install_requirements "linux" "
-    # RedHat Flavor only
-    shtools
-    knock
-    jq
-    xsel
-    nginx
-    dnsmasq
-    php
-    composer
-  "
-  verify_is_installed "
-    composer
-    php
-  "
-  su - "${SUDO_USER}" -c 'composer require laravel/valet'
-  valet install
-  # echo "_darwin__64 Procedure not yet implemented. I don't know what to do."
+  echo "_darwin__64 Procedure not yet implemented. I don't know what to do."
 } # end _darwin__64
 
 _darwin__arm64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _darwin__64
-  # echo "_darwin__arm64 Procedure not yet implemented. I don't know what to do."
+  echo "_darwin__arm64 Procedure not yet implemented. I don't know what to do."
 } # end _darwin__arm64
 
 _tar() {
@@ -192,12 +159,3 @@ _windows__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   echo "_windows__32 Procedure not yet implemented. I don't know what to do."
 } # end _windows__32
-
-
-_main() {
-  determine_os_and_fire_action
-} # end _main
-
-_main
-
-echo ":)"

@@ -436,7 +436,7 @@ directory_exists_with_spaces "${USER_HOME}"
 
 
 #!/bin/bash
-
+alias egrep='grep -E --color=auto --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox}'
 _add_variables_to_bashrc_zshrc(){
   local FINDBREW="/opt/homebrew/bin/brew"
 
