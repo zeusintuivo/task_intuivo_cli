@@ -550,8 +550,8 @@ _install_nvm() {
 
     [[  ! -e "${USER_HOME}/.config" ]] && mkdir -p "${USER_HOME}/.config"
     chown  -R "${SUDO_USER}" "${USER_HOME}/.config"
-		[ -s "${USER_HOME}/.nvm/nvm.sh" ] && chmod a+x "${USER_HOME}/.nvm/nvm.sh" 
-    [ -s "${USER_HOME}/.nvm/nvm.sh" ] && . "${USER_HOME}/.nvm/nvm.sh" # This loads nvm
+		[ -e "${USER_HOME}/.nvm/nvm.sh" ] && chmod a+x "${USER_HOME}/.nvm/nvm.sh" 
+    [ -e "${USER_HOME}/.nvm/nvm.sh" ] && . "${USER_HOME}/.nvm/nvm.sh" # This loads nvm
     msg=$(nvm >/dev/null 2>&1)
     ret=$?
 
@@ -613,8 +613,8 @@ _install_nvm_version(){
 
     # chown -R $SUDO_USER:$(id -gn $SUDO_USER) "${USER_HOME}/.config"
     Configuring nvm node "${TARGETVERSION}"
-		[ -s "${USER_HOME}/.nvm/nvm.sh" ] && chmod a+x "${USER_HOME}/.nvm/nvm.sh"
-    [ -s "${USER_HOME}/.nvm/nvm.sh" ] && . "${USER_HOME}/.nvm/nvm.sh" # This loads nvm
+		[ -e "${USER_HOME}/.nvm/nvm.sh" ] && chmod a+x "${USER_HOME}/.nvm/nvm.sh"
+    [ -e "${USER_HOME}/.nvm/nvm.sh" ] && . "${USER_HOME}/.nvm/nvm.sh" # This loads nvm
 
 
     local VERSION12=$(nvm ls | grep "v${TARGETVERSION}" |tail -1 >/dev/null 2>&1 )
@@ -759,8 +759,8 @@ _debian_flavor_install() {
   cd "${USER_HOME}/.nvm"
   Installing older version that is compatible with old linux
   git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" $(git rev-list --tags --max-count=1)`
-	[ -s "${USER_HOME}/.nvm/nvm.sh" ] && chmod a+x "${USER_HOME}/.nvm/nvm.sh"
-  [ -s "${USER_HOME}/.nvm/nvm.sh" ] && . "${USER_HOME}/.nvm/nvm.sh" # This loads nvm
+	[ -e "${USER_HOME}/.nvm/nvm.sh" ] && chmod a+x "${USER_HOME}/.nvm/nvm.sh"
+  [ -e "${USER_HOME}/.nvm/nvm.sh" ] && . "${USER_HOME}/.nvm/nvm.sh" # This loads nvm
   # \. "${USER_HOME}/.nvm/nvm.sh"
   local MSG=$(_add_variables_to_bashrc_zshrc)
   echo "${MSG}"
@@ -782,7 +782,10 @@ _redhat_flavor_install() {
   cd "${USER_HOME}/.nvm"
     Installing older version that is compatible with old linux
   git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" $(git rev-list --tags --max-count=1)`
-  \. "${USER_HOME}/.nvm/nvm.sh"
+  [ -e "${USER_HOME}/.nvm/nvm.sh" ] && chmod a+x "${USER_HOME}/.nvm/nvm.sh"
+  [ -e "${USER_HOME}/.nvm/nvm.sh" ] && . "${USER_HOME}/.nvm/nvm.sh" # This loads nvm
+
+	# \. "${USER_HOME}/.nvm/nvm.sh"
   local MSG=$(_add_variables_to_bashrc_zshrc)
   echo "${MSG}"
   # _checka_tools_commander
@@ -830,6 +833,21 @@ _fedora__32() {
 _fedora__64() {
   _redhat_flavor_install
 } # end _fedora__64
+
+_fedora_39__64() {
+  dnf build-dep nodejs -y --allowerasing
+  _git_clone "https://github.com/nvm-sh/nvm.git" "${USER_HOME}/.nvm"
+  cd "${USER_HOME}/.nvm"
+  Installing older version that is compatible with old linux
+  # git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" $(git rev-list --tags --max-count=1)`
+  [ -e "${USER_HOME}/.nvm/nvm.sh" ] && chmod a+x "${USER_HOME}/.nvm/nvm.sh"
+  [ -e "${USER_HOME}/.nvm/nvm.sh" ] && . "${USER_HOME}/.nvm/nvm.sh" # This loads nvm
+
+  _add_variables_to_bashrc_zshrc
+  _install_npm_utils
+  npm i -g pnpm
+	nvm ls
+} # end _fedora_39__64
 
 _gentoo__32() {
   _redhat_flavor_install
