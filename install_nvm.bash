@@ -500,7 +500,7 @@ _add_variables_to_bashrc_zshrc(){
   cd "${USER_HOME}/.nvm"
   mkdir -p "${USER_HOME}/.nvm/scripts"
   cp "${USER_HOME}/.nvm/nvm.sh" "${USER_HOME}/.nvm/scripts/nvm"
-
+  chmod a+x "${USER_HOME}/.nvm/scripts/nvm"
   local NVM_SH_CONTENT='
 
 # NVM
@@ -539,6 +539,7 @@ fi
   }
   done <<< "${INITFILES}"
 
+
 } # _add_variables_to_bashrc_zshrc
 
 
@@ -549,6 +550,7 @@ _install_nvm() {
 
     [[  ! -e "${USER_HOME}/.config" ]] && mkdir -p "${USER_HOME}/.config"
     chown  -R "${SUDO_USER}" "${USER_HOME}/.config"
+		[ -s "${USER_HOME}/.nvm/nvm.sh" ] && chmod a+x "${USER_HOME}/.nvm/nvm.sh" 
     [ -s "${USER_HOME}/.nvm/nvm.sh" ] && . "${USER_HOME}/.nvm/nvm.sh" # This loads nvm
     msg=$(nvm >/dev/null 2>&1)
     ret=$?
@@ -611,6 +613,7 @@ _install_nvm_version(){
 
     # chown -R $SUDO_USER:$(id -gn $SUDO_USER) "${USER_HOME}/.config"
     Configuring nvm node "${TARGETVERSION}"
+		[ -s "${USER_HOME}/.nvm/nvm.sh" ] && chmod a+x "${USER_HOME}/.nvm/nvm.sh"
     [ -s "${USER_HOME}/.nvm/nvm.sh" ] && . "${USER_HOME}/.nvm/nvm.sh" # This loads nvm
 
 
@@ -756,7 +759,9 @@ _debian_flavor_install() {
   cd "${USER_HOME}/.nvm"
   Installing older version that is compatible with old linux
   git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" $(git rev-list --tags --max-count=1)`
-  \. "${USER_HOME}/.nvm/nvm.sh"
+	[ -s "${USER_HOME}/.nvm/nvm.sh" ] && chmod a+x "${USER_HOME}/.nvm/nvm.sh"
+  [ -s "${USER_HOME}/.nvm/nvm.sh" ] && . "${USER_HOME}/.nvm/nvm.sh" # This loads nvm
+  # \. "${USER_HOME}/.nvm/nvm.sh"
   local MSG=$(_add_variables_to_bashrc_zshrc)
   echo "${MSG}"
 
