@@ -487,11 +487,12 @@ eval $("'${FINDBREW}'" shellenv)
   {
     [ -z ${INITFILE} ] && continue
     Checking "${USER_HOME}/${INITFILE}"
-    (_if_not_contains  "${USER_HOME}/${INITFILE}" "/bin/brew shellenv" ) || Configuring ${INITFILE}
-    (_if_not_contains  "${USER_HOME}/${INITFILE}" "/bin/brew shellenv" ) && Skipping configuration for ${INITFILE}
+    chown "${SUDO_USER}" "${INITFILE}"
+		(_if_not_contains  "${USER_HOME}/${INITFILE}" "shellenv" ) || Configuring ${INITFILE}
+    (_if_not_contains  "${USER_HOME}/${INITFILE}" "shellenv" ) && Skipping configuration for ${INITFILE}
     #                   filename            value      || do this .............
     (_if_not_contains  "${USER_HOME}/${INITFILE}" "# BREW - HOMEBREW" ) || echo -e "${BREW_SH_CONTENT}" >>"${USER_HOME}/${INITFILE}"
-    (_if_not_contains  "${USER_HOME}/${INITFILE}" "/bin/brew shellenv" ) || echo -e "${BREW_SH_CONTENT}" >>"${USER_HOME}/${INITFILE}"
+    (_if_not_contains  "${USER_HOME}/${INITFILE}" "shellenv" ) || echo -e "${BREW_SH_CONTENT}" >>"${USER_HOME}/${INITFILE}"
   }
   done <<< "${INITFILES}"
   # if it_exists /home/linuxbrew ; then
@@ -759,10 +760,16 @@ _fedora__32() {
 
   echo "CURRENTLY NOT SUPPORTED BY LINUX BREW REF: https://docs.brew.sh/Homebrew-on-Linux#install"
 }
-_fedora__64__37() {
+
+_fedora_37__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
-} # end _fedora__64
+} # end _fedora_37__64
+
+_fedora_39__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _fedora_39__64
 
 _fedora__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
