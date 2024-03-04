@@ -520,6 +520,7 @@ if [[ -e "'${USER_HOME}'/.nvm" ]] ; then
 fi
 [ -e "'${USER_HOME}'/.nvm/nvm.sh" ] && chmod a+x "'${USER_HOME}'/.nvm/nvm.sh"
 [ -e "'${USER_HOME}'/.nvm/nvm.sh" ] && . "'${USER_HOME}'/.nvm/nvm.sh" # This loads nvm
+[ -e "'${USER_HOME}'/.nvm/scripts/nvm" ] && . "'${USER_HOME}'/.nvm/scripts/nvm" # This loads nvm
 '
   # trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _add_variables_to_bashrc_zshrc nvm" && echo -e "${RESET}" && return 0' ERR
   echo "${NVM_SH_CONTENT}"
