@@ -207,11 +207,11 @@ _install_nvm_version(){
                 fi
                 if [[ "${VERSION12}" == *"v${TARGETVERSION}"* ]]  ; then
                 {
-                    passed that: node "${TARGETVERSION}" installed. Version Found "${VERSION12}"
+                    passed "that: node ${TARGETVERSION} installed. Version Found ${VERSION12}"
                 }
                 else
                 {
-                    failed to install node using nvm for version "${TARGETVERSION}"
+                    failed "to install node using nvm for version ${TARGETVERSION}"
                 }
                 fi
             }
