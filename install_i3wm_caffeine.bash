@@ -432,17 +432,22 @@ directory_exists_with_spaces "${USER_HOME}"
 
 
 
- #--------\/\/\/\/-- tasks_templates_sudo/rbenv …install_rbenv.bash” -- Custom code -\/\/\/\/-------
+ #--------\/\/\/\/-- tasks_templates_sudo/i3wm_caffeine …install_i3wm_caffeine.bash” -- Custom code -\/\/\/\/-------
 
 
-#!/usr/bin/env bash
-#
-# @author Zeus Intuivo <zeus@intuivo.com>
-#
+#!/usr/bin/bash
+
 _package_list_installer() {
+  # Sample usage
+  #   local package packages="
+  #  autoconf
+  #  bison
+  # "
+  # _package_list_installer "${packages}"
+
   # trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   local package packages="${@}"
-  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer rbenv" && echo -e "${RESET}" && return 0' ERR
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer i3wm" && echo -e "${RESET}" && return 0' ERR
 
   if ! install_requirements "linux" "${packages}" ; then
   {
@@ -467,8 +472,10 @@ _package_list_installer() {
   }
   fi
 } # end _package_list_installer
-
 _git_clone() {
+  # Sample usage
+  #    _git_clone "https://github.com/i3wm/i3wm.git" "${USER_HOME}/.i3wm"
+  #
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO  _git_clone KERL" && echo -e "${RESET}" && return 0' ERR
   local _source="${1}"
@@ -508,26 +515,22 @@ _git_clone() {
   }
   fi
   chown -R "${SUDO_USER}" "${_target}"
-
 } # end _git_clone
-
-
-
 _add_variables_to_bashrc_zshrc(){
-  local RBENV_SH_CONTENT='
+  local I3WM_SH_CONTENT='
 
-# RBENV
-if [[ -e "'${USER_HOME}'/.rbenv" ]] ; then
-{
-  export RBENV_ROOT="'${USER_HOME}'/.rbenv"
-  export PATH="'${USER_HOME}'/bin:${PATH}"
-  export PATH="'${USER_HOME}'/.rbenv/bin:${PATH}"
-  eval "$(rbenv init -)"
-}
-fi
-'
-  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _add_variables_to_bashrc_zshrc rbenv" && echo -e "${RESET}" && return 0' ERR
-  Checking "${RBENV_SH_CONTENT}"
+  # I3WM
+  if [[ -e "'${USER_HOME}'/.i3wm" ]] ; then
+  {
+    export I3WM_ROOT="'${USER_HOME}'/.i3wm"
+    export PATH="'${USER_HOME}'/bin:${PATH}"
+    export PATH="'${USER_HOME}'/.i3wm/bin:${PATH}"
+    eval "$(i3wm init -)"
+  }
+  fi
+  '
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _add_variables_to_bashrc_zshrc i3wm" && echo -e "${RESET}" && return 0' ERR
+  Checking "${I3WM_SH_CONTENT}"
   local INITFILE INITFILES="
    .bashrc
    .zshrc
@@ -540,49 +543,133 @@ fi
   {
     [ -z ${INITFILE} ] && continue
     Checking "${USER_HOME}/${INITFILE}"
-    _if_not_contains "${USER_HOME}/${INITFILE}"  "# RBENV" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
-    _if_not_contains "${USER_HOME}/${INITFILE}"  "RBENV_ROOT" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
-    _if_not_contains "${USER_HOME}/${INITFILE}"  "rbenv init" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "# I3WM" ||  echo "${I3WM_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "I3WM_ROOT" ||  echo "${I3WM_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "i3wm init" ||  echo "${I3WM_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
   }
   done <<< "${INITFILES}"
-  # type rbenv
-  Checking "export PATH=\"${USER_HOME}/.rbenv/bin:${PATH}\" "
-  export PATH="${USER_HOME}/.rbenv/bin:${PATH}"
-  chown -R "${SUDO_USER}" "${USER_HOME}/.rbenv"
-  cd "${USER_HOME}/.rbenv/bin"
-  eval "$("${USER_HOME}"/.rbenv/bin/rbenv init -)"
+  # type i3wm
+  Checking "export PATH=\"${USER_HOME}/.i3wm/bin:${PATH}\" "
+  export PATH="${USER_HOME}/.i3wm/bin:${PATH}"
+  chown -R "${SUDO_USER}" "${USER_HOME}/.i3wm"
+  cd "${USER_HOME}/.i3wm/bin"
+  eval "$("${USER_HOME}"/.i3wm/bin/i3wm init -)"
 
-  # rbenv doctor
-  # rbenv install -l
-  # rbenv install 2.6.5
-  # rbenv global 2.6.5
-  # rbenv rehash
+  # i3wm doctor
+  # i3wm install -l
+  # i3wm install 2.6.5
+  # i3wm global 2.6.5
+  # i3wm rehash
   # ruby -v
-
 } # _add_variables_to_bashrc_zshrc
-
-
 _debian_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   apt update -y
-  trap 'echo -e "${RED}" && echo "ERROR err:$_err failed $0:$LINENO _debian_flavor_install rbenv" && echo -e "${RESET}" && return 0' ERR
-  # Batch 1 18.04
+  trap 'echo -e "${RED}" && echo "ERROR err:$_err failed $0:$LINENO _debian_flavor_install i3wm" && echo -e "${RESET}" && return 0' ERR
+
+	local base_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+  local config_dir="${SUDO_HOME}/.config"
+  local temp_dir="/tmp/caffeine-installer"
+  if [[ ! -d "${temp_dir}" ]]; then
+	{
+    mkdir -p "${temp_dir}"
+  }
+	fi
+  directory_exists_with_spaces "${temp_dir}"
+  chown -R "${SUDO_USER}" "${temp_dir}"
+
+	if [[ ! -d "${config_dir}" ]]; then
+  {
+ 		mkdir -p "${config_dir}";
+	}
+	fi
+  directory_exists_with_spaces "${config_dir}"
+  chown -R "${SUDO_USER}" "${config_dir}"
+
   local package packages="
-    autoconf
-    bison
+	  # install apt pre requisites
+    xserver-xorg
+    xdm
+    pulseaudio
+    pulseaudio-utils
+    pavucontrol
+    dunst
+    libnotify-bin
+    dbus-x11
+    vim
+    git
+    screen
+    curl
+    mc
+    rsync
+    aptitude
+    source-highlight
+
+    htop
+    nload
+    nmap
+    net-tools
     build-essential
-    libssl-dev
-    libyaml-dev
-    libreadline6-dev
-    zlib1g-dev
-    libncurses5-dev
-    libffi-dev
-    libgdbm5
-    libgdbm-dev
-  "
-  _package_list_installer "${packages}"
-  # Batch 2 20.04
-  local package packages="
+    autoconf
+    automake
+    autogen
+
+    figlet
+    cowsay
+    w3m
+    mediainfo
+
+    unoconv
+    odt2txt
+    catdoc
+
+    python-pip
+    python3-pip
+    numlockx
+    xclip
+    rxvt-unicode-256color
+    arandr
+    acpi
+
+    rofi
+    compton
+    redshift
+    xbacklight
+
+    mpd
+    mpc
+    ncmpcpp
+
+    zathura
+    mpv
+    feh
+    scrot
+    vlc
+    vim-gtk
+    gtk2-engines-pixbuf
+    gtk2-engines-murrine
+
+
+    # install i3
+    ibxcb1-dev
+    libxcb-keysyms1-dev
+    libpango1.0-dev
+    libxcb-util0-dev
+
+    libxcb-icccm4-dev
+    libyajl-dev
+    libstartup-notification0-dev
+
+    libxcb-randr0-dev
+    libev-dev
+    libxcb-cursor-dev
+    libxcb-xinerama0-dev
+    libxcb-xkb-dev
+    libxkbcommon-dev
+    libxkbcommon-x11-dev
+    libxcb-xrm0
+    libxcb-xrm-dev
+    libxcb-shape0-dev
     autoconf
     bison
     build-essential
@@ -596,84 +683,329 @@ _debian_flavor_install() {
     libgdbm-dev
   "
   _package_list_installer "${packages}"
-  _git_clone "https://github.com/rbenv/rbenv.git" "${USER_HOME}/.rbenv"
-  _git_clone "https://github.com/rbenv/ruby-build.git" "${USER_HOME}/.rbenv/plugins/ruby-build"
-  local MSG=$(_add_variables_to_bashrc_zshrc)
-  echo "${MSG}"
-  ensure rbenv or "Canceling until rbenv did not install"
-  su - "${SUDO_USER}" -c 'rbenv install -l'
-  su - "${SUDO_USER}" -c 'rbenv install 2.6.5'
-  su - "${SUDO_USER}" -c 'rbenv global 2.6.5'
-  su - "${SUDO_USER}" -c 'rbenv rehash'
-  ensure ruby or "Canceling until ruby is not working"
-  su - "${SUDO_USER}" -c 'ruby -v'
+  ensure pip3 or "Canceling until pip3 is installed. try install_pyenv.bash"
+  su - "${SUDO_USER}" -c 'pip3 install py3status python-mpd2'
+
+  if [[ ! -d /usr/share/backgrounds ]]; then
+    mkdir -p /usr/share/backgrounds
+  fi
+  directory_exists_with_spaces /usr/share/backgrounds
+  file_exists_with_spaces "${base_dir}/global/usr/share/backgrounds/caffeine.png"
+  su - "${SUDO_USER}" -c 'cp '"${base_dir}/global/usr/share/backgrounds/caffeine.png"' /usr/share/backgrounds'
+  file_exists_with_spaces /usr/share/backgrounds/caffeine.png
+
+  if [[ ! -d /usr/share/fonts/caffeine-font ]]; then
+    mkdir -p /usr/share/fonts/caffeine-font
+  fi
+  directory_exists_with_spaces /usr/share/fonts/caffeine-font
+  su - "${SUDO_USER}" -c 'cp -R '"${base_dir}/global/usr/share/fonts/caffeine-font"' /usr/share/fonts/'
+  file_exists_with_spaces /usr/share/fonts/readme.md
+
+  Checking "# Set urxvt as default terminal"
+  update-alternatives --set x-terminal-emulator /usr/bin/urxvt
+
+  Checking "# Disable system-wide MPD"
+  if [ -f /etc/mpd.conf ]; then
+    rm /etc/mpd.conf;
+  fi
+  systemctl disable mpd
+
+  Checking "# urxvt plugins"
+  if [ ! -d /usr/lib/urxv/perl ]; then
+    mkdir -p /usr/lib/urxvt/perl
+  fi
+  directory_exists_with_spaces /usr/lib/urxvt/perl
+  su - "${SUDO_USER}" -c 'cp -R '"${base_dir}/global/usr/lib/urxvt/perl/*"' /usr/lib/urxvt/perl/'
+  file_exists_with_spaces /usr/lib/urxvt/perl/keyboard-select
+  file_exists_with_spaces /usr/lib/urxvt/perl/resize-font
+
+
+  _git_clone "https://github.com/Airblader/i3" "${temp_dir}"
+
+  directory_exists_with_spaces "${temp_dir}/i3"
+  cd "${temp_dir}/i3"
+  if [ -d build/ ]; then
+    rm -rf build/
+  fi
+
+  mkdir build/ || return 1
+
+  autoreconf --force --install || return 1
+  cd build || return 1
+  ../configure --prefix=/usr --sysconfdir=/etc --disable-sanitizers || return 1
+  make || return 1
+  make install || return 1
+
+  _package_list_installer "
+   i3lock
+   i3status
+  "
+
+  if [[ -f "${SUDO_HOME}/.Xresources" ]];        then
+    rm "${SUDO_HOME}/.Xresources"
+  fi
+  if [[ -d "${config_dir}/i3" ]];           then
+    rm -rf "${config_dir}/i3"
+  fi
+  if [[ -d "${config_dir}/i3status" ]];     then
+    rm -rf "${config_dir}/i3status"
+  fi
+  if [[ -d "${config_dir}/mpd" ]];          then
+    rm -rf "${config_dir}/mpd"
+  fi
+  if [[ -d "${config_dir}/mpv" ]];          then
+    rm -rf "${config_dir}/mpv"
+  fi
+  if [[ -d "${config_dir}/scripts" ]];      then
+    rm -rf "${config_dir}/scripts"
+  fi
+
+  ln -s "${base_dir}/home/.Xresources"          "${SUDO_HOME}/.Xresources"
+  ln -s "${base_dir}/home/.config/i3"           "${config_dir}/i3"
+  ln -s "${base_dir}/home/.config/i3status"     "${config_dir}/i3status"
+  ln -s "${base_dir}/home/.config/mpd"          "${config_dir}/mpd"
+  ln -s "${base_dir}/home/.config/mpv"          "${config_dir}/mpv"
+  ln -s "${base_dir}/home/.config/scripts"      "${config_dir}/scripts"
+  ln -s "${base_dir}/home/.config/dunst"        "${config_dir}/dunst"
+
+  echo "exec i3 > ${SUDO_HOME}/.xsession"
+
+  xdg-mime default feh.desktop image/jpeg
+  xdg-mime default feh.desktop image/png
+  su - "${SUDO_USER}" -c 'xdg-mime default feh.desktop image/jpeg'
+  su - "${SUDO_USER}" -c 'xdg-mime default feh.desktop image/png'
+
+  # _add_variables_to_bashrc_zshrc
+  # ensure i3wm or "Canceling until i3wm did not install"
+  # su - "${SUDO_USER}" -c 'i3wm install -l'
 } # end _debian_flavor_install
+
 
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  dnf build-dep rbenv -vy --allowerasing
+  dnf build-dep i3 -vy --allowerasing
   # dnf install  -y openssl-devel
   # Batch Fedora 37
-  local package packages="
-    libyaml
-    libyaml-devel
-    autoconf
-    bison
-		bison-devel
-    ruby-build-rbenv
-    openssl1.1
-    openssl1.1-devel-1
-		ncurses
-    ncurses-devel
-		ncurses-c++-libs
-		ncurses-compat-libs
-		ncurses-libs
-		ncurses-static
-		ncurses-base
-		# ncurses-term conflicts with foot-terminfo
-    readline
-		readline-static
-		readline-devel
-		compat-readline5
-		compat-readline5-devel
-		compat-readline6
-		compat-readline6-devel
-    zlib
-		zlib-devel
-    zlibrary-devel
-    zlibrary
-		libffi
-    libffi-devel
-		libffi3.1
-    # compat-gdbm
-		# compat-gdbm-devel
-    # compat-gdbm-libs
-		gdbm
-		gdbm-devel
+  local base_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+  local config_dir="${SUDO_HOME}/.config"
+  local temp_dir="/tmp/caffeine-installer"
+  if [[ ! -d "${temp_dir}" ]]; then
+	{
+    mkdir -p "${temp_dir}"
+  }
+	fi
+  directory_exists_with_spaces "${temp_dir}"
+  chown -R "${SUDO_USER}" "${temp_dir}"
+
+	if [[ ! -d "${config_dir}" ]]; then
+  {
+ 		mkdir -p "${config_dir}";
+	}
+	fi
+  directory_exists_with_spaces "${config_dir}"
+  chown -R "${SUDO_USER}" "${config_dir}"
+
+  # Fedora 37
+	local package packages="
+	  # install dnf pre requisites
+    xdm
+		pavucontrol
+	  gdbm-devel
 		gdbm-libs
+		dunst
+		dbus-x11
+		vim
+		git
+		screen
+		curl
+		mc
+		rsync
+		source-highlight
+		htop
+		nload
+		nmap
+		net-tools
+		autoconf
+		automake
+    autogen
+    figlet
+    cowsay
+    w3m
+    mediainfo
+    unoconv
+    odt2txt
+    catdoc
+    python-pip
+    python3-pip
+		numlockx
+    xclip
+    arandr
+    acpi
+    rofi
+    picom
+    redshift
+    xbacklight
+    mpd
+    mpc
+    ncmpcpp
+		zathura
+    mpv
+    feh
+    scrot
+    vlc
+    vim
+		gdk-pixbuf2
+    rust-gdk-pixbuf-sys-devel
+    rust-gdk-pixbuf-devel
+    gdk-pixbuf2-devel
+    gdk-pixbuf2-modules
+    gdk-pixbuf2-xlib
+    gtk-murrine-engine
+
+
+    # install i3
+		libxcb-devel
+    xcb-util-keysyms
+    xcb-util
+    xcb-util-devel
+    xcb-util-keysyms-devel
+		xcb-util-cursor
+    xcb-util-cursor-devel
+    rust-xcb+xinerama-devel
+		rust-xcb+xkb-devel
+    xcb-util-xrm-devel
+    xcb-util-xrm
+    libxkbcommon
+		libxkbcommon-devel
+    rust-xkbcommon+default-devel
+    rust-xkbcommon-devel
+
+    rust-xkbcommon+wayland-devel
+    libxkbcommon-x11-devel
+    libxkbcommon-x11
+		rust-xcb+shape-devel
+    rust-xcb+randr-devel
+    libev-devel
+    rust-xcb+genericevent-devel
+		pango
+    pango-devel
+    rust-pango-devel
+    yajl
+    yajl-devel
+    startup-notification
+		startup-notification-devel
+    arandr
+    xrandr
+    rust-xcb+randr-devel
+    libXrandr-devel
+		autorandr
+    lxrandr
+    rust-x11+xrandr-devel
+    libXrandr
+    xbacklight
   "
   _package_list_installer "${packages}"
 
-	ensure brew or "Canceling until brew is installed. try install_brew.bash install_brew.sh"
-	su - "${SUDO_USER}" -c 'brew install readline'
-	su - "${SUDO_USER}" -c 'brew install openssl@1.1'
-  _git_clone "https://github.com/rbenv/rbenv.git" "${USER_HOME}/.rbenv"
-  _git_clone "https://github.com/rbenv/ruby-build.git" "${USER_HOME}/.rbenv/plugins/ruby-build"
-  _add_variables_to_bashrc_zshrc
-  ensure rbenv or "Canceling until rbenv did not install"
-  su - "${SUDO_USER}" -c 'rbenv install -l'
-  su - "${SUDO_USER}" -c 'rbenv install 2.6.5'
-  su - "${SUDO_USER}" -c 'rbenv install 2.7.3'
-  su - "${SUDO_USER}" -c 'rbenv install 3.2.2'
-  su - "${SUDO_USER}" -c 'rbenv global 2.6.5'
-  su - "${SUDO_USER}" -c 'rbenv rehash'
-  ensure ruby or "Canceling until ruby is not working"
-  su - "${SUDO_USER}" -c 'ruby -v'
+	ensure pip3 or "Canceling until pip3 is installed. try install_pyenv.bash"
+	su - "${SUDO_USER}" -c 'pip3 install py3status python-mpd2'
+
+	if [[ ! -d /usr/share/backgrounds ]]; then
+    mkdir -p /usr/share/backgrounds
+  fi
+	directory_exists_with_spaces /usr/share/backgrounds
+	file_exists_with_spaces "${base_dir}/global/usr/share/backgrounds/caffeine.png"
+	su - "${SUDO_USER}" -c 'cp '"${base_dir}/global/usr/share/backgrounds/caffeine.png"' /usr/share/backgrounds'
+	file_exists_with_spaces /usr/share/backgrounds/caffeine.png
+
+	if [[ ! -d /usr/share/fonts/caffeine-font ]]; then
+    mkdir -p /usr/share/fonts/caffeine-font
+  fi
+  directory_exists_with_spaces /usr/share/fonts/caffeine-font
+	su - "${SUDO_USER}" -c 'cp -R '"${base_dir}/global/usr/share/fonts/caffeine-font"' /usr/share/fonts/'
+	file_exists_with_spaces /usr/share/fonts/readme.md
+
+  Checking "# Set urxvt as default terminal"
+	update-alternatives --set x-terminal-emulator /usr/bin/urxvt
+
+	Checking "# Disable system-wide MPD"
+	if [ -f /etc/mpd.conf ]; then
+		rm /etc/mpd.conf;
+	fi
+  systemctl disable mpd
+
+	Checking "# urxvt plugins"
+	if [ ! -d /usr/lib/urxv/perl ]; then
+    mkdir -p /usr/lib/urxvt/perl
+  fi
+  directory_exists_with_spaces /usr/lib/urxvt/perl
+	su - "${SUDO_USER}" -c 'cp -R '"${base_dir}/global/usr/lib/urxvt/perl/*"' /usr/lib/urxvt/perl/'
+  file_exists_with_spaces /usr/lib/urxvt/perl/keyboard-select
+	file_exists_with_spaces /usr/lib/urxvt/perl/resize-font
+
+
+  _git_clone "https://github.com/Airblader/i3" "${temp_dir}"
+
+	directory_exists_with_spaces "${temp_dir}/i3"
+  cd "${temp_dir}/i3"
+  if [ -d build/ ]; then
+    rm -rf build/
+  fi
+
+	mkdir build/ || return 1
+
+	autoreconf --force --install || return 1
+	cd build || return 1
+  ../configure --prefix=/usr --sysconfdir=/etc --disable-sanitizers || return 1
+  make || return 1
+	make install || return 1
+
+	_package_list_installer "
+	 i3lock
+ 	 i3status
+	"
+
+	if [[ -f "${SUDO_HOME}/.Xresources" ]];        then
+    rm "${SUDO_HOME}/.Xresources"
+  fi
+  if [[ -d "${config_dir}/i3" ]];           then
+    rm -rf "${config_dir}/i3"
+  fi
+  if [[ -d "${config_dir}/i3status" ]];     then
+    rm -rf "${config_dir}/i3status"
+  fi
+  if [[ -d "${config_dir}/mpd" ]];          then
+    rm -rf "${config_dir}/mpd"
+  fi
+  if [[ -d "${config_dir}/mpv" ]];          then
+    rm -rf "${config_dir}/mpv"
+  fi
+  if [[ -d "${config_dir}/scripts" ]];      then
+    rm -rf "${config_dir}/scripts"
+  fi
+
+  ln -s "${base_dir}/home/.Xresources"          "${SUDO_HOME}/.Xresources"
+  ln -s "${base_dir}/home/.config/i3"           "${config_dir}/i3"
+  ln -s "${base_dir}/home/.config/i3status"     "${config_dir}/i3status"
+  ln -s "${base_dir}/home/.config/mpd"          "${config_dir}/mpd"
+  ln -s "${base_dir}/home/.config/mpv"          "${config_dir}/mpv"
+  ln -s "${base_dir}/home/.config/scripts"      "${config_dir}/scripts"
+  ln -s "${base_dir}/home/.config/dunst"        "${config_dir}/dunst"
+
+  echo "exec i3 > ${SUDO_HOME}/.xsession"
+
+  xdg-mime default feh.desktop image/jpeg
+  xdg-mime default feh.desktop image/png
+  su - "${SUDO_USER}" -c 'xdg-mime default feh.desktop image/jpeg'
+	su - "${SUDO_USER}" -c 'xdg-mime default feh.desktop image/png'
+
+  # _add_variables_to_bashrc_zshrc
+  # ensure i3wm or "Canceling until i3wm did not install"
+  # su - "${SUDO_USER}" -c 'i3wm install -l'
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  echo "Procedure not yet implemented. I don't know what to do."
+  echo "_arch_flavor_install Procedure not yet implemented. I don't know what to do."
 } # end _readhat_flavor_install
 
 _arch__32() {
@@ -775,47 +1107,32 @@ _ubuntu__64() {
 
 _darwin__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  export HOMEBREW_NO_AUTO_UPDATE=1
-  ensure brew or "Canceling until brew is installed"
-  su - "${SUDO_USER}" -c 'brew install ruby-build'
-  _git_clone "https://github.com/rbenv/rbenv.git" "${USER_HOME}/.rbenv"
-  _git_clone "https://github.com/rbenv/ruby-build.git" "${USER_HOME}/.rbenv/plugins/ruby-build"
-  _add_variables_to_bashrc_zshrc
-  ensure "${USER_HOME}/.rbenv/bin/rbenv" or "Canceling until rbenv did not install"
-  su - "${SUDO_USER}" -c "git -C ${USER_HOME}/.rbenv/plugins/ruby-build pull"
-  su - "${SUDO_USER}" -c "${USER_HOME}/.rbenv/bin/rbenv install -l"
-  su - "${SUDO_USER}" -c "${USER_HOME}/.rbenv/bin/rbenv install 2.6.5"
-  su - "${SUDO_USER}" -c "${USER_HOME}/.rbenv/bin/rbenv install 2.7.3"
-  su - "${SUDO_USER}" -c "${USER_HOME}/.rbenv/bin/rbenv install 3.2.2"
-  su - "${SUDO_USER}" -c "${USER_HOME}/.rbenv/bin/rbenv global 2.7.3"
-  su - "${SUDO_USER}" -c "${USER_HOME}/.rbenv/bin/rbenv rehash"
-  ensure ruby or "Canceling until ruby is not working"
-  su - "${SUDO_USER}" -c 'ruby -v'
+  echo "_darwin__64 Procedure not yet implemented. I don't know what to do."
 } # end _darwin__64
 
 _darwin__arm64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _darwin__64
+  echo "_darwin__arm64 Procedure not yet implemented. I don't know what to do."
 } # end _darwin__arm64
 
 _tar() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  echo "Procedure not yet implemented. I don't know what to do."
+  echo "_tar Procedure not yet implemented. I don't know what to do."
 } # end tar
 
 _windows__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  echo "Procedure not yet implemented. I don't know what to do."
+  echo "_windows__64 Procedure not yet implemented. I don't know what to do."
 } # end _windows__64
 
 _windows__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  echo "Procedure not yet implemented. I don't know what to do."
+  echo "_windows__32 Procedure not yet implemented. I don't know what to do."
 } # end _windows__32
 
 
 
- #--------/\/\/\/\-- tasks_templates_sudo/rbenv …install_rbenv.bash” -- Custom code-/\/\/\/\-------
+ #--------/\/\/\/\-- tasks_templates_sudo/i3wm_caffeine …install_i3wm_caffeine.bash” -- Custom code-/\/\/\/\-------
 
 
 

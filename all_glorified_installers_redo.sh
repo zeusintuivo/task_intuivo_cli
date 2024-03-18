@@ -33,3 +33,6 @@
 ./generate_installer_with_sudo webstorm
 ./generate_installer_with_sudo yakuake
 ./generate_installer_with_sudo zoom
+./generate_installer_with_sudo i3wm_caffeine
+
+

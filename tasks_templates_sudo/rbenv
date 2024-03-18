@@ -33,6 +33,7 @@ _package_list_installer() {
 
 _git_clone() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO  _git_clone KERL" && echo -e "${RESET}" && return 0' ERR
   local _source="${1}"
   local _target="${2}"
   Checking "${SUDO_USER}" "${_target}"
@@ -173,7 +174,7 @@ _debian_flavor_install() {
 
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  dnf build-dep rbenv -vy --allow-erasing
+  dnf build-dep rbenv -vy --allowerasing
   # dnf install  -y openssl-devel
   # Batch Fedora 37
   local package packages="
@@ -275,8 +276,25 @@ _fedora__32() {
 
 _fedora__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _redhat_flavor_install
+  local _parameters="${*-}"
+	_redhat_flavor_install "${_parameters-}"
 } # end _fedora__64
+
+_fedora_37__64(){
+  # trap "echo Error:$?" ERR INT
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local _parameters="${*-}"
+  local -i _err=0
+	_redhat_flavor_install "${_parameters-}"
+} # end _fedora_37__64
+
+_fedora_39__64(){
+  # trap "echo Error:$?" ERR INT
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local _parameters="${*-}"
+  local -i _err=0
+	_redhat_flavor_install "${_parameters-}"
+} # end _fedora_39__64
 
 _gentoo__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR

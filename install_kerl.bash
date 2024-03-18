@@ -481,20 +481,36 @@ _git_clone() {
     if it_exists_with_spaces "${_target}/.git" ; then
     {
       cd "${_target}"
-      git config pull.rebase false
-      git fetch
-      git pull
+      if git config pull.rebase false ; then
+			{
+				warning Could not git config pull.rebase false
+			}
+			fi
+      if git fetch  ; then
+			{
+				warning Could not git fetch
+			}
+			fi
+      if git pull  ; then
+			{
+				warning Could not git pull
+			}
+			fi
     }
     fi
   }
   else
   {
-   git clone "${_source}" "${_target}"
+    if git clone "${_source}" "${_target}"  ; then
+		{
+			warning Could not git clone "${_source}" "${_target}"
+		}
+		fi
   }
   fi
   chown -R "${SUDO_USER}" "${_target}"
 
-} # _git_clone
+} # end _git_clone
 
 
 _install_and_add_variables_to_bashrc_zshrc(){
