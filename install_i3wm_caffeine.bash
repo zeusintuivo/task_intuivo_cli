@@ -978,9 +978,9 @@ _redhat_flavor_install() {
 	if [[ -f "${SUDO_HOME}/.Xresources" ]];        then
     rm "${SUDO_HOME}/.Xresources"
   fi
-  if [[ -d "${config_dir}/i3" ]];           then
-    rm -rf "${config_dir}/i3"
-  fi
+  # if [[ -d "${config_dir}/i3" ]];           then
+  #   rm -rf "${config_dir}/i3"
+  # fi
   if [[ -d "${config_dir}/i3status" ]];     then
     rm -rf "${config_dir}/i3status"
   fi
@@ -995,8 +995,10 @@ _redhat_flavor_install() {
   fi
 
   ln -s "${base_dir}/home/.Xresources"          "${SUDO_HOME}/.Xresources"
-  ln -s "${base_dir}/home/.config/i3"           "${config_dir}/i3"
-  ln -s "${base_dir}/home/.config/i3status"     "${config_dir}/i3status"
+  if [[ ! -d "${config_dir}/i3" ]]
+	  ln -s "${base_dir}/home/.config/i3"           "${config_dir}/i3"
+	fi
+	ln -s "${base_dir}/home/.config/i3status"     "${config_dir}/i3status"
   ln -s "${base_dir}/home/.config/mpd"          "${config_dir}/mpd"
   ln -s "${base_dir}/home/.config/mpv"          "${config_dir}/mpv"
   ln -s "${base_dir}/home/.config/scripts"      "${config_dir}/scripts"
