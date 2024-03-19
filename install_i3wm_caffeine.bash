@@ -936,7 +936,11 @@ _redhat_flavor_install() {
 	if [ -f /etc/mpd.conf ]; then
 		rm /etc/mpd.conf;
 	fi
-  systemctl disable mpd
+  if systemctl disable mpd ; then
+	{
+		warning "Failed to systemctl disable mpd.service. Maybe is not found "
+	}
+	fi
 
 	Checking "# urxvt plugins"
 	if [ ! -d /usr/lib/urxv/perl ]; then
