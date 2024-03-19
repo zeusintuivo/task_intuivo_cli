@@ -922,8 +922,8 @@ _redhat_flavor_install() {
     mkdir -p /usr/share/fonts/caffeine-font
   fi
   directory_exists_with_spaces /usr/share/fonts/caffeine-font
-	cp -R "${base_dir}/global/usr/share/fonts/caffeine-font/*.ttf" /usr/share/fonts/
-	cp -R "${base_dir}/global/usr/share/fonts/caffeine-font/readme.md" /usr/share/fonts/
+	cp -R "${base_dir}"/global/usr/share/fonts/caffeine-font/* /usr/share/fonts/
+	cp -R "${base_dir}"/global/usr/share/fonts/caffeine-font/*.* /usr/share/fonts/
 	chown -R "${SUDO_USER}" /usr/share/fonts/
 	file_exists_with_spaces /usr/share/fonts/readme.md
 
@@ -941,7 +941,8 @@ _redhat_flavor_install() {
     mkdir -p /usr/lib/urxvt/perl
   fi
   directory_exists_with_spaces /usr/lib/urxvt/perl
-	cp -R "${base_dir}/global/usr/lib/urxvt/perl/*" /usr/lib/urxvt/perl/
+	cp -R "${base_dir}"/global/usr/lib/urxvt/perl/* /usr/lib/urxvt/perl/
+	cp -R "${base_dir}"/global/usr/lib/urxvt/perl/*.* /usr/lib/urxvt/perl/
 	chown -R "${SUDO_USER}" /usr/lib/urxvt/perl/
   file_exists_with_spaces /usr/lib/urxvt/perl/keyboard-select
 	file_exists_with_spaces /usr/lib/urxvt/perl/resize-font
