@@ -953,22 +953,22 @@ _redhat_flavor_install() {
 	file_exists_with_spaces /usr/lib/urxvt/perl/resize-font
 
 
-	cd "${temp_dir}"
-  _git_clone "https://github.com/Airblader/i3" "i3"
+	# cd "${temp_dir}"
+  # _git_clone "https://github.com/Airblader/i3" "i3"
 
-	directory_exists_with_spaces "${temp_dir}/i3"
-  cd "${temp_dir}/i3"
-  if [ -d build/ ]; then
-    rm -rf build/
-  fi
+	# directory_exists_with_spaces "${temp_dir}/i3"
+  # cd "${temp_dir}/i3"
+  # if [ -d build/ ]; then
+  #  rm -rf build/
+  # fi
 
-	mkdir build/ || return 1
+	# mkdir build/ || return 1
 
-	autoreconf --force --install || return 1
-	cd build || return 1
-  ../configure --prefix=/usr --sysconfdir=/etc --disable-sanitizers || return 1
-  make || return 1
-	make install || return 1
+	# autoreconf --force --install || return 1
+	# cd build || return 1
+  # ../configure --prefix=/usr --sysconfdir=/etc --disable-sanitizers || return 1
+  # make || return 1
+	# make install || return 1
 
 	_package_list_installer "
 	 i3lock
