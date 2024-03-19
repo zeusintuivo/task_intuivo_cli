@@ -953,7 +953,8 @@ _redhat_flavor_install() {
 	file_exists_with_spaces /usr/lib/urxvt/perl/resize-font
 
 
-  _git_clone "https://github.com/Airblader/i3" "${temp_dir}"
+	cd "${temp_dir}"
+  _git_clone "https://github.com/Airblader/i3" "i3"
 
 	directory_exists_with_spaces "${temp_dir}/i3"
   cd "${temp_dir}/i3"
