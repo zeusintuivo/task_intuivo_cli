@@ -477,14 +477,17 @@ _redhat_flavor_install() {
   fi
 	directory_exists_with_spaces /usr/share/backgrounds
 	file_exists_with_spaces "${base_dir}/global/usr/share/backgrounds/caffeine.png"
-	su - "${SUDO_USER}" -c 'cp '"${base_dir}/global/usr/share/backgrounds/caffeine.png"' /usr/share/backgrounds'
+	cp "${base_dir}/global/usr/share/backgrounds/caffeine.png" /usr/share/backgrounds
+	chown -R "${SUDO_USER}" /usr/share/backgrounds
 	file_exists_with_spaces /usr/share/backgrounds/caffeine.png
 
 	if [[ ! -d /usr/share/fonts/caffeine-font ]]; then
     mkdir -p /usr/share/fonts/caffeine-font
   fi
   directory_exists_with_spaces /usr/share/fonts/caffeine-font
-	su - "${SUDO_USER}" -c 'cp -R '"${base_dir}/global/usr/share/fonts/caffeine-font"' /usr/share/fonts/'
+	cp -R "${base_dir}/global/usr/share/fonts/caffeine-font/*.ttf" /usr/share/fonts/
+	cp -R "${base_dir}/global/usr/share/fonts/caffeine-font/readme.md" /usr/share/fonts/
+	chown -R "${SUDO_USER}" /usr/share/fonts/
 	file_exists_with_spaces /usr/share/fonts/readme.md
 
   Checking "# Set urxvt as default terminal"
@@ -501,7 +504,8 @@ _redhat_flavor_install() {
     mkdir -p /usr/lib/urxvt/perl
   fi
   directory_exists_with_spaces /usr/lib/urxvt/perl
-	su - "${SUDO_USER}" -c 'cp -R '"${base_dir}/global/usr/lib/urxvt/perl/*"' /usr/lib/urxvt/perl/'
+	cp -R "${base_dir}/global/usr/lib/urxvt/perl/*" /usr/lib/urxvt/perl/
+	chown -R "${SUDO_USER}" /usr/lib/urxvt/perl/
   file_exists_with_spaces /usr/lib/urxvt/perl/keyboard-select
 	file_exists_with_spaces /usr/lib/urxvt/perl/resize-font
 
