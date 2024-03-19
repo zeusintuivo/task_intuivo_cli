@@ -927,8 +927,10 @@ _redhat_flavor_install() {
 	chown -R "${SUDO_USER}" /usr/share/fonts/
 	file_exists_with_spaces /usr/share/fonts/readme.md
 
-  Checking "# Set urxvt as default terminal"
-	update-alternatives --set x-terminal-emulator /usr/bin/urxvt
+  if [[  -e /var/lib/alternatives/x-terminal-emulator ]]; then
+    Checking "# Set urxvt as default terminal"
+	  update-alternatives --set x-terminal-emulator /usr/bin/urxvt
+	fi
 
 	Checking "# Disable system-wide MPD"
 	if [ -f /etc/mpd.conf ]; then
@@ -942,7 +944,6 @@ _redhat_flavor_install() {
   fi
   directory_exists_with_spaces /usr/lib/urxvt/perl
 	cp -R "${base_dir}"/global/usr/lib/urxvt/perl/* /usr/lib/urxvt/perl/
-	cp -R "${base_dir}"/global/usr/lib/urxvt/perl/*.* /usr/lib/urxvt/perl/
 	chown -R "${SUDO_USER}" /usr/lib/urxvt/perl/
   file_exists_with_spaces /usr/lib/urxvt/perl/keyboard-select
 	file_exists_with_spaces /usr/lib/urxvt/perl/resize-font
