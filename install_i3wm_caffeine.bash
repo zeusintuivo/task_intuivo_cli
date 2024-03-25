@@ -567,25 +567,6 @@ _debian_flavor_install() {
   apt update -y
   trap 'echo -e "${RED}" && echo "ERROR err:$_err failed $0:$LINENO _debian_flavor_install i3wm" && echo -e "${RESET}" && return 0' ERR
 
-	local base_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-  local config_dir="${SUDO_HOME}/.config"
-  local temp_dir="/tmp/caffeine-installer"
-  if [[ ! -d "${temp_dir}" ]]; then
-	{
-    mkdir -p "${temp_dir}"
-  }
-	fi
-  directory_exists_with_spaces "${temp_dir}"
-  chown -R "${SUDO_USER}" "${temp_dir}"
-
-	if [[ ! -d "${config_dir}" ]]; then
-  {
- 		mkdir -p "${config_dir}";
-	}
-	fi
-  directory_exists_with_spaces "${config_dir}"
-  chown -R "${SUDO_USER}" "${config_dir}"
-
   local package packages="
 	  # install apt pre requisites
     xserver-xorg
@@ -683,109 +664,10 @@ _debian_flavor_install() {
     libgdbm-dev
   "
   _package_list_installer "${packages}"
-  ensure pip3 or "Canceling until pip3 is installed. try install_pyenv.bash"
-  su - "${SUDO_USER}" -c 'pip3 install py3status python-mpd2'
+  _move_folders_copy_links
 
-  if [[ ! -d /usr/share/backgrounds ]]; then
-    mkdir -p /usr/share/backgrounds
-  fi
-  directory_exists_with_spaces /usr/share/backgrounds
-  file_exists_with_spaces "${base_dir}/global/usr/share/backgrounds/caffeine.png"
-  su - "${SUDO_USER}" -c 'cp '"${base_dir}/global/usr/share/backgrounds/caffeine.png"' /usr/share/backgrounds'
-  file_exists_with_spaces /usr/share/backgrounds/caffeine.png
-
-  if [[ ! -d /usr/share/fonts/caffeine-font ]]; then
-    mkdir -p /usr/share/fonts/caffeine-font
-  fi
-  directory_exists_with_spaces /usr/share/fonts/caffeine-font
-  su - "${SUDO_USER}" -c 'cp -R '"${base_dir}/global/usr/share/fonts/caffeine-font"' /usr/share/fonts/'
-  file_exists_with_spaces /usr/share/fonts/readme.md
-
-  Checking "# Set urxvt as default terminal"
-  update-alternatives --set x-terminal-emulator /usr/bin/urxvt
-
-  Checking "# Disable system-wide MPD"
-  if [ -f /etc/mpd.conf ]; then
-    rm /etc/mpd.conf;
-  fi
-  systemctl disable mpd
-
-  Checking "# urxvt plugins"
-  if [ ! -d /usr/lib/urxv/perl ]; then
-    mkdir -p /usr/lib/urxvt/perl
-  fi
-  directory_exists_with_spaces /usr/lib/urxvt/perl
-  su - "${SUDO_USER}" -c 'cp -R '"${base_dir}/global/usr/lib/urxvt/perl/*"' /usr/lib/urxvt/perl/'
-  file_exists_with_spaces /usr/lib/urxvt/perl/keyboard-select
-  file_exists_with_spaces /usr/lib/urxvt/perl/resize-font
-
-
-  _git_clone "https://github.com/Airblader/i3" "${temp_dir}"
-
-  directory_exists_with_spaces "${temp_dir}/i3"
-  cd "${temp_dir}/i3"
-  if [ -d build/ ]; then
-    rm -rf build/
-  fi
-
-  mkdir build/ || return 1
-
-  autoreconf --force --install || return 1
-  cd build || return 1
-  ../configure --prefix=/usr --sysconfdir=/etc --disable-sanitizers || return 1
-  make || return 1
-  make install || return 1
-
-  _package_list_installer "
-   i3lock
-   i3status
-  "
-
-  if [[ -f "${SUDO_HOME}/.Xresources" ]];        then
-    rm "${SUDO_HOME}/.Xresources"
-  fi
-  if [[ -d "${config_dir}/i3" ]];           then
-    rm -rf "${config_dir}/i3"
-  fi
-  if [[ -d "${config_dir}/i3status" ]];     then
-    rm -rf "${config_dir}/i3status"
-  fi
-  if [[ -d "${config_dir}/mpd" ]];          then
-    rm -rf "${config_dir}/mpd"
-  fi
-  if [[ -d "${config_dir}/mpv" ]];          then
-    rm -rf "${config_dir}/mpv"
-  fi
-  if [[ -d "${config_dir}/scripts" ]];      then
-    rm -rf "${config_dir}/scripts"
-  fi
-
-  ln -s "${base_dir}/home/.Xresources"          "${SUDO_HOME}/.Xresources"
-  ln -s "${base_dir}/home/.config/i3"           "${config_dir}/i3"
-  ln -s "${base_dir}/home/.config/i3status"     "${config_dir}/i3status"
-  ln -s "${base_dir}/home/.config/mpd"          "${config_dir}/mpd"
-  ln -s "${base_dir}/home/.config/mpv"          "${config_dir}/mpv"
-  ln -s "${base_dir}/home/.config/scripts"      "${config_dir}/scripts"
-  ln -s "${base_dir}/home/.config/dunst"        "${config_dir}/dunst"
-
-  echo "exec i3 > ${SUDO_HOME}/.xsession"
-
-  xdg-mime default feh.desktop image/jpeg
-  xdg-mime default feh.desktop image/png
-  su - "${SUDO_USER}" -c 'xdg-mime default feh.desktop image/jpeg'
-  su - "${SUDO_USER}" -c 'xdg-mime default feh.desktop image/png'
-
-  # _add_variables_to_bashrc_zshrc
-  # ensure i3wm or "Canceling until i3wm did not install"
-  # su - "${SUDO_USER}" -c 'i3wm install -l'
 } # end _debian_flavor_install
-
-
-_redhat_flavor_install() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  dnf build-dep i3 -vy --allowerasing
-  # dnf install  -y openssl-devel
-  # Batch Fedora 37
+_move_folders_copy_links() {
   local base_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
   local config_dir="${SUDO_HOME}/.config"
   local temp_dir="/tmp/caffeine-installer"
@@ -804,107 +686,6 @@ _redhat_flavor_install() {
 	fi
   directory_exists_with_spaces "${config_dir}"
   chown -R "${SUDO_USER}" "${config_dir}"
-
-  # Fedora 37
-	local package packages="
-	  # install dnf pre requisites
-    xdm
-		pavucontrol
-	  gdbm-devel
-		gdbm-libs
-		dunst
-		dbus-x11
-		vim
-		git
-		screen
-		curl
-		mc
-		rsync
-		source-highlight
-		htop
-		nload
-		nmap
-		net-tools
-		autoconf
-		automake
-    autogen
-    figlet
-    cowsay
-    w3m
-    mediainfo
-    unoconv
-    odt2txt
-    catdoc
-    python-pip
-    python3-pip
-		numlockx
-    xclip
-    arandr
-    acpi
-    rofi
-    picom
-    redshift
-    xbacklight
-    # mpd
-    mpc
-    ncmpcpp
-		zathura
-    mpv
-    feh
-    scrot
-    # vlc
-    vim
-		gdk-pixbuf2
-    rust-gdk-pixbuf-sys-devel
-    rust-gdk-pixbuf-devel
-    gdk-pixbuf2-devel
-    gdk-pixbuf2-modules
-    gdk-pixbuf2-xlib
-    gtk-murrine-engine
-
-
-    # install i3
-		libxcb-devel
-    xcb-util-keysyms
-    xcb-util
-    xcb-util-devel
-    xcb-util-keysyms-devel
-		xcb-util-cursor
-    xcb-util-cursor-devel
-    rust-xcb+xinerama-devel
-		rust-xcb+xkb-devel
-    xcb-util-xrm-devel
-    xcb-util-xrm
-    libxkbcommon
-		libxkbcommon-devel
-    rust-xkbcommon+default-devel
-    rust-xkbcommon-devel
-
-    rust-xkbcommon+wayland-devel
-    libxkbcommon-x11-devel
-    libxkbcommon-x11
-		rust-xcb+shape-devel
-    rust-xcb+randr-devel
-    libev-devel
-    rust-xcb+genericevent-devel
-		pango
-    pango-devel
-    rust-pango-devel
-    yajl
-    yajl-devel
-    startup-notification
-		startup-notification-devel
-    arandr
-    xrandr
-    rust-xcb+randr-devel
-    libXrandr-devel
-		autorandr
-    lxrandr
-    rust-x11+xrandr-devel
-    libXrandr
-    xbacklight
-  "
-  _package_list_installer "${packages}"
 
 	ensure pip3 or "Canceling until pip3 is installed. try install_pyenv.bash"
 	su - "${SUDO_USER}" -c 'pip3 install py3status python-mpd2'
@@ -1014,6 +795,114 @@ _redhat_flavor_install() {
   # _add_variables_to_bashrc_zshrc
   # ensure i3wm or "Canceling until i3wm did not install"
   # su - "${SUDO_USER}" -c 'i3wm install -l'
+
+} # end _move_folders_copy_links 
+
+_redhat_flavor_install() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  dnf build-dep i3 -vy --allowerasing
+  # dnf install  -y openssl-devel
+  # Fedora 37
+	local package packages="
+	  # install dnf pre requisites
+    xdm
+		pavucontrol
+	  gdbm-devel
+		gdbm-libs
+		dunst
+		dbus-x11
+		vim
+		git
+		screen
+		curl
+		mc
+		rsync
+		source-highlight
+		htop
+		nload
+		nmap
+		net-tools
+		autoconf
+		automake
+    autogen
+    figlet
+    cowsay
+    w3m
+    mediainfo
+    unoconv
+    odt2txt
+    catdoc
+    python-pip
+    python3-pip
+		numlockx
+    xclip
+    arandr
+    acpi
+    rofi
+    picom
+    redshift
+    xbacklight
+    # mpd
+    mpc
+    ncmpcpp
+		zathura
+    mpv
+    feh
+    scrot
+    # vlc
+    vim
+		gdk-pixbuf2
+    rust-gdk-pixbuf-sys-devel
+    rust-gdk-pixbuf-devel
+    gdk-pixbuf2-devel
+    gdk-pixbuf2-modules
+    gdk-pixbuf2-xlib
+    gtk-murrine-engine
+
+
+    # install i3
+		libxcb-devel
+    xcb-util-keysyms
+    xcb-util
+    xcb-util-devel
+    xcb-util-keysyms-devel
+		xcb-util-cursor
+    xcb-util-cursor-devel
+    rust-xcb+xinerama-devel
+		rust-xcb+xkb-devel
+    xcb-util-xrm-devel
+    xcb-util-xrm
+    libxkbcommon
+		libxkbcommon-devel
+    rust-xkbcommon+default-devel
+    rust-xkbcommon-devel
+
+    rust-xkbcommon+wayland-devel
+    libxkbcommon-x11-devel
+    libxkbcommon-x11
+		rust-xcb+shape-devel
+    rust-xcb+randr-devel
+    libev-devel
+    rust-xcb+genericevent-devel
+		pango
+    pango-devel
+    rust-pango-devel
+    yajl
+    yajl-devel
+    startup-notification
+		startup-notification-devel
+    arandr
+    xrandr
+    rust-xcb+randr-devel
+    libXrandr-devel
+		autorandr
+    lxrandr
+    rust-x11+xrandr-devel
+    libXrandr
+    xbacklight
+  "
+  _package_list_installer "${packages}"
+  _move_folders_copy_links
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {

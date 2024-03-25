@@ -68,6 +68,23 @@ _fedora__32() {
 _centos__64(){
   _fedora__64
 } # end _centos__64
+
+_fedora_37__64(){
+  _fedora__64
+} # end _fedora_37__64
+
+_fedora_38__64(){
+  _fedora__64
+} # end _fedora_38__64
+
+_fedora_39__64(){
+  _fedora__64
+} # end _fedora_38__64
+
+_fedora_40__64(){
+  _fedora__64
+} # end _fedora_40__64
+
 _fedora__64() {
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   local TARGET_URL=https://prerelease.keybase.io/keybase_amd64.rpm
