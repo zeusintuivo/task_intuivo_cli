@@ -95,6 +95,7 @@ _add_variables_to_bashrc_zshrc(){
   cd "${USER_HOME}/.i3status-rs/"
 	su - "${SUDO_USER}" -c 'cd '${USER_HOME}'/.i3status-rs/ && cargo build'
 	su - "${SUDO_USER}" -c 'cd '${USER_HOME}'/.i3status-rs/ && cargo xtask generate-manpage'
+	su - "${SUDO_USER}" -c 'cd '${USER_HOME}'/.i3status-rs/ && cargo install --path . --locked'
 	cp -R "${USER_HOME}/.i3status-rs/files/"* "${XDG_DATA_HOME}/i3status-rust/"
   mkdir -p "${XDG_DATA_HOME}/man/man1/"
 	directory_exists_with_spaces "${XDG_DATA_HOME}/man/man1/"

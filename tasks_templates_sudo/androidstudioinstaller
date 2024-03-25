@@ -6,6 +6,50 @@ _debian_flavor_install() {
 
 _redhat_flavor_install() {
   echo "Procedure not yet implemented. I don't know what to do."
+  HOW_TO_LOAD_JUST_ONE_SCRIPT_LOCAL_AND_ONLINE_EXECUTE_COMMAND
+  # dnf install -y snapd
+  # ln -s /var/lib/snapd/snap /snap
+  snap install core
+	snap refresh core
+  snap install android-studio --classic
+  snap list android-studio	
+	ln -sf /snap/bin/android-studio /usr/local/bin/android-studio
+	dnf install -y zlib.i686 ncurses-libs.i686 bzip2-libs.i686
+  cd /tmp
+  wget https://dl.google.com/dl/android/studio/ide-zips/2021.2.1.14/android-studio-2021.2.1.14-linux.tar.gz
+  tar -zxvf android-studio-*-linux.tar.gz
+  mv android-studio /opt/	
+  ln -sf /opt/android-studio/bin/studio.sh /usr/local/bin/android-studio
+  # vi /usr/share/applications/android-studio.desktop
+  echo "[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Android Studio
+Comment=Android Studio
+Exec=bash -i "/opt/android-studio/bin/studio.sh" %f
+Icon=/opt/android-studio/bin/studio.png
+Categories=Development;IDE;
+Terminal=false
+StartupNotify=true
+StartupWMClass=jetbrains-android-studio
+Name[en_GB]=android-studio.desktop
+  " > /usr/share/applications/android-studio.desktop
+
+	su - "${SUDO_USER}" -c 'pip install xattr'
+  su - "${SUDO_USER}" -c 'brew install GCC'
+  su - "${SUDO_USER}" -c 'brew reinstall --cask android-studio'
+  su - "${SUDO_USER}" -c 'brew reinstall --cask android-SDK'
+  su - "${SUDO_USER}" -c 'brew reinstall --cask android-ndk'
+  su - "${SUDO_USER}" -c 'brew reinstall --cask flutter'
+  su - "${SUDO_USER}" -c 'brew reinstall --HEAD libimobiledevice'
+  su - "${SUDO_USER}" -c 'brew reinstall ideviceinstaller'
+  su - "${SUDO_USER}" -c 'brew reinstall ios-deploy cocoapods'
+  su - "${SUDO_USER}" -c 'pod setup'
+  su - "${SUDO_USER}" -c 'flutter doctor'
+  # anounce_command xcodebuild -license
+  su - "${SUDO_USER}" -c 'flutter config --android-SDK'
+  su - "${SUDO_USER}" -c 'brew install --cask intel-haxm'
+
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
@@ -39,6 +83,22 @@ _debian__64() {
 _fedora__32() {
   _redhat_flavor_install
 } # end _fedora__32
+
+_fedora_37__64(){
+  _redhat_flavor_install
+} # end _fedora_37__64
+
+_fedora_38__64(){
+  _redhat_flavor_install
+} # end _fedora_38__64
+
+_fedora_39__64(){
+  _redhat_flavor_install
+} # end _fedora_39__64
+
+_fedora_40__64(){
+  _redhat_flavor_install
+} # end _fedora_40__64
 
 _fedora__64() {
   _redhat_flavor_install

@@ -94,6 +94,22 @@ _fedora__32() {
   _redhat_flavor_install
 } # end _fedora__32
 
+_fedora_37__64(){
+  _redhat_flavor_install
+} # end _fedora_37__64
+
+_fedora_38__64(){
+  _redhat_flavor_install
+} # end _fedora_38__64
+
+_fedora_39__64(){
+  _redhat_flavor_install
+} # end _fedora_39__64
+
+_fedora_40__64(){
+  _redhat_flavor_install
+} # end _fedora_40__64
+
 _fedora__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
