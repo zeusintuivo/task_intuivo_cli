@@ -444,9 +444,14 @@ _debian_flavor_install() {
 _redhat_flavor_install() {
   echo "Procedure not yet implemented. I don't know what to do."
   HOW_TO_LOAD_JUST_ONE_SCRIPT_LOCAL_AND_ONLINE_EXECUTE_COMMAND
-  # dnf install -y snapd
+  dnf install -y snapd
   # ln -s /var/lib/snapd/snap /snap
-  snap install core
+  #if ! it_exists_with_spaces /var/lib/snapd/snap ; then 
+	#{
+    ln -sf /var/lib/snapd/snap /snap
+	#}
+	#fi
+	snap install core
 	snap refresh core
   snap install android-studio --classic
   snap list android-studio	
