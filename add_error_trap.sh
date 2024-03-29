@@ -80,7 +80,7 @@ function _trap_on_error() {
   local __trapped_function="${7:-0}"
   local -i __trapped_bash_line_before="${8:-0}"
   if (local -i __trapped_line="${9:-0}") ; then
-    if (local -r __trapped_bash_command="${*:10}") ; then
+    if (local -r __trapped_bash_command="${*:10}") ; then # grab all parameters after 10 
       (( DEBUG )) && echo 'add error trap loading'
     fi
   fi

@@ -1,1 +1,7 @@
 .dir_bash_history
+.env
+.env_deb
+.env_rpm
+sdkmanager_2.1.0-11660.x86_64.rpm
+jetsons.html
+sdk-manager.html

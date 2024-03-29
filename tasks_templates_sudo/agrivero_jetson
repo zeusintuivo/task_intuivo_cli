@@ -1,0 +1,284 @@
+#!/usr/bin/bash
+
+
+_execute_project_command() {
+	# Sample usage:
+	#   _execute_project_command "${PROJECTREPO}" "bundle exec rake db:migrate db:migrate:emails db:migrate:credit_check "
+	#
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local PROJECTREPO=${1}
+enforce_parameter_with_value           1        PROJECTREPO      "${PROJECTREPO}"     "path folder where Gemfile or project is located "
+  local _command=${2}
+enforce_parameter_with_value           2        _command         "${_command}"        "bash command to run"
+# _command="$(sed 's/["]/\\\"/g' <<< "${_command}")"
+  echo "_command:${_command}"
+  su - "${SUDO_USER}" -c  "bash -c 'cd "${PROJECTREPO}" && ${_command} '"
+} # end _execute_project_command
+
+check_run_command_as_root() {
+	# Sample usage:
+	#  	check_run_command_as_root
+	#
+  [[ "${EUID:-${UID}}" == "0" ]] || return
+
+# Allow Azure Pipelines/GitHub Actions/Docker/Concourse/Kubernetes to do everything as root (as it's normal there)
+  [[ -f /.dockerenv ]] && return
+  [[ -f /proc/1/cgroup ]] && grep -E "azpl_job|actions_job|docker|garden|kubepods" -q /proc/1/cgroup && return
+
+  failed "Don't run this as root!"
+}
+
+
+_debian_flavor_install() {
+  # trap  '_trap_on_exit $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  EXIT
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+	apt-get update -y
+  if 
+		(
+    install_requirements "linux" "
+      base64
+      unzip
+      curl
+      wget
+      ufw
+	    apt-transport-https
+			ca-certificates
+			gnupg
+			curl
+			sudo
+			net-tools
+			network-manager
+			wireless-tools
+    "
+		) ; then
+    {
+      echo "Install run returned $?"
+    }
+  fi
+  verify_is_installed "
+    unzip
+    curl
+    wget
+    tar
+    ufw
+    apt-transport-https
+    ca-certificates
+    gnupg
+    curl
+    sudo
+    net-tools
+		network-manager
+		wireless-tools
+  "
+	ensure nmcli or "nmcli is needed to connect ot wifi is not working - Install network-manager"
+	Installing "Wifi"
+	echo "REF: https://askubuntu.com/questions/461825/how-to-connect-to-wifi-from-the-command-line"
+	Checking "list of saved connections"
+	nmcli c 
+	Checking "list of available wifi cards"
+	nmcli d | grep wifi
+	local _wifi_device=$(nmcli d | grep wifi | head -1 | cut -d' ' -f1)
+	if [[ -z "${_wifi_device}" ]] ; then 
+	{
+		warning "could not find wifi device to connect to"
+	  passed "Continuing with no WIFI to allow other things to install - Run this again when WIFI if avaible"
+	} 
+  else 
+	{
+	  Checking " list of available WiFi hotspots "
+	  nmcli d wifi list
+		local _ssid_name=$(nmcli d wifi list | grep agrivero  | grep '*' | head -1 | xargs |  sed 's/*//g' | xargs | cut -d' ' -f2)
+		echo 'hello there' | tr 'a-z' 'n-za-m'
+		echo 'hello there' | tr 'a-z' 'n-za-m' | tr 'a-z' 'n-za-m'
+		local _ssid_password=$("")
+    echo -n "hello there" | base64 |  tr 'a-z' 'n-za-m' | base64 -d 
+    echo -n "hello there" | base64 |  tr 'a-z' 'n-za-m' | base64 -d | base64 | tr 'a-z' 'n-za-m' | base64 -d
+		echo -n "hello there" | base64 | tr 'A-Z' 'N-ZA-M' | tr 'a-z' 'n-za-m'  |  base64 -d
+    echo "REF: https://stackoverflow.com/questions/6441260/how-to-shift-each-letter-of-the-string-by-a-given-number-of-letters"
+ 		local _ssid_password='d³322+S¥œžzgn' 
+		if [[ -z "${_ssid_name}" ]] ; then
+    {
+			warning "could not find wifi from the list "
+			passed "Continuing with no WIFI connection"
+		}
+	  else
+		{
+		  nmcli d wifi con "${_ssid_name}" password  "agrivero.ai"
+		}
+		fi
+	}
+	fi
+	Checking "If network is reachable - TODO this is dumb considering we already did Struct_testing loading and apt update and install - TODO move this an starting point form the script"
+	local _website='google.com'
+	if (enforce_web_is_reachable  "${_website}" > /dev/null 2>&1 ) ; then # redirect all sdout sderr to /dev/null
+	{
+   passed "reached connection with ${_website}"
+  }
+  else
+  {
+    failed "ERROR count not connec to online required to continue"
+    # [ $? -gt 0 ] && failed To connect git provider push  && exit 1
+  }
+  fi
+  Checking "Docker should be already installed - Why ?"
+	Installing "Add agrivero user"
+  anounce_command "usermod -a -G docker agrivero"
+  Installing "Google gpg cloud key"
+	anounce_command "curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg"
+  Installing "Google cloud apt source list"
+  anounce_command "echo 'deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main' > /etc/apt/sources.list.d/google-cloud-sdk.list"
+  apt-get update -y
+  if 
+		(
+    install_requirements "linux" "
+			google-cloud-cli
+    "
+		) ; then
+    {
+      echo "Install run returned $?"
+    }
+  fi
+  verify_is_installed "
+    google-cloud-cli
+  "
+  local PB_VERSION=0.16.7
+  local CODENAME="pocketbase_${PB_VERSION}_linux_amd64.zip"
+  local TARGET_URL="https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/${CODENAME}"
+  local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  directory_exists_with_spaces "${DOWNLOADFOLDER}"
+  cd "${DOWNLOADFOLDER}"
+  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+  # unzip "${DOWNLOADFOLDER}/${CODENAME}" -d $HOME/pb/
+  local UNZIPDIR="${USER_HOME}/_/software"
+  mkdir -p "${UNZIPDIR}"
+  _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
+  local PATHTOPOCKETBASE="${UNZIPDIR}/pocketbase"
+  local THISIP=$(myip)
+
+} # end _debian_flavor_install
+
+_redhat_flavor_install() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  Checking "Device Script - Goal location where is it ? When is it supposed to run?"
+	Checking "Guessing Pipeline - Run Agrivero Pipeline - where Google Cloud-Amazon ? how ?"
+  Checking "Guessing Desktop - Run as a program - where inside Ubuntu linux "?
+	Checking "Guessing Desktop - reports - where inside desktop ? how?"
+  Checking "Installed ?  https://developer.nvidia.com/sdk-manager in computer . My computer"
+	Checking " \__ Non-LTS versions are NOT supported"
+  Checking "The device should detect and perform upgrade? - this sounds I need more about this line "
+	Checking "Jetson 5 versus Versu Jerson 6?"
+	Checking "
+
+} # end _redhat_flavor_install
+
+_arch_flavor_install() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_arch_flavor_install Procedure not yet implemented. I don't know what to do."
+} # end _readhat_flavor_install
+
+_arch__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _arch_flavor_install
+} # end _arch__32
+
+_arch__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _arch_flavor_install
+} # end _arch__64
+
+_centos__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _centos__32
+
+_centos__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _centos__64
+
+_debian__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _debian__32
+
+_debian__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _debian__64
+
+_fedora__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _fedora__32
+
+_fedora__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _fedora__64
+
+_gentoo__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _gentoo__32
+
+_gentoo__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _gentoo__64
+
+_madriva__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _madriva__32
+
+_madriva__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _madriva__64
+
+_suse__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _suse__32
+
+_suse__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _suse__64
+
+_ubuntu__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _ubuntu__32
+
+_ubuntu__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _ubuntu__64
+
+_darwin__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_darwin__64 Procedure not yet implemented. I don't know what to do."
+} # end _darwin__64
+
+_darwin__arm64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_darwin__arm64 Procedure not yet implemented. I don't know what to do."
+} # end _darwin__arm64
+
+_tar() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_tar Procedure not yet implemented. I don't know what to do."
+} # end tar
+
+_windows__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_windows__64 Procedure not yet implemented. I don't know what to do."
+} # end _windows__64
+
+_windows__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_windows__32 Procedure not yet implemented. I don't know what to do."
+} # end _windows__32
