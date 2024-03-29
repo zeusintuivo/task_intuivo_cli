@@ -514,7 +514,7 @@ _debian_flavor_install() {
     _err=$?
     if [ ${_err} -gt 0 ] ; then
     {
-      failed "whilte running curl above: curl  $passwords -k $service_url > \"${filename}\""
+      failed "while running curl above: curl  $passwords -k $service_url > \"${filename}\""
     }
     fi
   }
@@ -606,7 +606,7 @@ _redhat_flavor_install() {
     _err=$?
     if [ ${_err} -gt 0 ] ; then
     {
-      failed "whilte running curl above: curl  $passwords -k $service_url > \"${filename}\""
+      failed "while running curl above: curl  $passwords -k $service_url > \"${filename}\""
     }
     fi
   }

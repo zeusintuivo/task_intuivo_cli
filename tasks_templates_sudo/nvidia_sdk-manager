@@ -4,14 +4,15 @@
 _execute_project_command() {
   # Sample usage:
   #   _execute_project_command "${PROJECTREPO}" "bundle exec rake db:migrate db:migrate:emails db:migrate:credit_check "
-  #
+  #   _execute_project_command "${PWD}" sdkmanager --cli  
+	#
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   local PROJECTREPO=${1}
-enforce_parameter_with_value           1        PROJECTREPO      "${PROJECTREPO}"     "path folder where Gemfile or project is located "
+  enforce_parameter_with_value           1        PROJECTREPO      "${PROJECTREPO}"     "path folder where Gemfile or project is located "
   local _command=${2}
-enforce_parameter_with_value           2        _command         "${_command}"        "bash command to run"
+  enforce_parameter_with_value           2        _command         "${_command}"        "bash command to run"
   local _parameters="${*:3}"  # grab all parameters after second
-# _command="$(sed 's/["]/\\\"/g' <<< "${_command}")"
+  # _command="$(sed 's/["]/\\\"/g' <<< "${_command}")"
   echo "_command:${_command}"
   su - "${SUDO_USER}" -c  "bash -c 'cd "${PROJECTREPO}" && ${_command} ${_parameters} '"
 } # end _execute_project_command
@@ -29,10 +30,136 @@ check_run_command_as_root() {
   failed "Don't run this as root!"
 }
 
+__download_file_check_checksum() {
+  # Sample usage: 
+	#    __download_file_check_checksum .torch_22_jetson_6_python_3_10 "https://developer.download.nvidia.cn/compute/redist/jp/v60dp/pytorch/torch-2.2.0a0+6a974be.nv23.11-cp310-cp310-linux_aarch64.whl" 94e70c4f45211737174a3c0f0b791b479c5fd9a2955ba77f573d31c0273e485e
+	local file_url_configuration="${1}"
+	enforce_parameter_with_value           1        file_url_configuration      "${file_url_configuration}"     ".trained_model .torch_22_jetson_6_python_3_10 full path filename "
+	if [[ ! -e "${file_url_configuration}" ]] ; then 
+	{
+		failed "file_url_configuration=file:${file_url_configuration}  does not exists"
+	}
+	fi
+  local sample_url_download="${2}"
+	enforce_parameter_with_value           2       sample_url_download         "${sample_url_download}"     "https://developer.download.nvidia.cn/compute/redist/jp/v60dp/pytorch/torch-2.2.0a0+6a974be.nv23.11-cp310-cp310-linux_aarch64.whl"
+  local hash_check_sum_to_check_against="${3}"
+	enforce_parameter_with_value           3       hash_check_sum_to_check_against "${hash_check_sum_to_check_against}"    "94e70c4f45211737174a3c0f0b791b479c5fd9a2955ba77f573d31c0273e48" 
+
+ 	local service_url="$(<"${file_url_configuration}")"
+  enforce_parameter_with_value           1        service_url      "${service_url}"    "${sample_url_download}" 
+  enforce_variable_with_value service_url  "${service_url}"
+  local filename=$(basename "${service_url}")
+  local -i _err=0
+  if [[ -e  "${filename}" ]] ; then
+  {
+    passed "Already downloaded: ${filename}"
+  }
+  else
+  {
+    ensure curl or "curl is needed to connect to download stuff - Cannot continue"
+    local passwords="$(<.env)"
+    enforce_parameter_with_value           2        passwords      "${passwords}"     "--proxy-user user:password --user user:password"
+    enforce_variable_with_value service_url  "${passwords}"
+    curl $passwords -k $service_url
+    _err=$?
+    if [ ${_err} -gt 0 ] ; then
+    {
+      failed "while running curl above: curl  $passwords -k $service_url > \"${filename}\""
+    }
+    fi
+  }
+  fi
+  Checking "checksum for ${filename}"
+  file_exists_with_spaces "${filename}"
+  local checksum=""
+  checksum=$(sha256sum "${filename}" | cut -d' ' -f1)
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running checksum above: sha256sum \"${filename}\""
+  }
+  fi
+  if [[ "${checksum}" == "${hash_check_sum_to_check_against}" ]] ; then
+  {
+    passed "Checksum checks ${checksum}"
+  }
+  else
+  {
+    rm -rf ${filename}
+    failed "removed file ${filename} Checksum DOES NOT check ${checksum}. Try again to download again"
+  }
+  fi
+} # end __download_file_check_checksum
+
+__passively_try_to_connect_to_wifi_but_continue_if_fails() {
+	ensure nmcli or "nmcli is needed to connect ot wifi is not working - Install network-manager"
+	Installing "Wifi"
+	echo "REF: https://askubuntu.com/questions/461825/how-to-connect-to-wifi-from-the-command-line"
+	Checking "list of saved connections"
+	nmcli c 
+	Checking "list of available wifi cards"
+	nmcli d | grep wifi
+	local _wifi_device=$(nmcli d | grep wifi | head -1 | cut -d' ' -f1)
+	if [[ -z "${_wifi_device}" ]] ; then 
+	{
+		warning "could not find wifi device to connect to"
+	  passed "Continuing with no WIFI to allow other things to install - Run this again when WIFI if avaible"
+	} 
+  else 
+	{
+	  Checking " list of available WiFi hotspots "
+	  nmcli d wifi list
+		local _ssid_name=$(nmcli d wifi list | grep agrivero  | grep '*' | head -1 | xargs |  sed 's/*//g' | xargs | cut -d' ' -f2)
+		echo 'hello there' | tr 'a-z' 'n-za-m'
+		echo 'hello there' | tr 'a-z' 'n-za-m' | tr 'a-z' 'n-za-m'
+		local _ssid_password=$("")
+    echo -n "hello there" | base64 |  tr 'a-z' 'n-za-m' | base64 -d 
+    echo -n "hello there" | base64 |  tr 'a-z' 'n-za-m' | base64 -d | base64 | tr 'a-z' 'n-za-m' | base64 -d
+		echo -n "hello there" | base64 | tr 'A-Z' 'N-ZA-M' | tr 'a-z' 'n-za-m'  |  base64 -d
+    echo "REF: https://stackoverflow.com/questions/6441260/how-to-shift-each-letter-of-the-string-by-a-given-number-of-letters"
+ 		local _ssid_password='d³322+S¥œžzgn' 
+		if [[ -z "${_ssid_name}" ]] ; then
+    {
+			warning "could not find wifi from the list "
+			passed "Continuing with no WIFI connection"
+		}
+	  else
+		{
+		  nmcli d wifi con "${_ssid_name}" password  "agrivero.ai"
+		}
+		fi
+	}
+	fi
+} # end __passively_try_to_connect_to_wifi_but_continue_if_fails
+
+
+
+__check_net_work_connection() {
+	trap 'return 1' ERR INT
+	Checking "If network is reachable - TODO this is dumb considering we already did Struct_testing loading and apt update and install - TODO move this an starting point form the script"
+	local _website='google.com'
+	if (enforce_web_is_reachable  "${_website}" > /dev/null 2>&1 ) ; then # redirect all sdout sderr to /dev/null
+	{
+    passed "reached connection with ${_website}"
+  }
+  else
+  {
+    failed "ERROR count not connec to online required to continue"
+    # [ $? -gt 0 ] && failed To connect git provider push  && exit 1
+  }
+  fi
+} # end __check_net_work_connection
+ 
+
 
 _debian_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   enforce_variable_with_value USER_HOME "${USER_HOME}"
+  if __check_net_work_connection ; then
+  {
+    failed "$0:$LINENO Network Connection Not Responding !!!"
+  }
+  fi
   apt-get update -y
   if
     (
@@ -77,7 +204,7 @@ _debian_flavor_install() {
     _err=$?
     if [ ${_err} -gt 0 ] ; then
     {
-      failed "whilte running curl above: curl  $passwords -k $service_url > \"${filename}\""
+      failed "while running curl above: curl  $passwords -k $service_url > \"${filename}\""
     }
     fi
   }
@@ -124,7 +251,12 @@ _debian_flavor_install() {
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  dnf update -y
+  if __check_net_work_connection ; then
+  {
+    failed "$0:$LINENO Network Connection Not Responding !!!"
+  }
+  fi
+	dnf update -y
   if
     (
     install_requirements "linux" "
@@ -169,7 +301,7 @@ _redhat_flavor_install() {
     _err=$?
     if [ ${_err} -gt 0 ] ; then
     {
-      failed "whilte running curl above: curl  $passwords -k $service_url > \"${filename}\""
+      failed "while running curl above: curl  $passwords -k $service_url > \"${filename}\""
     }
     fi
   }

@@ -50,8 +50,9 @@ _debian__64() {
         snap install cf-cli
     }
     fi
-    #chown $SUDO_USER -R $USER_HOME/.cf
-    #verify_is_installed cf
+		mkdir -p "${USER_HOME}/.cf"
+    chown "${SUDO_USER}" -R "${USER_HOME}/.cf"
+    verify_is_installed cf
     _checka_tools_commander $COMANDDER
 
 } # end _debian__64
@@ -75,7 +76,8 @@ _ubuntu__64() {
         snap install cf-cli
     }
     fi
-    chown $SUDO_USER -R $USER_HOME/.cf
+    mkdir -p "${USER_HOME}/.cf"
+    chown "${SUDO_USER}" -R "${USER_HOME}/.cf"
     verify_is_installed cf
     _checka_tools_commander $COMANDDER
 } # end _ubuntu__64
@@ -95,6 +97,8 @@ _fedora__64() {
         $COMANDDER -y install cf7-cli
     }
     fi
+		mkdir -p "${USER_HOME}/.cf"
+		chown "${SUDO_USER}" -R "${USER_HOME}/.cf"
     verify_is_installed cf
     _checka_tools_commander $COMANDDER
     verify_is_installed brew
