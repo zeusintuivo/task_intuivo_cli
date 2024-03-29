@@ -96,8 +96,8 @@ _debian_flavor_install() {
   {
     passed "Checksum checks ${checksum}"
     Installing "Ubuntu 16.04 or 18.04 or 20.04 or 22.04: apt-get install ./sdkmanager_[version]-[build#]_amd64.deb -y"
-    Installing "apt-get install ${filename} -y"
-    apt-get install "${filename}" -y
+    Installing "apt-get install ./${filename} -y"
+    apt-get install "./${filename}" -y
     _err=$?
     if [ ${_err} -gt 0 ] ; then
     {
@@ -188,8 +188,8 @@ _redhat_flavor_install() {
   {
     passed "Checksum checks ${checksum}"
     Installing "CentOS/RHEL 8.0 or 8.2: dnf install ./sdkmanager_[version]-[build#].x86_64.rpm -y"
-    Installing "dnf install ${filename} -y --allowerasing"
-    dnf install "${filename}" -y --allowerasing
+    Installing "dnf install ./${filename} -y --allowerasing"
+    dnf install "./${filename}" -y --allowerasing
     _err=$?
     if [ ${_err} -gt 0 ] ; then
     {
