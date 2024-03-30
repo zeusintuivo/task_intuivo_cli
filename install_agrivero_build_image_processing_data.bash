@@ -865,9 +865,12 @@ PROJECTGITREPOBRANCH="will_experiments" # global
 
 _debian_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-
-  _find_project_location_PROJECT_DIR_F
-  _err=$?
+  local -i _err=0
+  if _find_project_location_PROJECT_DIR_F ; then
+	{
+    _err=1
+	}
+	fi
   if [ ${_err} -gt 0 ] ; then
   {
     warning "could not find  project folder. Making one.. _err:${_err}"
