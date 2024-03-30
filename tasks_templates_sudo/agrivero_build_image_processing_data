@@ -5,6 +5,7 @@
 
 
 PROJECT_DIR_F=""  # GLOBAL
+set -E -o functrace
 
 _find_project_location_PROJECT_DIR_F() {
   local _target_project=""

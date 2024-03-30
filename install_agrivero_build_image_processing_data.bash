@@ -442,6 +442,7 @@ directory_exists_with_spaces "${USER_HOME}"
 
 
 PROJECT_DIR_F=""  # GLOBAL
+set -E -o functrace
 
 _find_project_location_PROJECT_DIR_F() {
   local _target_project=""
