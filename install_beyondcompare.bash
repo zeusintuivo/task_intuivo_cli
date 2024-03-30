@@ -565,6 +565,25 @@ _ubuntu__64() {
   _debian_flavor_install
 } # end _ubuntu__64
 
+_ubuntu__aarch64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local package packages="
+    poppler-utils
+  "
+  _package_list_installer "${packages}"
+
+	_debian_flavor_install
+} # end _ubuntu__aarch64
+
+_ubuntu_22__aarch64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local package packages="
+    poppler-utils
+  "
+  _package_list_installer "${packages}"
+	_debian_flavor_install
+} # end _ubuntu_22__aarch64
+
 _ubuntu__32() {
   #sudo_it
   # export USER_HOME="/Users/${SUDO_USER}"
