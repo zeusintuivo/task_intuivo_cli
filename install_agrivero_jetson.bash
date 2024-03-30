@@ -710,7 +710,8 @@ _debian_flavor_install() {
   }
   fi
   verify_is_installed "
-    google-cloud-cli
+    # google-cloud-cli
+		gcloud
   "
   Checking "Additionally, you should enable the Google Cloud Artifact Registry, to pull new images."
   ensure gcloud or "gcloud is installed"
@@ -824,7 +825,8 @@ _redhat_flavor_install() {
   }
   fi
   verify_is_installed "
-    google-cloud-cli
+    # google-cloud-cli
+		gcloud
   "
   Checking "Additionally, you should enable the Google Cloud Artifact Registry, to pull new images."
   ensure gcloud or "gcloud is installed"
