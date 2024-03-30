@@ -881,7 +881,7 @@ _debian_flavor_install() {
   {
     warning "could not find  project folder. Making one.. _err:${_err}"
     mkdir -p "${USER_HOME}/_/work/agrivero/projects/"
-		chmod -R "${SUDO_USER}" "${USER_HOME}/_/work"
+		chown -R "${SUDO_USER}" "${USER_HOME}/_/work"
     PROJECT_DIR_F="${USER_HOME}/_/work/agrivero/projects/"
     cd "${USER_HOME}/_/work/agrivero/projects/"
    }
