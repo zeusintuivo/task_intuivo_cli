@@ -481,7 +481,7 @@ _step1_apt_installs() {
     build-essential
     libssl-dev
     libyaml-dev
-    libreadline6-dev
+    # libreadline6-dev
     zlib1g-dev
     libncurses5-dev
     libffi-dev
@@ -512,7 +512,7 @@ _step1_apt_installs() {
     build-essential
     libssl-dev
     libyaml-dev
-    libreadline6-dev
+    # libreadline6-dev
     zlib1g-dev
     libncurses5-dev
     libffi-dev
@@ -871,7 +871,12 @@ _debian_flavor_install() {
 	{
     _err=1
 	}
+  else 
+	{
+		_err=2
+	}
 	fi
+	echo _err:$_err
   if [ ${_err} -gt 0 ] ; then
   {
     warning "could not find  project folder. Making one.. _err:${_err}"
