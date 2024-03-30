@@ -570,7 +570,15 @@ _step2_vimba_kernel_drivers() {
   cp "${USER_HOME}/Downloads/AlliedVision_NVidia_L4T_35.4.1_5.1.2.gcf4fa7ea0.tar.gz"  "${USER_HOME}/Downloads/AlliedVisionDriver"
   tar -xvf   AlliedVision_NVidia_L4T_35.4.1_5.1.2.gcf4fa7ea0.tar.gz
 
-  Installing "Execute install script inside"
+  Installing "Execute install script inside   ./install.sh "
+  Installing "Execute install script inside   ./install.sh "
+  Installing "Execute install script inside   ./install.sh "
+  Installing "Execute install script inside   ./install.sh "
+  Installing "Execute install script inside   ./install.sh "
+  Installing "Execute install script inside   ./install.sh "
+  Installing "Execute install script inside   ./install.sh "
+  Installing "Execute install script inside   ./install.sh "
+  Installing "Execute install script inside   ./install.sh "
   # tar -czf folder . # perform backup
   # mkdir -p folder && cd folder && tar -xzf VimbaX_Setup-2023-4-Linux_ARM64.tar.gz # perform restore
 } # end _step2_vimba_kernel_drivers
