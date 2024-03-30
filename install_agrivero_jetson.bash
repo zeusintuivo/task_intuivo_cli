@@ -426,13 +426,511 @@ directory_exists_with_spaces "${USER_HOME}"
 
 
 
- #--------\/\/\/\/-- Work here below \/, test, and transfer to tasks_templates/agrivero_jetson having a working version -\/\/\/\/-------
+ #---------/\/\/\-- tasks_base/sudoer.bash -------------/\/\/\--------
 
 
 
 
 
- #--------/\/\/\/\-- Work here above /\, test, and transfer to tasks_templates/agrivero_jetson having a working version -/\/\/\/\-------
+ #--------\/\/\/\/-- tasks_templates_sudo/agrivero_jetson ‚Ä¶install_agrivero_jetson.bash‚Äù -- Custom code -\/\/\/\/-------
+
+
+#!/usr/bin/bash
+
+
+_execute_project_command() {
+  # Sample usage:
+  #   _execute_project_command "${PROJECTREPO}" "bundle exec rake db:migrate db:migrate:emails db:migrate:credit_check "
+  #   _execute_project_command "${PWD}" sdkmanager --cli
+  #
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local PROJECTREPO=${1}
+  enforce_parameter_with_value           1        PROJECTREPO      "${PROJECTREPO}"     "path folder where Gemfile or project is located "
+  local _command=${2}
+  enforce_parameter_with_value           2        _command         "${_command}"        "bash command to run"
+  local _parameters="${*:3}"  # grab all parameters after second
+  # _command="$(sed 's/["]/\\\"/g' <<< "${_command}")"
+  echo "_command:${_command}"
+  su - "${SUDO_USER}" -c  "bash -c 'cd "${PROJECTREPO}" && ${_command} ${_parameters} '"
+} # end _execute_project_command
+
+check_run_command_as_root() {
+  # Sample usage:
+  #  check_run_command_as_root
+  #
+  [[ "${EUID:-${UID}}" == "0" ]] || return
+
+  # Allow Azure Pipelines/GitHub Actions/Docker/Concourse/Kubernetes to do everything as root (as it's normal there)
+  [[ -f /.dockerenv ]] && return
+  [[ -f /proc/1/cgroup ]] && grep -E "azpl_job|actions_job|docker|garden|kubepods" -q /proc/1/cgroup && return
+
+  failed "Don't run this as root!"
+}
+
+__download_file_check_checksum() {
+  # Sample usage:
+  #    __download_file_check_checksum .torch_22_jetson_6_python_3_10 "https://developer.download.nvidia.cn/compute/redist/jp/v60dp/pytorch/torch-2.2.0a0+6a974be.nv23.11-cp310-cp310-linux_aarch64.whl" 94e70c4f45211737174a3c0f0b791b479c5fd9a2955ba77f573d31c0273e485e
+  local -i _err=0
+  local file_url_configuration="${1}"
+        enforce_parameter_with_value           1        file_url_configuration      "${file_url_configuration}"     ".trained_model .torch_22_jetson_6_python_3_10 full path filename "
+        if [[ ! -e "${file_url_configuration}" ]] ; then
+        {
+          failed "file_url_configuration=file:${file_url_configuration}  does not exists"
+        }
+        fi
+  local sample_url_download="${2}"
+        enforce_parameter_with_value           2       sample_url_download         "${sample_url_download}"     "https://developer.download.nvidia.cn/compute/redist/jp/v60dp/pytorch/torch-2.2.0a0+6a974be.nv23.11-cp310-cp310-linux_aarch64.whl"
+  local hash_check_sum_to_check_against="${3}"
+        enforce_parameter_with_value           3       hash_check_sum_to_check_against "${hash_check_sum_to_check_against}"    "94e70c4f45211737174a3c0f0b791b479c5fd9a2955ba77f573d31c0273e48"
+
+  local service_url="$(<"${file_url_configuration}")"
+        enforce_parameter_with_value           1        service_url      "${service_url}"    "${sample_url_download}"
+        enforce_variable_with_value service_url  "${service_url}"
+  local filename=$(basename "${service_url}")
+        if [[ -e  "${filename}" ]] ; then
+        {
+          passed "Already downloaded: ${filename}"
+        }
+        else
+        {
+          ensure curl or "curl is needed to connect to download stuff - Cannot continue"
+          local passwords="$(<.env)"
+                enforce_parameter_with_value           2        passwords      "${passwords}"     "--proxy-user user:password --user user:password"
+                enforce_variable_with_value service_url  "${passwords}"
+
+          Intalling "Calling curl to sevice url: curl $passwords -k $service_url"
+          curl $passwords -k $service_url
+          _err=$?
+          if [ ${_err} -gt 0 ] ; then
+          {
+            failed "while running curl above: curl  $passwords -k $service_url > \"${filename}\""
+          }
+          fi
+        }
+        fi
+
+  Checking "checksum for ${filename}"
+  file_exists_with_spaces "${filename}"
+  local checksum=""
+  checksum=$(sha256sum "${filename}" | cut -d' ' -f1)
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running checksum above: sha256sum \"${filename}\""
+  }
+  fi
+  if [[ "${checksum}" == "${hash_check_sum_to_check_against}" ]] ; then
+  {
+    passed "Checksum checks ${checksum}"
+  }
+  else
+  {
+    rm -rf ${filename}
+    failed "removed file ${filename} Checksum DOES NOT check ${checksum}. Try again to download again"
+  }
+  fi
+} # end __download_file_check_checksum
+
+__passively_try_to_connect_to_wifi_but_continue_if_fails() {
+  ensure nmcli or "nmcli is needed to connect ot wifi is not working - Install network-manager"
+  Installing "Wifi"
+  echo "REF: https://askubuntu.com/questions/461825/how-to-connect-to-wifi-from-the-command-line"
+  Checking "list of saved connections"
+  nmcli c
+  Checking "list of available wifi cards"
+  nmcli d | grep wifi
+  local _wifi_device=$(nmcli d | grep wifi | head -1 | cut -d' ' -f1)
+        if [[ -z "${_wifi_device}" ]] ; then
+        {
+          warning "could not find wifi device to connect to"
+          passed "Continuing with no WIFI to allow other things to install - Run this again when WIFI if avaible"
+          return
+        }
+        fi
+
+  Checking " list of available WiFi hotspots "
+  nmcli d wifi list
+  local _ssid_name=$(nmcli d wifi list | grep agrivero  | grep '*' | head -1 | xargs |  sed 's/*//g' | xargs | cut -d' ' -f2)
+  echo 'hello there' | tr 'a-z' 'n-za-m'
+  echo 'hello there' | tr 'a-z' 'n-za-m' | tr 'a-z' 'n-za-m'
+  local _ssid_password=$("")
+  echo -n "hello there" | base64 |  tr 'a-z' 'n-za-m' | base64 -d
+  echo -n "hello there" | base64 |  tr 'a-z' 'n-za-m' | base64 -d | base64 | tr 'a-z' 'n-za-m' | base64 -d
+  echo -n "hello there" | base64 | tr 'A-Z' 'N-ZA-M' | tr 'a-z' 'n-za-m'  |  base64 -d
+  echo "REF: https://stackoverflow.com/questions/6441260/how-to-shift-each-letter-of-the-string-by-a-given-number-of-letters"
+  local _ssid_password='d≥322+S•úûzgn'
+  if [[ -z "${_ssid_name}" ]] ; then
+  {
+    warning "could not find wifi from the list "
+    passed "Continuing with no WIFI connection"
+  }
+  else
+  {
+    nmcli d wifi con "${_ssid_name}" password  "agrivero.ai"
+  }
+  fi
+} # end __passively_try_to_connect_to_wifi_but_continue_if_fails
+
+
+
+__check_net_work_connection() {
+  trap 'return 1' ERR INT
+  Checking "If network is reachable - TODO this is dumb considering we already did Struct_testing loading and apt update and install - TODO move this an starting point form the script"
+  local _website='google.com'
+  if (enforce_web_is_reachable  "${_website}" > /dev/null 2>&1 ) ; then # redirect all sdout sderr to /dev/null
+  {
+    passed "reached connection with ${_website}"
+  }
+  else
+  {
+    failed "ERROR count not connec to online required to continue"
+    # [ $? -gt 0 ] && failed To connect git provider push  && exit 1
+  }
+  fi
+} # end __check_net_work_connection
+
+
+_debian_flavor_install() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  if __check_net_work_connection ; then
+  {
+    failed "$0:$LINENO Network Connection Not Responding !!!"
+  }
+  fi
+  apt-get update -y
+  if
+    (
+      install_requirements "linux" "
+        base64
+        unzip
+        curl
+        wget
+        ufw
+        apt-transport-https
+        ca-certificates
+        gnupg
+        curl
+        sudo
+        net-tools
+        network-manager
+        wireless-tools
+      "
+    ) ; then
+  {
+    echo "Install run returned $?"
+  }
+  fi
+  verify_is_installed "
+    unzip
+    curl
+    wget
+    tar
+    ufw
+    apt-transport-https
+    ca-certificates
+    gnupg
+    curl
+    sudo
+    net-tools
+    network-manager
+    wireless-tools
+  "
+
+  if __passively_try_to_connect_to_wifi_but_continue_if_fails; then
+  {
+    warning "$0:$LINENO could WIFI connection failed"
+  }
+  fi
+  if __check_net_work_connection ; then
+  {
+    failed "$0:$LINENO Network Connection got LOST !!!"
+  }
+  fi
+
+  Checking "Docker should be already installed - Why ?"
+  Installing "Add agrivero user"
+  anounce_command "usermod -a -G docker agrivero"
+  Installing "Google gpg cloud key"
+  anounce_command "curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg"
+  Installing "Google cloud apt source list"
+  anounce_command "echo 'deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main' > /etc/apt/sources.list.d/google-cloud-sdk.list"
+  apt-get update -y
+  if
+    (
+     install_requirements "linux" "
+       google-cloud-cli
+      "
+    ) ; then
+  {
+    echo "Install run returned $?"
+  }
+  fi
+  verify_is_installed "
+    google-cloud-cli
+  "
+  Checking "Additionally, you should enable the Google Cloud Artifact Registry, to pull new images."
+  ensure gcloud or "gcloud is installed"
+  Installing "Downloading torch_22_jetson_6_python_3_10 torch-2.2.0a0+6a974be.nv23.11-cp310-cp310-linux_aarch64.whl"
+  local _msg=""
+  _msg="$(__download_file_check_checksum .torch_22_jetson_6_python_3_10 "https://developer.download.nvidia.cn/compute/redist/jp/v60dp/pytorch/torch-2.2.0a0+6a974be.nv23.11-cp310-cp310-linux_aarch64.whl" "94e70c4f45211737174a3c0f0b791b479c5fd9a2955ba77f573d31c0273e485e" 2>&1)"  # capture all sdout stdout input and output  sderr stderr
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running Downloading torch_22  __download_file_check_checksum() above _msg: '''${_msg}''' _err:${_err}"
+  }
+  fi
+  Installing "Trained Model"
+  _msg="$(__download_file_check_checksum .trained_model "https://developer.files.com/model.epoch_99_step_34200.ckpt" "36554a578b6d19d13dcc604e8216b5cb730996c94dc23318f68055dfd8ac0141" 2>&1)"  # capture all sdout stdout input and output  sderr stderr
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running Trained Model __download_file_check_checksum() above _msg: '''${_msg}''' _err:${_err}"
+  }
+  fi
+
+  local THISIP=$(myip)
+  echo "THIS IS MYIP :${THISIP}"
+
+} # end _debian_flavor_install
+
+_redhat_flavor_install() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  if __check_net_work_connection ; then
+  {
+    failed "$0:$LINENO Network Connection Not Responding !!!"
+  }
+  fi
+  dnf update -y
+
+  Checking "Device Script - Goal location where is it ? When is it supposed to run?"
+  Checking "Guessing Pipeline - Run Agrivero Pipeline - where Google Cloud-Amazon ? how ?"
+  Checking "Guessing Desktop - Run as a program - where inside Ubuntu linux "?
+  Checking "Guessing Desktop - reports - where inside desktop ? how?"
+  Checking "Installed ?  https://developer.nvidia.com/sdk-manager in computer . My computer"
+  Checking " \__ Non-LTS versions are NOT supported"
+  Checking "The device should detect and perform upgrade? - this sounds I need more about this line "
+  Checking "Jetson 5 versus  Jetson 6?"
+  Checking ""
+  if
+    (
+      install_requirements "linux" "
+        base64
+        unzip
+        curl
+        wget
+        ufw
+        apt-transport-https
+        ca-certificates
+        gnupg
+        curl
+        sudo
+        net-tools
+        network-manager
+        wireless-tools
+      "
+    ) ; then
+  {
+    echo "Install run returned $?"
+  }
+  fi
+  verify_is_installed "
+    unzip
+    curl
+    wget
+    tar
+    ufw
+    apt-transport-https
+    ca-certificates
+    gnupg
+    curl
+    sudo
+    net-tools
+    network-manager
+    wireless-tools
+  "
+
+  if __passively_try_to_connect_to_wifi_but_continue_if_fails; then
+  {
+    warning "$0:$LINENO could WIFI connection failed"
+  }
+  fi
+  if __check_net_work_connection ; then
+  {
+    failed "$0:$LINENO Network Connection got LOST !!!"
+  }
+  fi
+
+  Checking "Docker should be already installed - Why ?"
+  Installing "Add agrivero user"
+  anounce_command "usermod -a -G docker agrivero"
+  Installing "Google gpg cloud key"
+  anounce_command "curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg"
+  Installing "Google cloud apt source list"
+  anounce_command "echo 'deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main' > /etc/apt/sources.list.d/google-cloud-sdk.list"
+  apt-get update -y
+  if
+    (
+     install_requirements "linux" "
+       google-cloud-cli
+      "
+    ) ; then
+  {
+    echo "Install run returned $?"
+  }
+  fi
+  verify_is_installed "
+    google-cloud-cli
+  "
+  Checking "Additionally, you should enable the Google Cloud Artifact Registry, to pull new images."
+  ensure gcloud or "gcloud is installed"
+
+  local _topic="Downloading torch_22"
+  Installing "${_topic}"
+  local _msg=""
+  _msg="$(__download_file_check_checksum .torch_22_jetson_6_python_3_10 "https://developer.download.nvidia.cn/compute/redist/jp/v60dp/pytorch/torch-2.2.0a0+6a974be.nv23.11-cp310-cp310-linux_aarch64.whl" "94e70c4f45211737174a3c0f0b791b479c5fd9a2955ba77f573d31c0273e485e" 2>&1)"  # capture all sdout stdout input and output  sderr stderr
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running ${_topic}  __download_file_check_checksum() above _msg: '''${_msg}''' _err:${_err}"
+  }
+  fi
+  local _topic="Trained Model"
+  Installing "${_topic}"
+  _msg="$(__download_file_check_checksum .trained_model "https://developer.files.com/model.epoch_99_step_34200.ckpt" "36554a578b6d19d13dcc604e8216b5cb730996c94dc23318f68055dfd8ac0141" 2>&1)"  # capture all sdout stdout input and output  sderr stderr
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running ${_topic} __download_file_check_checksum() above _msg: '''${_msg}''' _err:${_err}"
+  }
+  fi
+
+  local THISIP=$(myip)
+  echo "THIS IS MYIP :${THISIP}"
+
+
+
+} # end _redhat_flavor_install
+
+_arch_flavor_install() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_arch_flavor_install Procedure not yet implemented. I don't know what to do."
+} # end _readhat_flavor_install
+
+_arch__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _arch_flavor_install
+} # end _arch__32
+
+_arch__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _arch_flavor_install
+} # end _arch__64
+
+_centos__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _centos__32
+
+_centos__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _centos__64
+
+_debian__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _debian__32
+
+_debian__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _debian__64
+
+_fedora__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _fedora__32
+
+_fedora__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _fedora__64
+
+_fedora_37__64(){
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _fedora_37__64
+
+_gentoo__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _gentoo__32
+
+_gentoo__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _gentoo__64
+
+_madriva__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _madriva__32
+
+_madriva__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _madriva__64
+
+_suse__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _suse__32
+
+_suse__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _suse__64
+
+_ubuntu__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _ubuntu__32
+
+_ubuntu__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _ubuntu__64
+
+_darwin__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_darwin__64 Procedure not yet implemented. I don't know what to do."
+} # end _darwin__64
+
+_darwin__arm64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_darwin__arm64 Procedure not yet implemented. I don't know what to do."
+} # end _darwin__arm64
+
+_tar() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_tar Procedure not yet implemented. I don't know what to do."
+} # end tar
+
+_windows__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_windows__64 Procedure not yet implemented. I don't know what to do."
+} # end _windows__64
+
+_windows__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_windows__32 Procedure not yet implemented. I don't know what to do."
+} # end _windows__32
+
+
+
+ #--------/\/\/\/\-- tasks_templates_sudo/agrivero_jetson ‚Ä¶install_agrivero_jetson.bash‚Äù -- Custom code-/\/\/\/\-------
 
 
 

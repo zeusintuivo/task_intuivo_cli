@@ -432,408 +432,276 @@ directory_exists_with_spaces "${USER_HOME}"
 
 
 
- #--------\/\/\/\/-- tasks_templates_sudo/nvidia_sdk-manager …install_nvidia_sdk-manager.bash” -- Custom code -\/\/\/\/-------
+ #--------\/\/\/\/-- tasks_templates_sudo/basic_clis …install_basic_clis.bash” -- Custom code -\/\/\/\/-------
 
 
-#!/usr/bin/bash
+#!/usr/bin/env bash
+#
+# @author Zeus Intuivo <zeus@intuivo.com>
+#
+_package_list_installer() {
+  # trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local package packages="${@}"
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer i3status" && echo -e "${RESET}" && return 0' ERR
 
-
-_execute_project_command() {
-  # Sample usage:
-  #   _execute_project_command "${PROJECTREPO}" "bundle exec rake db:migrate db:migrate:emails db:migrate:credit_check "
-  #   _execute_project_command "${PWD}" sdkmanager --cli  
-	#
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  local PROJECTREPO=${1}
-  enforce_parameter_with_value           1        PROJECTREPO      "${PROJECTREPO}"     "path folder where Gemfile or project is located "
-  local _command=${2}
-  enforce_parameter_with_value           2        _command         "${_command}"        "bash command to run"
-  local _parameters="${*:3}"  # grab all parameters after second
-  # _command="$(sed 's/["]/\\\"/g' <<< "${_command}")"
-  echo "_command:${_command}"
-  su - "${SUDO_USER}" -c  "bash -c 'cd "${PROJECTREPO}" && ${_command} ${_parameters} '"
-} # end _execute_project_command
-
-check_run_command_as_root() {
-  # Sample usage:
-  #  check_run_command_as_root
-  #
-  [[ "${EUID:-${UID}}" == "0" ]] || return
-
-# Allow Azure Pipelines/GitHub Actions/Docker/Concourse/Kubernetes to do everything as root (as it's normal there)
-  [[ -f /.dockerenv ]] && return
-  [[ -f /proc/1/cgroup ]] && grep -E "azpl_job|actions_job|docker|garden|kubepods" -q /proc/1/cgroup && return
-
-  failed "Don't run this as root!"
-}
-
-__download_file_check_checksum() {
-  # Sample usage: 
-	#    __download_file_check_checksum .torch_22_jetson_6_python_3_10 "https://developer.download.nvidia.cn/compute/redist/jp/v60dp/pytorch/torch-2.2.0a0+6a974be.nv23.11-cp310-cp310-linux_aarch64.whl" 94e70c4f45211737174a3c0f0b791b479c5fd9a2955ba77f573d31c0273e485e
-	local file_url_configuration="${1}"
-	enforce_parameter_with_value           1        file_url_configuration      "${file_url_configuration}"     ".trained_model .torch_22_jetson_6_python_3_10 full path filename "
-	if [[ ! -e "${file_url_configuration}" ]] ; then 
-	{
-		failed "file_url_configuration=file:${file_url_configuration}  does not exists"
-	}
-	fi
-  local sample_url_download="${2}"
-	enforce_parameter_with_value           2       sample_url_download         "${sample_url_download}"     "https://developer.download.nvidia.cn/compute/redist/jp/v60dp/pytorch/torch-2.2.0a0+6a974be.nv23.11-cp310-cp310-linux_aarch64.whl"
-  local hash_check_sum_to_check_against="${3}"
-	enforce_parameter_with_value           3       hash_check_sum_to_check_against "${hash_check_sum_to_check_against}"    "94e70c4f45211737174a3c0f0b791b479c5fd9a2955ba77f573d31c0273e48" 
-
- 	local service_url="$(<"${file_url_configuration}")"
-  enforce_parameter_with_value           1        service_url      "${service_url}"    "${sample_url_download}" 
-  enforce_variable_with_value service_url  "${service_url}"
-  local filename=$(basename "${service_url}")
-  local -i _err=0
-  if [[ -e  "${filename}" ]] ; then
+  if ! install_requirements "linux" "${packages}" ; then
   {
-    passed "Already downloaded: ${filename}"
+    warning "installing requirements. ${CYAN} attempting to install one by one"
+    while read package; do
+    {
+      [ -z ${package} ] && continue
+      if ! install_requirements "linux" "${package}" ; then
+      {
+        _err=$?
+        if [ ${_err} -gt 0 ] ; then
+        {
+          echo -e "${RED}"
+          echo failed to install requirements "${package}"
+          echo -e "${RESET}"
+        }
+        fi
+      }
+      fi
+    }
+    done <<< "${packages}"
+  }
+  fi
+} # end _package_list_installer
+
+_git_clone() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO  _git_clone I3STATUS" && echo -e "${RESET}" && return 0' ERR
+  local _source="${1}"
+  local _target="${2}"
+  Checking "${SUDO_USER}" "${_target}"
+  pwd
+  if  it_exists_with_spaces "${_target}" ; then # && it_exists_with_spaces "${_target}/.git" ; then
+  {
+    if it_exists_with_spaces "${_target}/.git" ; then
+    {
+      cd "${_target}"
+      if git config pull.rebase false ; then
+      {
+        warning Could not git config pull.rebase false
+      }
+      fi
+      if git fetch  ; then
+      {
+        warning Could not git fetch
+      }
+      fi
+      if git pull  ; then
+      {
+        warning Could not git pull
+      }
+      fi
+    }
+    fi
   }
   else
   {
-    ensure curl or "curl is needed to connect to download stuff - Cannot continue"
-    local passwords="$(<.env)"
-    enforce_parameter_with_value           2        passwords      "${passwords}"     "--proxy-user user:password --user user:password"
-    enforce_variable_with_value service_url  "${passwords}"
-    curl $passwords -k $service_url
-    _err=$?
-    if [ ${_err} -gt 0 ] ; then
+    if git clone "${_source}" "${_target}"  ; then
     {
-      failed "while running curl above: curl  $passwords -k $service_url > \"${filename}\""
+      warning Could not git clone "${_source}" "${_target}"
     }
     fi
   }
   fi
-  Checking "checksum for ${filename}"
-  file_exists_with_spaces "${filename}"
-  local checksum=""
-  checksum=$(sha256sum "${filename}" | cut -d' ' -f1)
-  _err=$?
-  if [ ${_err} -gt 0 ] ; then
-  {
-    failed "while running checksum above: sha256sum \"${filename}\""
-  }
-  fi
-  if [[ "${checksum}" == "${hash_check_sum_to_check_against}" ]] ; then
-  {
-    passed "Checksum checks ${checksum}"
-  }
-  else
-  {
-    rm -rf ${filename}
-    failed "removed file ${filename} Checksum DOES NOT check ${checksum}. Try again to download again"
-  }
-  fi
-} # end __download_file_check_checksum
+  chown -R "${SUDO_USER}" "${_target}"
 
-__passively_try_to_connect_to_wifi_but_continue_if_fails() {
-	ensure nmcli or "nmcli is needed to connect ot wifi is not working - Install network-manager"
-	Installing "Wifi"
-	echo "REF: https://askubuntu.com/questions/461825/how-to-connect-to-wifi-from-the-command-line"
-	Checking "list of saved connections"
-	nmcli c 
-	Checking "list of available wifi cards"
-	nmcli d | grep wifi
-	local _wifi_device=$(nmcli d | grep wifi | head -1 | cut -d' ' -f1)
-	if [[ -z "${_wifi_device}" ]] ; then 
-	{
-		warning "could not find wifi device to connect to"
-	  passed "Continuing with no WIFI to allow other things to install - Run this again when WIFI if avaible"
-	} 
-  else 
-	{
-	  Checking " list of available WiFi hotspots "
-	  nmcli d wifi list
-		local _ssid_name=$(nmcli d wifi list | grep agrivero  | grep '*' | head -1 | xargs |  sed 's/*//g' | xargs | cut -d' ' -f2)
-		echo 'hello there' | tr 'a-z' 'n-za-m'
-		echo 'hello there' | tr 'a-z' 'n-za-m' | tr 'a-z' 'n-za-m'
-		local _ssid_password=$("")
-    echo -n "hello there" | base64 |  tr 'a-z' 'n-za-m' | base64 -d 
-    echo -n "hello there" | base64 |  tr 'a-z' 'n-za-m' | base64 -d | base64 | tr 'a-z' 'n-za-m' | base64 -d
-		echo -n "hello there" | base64 | tr 'A-Z' 'N-ZA-M' | tr 'a-z' 'n-za-m'  |  base64 -d
-    echo "REF: https://stackoverflow.com/questions/6441260/how-to-shift-each-letter-of-the-string-by-a-given-number-of-letters"
- 		local _ssid_password='d³322+S¥œžzgn' 
-		if [[ -z "${_ssid_name}" ]] ; then
-    {
-			warning "could not find wifi from the list "
-			passed "Continuing with no WIFI connection"
-		}
-	  else
-		{
-		  nmcli d wifi con "${_ssid_name}" password  "agrivero.ai"
-		}
-		fi
-	}
-	fi
-} # end __passively_try_to_connect_to_wifi_but_continue_if_fails
+} # end _git_clone
 
 
 
-__check_net_work_connection() {
-	trap 'return 1' ERR INT
-	Checking "If network is reachable - TODO this is dumb considering we already did Struct_testing loading and apt update and install - TODO move this an starting point form the script"
-	local _website='google.com'
-	if (enforce_web_is_reachable  "${_website}" > /dev/null 2>&1 ) ; then # redirect all sdout sderr to /dev/null
-	{
-    passed "reached connection with ${_website}"
-  }
-  else
-  {
-    failed "ERROR count not connec to online required to continue"
-    # [ $? -gt 0 ] && failed To connect git provider push  && exit 1
-  }
-  fi
-} # end __check_net_work_connection
- 
 
-
-_debian_flavor_install() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
-  if __check_net_work_connection ; then
-  {
-    failed "$0:$LINENO Network Connection Not Responding !!!"
-  }
-  fi
-  apt-get update -y
-  if
-    (
-      install_requirements "linux" "
-        base64
-        unzip
-        curl
-        wget
-        curl
-        sudo
-      "
-    ) ; then
-  {
-    echo "Install run returned $?"
-  }
-  fi
-  verify_is_installed "
-    unzip
-    curl
-    wget
-    tar
-    curl
-    sudo
-    sha256sum
+_do_cloning_basic_clis(){
+  local _list_clis="
+    bash_intuivo_cli
+    bin
+    docker_intuivo_cli
+    execute_command_intuivo_cli
+    git_intuivo_cli
+    journal_intuivo_cli
+    ssh_intuivo_cli
+    task_intuivo_cli
   "
-
-  Installing "Downloading sdkmanager-2.1.0.11660"
-  local _msg=""
-  _msg="$(__download_file_check_checksum .env_deb "https://developer.download.nvidia.com/sdkmanager/secure/clients/sdkmanager-2.1.0.11660/sdkmanager_2.1.0-11660_amd64.deb?8nLD_V_5y-SqRHKhwoEzIDb80xM5gJzz17D5VXaGMXibHmkO8Ohnomi_-7-JQDk0Gf-Yqjo8ge5z9zTnlKpiBTr-JwveCu6iPNHXdCBRHvZyHPTV6fYk9kMKYSd0tBFYw00j7t267ssE5uGgv__RwfO4ZXWMrUHFMrCoczwOwkyuWBQRxjl_2gFnRf0n2-pV&t=eyJscyI6InJlZiIsImxzZCI6IlJFRi1naXRodWIuY29tLyJ9" "ca8e08922573521fd1525881069edf75b349ac68f707d06352d47e5c30bb21e3" 2>&1)"  # capture all sdout stdout input and output  sderrstderr
-  _err=$?
-  if [ ${_err} -gt 0 ] ; then
+  local _one=""
+  while read -r _one ; do
   {
-    failed "while running Downloading sdkmanager-2.1.0.11660  __download_file_check_checksum() above _msg: '''${_msg}''' _err:${_err}"
-  }
-  fi
-
-    Installing "Ubuntu 16.04 or 18.04 or 20.04 or 22.04: apt-get install ./sdkmanager_[version]-[build#]_amd64.deb -y"
-    Installing "apt-get install ./${filename} -y"
-    apt-get install "./${filename}" -y
-    _err=$?
-    if [ ${_err} -gt 0 ] ; then
+    [[ -z "${_one}" ]] && continue   # skip if is empty
+    Installing "${_one}"
+    _git_clone "https://github.com/zeusintuivo/${_one}.git" "${USER_HOME}/_/clis"
+    if "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ; then
     {
-      failed "while installing above: dnf install \"${filename}\" -y --allowerasing"
+        warning could not run link_folder_scripts
     }
     fi
-
-  Checking "Launch and login in browser.   https://developer.nvidia.com/sdk-manager
-    From the SDK Manager launch screen, select the appropriate login tab for your account type, NVIDIA Developer (developer.nvidia.com) OR NVONLINE (partners.nvidia.com) and complete the login process.
-    Select the Product Category you would like to install and follow the steps to complete the installation.
-  "
-  ensure sdkmanager or "sdkmanager was not installed. Install failed"
-  _execute_project_command "${PWD}" sdkmanager --cli
-
-} # end _debian_flavor_install
-
-_redhat_flavor_install() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
-  if __check_net_work_connection ; then
+  }
+  done <<< "${_list_clis}"
+  if [ -f /usr/local/bin/ag ] ; then
   {
-    failed "$0:$LINENO Network Connection Not Responding !!!"
+    unlink /usr/local/bin/ag # Bug path we need to do something abot this
   }
   fi
-	dnf update -y
-  if
-    (
-    install_requirements "linux" "
-      unzip
-      curl
-      wget
-      curl
-      sudo
-    "
-    ) ; then
+  if  softlink_exists_with_spaces "/usr/local/bin/added>$USER_HOME/_/clis/git_intuivo_cli/en/added" ; then
+  {
+    passed clis: git_intuivo_cli/en folder exists and is linked
+  }
+  else
+  {
+    Configuring extra work git_intuivo_cli/en
+    directory_exists_with_spaces "${USER_HOME}/_/clis/git_intuivo_cli/en"
+    cd "${USER_HOME}/_/clis/git_intuivo_cli/en"
+    if "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ; then
     {
-      echo "Install run returned $?"
+      warning could not run link_folder_scripts
     }
-  fi
-  verify_is_installed "
-    unzip
-    curl
-    wget
-    tar
-    curl
-    sudo
-    base64
-    sha256sum
-  "
-  Installing "Downloading sdkmanager-2.1.0.11660"
-  local _msg=""
-  _msg="$(__download_file_check_checksum .env_rpm "https://developer.download.nvidia.com/sdkmanager/secure/clients/sdkmanager-2.1.0.11660/sdkmanager_2.1.0-11660.x86_64.rpm?0FK2On882zB__HEHhBkkf17UWcTX2BhfZKX0frK0RPgZuH3NpogKJYXrbDtIzTBXSECQGPtMxlQSNJlIgLsG2e_MpFXeeTYjsfAQNOZit8t14VMA_Pbg4_Ov19FYLsXM-z6HkasfZ_-ajZXf70oyVwclsqRfqoYWQznPH8_fdc7pV5G54LZ0qWpz83tz12VxOg==&t=eyJscyI6InJlZiIsImxzZCI6IlJFRi1naXRodWIuY29tLyJ9" "2bf7177d6377bf59aa396104fb4f09dc7682fbbd2a35da8951164a2b3f9adaf1" 2>&1)"  # capture all sdout stdout input and output  sderrstderr
-  _err=$?
-  if [ ${_err} -gt 0 ] ; then
-  {
-    failed "while running Downloading sdkmanager-2.1.0.11660  __download_file_check_checksum() above _msg: '''${_msg}''' _err:${_err}"
+    fi
   }
   fi
 
-  Installing "CentOS/RHEL 8.0 or 8.2: dnf install ./sdkmanager_[version]-[build#].x86_64.rpm -y"
-  Installing "dnf install ./${filename} -y --allowerasing"
-  dnf install "./${filename}" -y --allowerasing
-  _err=$?
-  if [ ${_err} -gt 0 ] ; then
-  {
-    failed "while installing above: dnf install \"${filename}\" -y --allowerasing"
-  }
-  fi
- 
-  Checking "Launch and login in browser.   https://developer.nvidia.com/sdk-manager
-    From the SDK Manager launch screen, select the appropriate login tab for your account type, NVIDIA Developer (developer.nvidia.com) OR NVONLINE (partners.nvidia.com) and complete the login process.
-    Select the Product Category you would like to install and follow the steps to complete the installation.
-  "
-  ensure sdkmanager or "sdkmanager was not installed. Install failed"
-  _execute_project_command "${PWD}" sdkmanager --cli
-
-
-
-} # end _redhat_flavor_install
-
-_arch_flavor_install() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  echo "_arch_flavor_install Procedure not yet implemented. I don't know what to do."
-} # end _readhat_flavor_install
+} # end _do_cloning_basic_clis
 
 _arch__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _arch_flavor_install
+  _do_cloning_basic_clis
 } # end _arch__32
 
 _arch__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _arch_flavor_install
+  _do_cloning_basic_clis
 } # end _arch__64
 
 _centos__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _redhat_flavor_install
+  _do_cloning_basic_clis
 } # end _centos__32
 
 _centos__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _redhat_flavor_install
+  _do_cloning_basic_clis
 } # end _centos__64
 
 _debian__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _debian_flavor_install
+  _do_cloning_basic_clis
 } # end _debian__32
 
 _debian__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _debian_flavor_install
+  _do_cloning_basic_clis
 } # end _debian__64
 
 _fedora__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _redhat_flavor_install
+  _do_cloning_basic_clis
 } # end _fedora__32
 
 _fedora__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _redhat_flavor_install
+  local _parameters="${*-}"
+  _do_cloning_basic_clis "${_parameters-}"
 } # end _fedora__64
 
 _fedora_37__64(){
+  # trap "echo Error:$?" ERR INT
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _redhat_flavor_install
+  local _parameters="${*-}"
+  local -i _err=0
+  _do_cloning_basic_clis "${_parameters-}"
 } # end _fedora_37__64
+
+_fedora_39__64(){
+  # trap "echo Error:$?" ERR INT
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local _parameters="${*-}"
+  local -i _err=0
+  _do_cloning_basic_clis "${_parameters-}"
+} # end _fedora_39__64
 
 _gentoo__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _redhat_flavor_install
+  _do_cloning_basic_clis
 } # end _gentoo__32
 
 _gentoo__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _redhat_flavor_install
+  _do_cloning_basic_clis
 } # end _gentoo__64
 
 _madriva__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _redhat_flavor_install
+  _do_cloning_basic_clis
 } # end _madriva__32
 
 _madriva__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _redhat_flavor_install
+  _do_cloning_basic_clis
 } # end _madriva__64
 
 _suse__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _redhat_flavor_install
+  _do_cloning_basic_clis
 } # end _suse__32
 
 _suse__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _redhat_flavor_install
+  _do_cloning_basic_clis
 } # end _suse__64
 
 _ubuntu__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _debian_flavor_install
+  _do_cloning_basic_clis
 } # end _ubuntu__32
 
 _ubuntu__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _debian_flavor_install
+  _do_cloning_basic_clis
 } # end _ubuntu__64
 
 _darwin__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  echo "_darwin__64 Procedure not yet implemented. I don't know what to do."
+  export HOMEBREW_NO_AUTO_UPDATE=1
+  ensure brew or "Canceling until brew is installed"
+  su - "${SUDO_USER}" -c 'brew install ruby-build'
+  _git_clone "https://github.com/i3status/i3status.git" "${USER_HOME}/.i3status"
+  _git_clone "https://github.com/i3status/ruby-build.git" "${USER_HOME}/.i3status/plugins/ruby-build"
+  _add_variables_to_bashrc_zshrc
+  ensure "${USER_HOME}/.i3status/bin/i3status" or "Canceling until i3status did not install"
+  su - "${SUDO_USER}" -c "git -C ${USER_HOME}/.i3status/plugins/ruby-build pull"
+  su - "${SUDO_USER}" -c "${USER_HOME}/.i3status/bin/i3status install -l"
+  su - "${SUDO_USER}" -c "${USER_HOME}/.i3status/bin/i3status install 2.6.5"
+  su - "${SUDO_USER}" -c "${USER_HOME}/.i3status/bin/i3status install 2.7.3"
+  su - "${SUDO_USER}" -c "${USER_HOME}/.i3status/bin/i3status install 3.2.2"
+  su - "${SUDO_USER}" -c "${USER_HOME}/.i3status/bin/i3status global 2.7.3"
+  su - "${SUDO_USER}" -c "${USER_HOME}/.i3status/bin/i3status rehash"
+  ensure ruby or "Canceling until ruby is not working"
+  su - "${SUDO_USER}" -c 'ruby -v'
 } # end _darwin__64
 
 _darwin__arm64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  echo "_darwin__arm64 Procedure not yet implemented. I don't know what to do."
+  _darwin__64
 } # end _darwin__arm64
 
 _tar() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  echo "_tar Procedure not yet implemented. I don't know what to do."
+  echo "Procedure not yet implemented. I don't know what to do."
 } # end tar
 
 _windows__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  echo "_windows__64 Procedure not yet implemented. I don't know what to do."
+  echo "Procedure not yet implemented. I don't know what to do."
 } # end _windows__64
 
 _windows__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  echo "_windows__32 Procedure not yet implemented. I don't know what to do."
+  echo "Procedure not yet implemented. I don't know what to do."
 } # end _windows__32
 
 
 
- #--------/\/\/\/\-- tasks_templates_sudo/nvidia_sdk-manager …install_nvidia_sdk-manager.bash” -- Custom code-/\/\/\/\-------
+ #--------/\/\/\/\-- tasks_templates_sudo/basic_clis …install_basic_clis.bash” -- Custom code-/\/\/\/\-------
 
 
 

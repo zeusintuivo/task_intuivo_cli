@@ -185,43 +185,17 @@ _debian_flavor_install() {
     sudo
     sha256sum
   "
-  local service_url="$(<.env_deb)"
-  enforce_parameter_with_value           1        service_url      "${service_url}"     "https://developer.download.nvidia.com/sdkmanager/secure/clients/sdkmanager-2.1.0.11660/sdkmanager_2.1.0-11660_amd64.deb?8nLD_V_5y-SqRHKhwoEzIDb80xM5gJzz17D5VXaGMXibHmkO8Ohnomi_-7-JQDk0Gf-Yqjo8ge5z9zTnlKpiBTr-JwveCu6iPNHXdCBRHvZyHPTV6fYk9kMKYSd0tBFYw00j7t267ssE5uGgv__RwfO4ZXWMrUHFMrCoczwOwkyuWBQRxjl_2gFnRf0n2-pV&t=eyJscyI6InJlZiIsImxzZCI6IlJFRi1naXRodWIuY29tLyJ9"
-  enforce_variable_with_value service_url  "${service_url}"
-  local filename=$(basename "${service_url}")
-  local -i _err=0
-  if [[ -e  "${filename}" ]] ; then
-  {
-    passed "Already downloaded: ${filename}"
-  }
-  else
-  {
-    ensure curl or "curl is needed to connect to download stuff - Cannot continue"
-    local passwords="$(<.env)"
-    enforce_parameter_with_value           2        passwords      "${passwords}"     "--proxy-user user:password --user user:password"
-    enforce_variable_with_value service_url  "${passwords}"
-    curl $passwords -k $service_url
-    _err=$?
-    if [ ${_err} -gt 0 ] ; then
-    {
-      failed "while running curl above: curl  $passwords -k $service_url > \"${filename}\""
-    }
-    fi
-  }
-  fi
-  Checking "checksum for ${filename}"
-  file_exists_with_spaces "${filename}"
-  local checksum=""
-  checksum=$(sha256sum "${filename}" | cut -d' ' -f1)
+
+  Installing "Downloading sdkmanager-2.1.0.11660"
+  local _msg=""
+  _msg="$(__download_file_check_checksum .env_deb "https://developer.download.nvidia.com/sdkmanager/secure/clients/sdkmanager-2.1.0.11660/sdkmanager_2.1.0-11660_amd64.deb?8nLD_V_5y-SqRHKhwoEzIDb80xM5gJzz17D5VXaGMXibHmkO8Ohnomi_-7-JQDk0Gf-Yqjo8ge5z9zTnlKpiBTr-JwveCu6iPNHXdCBRHvZyHPTV6fYk9kMKYSd0tBFYw00j7t267ssE5uGgv__RwfO4ZXWMrUHFMrCoczwOwkyuWBQRxjl_2gFnRf0n2-pV&t=eyJscyI6InJlZiIsImxzZCI6IlJFRi1naXRodWIuY29tLyJ9" "ca8e08922573521fd1525881069edf75b349ac68f707d06352d47e5c30bb21e3" 2>&1)"  # capture all sdout stdout input and output  sderrstderr
   _err=$?
   if [ ${_err} -gt 0 ] ; then
   {
-    failed "while running checksum above: sha256sum \"${filename}\""
+    failed "while running Downloading sdkmanager-2.1.0.11660  __download_file_check_checksum() above _msg: '''${_msg}''' _err:${_err}"
   }
   fi
-  if [[ "${checksum}" == 'ca8e08922573521fd1525881069edf75b349ac68f707d06352d47e5c30bb21e3' ]] ; then
-  {
-    passed "Checksum checks ${checksum}"
+
     Installing "Ubuntu 16.04 or 18.04 or 20.04 or 22.04: apt-get install ./sdkmanager_[version]-[build#]_amd64.deb -y"
     Installing "apt-get install ./${filename} -y"
     apt-get install "./${filename}" -y
@@ -231,13 +205,6 @@ _debian_flavor_install() {
       failed "while installing above: dnf install \"${filename}\" -y --allowerasing"
     }
     fi
-  }
-  else
-  {
-    rm -rf ${filename}
-    failed "removed file ${filename} Checksum DOES NOT check ${checksum}"
-  }
-  fi
 
   Checking "Launch and login in browser.   https://developer.nvidia.com/sdk-manager
     From the SDK Manager launch screen, select the appropriate login tab for your account type, NVIDIA Developer (developer.nvidia.com) OR NVONLINE (partners.nvidia.com) and complete the login process.
@@ -281,61 +248,26 @@ _redhat_flavor_install() {
     base64
     sha256sum
   "
-  local service_url="$(<.env_rpm)"
-  enforce_parameter_with_value           1        service_url      "${service_url}"     "https://developer.download.nvidia.com/sdkmanager/secure/clients/sdkmanager-2.1.0.11660/sdkmanager_2.1.0-11660.x86_64.rpm?0FK2On882zB__HEHhBkkf17UWcTX2BhfZKX0frK0RPgZuH3NpogKJYXrbDtIzTBXSECQGPtMxlQSNJlIgLsG2e_MpFXeeTYjsfAQNOZit8t14VMA_Pbg4_Ov19FYLsXM-z6HkasfZ_-ajZXf70oyVwclsqRfqoYWQznPH8_fdc7pV5G54LZ0qWpz83tz12VxOg==&t=eyJscyI6InJlZiIsImxzZCI6IlJFRi1naXRodWIuY29tLyJ9"
-  enforce_variable_with_value service_url  "${service_url}"
-  local filename=$(basename "${service_url}")
-  local -i _err=0
-  if [[ -e  "${filename}" ]] ; then
-  {
-    passed "Already downloaded: ${filename}"
-  }
-  else
-  {
-    ensure curl or "curl is needed to connect to download stuff - Cannot continue"
-    local passwords="$(<.env)"
-    enforce_parameter_with_value           2        passwords      "${passwords}"     "--proxy-user user:password --user user:password"
-    enforce_variable_with_value service_url  "${passwords}"
-    Checking " curl  $passwords -k $service_url > ${filename} "
-    curl  $passwords -k $service_url > "${filename}"
-    _err=$?
-    if [ ${_err} -gt 0 ] ; then
-    {
-      failed "while running curl above: curl  $passwords -k $service_url > \"${filename}\""
-    }
-    fi
-  }
-  fi
-  Checking "checksum for ${filename}"
-  file_exists_with_spaces "${filename}"
-  local checksum=""
-  checksum=$(sha256sum "${filename}" | cut -d' ' -f1)
+  Installing "Downloading sdkmanager-2.1.0.11660"
+  local _msg=""
+  _msg="$(__download_file_check_checksum .env_rpm "https://developer.download.nvidia.com/sdkmanager/secure/clients/sdkmanager-2.1.0.11660/sdkmanager_2.1.0-11660.x86_64.rpm?0FK2On882zB__HEHhBkkf17UWcTX2BhfZKX0frK0RPgZuH3NpogKJYXrbDtIzTBXSECQGPtMxlQSNJlIgLsG2e_MpFXeeTYjsfAQNOZit8t14VMA_Pbg4_Ov19FYLsXM-z6HkasfZ_-ajZXf70oyVwclsqRfqoYWQznPH8_fdc7pV5G54LZ0qWpz83tz12VxOg==&t=eyJscyI6InJlZiIsImxzZCI6IlJFRi1naXRodWIuY29tLyJ9" "2bf7177d6377bf59aa396104fb4f09dc7682fbbd2a35da8951164a2b3f9adaf1" 2>&1)"  # capture all sdout stdout input and output  sderrstderr
   _err=$?
   if [ ${_err} -gt 0 ] ; then
   {
-    failed "while running checksum above: sha256sum \"${filename}\""
-  }
-  fi
-  if [[ "${checksum}" == '2bf7177d6377bf59aa396104fb4f09dc7682fbbd2a35da8951164a2b3f9adaf1' ]] ; then
-  {
-    passed "Checksum checks ${checksum}"
-    Installing "CentOS/RHEL 8.0 or 8.2: dnf install ./sdkmanager_[version]-[build#].x86_64.rpm -y"
-    Installing "dnf install ./${filename} -y --allowerasing"
-    dnf install "./${filename}" -y --allowerasing
-    _err=$?
-    if [ ${_err} -gt 0 ] ; then
-    {
-      failed "while installing above: dnf install \"${filename}\" -y --allowerasing"
-    }
-    fi
-  }
-  else
-  {
-    rm -rf ${filename}
-    failed "removed file ${filename} Checksum DOES NOT check ${checksum}"
+    failed "while running Downloading sdkmanager-2.1.0.11660  __download_file_check_checksum() above _msg: '''${_msg}''' _err:${_err}"
   }
   fi
 
+  Installing "CentOS/RHEL 8.0 or 8.2: dnf install ./sdkmanager_[version]-[build#].x86_64.rpm -y"
+  Installing "dnf install ./${filename} -y --allowerasing"
+  dnf install "./${filename}" -y --allowerasing
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while installing above: dnf install \"${filename}\" -y --allowerasing"
+  }
+  fi
+ 
   Checking "Launch and login in browser.   https://developer.nvidia.com/sdk-manager
     From the SDK Manager launch screen, select the appropriate login tab for your account type, NVIDIA Developer (developer.nvidia.com) OR NVONLINE (partners.nvidia.com) and complete the login process.
     Select the Product Category you would like to install and follow the steps to complete the installation.
