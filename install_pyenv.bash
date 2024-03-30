@@ -624,6 +624,7 @@ fi
   export PATH="${USER_HOME}/.pyenv/bin:${PATH}"
 	eval "$("${USER_HOME}/.pyenv/bin/pyenv" init -)"
 	"${USER_HOME}/.pyenv/bin/pyenv" doctor
+	chown -R "${SUDO_USER}" "${USER_HOME}/.pyenv"
 } # _add_variables_to_bashrc_zshrc
 
 _arch_flavor_install() {
