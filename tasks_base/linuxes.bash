@@ -140,6 +140,11 @@ _ubuntu__aarch64() {
   _debian_flavor_install
 } # end _ubuntu__aarch64
 
+_ubuntu_22_aarch64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _ubuntu_22_aarch64
+
 _darwin__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   echo "_darwin__64 Procedure not yet implemented. I don't know what to do."
