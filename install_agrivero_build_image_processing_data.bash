@@ -529,8 +529,15 @@ _step1_apt_installs() {
 _step2_vimba_kernel_drivers() {
   local _topic="Vimba camera drivers"
   Installing "${_topic}"
-  _msg="$(__download_file_check_checksum .camera_driver_vimba "https://developer.files.com/VimbaX_Setup-2023-4-Linux64.tar.gz" "f4458b72ed3d7e167e2c4026180780254fad7667e9a46b63f9a74caa4e581871" 2>&1)"  # capture all sdout stdout input and output  sderr stderr
-  _err=$?
+  if _msg="$(__download_file_check_checksum .camera_driver_vimba "https://developer.files.com/VimbaX_Setup-2023-4-Linux64.tar.gz" "f4458b72ed3d7e167e2c4026180780254fad7667e9a46b63f9a74caa4e581871" 2>&1)" ; then  # capture all sdout stdout input and output  sderr stderr
+  {
+    _err=1
+	}
+  else
+	{
+		_err=2
+	}
+	fi
   if [ ${_err} -gt 0 ] ; then
   {
     failed "while running ${_topic}  __download_file_check_checksum() above _msg: '''${_msg}''' _err:${_err}"
@@ -869,7 +876,7 @@ _debian_flavor_install() {
   local -i _err=0
   if _find_project_location_PROJECT_DIR_F ; then
 	{
-    _err=1
+    _err=0
 	}
   else 
 	{
