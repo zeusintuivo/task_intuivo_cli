@@ -441,6 +441,151 @@ directory_exists_with_spaces "${USER_HOME}"
 #
 
 
+PROJECT_DIR_F=""  # GLOBAL
+
+_find_project_location_PROJECT_DIR_F() {
+  local _target_project=""
+  Checking "location of project "
+  local _list_posssibles="
+    ${USER_HOME}/_/work/agrivero/projects
+    ${USER_HOME}/_/work/agriveo
+    /repo/work/agrivero/projects
+  "
+  local one=""
+  while read -r one ; do
+  {
+    [[ -z "${one}" ]] && continue
+    if it_exists_with_spaces "${one}" ; then
+    {
+     _target_project="${one}"
+     break
+    }
+    fi
+  }
+  done <<< "${_list_posssibles}"
+  [[ -z "${one}" ]] && failed "Could not find/determine location of project" && exit 1
+  passed "found of project dir ${_target_project}"
+  PROJECT_DIR_F="${_target_project}"
+  return 0
+} # end _find_project_location_PROJECT_DIR_F
+
+_step1_apt_installs() {
+  
+  trap 'echo -e "${RED}" && echo "ERROR err:$_err failed $0:$LINENO _debian_flavor_install agri_pd" && echo -e "${RESET}" && return 0' ERR
+  # Batch 1 18.04
+	apt update -y
+  local package packages="
+    autoconf
+    bison
+    build-essential
+    libssl-dev
+    libyaml-dev
+    libreadline6-dev
+    zlib1g-dev
+    libncurses5-dev
+    libffi-dev
+make 
+libbz2-dev 
+libreadline-dev 
+libsqlite3-dev 
+wget 
+curl 
+llvm 
+libncursesw5-dev 
+xz-utils 
+tk-dev 
+libxml2-dev 
+libxmlsec1-devlibffi-dev 
+liblzma-dev
+  "
+  _package_list_installer "${packages}"
+  # Batch 2 20.04
+  local package packages="
+    gcc
+    libssl-dev
+    libsensors-dev
+    clang
+    autoconf
+    bison
+    build-essential
+    libssl-dev
+    libyaml-dev
+    libreadline6-dev
+    zlib1g-dev
+    libncurses5-dev
+    libffi-dev
+  "
+  if _package_list_installer "${packages}"; then
+	{
+		echo "Installer returned $?"
+	}
+	fi
+
+
+} # end _step1_apt_installs
+
+_step2_vimba_kernel_drivers() {	
+	local _topic="Vimba camera drivers"
+	Installing "${_topic}"
+  _msg="$(__download_file_check_checksum .camera_driver_vimba "https://developer.files.com/VimbaX_Setup-2023-4-Linux64.tar.gz" "f4458b72ed3d7e167e2c4026180780254fad7667e9a46b63f9a74caa4e581871" 2>&1)"  # capture all sdout stdout input and output  sderr stderr
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running ${_topic}  __download_file_check_checksum() above _msg: '''${_msg}''' _err:${_err}"
+  }
+  fi
+  if ( command -v nvidia-smi >/dev/null 2>&1; )  ; then
+  {
+    nvidia-smi
+  }
+	fi
+
+  echo "ref: https://docs.alliedvision.com/Vimba_X/Vimba_X_DeveloperGuide/settings.html#linux-and-arm"
+  Installing "Increasing the USBFS buffer size:"
+	mkdir -p /sys/module/usbcore/parameters/
+	touch /sys/module/usbcore/parameters/usbfs_memory_mb
+	cat /sys/module/usbcore/parameters/usbfs_memory_mb
+	sudo sh -c 'echo 1000 > /sys/module/usbcore/parameters/usbfs_memory_mb'
+  cat /sys/module/usbcore/parameters/usbfs_memory_mb
+
+	Installing "Increasing the OS receive buffer size:"
+	sysctl -w net.core.rmem_max=33554432
+  sysctl -w net.core.wmem_max=33554432
+  sysctl -w net.core.rmem_default=33554432
+  sysctl -w net.core.wmem_default=33554432
+
+  Installing "Kernel update for nvdia jetson Vimba X ref: https://github.com/alliedvision/linux_nvidia_jetson/releases"
+	file_exists_with_spaces 	"${USER_HOME}/Downloads/AlliedVision_NVidia_L4T_35.4.1_5.1.2.gcf4fa7ea0.tar.gz"
+	mkdir -p "${USER_HOME}/Downloads/AlliedVisionDriver" 
+	cd "${USER_HOME}/Downloads/AlliedVisionDriver" 
+	cp "${USER_HOME}/Downloads/AlliedVision_NVidia_L4T_35.4.1_5.1.2.gcf4fa7ea0.tar.gz"  "${USER_HOME}/Downloads/AlliedVisionDriver"
+	tar -xvf 	AlliedVision_NVidia_L4T_35.4.1_5.1.2.gcf4fa7ea0.tar.gz
+  
+  Installing "Execute install script inside"
+	# tar -czf folder . # perform backup
+  # mkdir -p folder && cd folder && tar -xzf VimbaX_Setup-2023-4-Linux_ARM64.tar.gz # perform restore
+} # end _step2_vimba_kernel_drivers
+
+_step3_install_processing_data() {
+	Checking "needs .ssh setup before using git@git  have added .ssh keys  yet ?  sshgenerate key ?? "
+	Checking "needs .ssh setup before using git@git  have added .ssh keys  yet ?  sshgenerate key ?? "
+	Checking "needs .ssh setup before using git@git  have added .ssh keys  yet ?  sshgenerate key ?? "
+	Checking "needs .ssh setup before using git@git  have added .ssh keys  yet ?  sshgenerate key ?? "
+	Checking "needs .ssh setup before using git@git  have added .ssh keys  yet ?  sshgenerate key ?? "
+
+	file_exists_with_spaces "${USER_HOME}/.ssh/id_rsa.pub"
+	
+	cd "${PROJECTSBASEDIR}"
+  _git_clone "${PROJECTGITREPO}" "${PROJECTREPO}" "${PROJECTGITREPOBRANCH}"
+	directory_exists_with_spaces "${PROJECTREPO}" 
+	
+	Installing "Torch Package from Jetpack 6 / PyTorch v2.1"
+	Checking "curl https://forums.developer.nvidia.com/t/pytorch-for-jetson/72048"
+
+
+} # end _step3_install_processing_data
+
+
 _execute_project_command() {
   # Sample usage:
   #   _execute_project_command "${PROJECTREPO}" "bundle exec rake db:migrate db:migrate:emails db:migrate:credit_check "
@@ -706,93 +851,77 @@ fi
   echo " "
 } # _add_variables_to_bashrc_zshrc
 
+PROJECTSBASEDIR="${PROJECT_DIR_F-}" # global
+PROJECTREPO="${PROJECT_DIR_F-}/processing_data" #  global
+PROJECTGITREPO="git@github.com:agrivero-ai/processing_data.git" # global
+PROJECTGITREPOBRANCH="will_experiments" # global
 
 _debian_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  apt update -y
-  trap 'echo -e "${RED}" && echo "ERROR err:$_err failed $0:$LINENO _debian_flavor_install agri_pd" && echo -e "${RESET}" && return 0' ERR
-  # Batch 1 18.04
-  local package packages="
-    autoconf
-    bison
-    build-essential
-    libssl-dev
-    libyaml-dev
-    libreadline6-dev
-    zlib1g-dev
-    libncurses5-dev
-    libffi-dev
-make 
-libbz2-dev 
-libreadline-dev 
-libsqlite3-dev 
-wget 
-curl 
-llvm 
-libncursesw5-dev 
-xz-utils 
-tk-dev 
-libxml2-dev 
-libxmlsec1-devlibffi-dev 
-liblzma-dev
-  "
-  _package_list_installer "${packages}"
-  # Batch 2 20.04
-  local package packages="
-    gcc
-    libssl-dev
-    libsensors-dev
-    clang
-    autoconf
-    bison
-    build-essential
-    libssl-dev
-    libyaml-dev
-    libreadline6-dev
-    zlib1g-dev
-    libncurses5-dev
-    libffi-dev
-  "
-  if _package_list_installer "${packages}"; then
-	{
-		echo "Installer returned $?"
-	}
-	fi
-
-	local _topic="Vimba camera drivers"
-	Installing "${_topic}"
-  _msg="$(__download_file_check_checksum .camera_driver_vimba "https://developer.files.com/VimbaX_Setup-2023-4-Linux64.tar.gz" "f4458b72ed3d7e167e2c4026180780254fad7667e9a46b63f9a74caa4e581871" 2>&1)"  # capture all sdout stdout input and output  sderr stderr
+  
+	_find_project_location_PROJECT_DIR_F
   _err=$?
-  if [ ${_err} -gt 0 ] ; then
+	if [ ${_err} -gt 0 ] ; then
   {
-    failed "while running ${_topic}  __download_file_check_checksum() above _msg: '''${_msg}''' _err:${_err}"
+    warning "could not find  project folder. Making one.. _err:${_err}"
+    mkdir -p "${USER_HOME}/_/work/agrivero/projects/"
+	  PROJECT_DIR_F="${USER_HOME}/_/work/agrivero/projects/"
+	  cd "${USER_HOME}/_/work/agrivero/projects/"	
+ 	}
+  fi
+  PROJECTSBASEDIR="${PROJECT_DIR_F}"
+  PROJECTREPO="${PROJECT_DIR_F}/processing_data"
+  PROJECTGITREPO="git@github.com:agrivero-ai/processing_data.git"
+  PROJECTGITREPOBRANCH="will_experiments"
+  local -i _err=0
+  local _step=step1_apt_installs
+	if [[ ! -f "${PROJECT_DIR_F}/.${_step}"  ]] ; then
+  {
+    Working "Step .${step}"
+    _step1_apt_installs
+    _err=$?
+		if [ ${_err} -gt 0 ] ; then
+    {
+      failed "while running ${_step} above _err:${_err}"
+    }
+    fi
+    local _touch_name="\"${PROJECT_DIR_F}/.${step}\""
+    _execute_project_command "${PROJECT_DIR_F}" "touch ${_touch_name} "
   }
   fi
-  if ( command -v nvidia-smi >/dev/null 2>&1; )  ; then
+
+	local _step=step2_vimba_kernel_drivers
+	if [[ ! -f "${PROJECT_DIR_F}/.${_step}"  ]] ; then
   {
-    nvidia-smi
+    Working "Step .${step}"
+    _step2_vimba_kernel_drivers
+    _err=$?
+		if [ ${_err} -gt 0 ] ; then
+    {
+      failed "while running ${_step} above _err:${_err}"
+    }
+    fi
+    local _touch_name="\"${PROJECT_DIR_F}/.${step}\""
+    _execute_project_command "${PROJECT_DIR_F}" "touch ${_touch_name} "
   }
-	fi
-tar -czf 
-  tar -xzf VimbaX_Setup-2023-4-Linux_ARM64.tar.gz
-¡@
-  	
+  fi
 
+  local _step=step3_install_processing_data
+	if [[ ! -f "${PROJECT_DIR_F}/.${_step}"  ]] ; then
+  {
+	  Working "Step .${step}"
+	  _step3_install_processing_data
+    _err=$?
+		if [ ${_err} -gt 0 ] ; then
+    {
+      failed "while running ${_step} above _err:${_err}"
+    }
+    fi
+    local _touch_name="\"${PROJECT_DIR_F}/.${step}\""
+    _execute_project_command "${PROJECT_DIR_F}" "touch ${_touch_name} "
+  }
+  fi
 
-	Checking "needs .ssh setup before using git@git"
-  _git_clone "git@github.com:agrivero-ai/processing_data.git" "${USER_HOME}/processing_data" "will_experiments"
-	Installing "Torch Package from Jetpack 6 / PyTorch v2.1"
-	curl https://forums.developer.nvidia.com/t/pytorch-for-jetson/72048
-
-  local MSG=$(_add_variables_to_bashrc_zshrc)
-  echo "${MSG}"
-  ensure agri_pd-rs or "Canceling until agri_pd-rs did not install"
-  #su - "${SUDO_USER}" -c 'agri_pd install -l'
-  #su - "${SUDO_USER}" -c 'agri_pd install 2.6.5'
-  #su - "${SUDO_USER}" -c 'agri_pd global 2.6.5'
-  #su - "${SUDO_USER}" -c 'agri_pd rehash'
-  #ensure ruby or "Canceling until ruby is not working"
-  #su - "${SUDO_USER}" -c 'ruby -v'
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
@@ -987,6 +1116,17 @@ _ubuntu__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _debian_flavor_install
 } # end _ubuntu__64
+
+_ubuntu__aarch64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _ubuntu__aarch64
+
+_ubuntu_22__aarch64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _ubuntu_22__aarch64
+
 
 _darwin__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR

@@ -435,7 +435,10 @@ directory_exists_with_spaces "${USER_HOME}"
  #--------\/\/\/\/-- tasks_templates_sudo/agrivero_jetson …install_agrivero_jetson.bash” -- Custom code -\/\/\/\/-------
 
 
-#!/usr/bin/bash
+#!/usr/bin/env bash
+#
+# @author Zeus Intuivo <zeus@intuivo.com>
+#
 
 
 _execute_project_command() {
@@ -530,6 +533,36 @@ __download_file_check_checksum() {
   }
   fi
 } # end __download_file_check_checksum
+
+_package_list_installer() {
+  # trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local package packages="${@}"
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer agri_pd" && echo -e "${RESET}" && return 0' ERR
+
+  if ! install_requirements "linux" "${packages}" ; then
+  {
+    warning "installing requirements. ${CYAN} attempting to install one by one"
+    while read package; do
+    {
+      [ -z ${package} ] && continue
+      if ! install_requirements "linux" "${package}" ; then
+      {
+        _err=$?
+        if [ ${_err} -gt 0 ] ; then
+        {
+          echo -e "${RED}"
+          echo failed to install requirements "${package}"
+          echo -e "${RESET}"
+        }
+        fi
+      }
+      fi
+    }
+    done <<< "${packages}"
+  }
+  fi
+} # end _package_list_installer
+
 
 __passively_try_to_connect_to_wifi_but_continue_if_fails() {
   ensure nmcli or "nmcli is needed to connect ot wifi is not working - Install network-manager"
@@ -902,6 +935,16 @@ _ubuntu__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _debian_flavor_install
 } # end _ubuntu__64
+
+_ubuntu__aarch64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _ubuntu__aarch64
+
+_ubuntu_22__aarch64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _ubuntu_22__aarch64
 
 _darwin__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR

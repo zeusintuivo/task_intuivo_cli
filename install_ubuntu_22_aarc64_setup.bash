@@ -443,8 +443,15 @@ _debian_flavor_install() {
   enforce_variable_with_value USER_HOME "${USER_HOME}"
 	./install_basic_clis.bash
   ./install_rbenv.bash
+	ensure rbenv or "Canceling until installed rbenv "
+  su - "${SUDO_USER}" -c 'rbenv install 3.1.4'
+  su - "${SUDO_USER}" -c 'rbenv global 3.1.4'
+  su - "${SUDO_USER}" -c 'rbenv rebash'
 	ensure ruby or "Canceling until installed ruby "
 	./install_brew.bash
+	eval "$("${USER_HOME}/.linuxbrew/bin/brew" shellenv)"
+  su - "${SUDO_USER}" -c 'brew install pt'
+
   if (
   install_requirements "linux" "
     base64

@@ -119,6 +119,7 @@ _debian_flavor_install() {
   local PROJECTSBASEDIR="${PROJECT_DIR_F}"
   local PROJECTREPO="${PROJECT_DIR_F}/loanlink-api"
   local PROJECTGITREPO ="git@github.com:LoanLink/loanlink-api.git"
+  local PROJECTGITREPOBRANCH="main"
 
   if [[ ! -f "${PROJECTREPO}/.step1_brew_check_requirements_postgress_12_install"  ]] ; then
   {
@@ -204,6 +205,7 @@ _redhat_flavor_install() {
   local PROJECTSBASEDIR="${PROJECT_DIR_F}"
   local PROJECTREPO="${PROJECT_DIR_F}/loanlink-api"
   local PROJECTGITREPO="git@github.com:LoanLink/loanlink-api.git"
+  local PROJECTGITREPOBRANCH="main"
 
   if [[ ! -f "${PROJECTREPO}/.step1_brew_check_requirements_postgress_12_install"  ]] ; then
   {
@@ -1916,6 +1918,7 @@ _darwin__64() {
   local PROJECTSBASEDIR="${PROJECT_DIR_F}"
   local PROJECTREPO="${PROJECT_DIR_F}/loanlink-api"
   local PROJECTGITREPO="git@github.com:LoanLink/loanlink-api.git"
+  local PROJECTGITREPOBRANCH="main"
 
   if [[ ! -f "${PROJECTREPO}/.step1_brew_check_requirements_postgress_12_install"  ]] ; then
   {
