@@ -603,8 +603,6 @@ _debian_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
 
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  export USER_HOME="/home/${SUDO_USER}"
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
   install_requirements "linux" "
     # Debian Ubuntu only
     build-essential
