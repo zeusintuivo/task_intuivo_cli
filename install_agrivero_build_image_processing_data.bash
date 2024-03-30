@@ -529,9 +529,9 @@ _step1_apt_installs() {
 _step2_vimba_kernel_drivers() {
   local _topic="Vimba camera drivers"
   Installing "${_topic}"
-  if _msg="$(__download_file_check_checksum .camera_driver_vimba "https://developer.files.com/VimbaX_Setup-2023-4-Linux64.tar.gz" "f4458b72ed3d7e167e2c4026180780254fad7667e9a46b63f9a74caa4e581871" 2>&1)" ; then  # capture all sdout stdout input and output  sderr stderr
+  if _msg="$(__download_file_check_checksum .camera_driver_vimba "https://developer.files.com/VimbaX_Setup-2023-4-Linux64.tar.gz" "daa552b0b116c19c8d4d784a740bd630033e6eedc334f6361d114a9ce05e2bde" 2>&1)" ; then  # capture all sdout stdout input and output  sderr stderr
   {
-    _err=1
+    _err=0
 	}
   else
 	{
@@ -540,7 +540,7 @@ _step2_vimba_kernel_drivers() {
 	fi
   if [ ${_err} -gt 0 ] ; then
   {
-    failed "while running ${_topic}  __download_file_check_checksum() above _msg: '''${_msg}''' _err:${_err}"
+    failed "\n +----     while running ${_topic}  __download_file_check_checksum() above _msg: ''' \n${_msg} \n '''\n  _err:${_err} ------+ \n "
   }
   fi
   if ( command -v nvidia-smi >/dev/null 2>&1; )  ; then
@@ -683,7 +683,10 @@ __download_file_check_checksum() {
   else
   {
     rm -rf ${filename}
-    failed "removed file ${filename} Checksum DOES NOT check ${checksum}. Try again to download again"
+    failed "removed file ${filename} Checksum DOES NOT check
+		     GOT:${checksum}
+		EXPECTED:${hash_check_sum_to_check_against}
+	 	Try again to download again"
   }
   fi
 } # end __download_file_check_checksum
