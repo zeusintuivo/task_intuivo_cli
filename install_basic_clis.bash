@@ -474,7 +474,8 @@ _git_clone() {
   local _source="${1}"
   local _target="${2}"
   Checking "${SUDO_USER}" "${_target}"
-  pwd
+  local _cwd="$(pwd)"
+	Checking "_cwd:${_cwd}"
   if  it_exists_with_spaces "${_target}" ; then # && it_exists_with_spaces "${_target}/.git" ; then
   {
     if it_exists_with_spaces "${_target}/.git" ; then
@@ -508,7 +509,7 @@ _git_clone() {
   }
   fi
   chown -R "${SUDO_USER}" "${_target}"
-
+  cd "${_cwd}"
 } # end _git_clone
 
 
@@ -526,12 +527,15 @@ _do_cloning_basic_clis(){
     task_intuivo_cli
   "
   local _one=""
+	mkdir -p "${USER_HOME}/_/clis"
+	cd "${USER_HOME}/_/clis"
   while read -r _one ; do
   {
     [[ -z "${_one}" ]] && continue   # skip if is empty
     Installing "${_one}"
-    _git_clone "https://github.com/zeusintuivo/${_one}.git" "${USER_HOME}/_/clis"
-    if "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ; then
+    _git_clone "https://github.com/zeusintuivo/${_one}.git" "${USER_HOME}/_/clis/${_one}"
+    wait
+		if command "${USER_HOME}/_/clis/bash_intuivo_cli/link_folder_scripts" ; then
     {
         warning could not run link_folder_scripts
     }
@@ -543,7 +547,7 @@ _do_cloning_basic_clis(){
     unlink /usr/local/bin/ag # Bug path we need to do something abot this
   }
   fi
-  if  softlink_exists_with_spaces "/usr/local/bin/added>$USER_HOME/_/clis/git_intuivo_cli/en/added" ; then
+  if [[ ! -L "/usr/local/bin/added" ]] ; then
   {
     passed clis: git_intuivo_cli/en folder exists and is linked
   }
@@ -552,7 +556,7 @@ _do_cloning_basic_clis(){
     Configuring extra work git_intuivo_cli/en
     directory_exists_with_spaces "${USER_HOME}/_/clis/git_intuivo_cli/en"
     cd "${USER_HOME}/_/clis/git_intuivo_cli/en"
-    if "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ; then
+    if command "${USER_HOME}/_/clis/bash_intuivo_cli/link_folder_scripts" ; then
     {
       warning could not run link_folder_scripts
     }
