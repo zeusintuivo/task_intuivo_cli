@@ -213,10 +213,10 @@ _ubuntu__aarch64() {
   _debian_flavor_install
 } # end _ubuntu__aarch64
 
-_ubuntu_22_aarch64() {
+_ubuntu_22__aarch64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _debian_flavor_install
-} # end _ubuntu_22_aarch64
+} # end _ubuntu_22__aarch64
 
 _darwin__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
