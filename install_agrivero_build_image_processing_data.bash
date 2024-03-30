@@ -463,17 +463,17 @@ _find_project_location_PROJECT_DIR_F() {
     fi
   }
   done <<< "${_list_posssibles}"
-  [[ -z "${one}" ]] && failed "Could not find/determine location of project" && exit 1
+  [[ -z "${one}" ]] && warning "Could not find/determine location of project" && exit 1
   passed "found of project dir ${_target_project}"
   PROJECT_DIR_F="${_target_project}"
   return 0
 } # end _find_project_location_PROJECT_DIR_F
 
 _step1_apt_installs() {
-  
+
   trap 'echo -e "${RED}" && echo "ERROR err:$_err failed $0:$LINENO _debian_flavor_install agri_pd" && echo -e "${RESET}" && return 0' ERR
   # Batch 1 18.04
-	apt update -y
+  apt update -y
   local package packages="
     autoconf
     bison
@@ -484,19 +484,19 @@ _step1_apt_installs() {
     zlib1g-dev
     libncurses5-dev
     libffi-dev
-make 
-libbz2-dev 
-libreadline-dev 
-libsqlite3-dev 
-wget 
-curl 
-llvm 
-libncursesw5-dev 
-xz-utils 
-tk-dev 
-libxml2-dev 
-libxmlsec1-devlibffi-dev 
-liblzma-dev
+    make
+    libbz2-dev
+    libreadline-dev
+    libsqlite3-dev
+    wget
+    curl
+    llvm
+    libncursesw5-dev
+    xz-utils
+    tk-dev
+    libxml2-dev
+    libxmlsec1-devlibffi-dev
+    liblzma-dev
   "
   _package_list_installer "${packages}"
   # Batch 2 20.04
@@ -516,17 +516,17 @@ liblzma-dev
     libffi-dev
   "
   if _package_list_installer "${packages}"; then
-	{
-		echo "Installer returned $?"
-	}
-	fi
+  {
+    echo "Installer returned $?"
+  }
+  fi
 
 
 } # end _step1_apt_installs
 
-_step2_vimba_kernel_drivers() {	
-	local _topic="Vimba camera drivers"
-	Installing "${_topic}"
+_step2_vimba_kernel_drivers() {
+  local _topic="Vimba camera drivers"
+  Installing "${_topic}"
   _msg="$(__download_file_check_checksum .camera_driver_vimba "https://developer.files.com/VimbaX_Setup-2023-4-Linux64.tar.gz" "f4458b72ed3d7e167e2c4026180780254fad7667e9a46b63f9a74caa4e581871" 2>&1)"  # capture all sdout stdout input and output  sderr stderr
   _err=$?
   if [ ${_err} -gt 0 ] ; then
@@ -538,49 +538,49 @@ _step2_vimba_kernel_drivers() {
   {
     nvidia-smi
   }
-	fi
+  fi
 
   echo "ref: https://docs.alliedvision.com/Vimba_X/Vimba_X_DeveloperGuide/settings.html#linux-and-arm"
   Installing "Increasing the USBFS buffer size:"
-	mkdir -p /sys/module/usbcore/parameters/
-	touch /sys/module/usbcore/parameters/usbfs_memory_mb
-	cat /sys/module/usbcore/parameters/usbfs_memory_mb
-	sudo sh -c 'echo 1000 > /sys/module/usbcore/parameters/usbfs_memory_mb'
+  mkdir -p /sys/module/usbcore/parameters/
+  touch /sys/module/usbcore/parameters/usbfs_memory_mb
+  cat /sys/module/usbcore/parameters/usbfs_memory_mb
+  sudo sh -c 'echo 1000 > /sys/module/usbcore/parameters/usbfs_memory_mb'
   cat /sys/module/usbcore/parameters/usbfs_memory_mb
 
-	Installing "Increasing the OS receive buffer size:"
-	sysctl -w net.core.rmem_max=33554432
+  Installing "Increasing the OS receive buffer size:"
+  sysctl -w net.core.rmem_max=33554432
   sysctl -w net.core.wmem_max=33554432
   sysctl -w net.core.rmem_default=33554432
   sysctl -w net.core.wmem_default=33554432
 
   Installing "Kernel update for nvdia jetson Vimba X ref: https://github.com/alliedvision/linux_nvidia_jetson/releases"
-	file_exists_with_spaces 	"${USER_HOME}/Downloads/AlliedVision_NVidia_L4T_35.4.1_5.1.2.gcf4fa7ea0.tar.gz"
-	mkdir -p "${USER_HOME}/Downloads/AlliedVisionDriver" 
-	cd "${USER_HOME}/Downloads/AlliedVisionDriver" 
-	cp "${USER_HOME}/Downloads/AlliedVision_NVidia_L4T_35.4.1_5.1.2.gcf4fa7ea0.tar.gz"  "${USER_HOME}/Downloads/AlliedVisionDriver"
-	tar -xvf 	AlliedVision_NVidia_L4T_35.4.1_5.1.2.gcf4fa7ea0.tar.gz
-  
+  file_exists_with_spaces   "${USER_HOME}/Downloads/AlliedVision_NVidia_L4T_35.4.1_5.1.2.gcf4fa7ea0.tar.gz"
+  mkdir -p "${USER_HOME}/Downloads/AlliedVisionDriver"
+  cd "${USER_HOME}/Downloads/AlliedVisionDriver"
+  cp "${USER_HOME}/Downloads/AlliedVision_NVidia_L4T_35.4.1_5.1.2.gcf4fa7ea0.tar.gz"  "${USER_HOME}/Downloads/AlliedVisionDriver"
+  tar -xvf   AlliedVision_NVidia_L4T_35.4.1_5.1.2.gcf4fa7ea0.tar.gz
+
   Installing "Execute install script inside"
-	# tar -czf folder . # perform backup
+  # tar -czf folder . # perform backup
   # mkdir -p folder && cd folder && tar -xzf VimbaX_Setup-2023-4-Linux_ARM64.tar.gz # perform restore
 } # end _step2_vimba_kernel_drivers
 
 _step3_install_processing_data() {
-	Checking "needs .ssh setup before using git@git  have added .ssh keys  yet ?  sshgenerate key ?? "
-	Checking "needs .ssh setup before using git@git  have added .ssh keys  yet ?  sshgenerate key ?? "
-	Checking "needs .ssh setup before using git@git  have added .ssh keys  yet ?  sshgenerate key ?? "
-	Checking "needs .ssh setup before using git@git  have added .ssh keys  yet ?  sshgenerate key ?? "
-	Checking "needs .ssh setup before using git@git  have added .ssh keys  yet ?  sshgenerate key ?? "
+  Checking "needs .ssh setup before using git@git  have added .ssh keys  yet ?  sshgenerate key ?? "
+  Checking "needs .ssh setup before using git@git  have added .ssh keys  yet ?  sshgenerate key ?? "
+  Checking "needs .ssh setup before using git@git  have added .ssh keys  yet ?  sshgenerate key ?? "
+  Checking "needs .ssh setup before using git@git  have added .ssh keys  yet ?  sshgenerate key ?? "
+  Checking "needs .ssh setup before using git@git  have added .ssh keys  yet ?  sshgenerate key ?? "
 
-	file_exists_with_spaces "${USER_HOME}/.ssh/id_rsa.pub"
-	
-	cd "${PROJECTSBASEDIR}"
+  file_exists_with_spaces "${USER_HOME}/.ssh/id_rsa.pub"
+
+  cd "${PROJECTSBASEDIR}"
   _git_clone "${PROJECTGITREPO}" "${PROJECTREPO}" "${PROJECTGITREPOBRANCH}"
-	directory_exists_with_spaces "${PROJECTREPO}" 
-	
-	Installing "Torch Package from Jetpack 6 / PyTorch v2.1"
-	Checking "curl https://forums.developer.nvidia.com/t/pytorch-for-jetson/72048"
+  directory_exists_with_spaces "${PROJECTREPO}"
+
+  Installing "Torch Package from Jetpack 6 / PyTorch v2.1"
+  Checking "curl https://forums.developer.nvidia.com/t/pytorch-for-jetson/72048"
 
 
 } # end _step3_install_processing_data
@@ -709,15 +709,15 @@ _package_list_installer() {
 } # end _package_list_installer
 
 _git_clone() {
-	# Sample usage
-	# _git_clone git@github.com:some-ai/processing_data.git  "$HOME"  
-	# _git_clone git@github.com:another-ai/processing_data.git  "$HOME" "i_experiment_branch" 
-	#
+  # Sample usage
+  # _git_clone git@github.com:some-ai/processing_data.git  "$HOME"
+  # _git_clone git@github.com:another-ai/processing_data.git  "$HOME" "i_experiment_branch"
+  #
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO  _git_clone I3STATUS" && echo -e "${RESET}" && return 0' ERR
   local _source="${1-}"
   local _target="${2-}"
-	local _branch="${3-}"
+  local _branch="${3-}"
   Checking "${SUDO_USER} git clone ${_source}  ${_target}  --branch ${_branch} "
   pwd
   if  it_exists_with_spaces "${_target}" ; then # && it_exists_with_spaces "${_target}/.git" ; then
@@ -725,18 +725,21 @@ _git_clone() {
     if it_exists_with_spaces "${_target}/.git" ; then
     {
       if ! cd "${_target}" ; then
-			{
-				warning Could not CD into "${_target}. There seems to be a problem" 
-				return 1
-			}
-			fi
-      if [[ -n "${_branch}" ]] \ 
-				&& ! git checkout "${_branch}" ; then
-			{
-					warning Could could not checkout such branch: "${_branch}"
-				 return 1	
-			}
-			fi	
+      {
+        warning Could not CD into "${_target}. There seems to be a problem"
+        return 1
+      }
+      fi
+      if [[ -n "${_branch}" ]] ; then
+      {
+        if ! git checkout "${_branch}" ; then
+        {
+          warning Could could not checkout such branch: "${_branch}"
+          return 1
+        }
+        fi
+      }
+      fi
       if git config pull.rebase false ; then
       {
         warning Could not git config pull.rebase false
@@ -763,18 +766,21 @@ _git_clone() {
     }
     fi
       if ! cd "${_target}" ; then
-			{
-				warning Could not CD into "${_target}. There seems to be a problem. Clone failed!!!" 
-				return 1
-			}
-			fi
-      if [[ -n "${_branch}" ]] 
-				&& ! git checkout "${_branch}" ; then
-			{
-					warning Could could not checkout such branch: "${_branch}"
-				 return 1	
-			}
-			fi	
+      {
+        warning Could not CD into "${_target}. There seems to be a problem. Clone failed!!!"
+        return 1
+      }
+      fi
+      if [[ -n "${_branch}" ]] ; then
+      {
+        if ! git checkout "${_branch}" ; then
+        {
+          warning Could could not checkout such branch: "${_branch}"
+          return 1
+        }
+        fi
+      }
+      fi
       if git config pull.rebase false ; then
       {
         warning Could not git config pull.rebase false
@@ -789,31 +795,31 @@ _git_clone() {
 
 
 _add_variables_to_bashrc_zshrc(){
-	local XDG_DATA_HOME="${XDG_DATA_HOME:-${USER_HOME}/.local/share}"
-	Checking "mkdir -p \"${XDG_DATA_HOME}/agri_pd-rust\""
-	mkdir -p "${XDG_DATA_HOME}/agri_pd-rust"
+  local XDG_DATA_HOME="${XDG_DATA_HOME:-${USER_HOME}/.local/share}"
+  Checking "mkdir -p \"${XDG_DATA_HOME}/agri_pd-rust\""
+  mkdir -p "${XDG_DATA_HOME}/agri_pd-rust"
 
   directory_exists_with_spaces "${XDG_DATA_HOME}/agri_pd-rust"
   directory_exists_with_spaces "${USER_HOME}/.agri_pd-rs"
 
-  if [[ ! -e "${XDG_DATA_HOME}/agri_pd-rust/config.toml" ]] ; then 
+  if [[ ! -e "${XDG_DATA_HOME}/agri_pd-rust/config.toml" ]] ; then
   {
-		cp "${USER_HOME}/.agri_pd-rs/examples/config.toml" "${XDG_DATA_HOME}/agri_pd-rust/config.toml"
-	}
-	fi
+    cp "${USER_HOME}/.agri_pd-rs/examples/config.toml" "${XDG_DATA_HOME}/agri_pd-rust/config.toml"
+  }
+  fi
 
 
-	export XDG_DATA_HOME="${XDG_DATA_HOME}"
+  export XDG_DATA_HOME="${XDG_DATA_HOME}"
   cd "${USER_HOME}/.agri_pd-rs/"
-	su - "${SUDO_USER}" -c 'cd '${USER_HOME}'/.agri_pd-rs/ && cargo build'
-	su - "${SUDO_USER}" -c 'cd '${USER_HOME}'/.agri_pd-rs/ && cargo xtask generate-manpage'
-	su - "${SUDO_USER}" -c 'cd '${USER_HOME}'/.agri_pd-rs/ && cargo install --path . --locked'
-	cp -R "${USER_HOME}/.agri_pd-rs/files/"* "${XDG_DATA_HOME}/agri_pd-rust/"
+  su - "${SUDO_USER}" -c 'cd '${USER_HOME}'/.agri_pd-rs/ && cargo build'
+  su - "${SUDO_USER}" -c 'cd '${USER_HOME}'/.agri_pd-rs/ && cargo xtask generate-manpage'
+  su - "${SUDO_USER}" -c 'cd '${USER_HOME}'/.agri_pd-rs/ && cargo install --path . --locked'
+  cp -R "${USER_HOME}/.agri_pd-rs/files/"* "${XDG_DATA_HOME}/agri_pd-rust/"
   mkdir -p "${XDG_DATA_HOME}/man/man1/"
-	directory_exists_with_spaces "${XDG_DATA_HOME}/man/man1/"
+  directory_exists_with_spaces "${XDG_DATA_HOME}/man/man1/"
 
-	cp "${USER_HOME}/.agri_pd-rs/man/agri_pd-rs.1" "${XDG_DATA_HOME}/man/man1/agri_pd-rs.1"
-	local AGRI_PD_SH_CONTENT='
+  cp "${USER_HOME}/.agri_pd-rs/man/agri_pd-rs.1" "${XDG_DATA_HOME}/man/man1/agri_pd-rs.1"
+  local AGRI_PD_SH_CONTENT='
 
 # AGRI_PD
 if [[ -e "'${XDG_DATA_HOME}'" ]] ; then
@@ -841,13 +847,13 @@ fi
   }
   done <<< "${INITFILES}"
   # type agri_pd
-  Checking "export XDG_DATA_HOME=${XDG_DATA_HOME}" 
+  Checking "export XDG_DATA_HOME=${XDG_DATA_HOME}"
 
-	chown -R "${SUDO_USER}" "${XDG_DATA_HOME}/agri_pd-rust"
-	chown -R "${SUDO_USER}" "${USER_HOME}/.agri_pd-rs"
-	chown -R "${SUDO_USER}" "${XDG_DATA_HOME}/man/man1/"
+  chown -R "${SUDO_USER}" "${XDG_DATA_HOME}/agri_pd-rust"
+  chown -R "${SUDO_USER}" "${USER_HOME}/.agri_pd-rs"
+  chown -R "${SUDO_USER}" "${XDG_DATA_HOME}/man/man1/"
   echo "check configs:"
-	echo ${INITFILES} | xargs | xargs -I {} echo "vim {}"
+  echo ${INITFILES} | xargs | xargs -I {} echo "vim {}"
   echo " "
 } # _add_variables_to_bashrc_zshrc
 
@@ -858,16 +864,16 @@ PROJECTGITREPOBRANCH="will_experiments" # global
 
 _debian_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  
-	_find_project_location_PROJECT_DIR_F
+
+  _find_project_location_PROJECT_DIR_F
   _err=$?
-	if [ ${_err} -gt 0 ] ; then
+  if [ ${_err} -gt 0 ] ; then
   {
     warning "could not find  project folder. Making one.. _err:${_err}"
     mkdir -p "${USER_HOME}/_/work/agrivero/projects/"
-	  PROJECT_DIR_F="${USER_HOME}/_/work/agrivero/projects/"
-	  cd "${USER_HOME}/_/work/agrivero/projects/"	
- 	}
+    PROJECT_DIR_F="${USER_HOME}/_/work/agrivero/projects/"
+    cd "${USER_HOME}/_/work/agrivero/projects/"
+   }
   fi
   PROJECTSBASEDIR="${PROJECT_DIR_F}"
   PROJECTREPO="${PROJECT_DIR_F}/processing_data"
@@ -875,12 +881,12 @@ _debian_flavor_install() {
   PROJECTGITREPOBRANCH="will_experiments"
   local -i _err=0
   local _step=step1_apt_installs
-	if [[ ! -f "${PROJECT_DIR_F}/.${_step}"  ]] ; then
+  if [[ ! -f "${PROJECT_DIR_F}/.${_step}"  ]] ; then
   {
     Working "Step .${step}"
     _step1_apt_installs
     _err=$?
-		if [ ${_err} -gt 0 ] ; then
+    if [ ${_err} -gt 0 ] ; then
     {
       failed "while running ${_step} above _err:${_err}"
     }
@@ -890,13 +896,13 @@ _debian_flavor_install() {
   }
   fi
 
-	local _step=step2_vimba_kernel_drivers
-	if [[ ! -f "${PROJECT_DIR_F}/.${_step}"  ]] ; then
+  local _step=step2_vimba_kernel_drivers
+  if [[ ! -f "${PROJECT_DIR_F}/.${_step}"  ]] ; then
   {
     Working "Step .${step}"
     _step2_vimba_kernel_drivers
     _err=$?
-		if [ ${_err} -gt 0 ] ; then
+    if [ ${_err} -gt 0 ] ; then
     {
       failed "while running ${_step} above _err:${_err}"
     }
@@ -907,12 +913,12 @@ _debian_flavor_install() {
   fi
 
   local _step=step3_install_processing_data
-	if [[ ! -f "${PROJECT_DIR_F}/.${_step}"  ]] ; then
+  if [[ ! -f "${PROJECT_DIR_F}/.${_step}"  ]] ; then
   {
-	  Working "Step .${step}"
-	  _step3_install_processing_data
+    Working "Step .${step}"
+    _step3_install_processing_data
     _err=$?
-		if [ ${_err} -gt 0 ] ; then
+    if [ ${_err} -gt 0 ] ; then
     {
       failed "while running ${_step} above _err:${_err}"
     }
@@ -927,8 +933,8 @@ _debian_flavor_install() {
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   dnf build-dep agri_pd -vy --allowerasing
-	yes | dnf copr enable atim/agri_pd-rust
-	dnf install agri_pd-rust -y --allowerasing
+  yes | dnf copr enable atim/agri_pd-rust
+  dnf install agri_pd-rust -y --allowerasing
   # dnf install  -y openssl-devel
   # Batch Fedora 37
   local package packages="
@@ -995,7 +1001,7 @@ _redhat_flavor_install() {
     # wireplumber
     clang
     notmuch
-		pandoc
+    pandoc
   "
   if _package_list_installer "${packages}"; then
   {
@@ -1006,7 +1012,7 @@ _redhat_flavor_install() {
   # su - "${SUDO_USER}" -c 'brew install readline'
   # su - "${SUDO_USER}" -c 'brew install openssl@1.1'
   _git_clone "https://github.com/greshake/agri_pd-rust.git" "${USER_HOME}/.agri_pd-rs"
-  
+
   _add_variables_to_bashrc_zshrc
   # ensure agri_pd or "Canceling until agri_pd did not install"
   # su - "${SUDO_USER}" -c 'agri_pd install -l'
