@@ -148,7 +148,7 @@ _git_clone() {
 				return 1
 			}
 			fi
-      if [[ -n "${_branch}" ]] 
+      if [[ -n "${_branch}" ]] \ 
 				&& ! git checkout "${_branch}" ; then
 			{
 					warning Could could not checkout such branch: "${_branch}"
@@ -336,8 +336,9 @@ liblzma-dev
     nvidia-smi
   }
 	fi
-  file_exists_with_spaces VimbaX_Setup-2023-4-Linux64.tar.gz
-  file_exists_with_spaces VimbaX_Setup-2023-4-Linux_ARM64.tar.gz
+tar -czf 
+  tar -xzf VimbaX_Setup-2023-4-Linux_ARM64.tar.gz
+¡@
   	
 
 
