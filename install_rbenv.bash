@@ -775,12 +775,53 @@ _ubuntu__64() {
 
 _ubuntu__aarch64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _debian_flavor_install
+  _ubuntu_22__aarch64
 } # end _ubuntu__aarch64
 
 _ubuntu_22__aarch64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _debian_flavor_install
+  apt update -y
+  trap 'echo -e "${RED}" && echo "ERROR err:$_err failed $0:$LINENO _debian_flavor_install rbenv" && echo -e "${RESET}" && return 0' ERR
+  # Batch 1 18.04
+  local package packages="
+    autoconf
+    bison
+    build-essential
+    libssl-dev
+    libyaml-dev
+    libreadline6-dev
+    zlib1g-dev
+    libncurses5-dev
+    libffi-dev
+    libgdbm-dev
+  "
+  _package_list_installer "${packages}"
+  # Batch 2 20.04
+  local package packages="
+    autoconf
+    bison
+    build-essential
+    libssl-dev
+    libyaml-dev
+    libreadline6-dev
+    zlib1g-dev
+    libncurses5-dev
+    libffi-dev
+    libgdbm6
+    libgdbm-dev
+  "
+  _package_list_installer "${packages}"
+  _git_clone "https://github.com/rbenv/rbenv.git" "${USER_HOME}/.rbenv"
+  _git_clone "https://github.com/rbenv/ruby-build.git" "${USER_HOME}/.rbenv/plugins/ruby-build"
+  local MSG=$(_add_variables_to_bashrc_zshrc)
+  echo "${MSG}"
+  ensure rbenv or "Canceling until rbenv did not install"
+  su - "${SUDO_USER}" -c 'rbenv install -l'
+  su - "${SUDO_USER}" -c 'rbenv install 2.6.5'
+  su - "${SUDO_USER}" -c 'rbenv global 2.6.5'
+  su - "${SUDO_USER}" -c 'rbenv rehash'
+  ensure ruby or "Canceling until ruby is not working"
+  su - "${SUDO_USER}" -c 'ruby -v'
 } # end _ubuntu_22__aarch64
 
 _darwin__64() {
