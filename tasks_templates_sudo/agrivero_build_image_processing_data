@@ -59,7 +59,8 @@ _step1_apt_installs() {
     xz-utils
     tk-dev
     libxml2-dev
-    libxmlsec1-devlibffi-dev
+    libxmlsec1-dev
+		libffi-dev
     liblzma-dev
   "
   _package_list_installer "${packages}"
@@ -450,7 +451,7 @@ _debian_flavor_install() {
   local _step=step1_apt_installs
   if [[ ! -f "${PROJECT_DIR_F}/.${_step}"  ]] ; then
   {
-    Working "Step .${step}"
+		Working "Step .${_step}"
     _step1_apt_installs
     _err=$?
     if [ ${_err} -gt 0 ] ; then
@@ -466,7 +467,7 @@ _debian_flavor_install() {
   local _step=step2_vimba_kernel_drivers
   if [[ ! -f "${PROJECT_DIR_F}/.${_step}"  ]] ; then
   {
-    Working "Step .${step}"
+    Working "Step .${_step}"
     _step2_vimba_kernel_drivers
     _err=$?
     if [ ${_err} -gt 0 ] ; then
@@ -482,7 +483,7 @@ _debian_flavor_install() {
   local _step=step3_install_processing_data
   if [[ ! -f "${PROJECT_DIR_F}/.${_step}"  ]] ; then
   {
-    Working "Step .${step}"
+		Working "Step .${_step}"
     _step3_install_processing_data
     _err=$?
     if [ ${_err} -gt 0 ] ; then
