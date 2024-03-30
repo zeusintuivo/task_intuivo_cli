@@ -443,10 +443,10 @@ _debian_flavor_install() {
   if [ ${_err} -gt 0 ] ; then
   {
     warning "could not find  project folder. Making one.. _err:${_err}"
-    mkdir -p "${USER_HOME}/_/work/agrivero/projects/"
+    mkdir -p "${USER_HOME}/_/work/agrivero/projects"
 		chown -R "${SUDO_USER}" "${USER_HOME}/_/work"
-    PROJECT_DIR_F="${USER_HOME}/_/work/agrivero/projects/"
-    cd "${USER_HOME}/_/work/agrivero/projects/"
+    PROJECT_DIR_F="${USER_HOME}/_/work/agrivero/projects"
+    cd "${USER_HOME}/_/work/agrivero/projects"
    }
   fi
   PROJECTSBASEDIR="${PROJECT_DIR_F}"
