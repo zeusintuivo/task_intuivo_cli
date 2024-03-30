@@ -145,16 +145,17 @@ __passively_try_to_connect_to_wifi_but_continue_if_fails() {
         fi
 
   Checking " list of available WiFi hotspots "
-  nmcli d wifi list
+  Checking "nmcli d wifi list" 
   local _ssid_name=$(nmcli d wifi list | grep agrivero  | grep '*' | head -1 | xargs |  sed 's/*//g' | xargs | cut -d' ' -f2)
   echo 'hello there' | tr 'a-z' 'n-za-m'
   echo 'hello there' | tr 'a-z' 'n-za-m' | tr 'a-z' 'n-za-m'
-  local _ssid_password=$("")
+  local _ssid_password=""
   echo -n "hello there" | base64 |  tr 'a-z' 'n-za-m' | base64 -d
   echo -n "hello there" | base64 |  tr 'a-z' 'n-za-m' | base64 -d | base64 | tr 'a-z' 'n-za-m' | base64 -d
   echo -n "hello there" | base64 | tr 'A-Z' 'N-ZA-M' | tr 'a-z' 'n-za-m'  |  base64 -d
   echo "REF: https://stackoverflow.com/questions/6441260/how-to-shift-each-letter-of-the-string-by-a-given-number-of-letters"
-  local _ssid_password='d³322+S¥œžzgn'
+	# local _ssid_password=$( echo -n 'd³322+S¥œžzgn' | base64 |  tr 'a-z' 'n-za-m' | tr 'A-Z' 'N-ZA-M' | base64 -d)
+  local _ssid_password=$( echo -n 'd³322+S¥œžzgn' | base64 |  tr 'a-z' 'n-za-m' | tr 'A-Z' 'N-ZA-M' | base64 -d)
   if [[ -z "${_ssid_name}" ]] ; then
   {
     warning "could not find wifi from the list "
@@ -162,9 +163,10 @@ __passively_try_to_connect_to_wifi_but_continue_if_fails() {
   }
   else
   {
-    nmcli d wifi con "${_ssid_name}" password  "agrivero.ai"
+    nmcli d wifi con "${_ssid_name}" password  "${_ssid_password}"
   }
   fi
+
 } # end __passively_try_to_connect_to_wifi_but_continue_if_fails
 
 
