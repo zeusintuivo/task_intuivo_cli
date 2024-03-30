@@ -667,7 +667,7 @@ _debian_flavor_install() {
     curl
     wget
     tar
-    ufw
+    # ufw
     apt-transport-https
     ca-certificates
     gnupg
