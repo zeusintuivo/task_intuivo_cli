@@ -172,7 +172,15 @@ __passively_try_to_connect_to_wifi_but_continue_if_fails() {
 __check_net_work_connection() {
   trap 'return 1' ERR INT
   Checking "If network is reachable - TODO this is dumb considering we already did Struct_testing loading and apt update and install - TODO move this an starting point form the script"
-  local _website='google.com'
+	local _website='google.com'
+	# enforce_web_is_reachable  "${_website}"  
+  # _err=$?
+  # if [ ${_err} -gt 0 ] ; then
+  # {
+  #  failed "ERROR count not connec to online required to continue"
+  # }
+  # fi
+ 
   if (enforce_web_is_reachable  "${_website}" > /dev/null 2>&1 ) ; then # redirect all sdout sderr to /dev/null
   {
     passed "reached connection with ${_website}"
@@ -189,7 +197,7 @@ __check_net_work_connection() {
 _debian_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  if __check_net_work_connection ; then
+  if ! __check_net_work_connection ; then
   {
     failed "$0:$LINENO Network Connection Not Responding !!!"
   }
@@ -238,7 +246,7 @@ _debian_flavor_install() {
     warning "$0:$LINENO could WIFI connection failed"
   }
   fi
-  if __check_net_work_connection ; then
+  if ! __check_net_work_connection ; then
   {
     failed "$0:$LINENO Network Connection got LOST !!!"
   }
@@ -293,7 +301,7 @@ _debian_flavor_install() {
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  if __check_net_work_connection ; then
+  if ! __check_net_work_connection ; then
   {
     failed "$0:$LINENO Network Connection Not Responding !!!"
   }
