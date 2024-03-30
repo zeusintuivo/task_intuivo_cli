@@ -380,8 +380,8 @@ _ubuntu_22__aarch64() {
   echo "${MSG}"
   ensure rbenv or "Canceling until rbenv did not install"
   su - "${SUDO_USER}" -c 'rbenv install -l'
-  su - "${SUDO_USER}" -c 'rbenv install 2.6.5'
-  su - "${SUDO_USER}" -c 'rbenv global 2.6.5'
+  su - "${SUDO_USER}" -c 'rbenv install 3.1.4'
+  su - "${SUDO_USER}" -c 'rbenv global 3.1.4'
   su - "${SUDO_USER}" -c 'rbenv rehash'
   ensure ruby or "Canceling until ruby is not working"
   su - "${SUDO_USER}" -c 'ruby -v'

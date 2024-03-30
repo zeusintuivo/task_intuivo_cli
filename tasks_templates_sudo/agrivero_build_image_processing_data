@@ -7,8 +7,8 @@
 _execute_project_command() {
   # Sample usage:
   #   _execute_project_command "${PROJECTREPO}" "bundle exec rake db:migrate db:migrate:emails db:migrate:credit_check "
-  #   _execute_project_command "${PWD}" sdkmanager --cli  
-	#
+  #   _execute_project_command "${PWD}" sdkmanager --cli
+  #
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   local PROJECTREPO=${1}
   enforce_parameter_with_value           1        PROJECTREPO      "${PROJECTREPO}"     "path folder where Gemfile or project is located "
@@ -26,7 +26,7 @@ check_run_command_as_root() {
   #
   [[ "${EUID:-${UID}}" == "0" ]] || return
 
-# Allow Azure Pipelines/GitHub Actions/Docker/Concourse/Kubernetes to do everything as root (as it's normal there)
+  # Allow Azure Pipelines/GitHub Actions/Docker/Concourse/Kubernetes to do everything as root (as it's normal there)
   [[ -f /.dockerenv ]] && return
   [[ -f /proc/1/cgroup ]] && grep -E "azpl_job|actions_job|docker|garden|kubepods" -q /proc/1/cgroup && return
 
@@ -34,25 +34,68 @@ check_run_command_as_root() {
 }
 
 __download_file_check_checksum() {
-  # Sample usage: 
-	#    __download_file_check_checksum .torch_22_jetson_6_python_3_10 "https://developer.download.nvidia.cn/compute/redist/jp/v60dp/pytorch/torch-2.2.0a0+6a974be.nv23.11-cp310-cp310-linux_aarch64.whl" 94e70c4f45211737174a3c0f0b791b479c5fd9a2955ba77f573d31c0273e485e
-	local file_url_configuration="${1}"
-	enforce_parameter_with_value           1        file_url_configuration      "${file_url_configuration}"     ".trained_model .torch_22_jetson_6_python_3_10 full path filename "
-	if [[ ! -e "${file_url_configuration}" ]] ; then 
-	{
-		failed "file_url_configuration=file:${file_url_configuration}  does not exists"
-	}
-	fi
-  local sample_url_download="${2}"
-	enforce_parameter_with_value           2       sample_url_download         "${sample_url_download}"     "https://developer.download.nvidia.cn/compute/redist/jp/v60dp/pytorch/torch-2.2.0a0+6a974be.nv23.11-cp310-cp310-linux_aarch64.whl"
-  local hash_check_sum_to_check_against="${3}"
-	enforce_parameter_with_value           3       hash_check_sum_to_check_against "${hash_check_sum_to_check_against}"    "94e70c4f45211737174a3c0f0b791b479c5fd9a2955ba77f573d31c0273e48" 
-
- 	local service_url="$(<"${file_url_configuration}")"
-  enforce_parameter_with_value           1        service_url      "${service_url}"    "${sample_url_download}" 
-  enforce_variable_with_value service_url  "${service_url}"
-  local filename=$(basename "${service_url}")
+  # Sample usage:
+  #    __download_file_check_checksum .torch_22_jetson_6_python_3_10 "https://developer.download.nvidia.cn/compute/redist/jp/v60dp/pytorch/torch-2.2.0a0+6a974be.nv23.11-cp310-cp310-linux_aarch64.whl" 94e70c4f45211737174a3c0f0b791b479c5fd9a2955ba77f573d31c0273e485e
   local -i _err=0
+  local file_url_configuration="${1}"
+        enforce_parameter_with_value           1        file_url_configuration      "${file_url_configuration}"     ".trained_model .torch_22_jetson_6_python_3_10 full path filename "
+        if [[ ! -e "${file_url_configuration}" ]] ; then
+        {
+          failed "file_url_configuration=file:${file_url_configuration}  does not exists"
+        }
+        fi
+  local sample_url_download="${2}"
+        enforce_parameter_with_value           2       sample_url_download         "${sample_url_download}"     "https://developer.download.nvidia.cn/compute/redist/jp/v60dp/pytorch/torch-2.2.0a0+6a974be.nv23.11-cp310-cp310-linux_aarch64.whl"
+  local hash_check_sum_to_check_against="${3}"
+        enforce_parameter_with_value           3       hash_check_sum_to_check_against "${hash_check_sum_to_check_against}"    "94e70c4f45211737174a3c0f0b791b479c5fd9a2955ba77f573d31c0273e48"
+
+  local service_url="$(<"${file_url_configuration}")"
+        enforce_parameter_with_value           1        service_url      "${service_url}"    "${sample_url_download}"
+        enforce_variable_with_value service_url  "${service_url}"
+  local filename=$(basename "${service_url}")
+        if [[ -e  "${filename}" ]] ; then
+        {
+          passed "Already downloaded: ${filename}"
+        }
+        else
+        {
+          ensure curl or "curl is needed to connect to download stuff - Cannot continue"
+          local passwords="$(<.env)"
+                enforce_parameter_with_value           2        passwords      "${passwords}"     "--proxy-user user:password --user user:password"
+                enforce_variable_with_value service_url  "${passwords}"
+
+          Intalling "Calling curl to sevice url: curl $passwords -k $service_url"
+          curl $passwords -k $service_url
+          _err=$?
+          if [ ${_err} -gt 0 ] ; then
+          {
+            failed "while running curl above: curl  $passwords -k $service_url > \"${filename}\""
+          }
+          fi
+        }
+        fi
+
+  Checking "checksum for ${filename}"
+  file_exists_with_spaces "${filename}"
+  local checksum=""
+  checksum=$(sha256sum "${filename}" | cut -d' ' -f1)
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running checksum above: sha256sum \"${filename}\""
+  }
+  fi
+  if [[ "${checksum}" == "${hash_check_sum_to_check_against}" ]] ; then
+  {
+    passed "Checksum checks ${checksum}"
+  }
+  else
+  {
+    rm -rf ${filename}
+    failed "removed file ${filename} Checksum DOES NOT check ${checksum}. Try again to download again"
+  }
+  fi
+} # end __download_file_check_checksum
 
 _package_list_installer() {
   # trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
@@ -293,7 +336,9 @@ liblzma-dev
     nvidia-smi
   }
 	fi
-	
+  file_exists_with_spaces VimbaX_Setup-2023-4-Linux64.tar.gz
+  file_exists_with_spaces VimbaX_Setup-2023-4-Linux_ARM64.tar.gz
+  	
 
 
 	Checking "needs .ssh setup before using git@git"
