@@ -695,9 +695,9 @@ _debian_flavor_install() {
   Installing "Add agrivero user"
   anounce_command "usermod -a -G docker agrivero"
   Installing "Google gpg cloud key"
-  anounce_command "curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg"
+  anounce_command "yes | curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg"
   Installing "Google cloud apt source list"
-  anounce_command "echo 'deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main' > /etc/apt/sources.list.d/google-cloud-sdk.list"
+  anounce_command "yes | echo 'deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main' > /etc/apt/sources.list.d/google-cloud-sdk.list"
   apt-get update -y
   if
     (
@@ -810,9 +810,9 @@ _redhat_flavor_install() {
   Installing "Add agrivero user"
   anounce_command "usermod -a -G docker agrivero"
   Installing "Google gpg cloud key"
-  anounce_command "curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg"
+  anounce_command "yes | curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg"
   Installing "Google cloud apt source list"
-  anounce_command "echo 'deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main' > /etc/apt/sources.list.d/google-cloud-sdk.list"
+  anounce_command "yes | echo 'deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main' > /etc/apt/sources.list.d/google-cloud-sdk.list"
   apt-get update -y
   if
     (
