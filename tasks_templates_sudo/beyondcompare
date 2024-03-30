@@ -41,8 +41,8 @@ _version_test(){
 #_version_test
 
 _darwin__64() {
-  sudo_it
-  export USER_HOME="/Users/${SUDO_USER}"
+  # sudo_it
+  # export USER_HOME="/Users/${SUDO_USER}"
   enforce_variable_with_value USER_HOME "${USER_HOME}"
 
   local CODENAME=$(_version "mac" "BCompareOSX*.*.*.*.zip")
@@ -77,7 +77,7 @@ _darwin__64() {
 } # end _darwin__64
 
 _debian_flavor_install() {
-  sudo_it
+  # sudo_it
   trap 'echo -e "${RED}" && echo -e "ERROR failed \n$0:$LINENO _debian_flavor_install beyondcomapre" && echo -e "${RESET}" && return 0' ERR
 
   # export USER_HOME="/home/${SUDO_USER}"
@@ -230,7 +230,7 @@ _fedora__64() {
 } # end _fedora__64
 
 _mingw__64() {
-  sudo_it
+  # sudo_it
   export USER_HOME="/Users/${SUDO_USER}"
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   # _linux_prepare
