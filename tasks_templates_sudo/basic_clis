@@ -222,24 +222,15 @@ _ubuntu__64() {
   _do_cloning_basic_clis
 } # end _ubuntu__64
 
+_ubuntu__aarch64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _do_cloning_basic_clis
+} # end _ubuntu__aarch64
+
+
 _darwin__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  export HOMEBREW_NO_AUTO_UPDATE=1
-  ensure brew or "Canceling until brew is installed"
-  su - "${SUDO_USER}" -c 'brew install ruby-build'
-  _git_clone "https://github.com/i3status/i3status.git" "${USER_HOME}/.i3status"
-  _git_clone "https://github.com/i3status/ruby-build.git" "${USER_HOME}/.i3status/plugins/ruby-build"
-  _add_variables_to_bashrc_zshrc
-  ensure "${USER_HOME}/.i3status/bin/i3status" or "Canceling until i3status did not install"
-  su - "${SUDO_USER}" -c "git -C ${USER_HOME}/.i3status/plugins/ruby-build pull"
-  su - "${SUDO_USER}" -c "${USER_HOME}/.i3status/bin/i3status install -l"
-  su - "${SUDO_USER}" -c "${USER_HOME}/.i3status/bin/i3status install 2.6.5"
-  su - "${SUDO_USER}" -c "${USER_HOME}/.i3status/bin/i3status install 2.7.3"
-  su - "${SUDO_USER}" -c "${USER_HOME}/.i3status/bin/i3status install 3.2.2"
-  su - "${SUDO_USER}" -c "${USER_HOME}/.i3status/bin/i3status global 2.7.3"
-  su - "${SUDO_USER}" -c "${USER_HOME}/.i3status/bin/i3status rehash"
-  ensure ruby or "Canceling until ruby is not working"
-  su - "${SUDO_USER}" -c 'ruby -v'
+  _do_cloning_basic_clis
 } # end _darwin__64
 
 _darwin__arm64() {
