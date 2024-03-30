@@ -901,7 +901,7 @@ _debian_flavor_install() {
       failed "while running ${_step} above _err:${_err}"
     }
     fi
-    local _touch_name="\"${PROJECT_DIR_F}/.${step}\""
+    local _touch_name="\"${PROJECT_DIR_F}/.${_step}\""
     _execute_project_command "${PROJECT_DIR_F}" "touch ${_touch_name} "
   }
   fi
@@ -917,7 +917,7 @@ _debian_flavor_install() {
       failed "while running ${_step} above _err:${_err}"
     }
     fi
-    local _touch_name="\"${PROJECT_DIR_F}/.${step}\""
+    local _touch_name="\"${PROJECT_DIR_F}/.${_step}\""
     _execute_project_command "${PROJECT_DIR_F}" "touch ${_touch_name} "
   }
   fi
@@ -933,7 +933,7 @@ _debian_flavor_install() {
       failed "while running ${_step} above _err:${_err}"
     }
     fi
-    local _touch_name="\"${PROJECT_DIR_F}/.${step}\""
+    local _touch_name="\"${PROJECT_DIR_F}/.${_step}\""
     _execute_project_command "${PROJECT_DIR_F}" "touch ${_touch_name} "
   }
   fi
