@@ -668,14 +668,14 @@ _debian_flavor_install() {
     wget
     tar
     # ufw
-    apt-transport-https
-    ca-certificates
-    gnupg
+    # apt-transport-https
+    # ca-certificates
+    # gnupg
     curl
-    sudo
-    net-tools
-    network-manager
-    wireless-tools
+    # sudo
+    # net-tools
+    # network-manager
+    # wireless-tools
   "
 
   if __passively_try_to_connect_to_wifi_but_continue_if_fails; then
@@ -781,15 +781,15 @@ _redhat_flavor_install() {
     curl
     wget
     tar
-    ufw
-    apt-transport-https
-    ca-certificates
-    gnupg
+    # ufw
+    # apt-transport-https
+    # ca-certificates
+    # gnupg
     curl
-    sudo
-    net-tools
-    network-manager
-    wireless-tools
+    # sudo
+    # net-tools
+    # network-manager
+    # wireless-tools
   "
 
   if __passively_try_to_connect_to_wifi_but_continue_if_fails; then
