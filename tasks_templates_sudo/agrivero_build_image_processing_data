@@ -26,7 +26,7 @@ _find_project_location_PROJECT_DIR_F() {
     fi
   }
   done <<< "${_list_posssibles}"
-  [[ -z "${one}" ]] && warning "Could not find/determine location of project" && exit 1
+  [[ -z "${one}" ]] && warning "Could not find/determine location of project" && return 1
   passed "found of project dir ${_target_project}"
   PROJECT_DIR_F="${_target_project}"
   return 0
