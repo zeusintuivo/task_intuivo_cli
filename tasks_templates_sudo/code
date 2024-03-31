@@ -7,7 +7,7 @@
 # SUDO_USER only exists during execution of sudo
 # REF: https://stackoverflow.com/questions/7358611/get-users-home-directory-when-they-run-a-script-as-root
 # Global:
-THISSCRIPTNAME=`basename "$0"`
+# THISSCRIPTNAME=`basename "$0"`
 
 execute_as_sudo(){
   if [ -z $SUDO_USER ] ; then
@@ -81,7 +81,7 @@ _get_user_home() {
 
 } # end _get_user_home
 
-_get_user_home
+# _get_user_home
 
 
 
@@ -91,11 +91,11 @@ load_struct_testing_wget(){
     [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
     ( ( ! command -v passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
 } # end load_struct_testing_wget
-load_struct_testing_wget
+# load_struct_testing_wget
 
-passed Caller user identified:$SUDO_USER
-passed Home identified:$USER_HOME
-directory_exists_with_spaces "$USER_HOME"
+# passed Caller user identified:$SUDO_USER
+# passed Home identified:$USER_HOME
+# directory_exists_with_spaces "$USER_HOME"
 
 
 # function _assure_success() {
@@ -188,10 +188,10 @@ directory_exists_with_spaces "$USER_HOME"
 #   "${body}"
 #   _trap_catch_check
 # }
-
+CODELASTESTBUILD="1.87.2-1709911730"
 _darwin__64() {
     local CODENAME="Visual Studio Code%20Text%20Build%20${CODELASTESTBUILD}.dmg"
-    cd $USER_HOME/Downloads/
+    cd "${USER_HOME}/Downloads/"
     local URL=""
     _download "${URL}"
     sudo hdiutil attach ${CODENAME}
@@ -202,7 +202,7 @@ _darwin__64() {
 _ubuntu__aarch64() {
     trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
     local CODENAME="studio_code-text_build-${CODELASTESTBUILD}_arm64.deb"
-    cd $USER_HOME/Downloads/
+    cd "${USER_HOME}/Downloads/"
     local URL=""
     _download "${URL}"
     sudo dpkg -i ${CODENAME}
@@ -211,7 +211,7 @@ _ubuntu__aarch64() {
 _ubuntu_22__aarch64() {
     trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
     local CODENAME="studio_code-text_build-${CODELASTESTBUILD}_arm64.deb"
-    cd $USER_HOME/Downloads/
+    cd "${USER_HOME}/Downloads/"
     local URL=""
     _download "${URL}"
     sudo dpkg -i ${CODENAME}
@@ -219,7 +219,7 @@ _ubuntu_22__aarch64() {
 
 _ubuntu__64() {
     local CODENAME="studio_code-text_build-${CODELASTESTBUILD}_amd64.deb"
-    cd $USER_HOME/Downloads/
+    cd "${USER_HOME}/Downloads/"
     local URL=""
     _download "${URL}"
     sudo dpkg -i ${CODENAME}
@@ -227,7 +227,7 @@ _ubuntu__64() {
 
 _ubuntu__32() {
     local CODENAME="studio_code-text_build-${CODELASTESTBUILD}_i386.deb"
-    cd $USER_HOME/Downloads/
+    cd "${USER_HOME}/Downloads/"
     local URL=""
     _download "${URL}"
     sudo dpkg -i ${CODENAME}
@@ -378,7 +378,7 @@ EOF
   local DOWNLOADFOLDER="${USER_HOME}/Downloads"
   enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
   _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
-  msg=$(_install_rpm "${TARGET_URL}" "${DOWNLOADFOLDERgffffff}"  "${CODENAME}" 0)
+  msg=$(_install_rpm "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0)
   # msg=$(rpm -ivh "${download_folder}/${CODENAME}")
   _trap_catch_check
   Message "${msg}"
