@@ -474,15 +474,15 @@ _debian_flavor_install() {
   
 	ensure docker or "Canceling until docker is installed"
 	
-	groupadd docker
-  usermod -aG docker root
-	usermod -aG docker "${SUDO_USER}"
-  newgrp docker
-  chown -R  root  /root/.docker
-	chown -R   "${SUDO_USER}" "${USER_HOME}/.docker"
+	if groupadd docker ; then { warning " Group already exists" } fi
+  if usermod -aG docker root; then { warning " root already added to docker" } fi
+	if usermod -aG docker "${SUDO_USER}"; then { warning " " } fi
+  if newgrp docker; then { warning " " } fi
+  if chown -R  root  /root/.docker; then { warning " " } fi
+	if chown -R   "${SUDO_USER}" "${USER_HOME}/.docker"; then { warning " " } fi
 
-	chmod g+rwx "/root/.docker"
-  chmod g+rwx "${USER_HOME}/.docker"
+	if chmod g+rwx "/root/.docker"; then { warning " " } fi
+  if chmod g+rwx "${USER_HOME}/.docker"; then { warning " " } fi
 
 	yes | systemctl enable docker.service
 	yes | systemctl start docker.service
