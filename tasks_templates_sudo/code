@@ -199,6 +199,24 @@ _darwin__64() {
     sudo hdiutil detach /Volumes/Visual Studio Code\ Text
 } # end _darwin__64
 
+_ubuntu__aarch64() {
+    trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+    local CODENAME="studio_code-text_build-${CODELASTESTBUILD}_arm64.deb"
+    cd $USER_HOME/Downloads/
+    local URL=""
+    _download "${URL}"
+    sudo dpkg -i ${CODENAME}
+} # end _ubuntu__aarch64
+
+_ubuntu_22__aarch64() {
+    trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+    local CODENAME="studio_code-text_build-${CODELASTESTBUILD}_arm64.deb"
+    cd $USER_HOME/Downloads/
+    local URL=""
+    _download "${URL}"
+    sudo dpkg -i ${CODENAME}
+} # end _ubuntu_22__aarch64
+
 _ubuntu__64() {
     local CODENAME="studio_code-text_build-${CODELASTESTBUILD}_amd64.deb"
     cd $USER_HOME/Downloads/
