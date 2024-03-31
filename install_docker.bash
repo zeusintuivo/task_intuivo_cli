@@ -444,8 +444,25 @@ _debian_flavor_install() {
 		warning "failed to remove older version of docker"
 	}
 	fi
-  rm -r $HOME/.docker/desktop
-  rm /usr/local/bin/com.docker.cli
+  if rm -rf "${HOME}/.docker/desktop" ; then 
+	{
+		warning "failed to remove ${HOME}/.docker/desktop"
+	}
+	fi
+  if rm -rf "${USER_HOME}/.docker/desktop" ; then 
+	{
+		warning "failed to remove ${USER_HOME}/.docker/desktop"
+	}
+	fi
+  if rm -rf /usr/local/bin/com.docker.cli ; then 
+	{
+		warning "failed to remove /usr/local/bin/com.docker.cli"
+	}
+	fi
+  apt install docker.io -y
+  apt install docker-compose -y
+  # systemctl --user enable docker-desktop
+	ensure docker or "Canceling until docker is installed"
   # sudo apt purge docker-desktop -y
   docker compose version
   # Docker Compose version v2.17.3
@@ -457,9 +474,7 @@ _debian_flavor_install() {
   # Version:           23.0.5
   # API version:       1.42
   # <...>
-  apt install docker.io -y
-  apt install docker-compose -y
-  # systemctl --user enable docker-desktop
+  
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
