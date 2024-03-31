@@ -4,7 +4,7 @@ _debian_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   verify_is_installed  snap
-  snap install vlc -y
+  snap install vlc
   # if (
   # install_requirements "linux" "
   #   base64
