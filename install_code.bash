@@ -629,7 +629,7 @@ CODELASTESTBUILD="1.87.2-1709911730"
 _darwin__64() {
     local CODENAME="Visual Studio Code%20Text%20Build%20${CODELASTESTBUILD}.dmg"
     cd "${USER_HOME}/Downloads/"
-    local URL=""
+    local URL="https://vscode.download.prss.microsoft.com/dbazure/download/stable/863d2581ecda6849923a2118d93a088b0745d9d6/code_1.87.2-1709911730.dmg"
     _download "${URL}"
     sudo hdiutil attach ${CODENAME}
     sudo cp -R /Volumes/Visual Studio Code\ Text/Visual Studio Code\ Text.app /Applications/
@@ -640,7 +640,7 @@ _ubuntu__aarch64() {
     trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
     local CODENAME="studio_code-text_build-${CODELASTESTBUILD}_arm64.deb"
     cd "${USER_HOME}/Downloads/"
-    local URL=""
+    local URL="https://vscode.download.prss.microsoft.com/dbazure/download/stable/863d2581ecda6849923a2118d93a088b0745d9d6/code_1.87.2-1709911730_arm64.deb"
     _download "${URL}"
     sudo dpkg -i ${CODENAME}
 } # end _ubuntu__aarch64
@@ -649,7 +649,7 @@ _ubuntu_22__aarch64() {
     trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
     local CODENAME="studio_code-text_build-${CODELASTESTBUILD}_arm64.deb"
     cd "${USER_HOME}/Downloads/"
-    local URL=""
+    local URL="https://vscode.download.prss.microsoft.com/dbazure/download/stable/863d2581ecda6849923a2118d93a088b0745d9d6/code_1.87.2-1709911730_arm64.deb"
     _download "${URL}"
     sudo dpkg -i ${CODENAME}
 } # end _ubuntu_22__aarch64
@@ -657,7 +657,7 @@ _ubuntu_22__aarch64() {
 _ubuntu__64() {
     local CODENAME="studio_code-text_build-${CODELASTESTBUILD}_amd64.deb"
     cd "${USER_HOME}/Downloads/"
-    local URL=""
+    local URL="https://vscode.download.prss.microsoft.com/dbazure/download/stable/863d2581ecda6849923a2118d93a088b0745d9d6/code_1.87.2-1709911730_amd64.deb"
     _download "${URL}"
     sudo dpkg -i ${CODENAME}
 } # end _ubuntu__64
@@ -665,7 +665,7 @@ _ubuntu__64() {
 _ubuntu__32() {
     local CODENAME="studio_code-text_build-${CODELASTESTBUILD}_i386.deb"
     cd "${USER_HOME}/Downloads/"
-    local URL=""
+    local URL="https://vscode.download.prss.microsoft.com/dbazure/download/stable/863d2581ecda6849923a2118d93a088b0745d9d6/code_1.87.2-1709911730_i386.deb"
     _download "${URL}"
     sudo dpkg -i ${CODENAME}
 } # end _ubuntu__32
@@ -809,6 +809,8 @@ EOF
   [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   local TARGET_URL=https://az764295.vo.msecnd.net/insider/192c817fd350bcbf3caecae22a45ec39bae78516/code-insiders-1.54.0-1613712429.el7.x86_64.rpm
+  local TARGET_URL="https://vscode.download.prss.microsoft.com/dbazure/download/stable/863d2581ecda6849923a2118d93a088b0745d9d6/code_1.87.2-1709911730.x86_64.rpm"
+
   enforce_variable_with_value TARGET_URL "${TARGET_URL}"
   local CODENAME=$(basename "${TARGET_URL}")
   enforce_variable_with_value CODENAME "${CODENAME}"
