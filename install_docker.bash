@@ -459,23 +459,41 @@ _debian_flavor_install() {
 		warning "failed to remove /usr/local/bin/com.docker.cli"
 	}
 	fi
-  apt install docker.io -y
-  apt install docker-compose -y
-  # systemctl --user enable docker-desktop
+
+   # Add Docker's official GPG key:
+  apt-get update -y
+  apt-get install ca-certificates curl -y
+  yes | install -m 0755 -d /etc/apt/keyrings
+  yes | curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+  chmod a+r /etc/apt/keyrings/docker.asc
+
+  # Add the repository to Apt sources:
+  echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+  apt-get update -y
+  apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
+  
 	ensure docker or "Canceling until docker is installed"
-  # sudo apt purge docker-desktop -y
+	docker run hello-world
   docker compose version
-  # Docker Compose version v2.17.3
   docker --version
-  # Docker version 23.0.5, build bc4487a
   docker version
-  # Client: Docker Engine - Community
-  # Cloud integration: v1.0.31
-  # Version:           23.0.5
-  # API version:       1.42
-  # <...>
   
 } # end _debian_flavor_install
+
+uninstall_docker() {
+ echo "Uninstall Docker Engine
+
+    Uninstall the Docker Engine, CLI, containerd, and Docker Compose packages:
+
+ sudo apt-get purge docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin docker-ce-rootless-extras
+
+Images, containers, volumes, or custom configuration files on your host aren't automatically removed. To delete all images, containers, and volumes:
+
+ sudo rm -rf /var/lib/docker
+
+ sudo rm -rf /var/lib/containerd
+ "
+} # end uninstall_docker 
 
 _redhat_flavor_install() {
   echo "Procedure not yet implemented. I don't know what to do."
