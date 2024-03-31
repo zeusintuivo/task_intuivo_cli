@@ -37,15 +37,47 @@ _debian_flavor_install() {
   
 	ensure docker or "Canceling until docker is installed"
 	
-	if groupadd docker ; then { warning " Group already exists" } fi
-  if usermod -aG docker root; then { warning " root already added to docker" } fi
-	if usermod -aG docker "${SUDO_USER}"; then { warning " " } fi
-  if newgrp docker; then { warning " " } fi
-  if chown -R  root  /root/.docker; then { warning " " } fi
-	if chown -R   "${SUDO_USER}" "${USER_HOME}/.docker"; then { warning " " } fi
+	if groupadd docker ; then 
+	{ 
+		warning " Group already exists" 
+	} 
+	fi
+  if usermod -aG docker root ; then
+	{ 
+		warning " root already added to docker" 
+	} 
+	fi
+	if usermod -aG docker "${SUDO_USER}" ; then 
+	{ 
+		warning " user ${SUDO_USER} already  added to docker group" 
+	} 
+	fi
+  if newgrp docker ; then
+	{ 
+		warning " could not run newgrp docker " 
+	} 
+	fi
+  if chown -R  root  /root/.docker ; then\
+	{ 
+		warning " chown failed to docker " 
+	} 
+	fi
+	if chown -R   "${SUDO_USER}" "${USER_HOME}/.docker" ; then
+	{ 
+		warning " ${SUDO_USER} alredy added user to docker  " 
+	} 
+	fi
 
-	if chmod g+rwx "/root/.docker"; then { warning " " } fi
-  if chmod g+rwx "${USER_HOME}/.docker"; then { warning " " } fi
+	if chmod g+rwx "/root/.docker" ; then 
+	{ 
+		warning "chmod failed for root " 
+	} 
+	fi
+  if chmod g+rwx "${USER_HOME}/.docker" ; then
+	{ 
+		warning " chmod failed for ${SUDO_USER} in ${USER_HOME}"
+	} 
+	fi
 
 	yes | systemctl enable docker.service
 	yes | systemctl start docker.service
