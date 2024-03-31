@@ -1,10 +1,10 @@
 #!/usr/bin/bash
 
 _debian_flavor_install() {
-  sudo apt install gnome-terminal -y
-  sudo apt remove docker-desktop -y
+  apt install gnome-terminal -y
+  apt remove docker-desktop -y
   rm -r $HOME/.docker/desktop
-  sudo rm /usr/local/bin/com.docker.cli
+  rm /usr/local/bin/com.docker.cli
   # sudo apt purge docker-desktop -y
   docker compose version
   # Docker Compose version v2.17.3
@@ -114,6 +114,16 @@ _ubuntu__32() {
 _ubuntu__64() {
   _debian_flavor_install
 } # end _ubuntu__64
+
+_ubuntu__aarch64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _ubuntu__aarch64
+
+_ubuntu_22__aarch64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _ubuntu_22__aarch64
 
 _darwin__64() {
   echo "Procedure not yet implemented. I don't know what to do."
