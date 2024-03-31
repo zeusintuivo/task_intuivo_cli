@@ -36,6 +36,23 @@ _debian_flavor_install() {
   apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
   
 	ensure docker or "Canceling until docker is installed"
+	
+	groupadd docker
+  usermod -aG docker root
+	usermod -aG docker "${SUDO_USER}"
+  newgrp docker
+  chown -R  root  /root/.docker
+	chown -R   "${SUDO_USER}" "${USER_HOME}/.docker"
+
+	chmod g+rwx "/root/.docker"
+  chmod g+rwx "${USER_HOME}/.docker"
+
+	yes | systemctl enable docker.service
+	yes | systemctl start docker.service
+	yes | systemctl enable containerd.service
+  yes | systemctl start containerd.service
+
+
 	docker run hello-world
   docker compose version
   docker --version
