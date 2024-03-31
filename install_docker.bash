@@ -439,7 +439,11 @@ directory_exists_with_spaces "${USER_HOME}"
 
 _debian_flavor_install() {
   apt install gnome-terminal -y
-  apt remove docker-desktop -y
+  if apt remove docker-desktop -y ; then
+	{
+		warning "failed to remove older version of docker"
+	}
+	fi
   rm -r $HOME/.docker/desktop
   rm /usr/local/bin/com.docker.cli
   # sudo apt purge docker-desktop -y
