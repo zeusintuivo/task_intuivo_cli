@@ -934,7 +934,7 @@ _debian_flavor_install() {
 		if function_is_defined "${_function_to_call}" ; then
     {
       passed "function defined ${_function_to_call}"
-      _${_function_to_call}
+      ${_function_to_call} # : command not found <-- could be triggered here also 
       # _assure_success
       _err=$?
       if [ ${_err} -gt 0 ] ; then
