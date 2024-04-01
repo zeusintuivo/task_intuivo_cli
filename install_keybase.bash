@@ -465,6 +465,18 @@ _ubuntu__64(){
   _debian__64
 } # end _ubuntu__64
 
+
+_ubuntu__aarch64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_64
+} # end _ubuntu__aarch64
+
+_ubuntu_22__aarch64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_64
+} # end _ubuntu_22__aarch64
+
+
 _debian__32(){
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   local TARGET_URL=https://prerelease.keybase.io/keybase_i386.deb
