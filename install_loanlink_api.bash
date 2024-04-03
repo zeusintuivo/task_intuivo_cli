@@ -514,7 +514,7 @@ _find_project_location_PROJECT_DIR_F() {
 		}
     done <<< "${_list_posssibles}"
 
-		[[ -z "${one}" ]] && failed "Could not find/determine location of project" && exit 1
+  [[ -z "${one}" ]] && warning "Could not find/determine location of project" && return 1
 
 		passed "found of project dir ${_target_project}"
 		PROJECT_DIR_F="${_target_project}"
@@ -628,7 +628,13 @@ _debian_flavor_install() {
 } # end _debian_flavor_install
 
 
-
+PROJECT_DIR_F=""  # GLOBAL
++ set -E -o functrace
++ sudo cp ~/jetson-files/deepstream-6.3_6.3.0-1_arm64.deb /media/jetpack/flash/home/jetpack;
+PROJECTSBASEDIR="${PROJECT_DIR_F-}" # global
+PROJECTREPO="${PROJECT_DIR_F-}/processing_data" #  global
+PROJECTGITREPO="git@github.com:agrivero-ai/processing_data.git" # global
+PROJECTGITREPOBRANCH="will_experiments" # global
 
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
@@ -637,13 +643,33 @@ _redhat_flavor_install() {
   dnf remove openssl1.1-devel-1 openssl-devel-1 openssl-devel -y
 	dnf builddep ruby-devel -y --allowerasing
   dnf builddep rbenv -y --allowerasing
+  local -i _err=0
+  if _find_project_location_PROJECT_DIR_F ; then
+  {
+    _err=0
+  }
+  else
+  {
+    _err=2
+  }
+  fi
+  echo _err:$_err
+  if [ ${_err} -gt 0 ] ; then
+  {
+		PROJECT_DIR_F="${USER_HOME}/_/work/finlink/projects"
+    warning "could not find  project folder. Making one.. _err:${_err}"
+    mkdir -p "${PROJECT_DIR_F}"
+    chown -R "${SUDO_USER}" "${USER_HOME}/_/work"
+    cd "${PROJECT_DIR_F}"
+  }
+  fi
 
-	_find_project_location_PROJECT_DIR_F
-  local PROJECTSBASEDIR="${PROJECT_DIR_F}"
-  local PROJECTREPO="${PROJECT_DIR_F}/loanlink-api"
-  local PROJECTGITREPO="git@github.com:LoanLink/loanlink-api.git"
-  local PROJECTGITREPOBRANCH="main"
-
+  PROJECTSBASEDIR="${PROJECT_DIR_F}"
+  PROJECTREPO="${PROJECT_DIR_F}/loanlink-api"
+  PROJECTGITREPO="git@github.com:LoanLink/loanlink-api.git"
+  PROJECTGITREPOBRANCH="main"
+ 
+	# _find_project_location_PROJECT_DIR_F
   if [[ ! -f "${PROJECTREPO}/.step1_brew_check_requirements_postgress_12_install"  ]] ; then
   {
     Working "Step .step1_brew_check_requirements_postgress_12_install"
@@ -750,6 +776,11 @@ _fedora__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _fedora__64
+
+_fedora_37__64(){
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _fedora_37__64
 
 _gentoo__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
