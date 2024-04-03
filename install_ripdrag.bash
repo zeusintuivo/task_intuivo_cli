@@ -432,135 +432,238 @@ directory_exists_with_spaces "${USER_HOME}"
 
 
 
- #--------\/\/\/\/-- tasks_templates_sudo/keybase …install_keybase.bash” -- Custom code -\/\/\/\/-------
+ #--------\/\/\/\/-- tasks_templates_sudo/ripdrag …install_ripdrag.bash” -- Custom code -\/\/\/\/-------
 
 
-#!/bin/bash
-#
-# @author Zeus Intuivo <zeus@intuivo.com>
-#
-#
+#!/usr/bin/bash
 
-
-_debian__64(){
+_debian_flavor_install() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  ensure rustc or "We need rust to be installed try -> curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh"
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  local TARGET_URL=https://prerelease.keybase.io/keybase_amd64.deb
-  Comment TARGET_URL "${TARGET_URL}"
-  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
-  local CODENAME=$(basename "${TARGET_URL}")
-  Comment CODENAME "${CODENAME}"
-  enforce_variable_with_value CODENAME "${CODENAME}"
-  local DOWNLOADFOLDER="$(_find_downloads_folder)"
-  Comment DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
-  _install_apt "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
-  _err=$?
-  _remove_downloaded_codename_or_err  $_err "${DOWNLOADFOLDER}/${CODENAME}"
-  _err=$?
-  return  $_err
-} # end __debian__64
+  if
+    (
+    install_requirements "linux" "
+      libgtk-4-dev
+      build-essential
+      curl
+     "
+    ); then
+  {
+      echo "Installer run $? "
+  }
+  fi
+  Installing "for user"
+  su - "${SUDO_USER}" -c 'cargo install ripdrag'
+  Installing "for root"
+  cargo install ripdrag
 
-_ubuntu__64(){
-  _debian__64
+} # end _debian_flavor_install
+
+_redhat_flavor_install() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  ensure rustc or "We need rust to be installed try -> curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  if
+    (
+    install_requirements "linux" "
+      cargo
+      gdk-pixbuf2-devel
+      pango-devel
+      graphene-devel
+      cairo-gobject-devel
+      cairo-devel
+      python2-cairo-devel
+      gtk4-devel
+    "
+    ); then
+    {
+      echo "Installer run $? "
+    }
+  fi
+  Installing "for user"
+  su - "${SUDO_USER}" -c 'cargo install ripdrag'
+  Installing "for root"
+  cargo install ripdrag
+
+} # end _redhat_flavor_install
+
+_arch_flavor_install() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  ensure rustc or "We need rust to be installed try -> curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  if (
+  install_requirements "linux" "
+    rust
+    gtk4
+    base-devel
+  "
+  ); then
+    {
+      echo "Installer run $? "
+    }
+  fi
+  pacman -Sy --needed rust gtk4 base-devel
+  Installing "for user"
+  su - "${SUDO_USER}" -c 'cargo install ripdrag'
+  Installing "for root"
+  cargo install ripdrag
+
+} # end _readhat_flavor_install
+
+_arch__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _arch_flavor_install
+} # end _arch__32
+
+_arch__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _arch_flavor_install
+} # end _arch__64
+
+_centos__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _centos__32
+
+_centos__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _centos__64
+
+_debian__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _debian__32
+
+_debian__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _debian__64
+
+_fedora__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _fedora__32
+
+_fedora__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _fedora__64
+
+_gentoo__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _gentoo__32
+
+_gentoo__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _gentoo__64
+
+_madriva__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _madriva__32
+
+_madriva__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _madriva__64
+
+_suse__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _suse__32
+
+_suse__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _suse__64
+
+_ubuntu__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _ubuntu__32
+
+_ubuntu__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
 } # end _ubuntu__64
-
 
 _ubuntu__aarch64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _debian__64 # 2eVBOEDbQZEAEc9vCIwZKS85CPJ_2uiGFz2qwQXJJ2CHnEZ2G
+  _debian_flavor_install
 } # end _ubuntu__aarch64
 
 _ubuntu_22__aarch64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-	_debian__64
+  _debian_flavor_install
 } # end _ubuntu_22__aarch64
 
-
-_debian__32(){
+_netbsd__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  ensure rustc or "We need rust to be installed try -> curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh"
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  local TARGET_URL=https://prerelease.keybase.io/keybase_i386.deb
-  Comment TARGET_URL "${TARGET_URL}"
-  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
-  local CODENAME=$(basename "${TARGET_URL}")
-  Comment CODENAME "${CODENAME}"
-  enforce_variable_with_value CODENAME "${CODENAME}"
-  local DOWNLOADFOLDER="${USER_HOME}/Downloads"
-  Comment DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
-  _install_apt "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
-  _err=$?
-  _remove_downloaded_codename_or_err  $_err "${DOWNLOADFOLDER}/${CODENAME}"
-  _err=$?
-  return  $_err
-} # end __debian__64
+  if (
+  install_requirements "linux" "
+    ripdrag
+  "
+  ); then
+    {
+      echo "Installer run $? "
+    }
+  fi
+  Installing "for user"
+  su - "${SUDO_USER}" -c 'cargo install ripdrag'
+  Installing "for root"
+  cargo install ripdrag
+} # end _netbsd__64
 
-_fedora__32() {
+_darwin__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  ensure rustc or "We need rust to be installed try -> curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh"
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  local TARGET_URL=https://prerelease.keybase.io/keybase_i386.rpm
-  Comment TARGET_URL "${TARGET_URL}"
-  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
-  local CODENAME=$(basename "${TARGET_URL}")
-  Comment CODENAME "${CODENAME}"
-  enforce_variable_with_value CODENAME "${CODENAME}"
-  local DOWNLOADFOLDER="$(_find_downloads_folder)"
-  Comment DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
-  _install_rpm "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
-  _err=$?
-  _remove_downloaded_codename_or_err  $_err "${DOWNLOADFOLDER}/${CODENAME}"
-  _err=$?
-  return  $_err
-} # end _fedora__32
-_centos__64(){
-  _fedora__64
-} # end _centos__64
-
-_fedora_37__64(){
-  _fedora__64
-} # end _fedora_37__64
-
-_fedora_38__64(){
-  _fedora__64
-} # end _fedora_38__64
-
-_fedora_39__64(){
-  _fedora__64
-} # end _fedora_38__64
-
-_fedora_40__64(){
-  _fedora__64
-} # end _fedora_40__64
-
-_fedora__64() {
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
-  local TARGET_URL=https://prerelease.keybase.io/keybase_amd64.rpm
-  Comment TARGET_URL "${TARGET_URL}"
-  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
-  local CODENAME=$(basename "${TARGET_URL}")
-  Comment CODENAME "${CODENAME}"
-  enforce_variable_with_value CODENAME "${CODENAME}"
-  local DOWNLOADFOLDER="$(_find_downloads_folder)"
-  Comment DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
-  _install_rpm "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
-  _err=$?
-	chown -R $USER /etc/keybase/
-  _remove_downloaded_codename_or_err  $_err "${DOWNLOADFOLDER}/${CODENAME}"
-  _err=$?
-  return  $_err
-} # end _fedora__64
-
-_darwin__64(){
-  su - "${SUDO_USER}" -c 'brew install keybase --force'
+  if (
+  install_requirements "linux" "
+    rust
+    gtk4
+    base-devel
+  "
+  ); then
+    {
+      echo "Installer run $? "
+    }
+  fi
+  Installing "for user"
+  su - "${SUDO_USER}" -c 'cargo install ripdrag'
+  Installing "for root"
+  cargo install ripdrag
 } # end _darwin__64
 
+_darwin__arm64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_darwin__arm64 Procedure not yet implemented. I don't know what to do."
+} # end _darwin__arm64
+
+_tar() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_tar Procedure not yet implemented. I don't know what to do."
+} # end tar
+
+_windows__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_windows__64 Procedure not yet implemented. I don't know what to do."
+} # end _windows__64
+
+_windows__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_windows__32 Procedure not yet implemented. I don't know what to do."
+} # end _windows__32
 
 
- #--------/\/\/\/\-- tasks_templates_sudo/keybase …install_keybase.bash” -- Custom code-/\/\/\/\-------
+
+ #--------/\/\/\/\-- tasks_templates_sudo/ripdrag …install_ripdrag.bash” -- Custom code-/\/\/\/\-------
 
 
 
