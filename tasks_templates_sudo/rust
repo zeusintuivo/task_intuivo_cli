@@ -27,7 +27,7 @@ _debian_flavor_install() {
     tar
   "
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-	su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs'"
+	su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs"
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
@@ -56,7 +56,7 @@ _redhat_flavor_install() {
     tar
   "
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-	su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs'"
+	su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs"
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
