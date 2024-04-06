@@ -4,16 +4,17 @@ _debian_flavor_install() {
   # trap  '_trap_on_exit $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  EXIT
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  if (
-  install_requirements "linux" "
-    base64
-    unzip
-    curl
-    wget
-    ufw
-    nginx
-  "
-  ); then
+  if
+    (
+    install_requirements "linux" "
+      base64
+      unzip
+      curl
+      wget
+      ufw
+      nginx
+    "
+    ); then
     {
       apt install base64 -y
       apt install unzip -y
@@ -94,6 +95,68 @@ _fedora__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _fedora__64
+
+_fedora__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _fedora__64
+
+_fedora__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _fedora__64
+
+_fedora_36__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running callsomething above _err:${_err}"
+  }
+  fi
+  _redhat_flavor_install "${_parameters-}"
+} # end _fedora_36__64
+
+_fedora_37__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running callsomething above _err:${_err}"
+  }
+  fi
+  _redhat_flavor_install "${_parameters-}"
+} # end _fedora_37__64
+
+_fedora_38__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running callsomething above _err:${_err}"
+  }
+  fi
+  _redhat_flavor_install "${_parameters-}"
+} # end _fedora_38__64
+
+_fedora_39__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running callsomething above _err:${_err}"
+  }
+  fi
+  _redhat_flavor_install "${_parameters-}"
+} # end _fedora_39__64
 
 _gentoo__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
