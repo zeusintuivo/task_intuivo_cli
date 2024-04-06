@@ -26,8 +26,9 @@ _debian_flavor_install() {
     wget
     tar
   "
-  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-	su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs"
+	export ARCHFLAGS="-arch $(uname -m)"
+  ARCHFLAGS="-arch $(uname -m)" curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+	su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
@@ -55,8 +56,9 @@ _redhat_flavor_install() {
     wget
     tar
   "
-  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-	su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs"
+	export ARCHFLAGS="-arch $(uname -m)" 
+  ARCHFLAGS="-arch $(uname -m)" curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+	su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
@@ -172,22 +174,27 @@ _ubuntu_22__aarch64() {
 
 _darwin__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  echo "_darwin__64 Procedure not yet implemented. I don't know what to do."
+ 	export ARCHFLAGS="-arch $(uname -m)"
+  ARCHFLAGS="-arch $(uname -m)" curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+  su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
 } # end _darwin__64
 
 _darwin__arm64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  echo "_darwin__arm64 Procedure not yet implemented. I don't know what to do."
+ 	export ARCHFLAGS="-arch $(uname -m)"
+  ARCHFLAGS="-arch $(uname -m)" curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+	su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
 } # end _darwin__arm64
 
 _tar() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  echo "_tar Procedure not yet implemented. I don't know what to do."
 } # end tar
 
 _windows__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  echo "_windows__64 Procedure not yet implemented. I don't know what to do."
+	export ARCHFLAGS="-arch $(uname -m)"
+  ARCHFLAGS="-arch $(uname -m)" curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+	su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
 } # end _windows__64
 
 _windows__32() {
