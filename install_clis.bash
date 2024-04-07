@@ -932,7 +932,8 @@ _if_not_contains "$USER_HOME/.bashrc" "colorls" && echo "alias ll='colorls -lA -
 _if_not_contains "$USER_HOME/.bashrc" "colorls" && echo "alias ls='colorls --group-directories-first'" >> $USER_HOME/.bashrc
 
 
-_setup_clis(){
+_setup_clis() {
+  return 0
   local -i ret
   local msg
   ret=0

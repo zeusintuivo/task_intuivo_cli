@@ -526,6 +526,7 @@ __download_file_check_checksum() {
     failed "removed file ${filename} Checksum DOES NOT check ${checksum}. Try again to download again"
   }
   fi
+  echo "${filename}"
 } # end __download_file_check_checksum
 
 __passively_try_to_connect_to_wifi_but_continue_if_fails() {
@@ -592,7 +593,7 @@ __check_net_work_connection() {
 _debian_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  if __check_net_work_connection ; then
+  if ! __check_net_work_connection ; then
   {
     failed "$0:$LINENO Network Connection Not Responding !!!"
   }
@@ -633,15 +634,18 @@ _debian_flavor_install() {
   }
   fi
 
-    Installing "Ubuntu 16.04 or 18.04 or 20.04 or 22.04: apt-get install ./sdkmanager_[version]-[build#]_amd64.deb -y"
-    Installing "apt-get install ./${filename} -y"
-    apt-get install "./${filename}" -y
-    _err=$?
-    if [ ${_err} -gt 0 ] ; then
-    {
-      failed "while installing above: dnf install \"${filename}\" -y --allowerasing"
-    }
-    fi
+  local filename=$(echo "${_msg}" | tail -1)
+  Installing "expected: Ubuntu 16.04 or 18.04 or 20.04 or 22.04: apt-get install ./sdkmanager_[version]-[build#]_amd64.deb -y"
+  Installing "     got: Ubuntu 16.04 or 18.04 or 20.04 or 22.04: apt-get install ./${filename} -y"
+  Installing "apt-get install ./${filename} -y"
+  file_exists_with_spaces "${filename}"
+  apt-get install "./${filename}" -y
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while installing above: dnf install \"${filename}\" -y --allowerasing"
+  }
+  fi
 
   Checking "Launch and login in browser.   https://developer.nvidia.com/sdk-manager
     From the SDK Manager launch screen, select the appropriate login tab for your account type, NVIDIA Developer (developer.nvidia.com) OR NVONLINE (partners.nvidia.com) and complete the login process.
@@ -694,9 +698,11 @@ _redhat_flavor_install() {
     failed "while running Downloading sdkmanager-2.1.0.11660  __download_file_check_checksum() above _msg: '''${_msg}''' _err:${_err}"
   }
   fi
-
-  Installing "CentOS/RHEL 8.0 or 8.2: dnf install ./sdkmanager_[version]-[build#].x86_64.rpm -y"
+  local filename=$(echo "${_msg}" | tail -1)
+  Installing "expecting: CentOS/RHEL 8.0 or 8.2: dnf install ./sdkmanager_[version]-[build#].x86_64.rpm -y"
+  Installing "      got: CentOS/RHEL 8.0 or 8.2: dnf install ./${filename} -y"
   Installing "dnf install ./${filename} -y --allowerasing"
+  file_exists_with_spaces "${filename}"
   dnf install "./${filename}" -y --allowerasing
   _err=$?
   if [ ${_err} -gt 0 ] ; then
