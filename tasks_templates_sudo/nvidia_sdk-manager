@@ -165,7 +165,7 @@ _debian_flavor_install() {
   if
     (
       install_requirements "linux" "
-        base64
+        # base64
         unzip
         curl
         wget
