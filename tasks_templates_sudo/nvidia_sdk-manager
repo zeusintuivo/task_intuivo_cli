@@ -145,7 +145,7 @@ __check_net_work_connection() {
   }
   else
   {
-    failed "ERROR count not connec to online required to continue"
+    warning "ERROR count not connect to online required to continue"
     # [ $? -gt 0 ] && failed To connect git provider push  && exit 1
   }
   fi
