@@ -74,7 +74,7 @@ _git_clone() {
   }
   else
   {
-    if git clone "${_source}" "${_target}"  ; then
+    if git clone "${_source}" "${_target}" --depth 1 ; then
     {
       warning Could not git clone "${_source}" "${_target}"
     }
@@ -122,11 +122,11 @@ _do_cloning_basic_clis(){
   while read -r _one ; do
   {
     [[ -z "${_one}" ]] && continue   # skip if is empty
-    [[ "${_one}" == "execute_command_intuivo_cli" ]] && continue
 		Installing "${_one}"
 	  anounce_command cd "${USER_HOME}/_/clis"
     _git_clone "https://github.com/zeusintuivo/${_one}.git" "${USER_HOME}/_/clis/${_one}"
     wait
+    [[ "${_one}" == "execute_command_intuivo_cli" ]] && continue
 		anounce_command cd "${USER_HOME}/_/clis/${_one}"
 		if command "${USER_HOME}/_/clis/bash_intuivo_cli/link_folder_scripts" ; then
     {
@@ -137,18 +137,18 @@ _do_cloning_basic_clis(){
   done <<< "${_list_clis}"
   if [ -f /usr/local/bin/sift ] ; then
   {
-    unlink /usr/local/bin/sift # Bug path we need to do something abot this
+    unlink /usr/local/bin/sift # Bug path we need to do something about this
   }
   fi
  
   if [ -f /usr/local/bin/pt ] ; then
   {
-    unlink /usr/local/bin/pt # Bug path we need to do something abot this
+    unlink /usr/local/bin/pt # Bug path we need to do something about this
   }
   fi
   if [ -f /usr/local/bin/ag ] ; then
   {
-    unlink /usr/local/bin/ag # Bug path we need to do something abot this
+    unlink /usr/local/bin/ag # Bug path we need to do something about this
   }
   fi
   if [[ ! -L "/usr/local/bin/added" ]] ; then
@@ -162,7 +162,7 @@ _do_cloning_basic_clis(){
     cd "${USER_HOME}/_/clis/git_intuivo_cli/en"
     if command "${USER_HOME}/_/clis/bash_intuivo_cli/link_folder_scripts" ; then
     {
-      warning could not run link_folder_scripts
+      warning could not run link_folder_scripts  in git_intuivo_cli/en
     }
     fi
   }
