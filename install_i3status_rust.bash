@@ -432,7 +432,7 @@ directory_exists_with_spaces "${USER_HOME}"
 
 
 
- #--------\/\/\/\/-- tasks_templates_sudo/i3status …install_i3status.bash” -- Custom code -\/\/\/\/-------
+ #--------\/\/\/\/-- tasks_templates_sudo/i3status_rust …install_i3status_rust.bash” -- Custom code -\/\/\/\/-------
 
 
 #!/usr/bin/env bash
@@ -474,15 +474,26 @@ _git_clone() {
   local _source="${1}"
   local _target="${2}"
   Checking "${SUDO_USER}" "${_target}"
-  pwd
+  local _cwd="$(pwd)"
+  Checking "_cwd:${_cwd}"
   if  it_exists_with_spaces "${_target}" ; then # && it_exists_with_spaces "${_target}/.git" ; then
   {
     if it_exists_with_spaces "${_target}/.git" ; then
     {
       cd "${_target}"
+      if git branch --set-upstream-to=origin/master master ; then
+      {
+        warning "Could not do git branch --set-upstream-to=origin/master master"
+      }
+      fi
+      if git branch --set-upstream-to=origin/main main ; then
+      {
+        warning "Could not do git branch --set-upstream-to=origin/main main"
+      }
+      fi
       if git config pull.rebase false ; then
       {
-        warning Could not git config pull.rebase false
+        warning "Could not git config pull.rebase false"
       }
       fi
       if git fetch  ; then
@@ -500,15 +511,33 @@ _git_clone() {
   }
   else
   {
-    if git clone "${_source}" "${_target}"  ; then
+    if git clone "${_source}" "${_target}" --depth 1 ; then
     {
       warning Could not git clone "${_source}" "${_target}"
     }
+    else
+		{
+      if git branch --set-upstream-to=origin/master master ; then
+      {
+        warning "Could not do git branch --set-upstream-to=origin/master master"
+      }
+      fi
+      if git branch --set-upstream-to=origin/main main ; then
+      {
+        warning "Could not do git branch --set-upstream-to=origin/main main"
+      }
+      fi
+      if git config pull.rebase false ; then
+      {
+        warning "Could not git config pull.rebase false"
+      }
+      fi
+		}
     fi
   }
   fi
   chown -R "${SUDO_USER}" "${_target}"
-
+  cd "${_cwd}"
 } # end _git_clone
 
 
@@ -532,6 +561,7 @@ _add_variables_to_bashrc_zshrc(){
   cd "${USER_HOME}/.i3status-rs/"
 	su - "${SUDO_USER}" -c 'cd '${USER_HOME}'/.i3status-rs/ && cargo build'
 	su - "${SUDO_USER}" -c 'cd '${USER_HOME}'/.i3status-rs/ && cargo xtask generate-manpage'
+	su - "${SUDO_USER}" -c 'cd '${USER_HOME}'/.i3status-rs/ && cargo install --path . --locked'
 	cp -R "${USER_HOME}/.i3status-rs/files/"* "${XDG_DATA_HOME}/i3status-rust/"
   mkdir -p "${XDG_DATA_HOME}/man/man1/"
 	directory_exists_with_spaces "${XDG_DATA_HOME}/man/man1/"
@@ -872,7 +902,7 @@ _windows__32() {
 
 
 
- #--------/\/\/\/\-- tasks_templates_sudo/i3status …install_i3status.bash” -- Custom code-/\/\/\/\-------
+ #--------/\/\/\/\-- tasks_templates_sudo/i3status_rust …install_i3status_rust.bash” -- Custom code-/\/\/\/\-------
 
 
 

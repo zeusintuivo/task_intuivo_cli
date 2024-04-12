@@ -561,11 +561,13 @@ _do_cloning_basic_clis(){
     [[ -z "${_one}" ]] && continue   # skip if is empty
 		Installing "${_one}"
 	  anounce_command cd "${USER_HOME}/_/clis"
+		cd "${USER_HOME}/_/clis"
     _git_clone "https://github.com/zeusintuivo/${_one}.git" "${USER_HOME}/_/clis/${_one}"
     wait
     [[ "${_one}" == "execute_command_intuivo_cli" ]] && continue
 		anounce_command cd "${USER_HOME}/_/clis/${_one}"
-		if command "${USER_HOME}/_/clis/bash_intuivo_cli/link_folder_scripts" ; then
+		cd "${USER_HOME}/_/clis/${_one}"
+		if ( "${USER_HOME}/_/clis/bash_intuivo_cli/link_folder_scripts" ) ; then
     {
         warning could not run link_folder_scripts
     }
@@ -597,7 +599,7 @@ _do_cloning_basic_clis(){
     Configuring extra work git_intuivo_cli/en
     directory_exists_with_spaces "${USER_HOME}/_/clis/git_intuivo_cli/en"
     cd "${USER_HOME}/_/clis/git_intuivo_cli/en"
-    if command "${USER_HOME}/_/clis/bash_intuivo_cli/link_folder_scripts" ; then
+		if ( "${USER_HOME}/_/clis/bash_intuivo_cli/link_folder_scripts" ) ; then
     {
       warning could not run link_folder_scripts  in git_intuivo_cli/en
     }
