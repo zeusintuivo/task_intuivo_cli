@@ -1,5 +1,5 @@
 #!/usr/bin/bash
-
+# /home/agrivero/Downloads/VilmaX/VimbaX_2023-4/api/examples/VmbC/ChunkAccess/build/ChunkAccess_VmbC`
 _debian_flavor_install() {
   # trap  '_trap_on_exit $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  EXIT
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
@@ -30,6 +30,7 @@ gpgcheck=1
 repo_gpgcheck=1
 gpgkey=https://keys.anydesk.com/repos/RPM-GPG-KEY
 EOF
+dnf install anydesk -y
 
 } # end _redhat_flavor_install
 

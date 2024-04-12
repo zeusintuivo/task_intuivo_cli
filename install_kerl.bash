@@ -475,41 +475,70 @@ _git_clone() {
   local _source="${1}"
   local _target="${2}"
   Checking "${SUDO_USER}" "${_target}"
-  pwd
+  local _cwd="$(pwd)"
+  Checking "_cwd:${_cwd}"
   if  it_exists_with_spaces "${_target}" ; then # && it_exists_with_spaces "${_target}/.git" ; then
   {
     if it_exists_with_spaces "${_target}/.git" ; then
     {
       cd "${_target}"
+      if git branch --set-upstream-to=origin/master master ; then
+      {
+        warning "Could not do git branch --set-upstream-to=origin/master master"
+      }
+      fi
+      if git branch --set-upstream-to=origin/main main ; then
+      {
+        warning "Could not do git branch --set-upstream-to=origin/main main"
+      }
+      fi
       if git config pull.rebase false ; then
-			{
-				warning Could not git config pull.rebase false
-			}
-			fi
+      {
+        warning "Could not git config pull.rebase false"
+      }
+      fi
       if git fetch  ; then
-			{
-				warning Could not git fetch
-			}
-			fi
+      {
+        warning Could not git fetch
+      }
+      fi
       if git pull  ; then
-			{
-				warning Could not git pull
-			}
-			fi
+      {
+        warning Could not git pull
+      }
+      fi
     }
     fi
   }
   else
   {
     if git clone "${_source}" "${_target}"  ; then
+    {
+      warning Could not git clone "${_source}" "${_target}"
+    }
+    else
 		{
-			warning Could not git clone "${_source}" "${_target}"
+      if git branch --set-upstream-to=origin/master master ; then
+      {
+        warning "Could not do git branch --set-upstream-to=origin/master master"
+      }
+      fi
+      if git branch --set-upstream-to=origin/main main ; then
+      {
+        warning "Could not do git branch --set-upstream-to=origin/main main"
+      }
+      fi
+      if git config pull.rebase false ; then
+      {
+        warning "Could not git config pull.rebase false"
+      }
+      fi
 		}
-		fi
+    fi
   }
   fi
   chown -R "${SUDO_USER}" "${_target}"
-
+  cd "${_cwd}"
 } # end _git_clone
 
 

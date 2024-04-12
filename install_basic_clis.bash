@@ -475,7 +475,7 @@ _git_clone() {
   local _target="${2}"
   Checking "${SUDO_USER}" "${_target}"
   local _cwd="$(pwd)"
-	Checking "_cwd:${_cwd}"
+  Checking "_cwd:${_cwd}"
   if  it_exists_with_spaces "${_target}" ; then # && it_exists_with_spaces "${_target}/.git" ; then
   {
     if it_exists_with_spaces "${_target}/.git" ; then
@@ -486,17 +486,22 @@ _git_clone() {
         warning "Could not do git branch --set-upstream-to=origin/master master"
       }
       fi
+      if git branch --set-upstream-to=origin/main main ; then
+      {
+        warning "Could not do git branch --set-upstream-to=origin/main main"
+      }
+      fi
       if git config pull.rebase false ; then
       {
         warning "Could not git config pull.rebase false"
       }
       fi
-      if "git fetch"  ; then
+      if git fetch  ; then
       {
         warning Could not git fetch
       }
       fi
-      if "git pull"  ; then
+      if git pull  ; then
       {
         warning Could not git pull
       }
@@ -515,6 +520,11 @@ _git_clone() {
       if git branch --set-upstream-to=origin/master master ; then
       {
         warning "Could not do git branch --set-upstream-to=origin/master master"
+      }
+      fi
+      if git branch --set-upstream-to=origin/main main ; then
+      {
+        warning "Could not do git branch --set-upstream-to=origin/main main"
       }
       fi
       if git config pull.rebase false ; then
@@ -549,7 +559,8 @@ _do_cloning_basic_clis(){
   while read -r _one ; do
   {
     [[ -z "${_one}" ]] && continue   # skip if is empty
-    Installing "${_one}"
+    [[ "${_one}" == "execute_command_intuivo_cli" ]] && continue
+		Installing "${_one}"
 	  anounce_command cd "${USER_HOME}/_/clis"
     _git_clone "https://github.com/zeusintuivo/${_one}.git" "${USER_HOME}/_/clis/${_one}"
     wait
@@ -690,6 +701,13 @@ _ubuntu__32() {
 
 _ubuntu__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local package packages="
+    git 
+		curl
+		openssl
+    tree
+  "
+  _package_list_installer "${packages}"
   _do_cloning_basic_clis
 } # end _ubuntu__64
 
@@ -701,12 +719,32 @@ _ubuntu__aarch64() {
 
 _darwin__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  export HOMEBREW_NO_AUTO_UPDATE=1
+  trap 'echo -e "${RED}" && echo "ERROR err:$_err failed $0:$LINENO _darwin__64 kerl" && echo -e "${RESET}" && return 0' ERR
+  local package packages="
+    wget
+    openssl
+    wxWidgets
+    fop
+    libxslt
+  "
+  _package_list_installer "${packages}"
   _do_cloning_basic_clis
 } # end _darwin__64
 
 _darwin__arm64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _darwin__64
+  export HOMEBREW_NO_AUTO_UPDATE=1
+  trap 'echo -e "${RED}" && echo "ERROR err:$_err failed $0:$LINENO _darwin__arm64 kerl" && echo -e "${RESET}" && return 0' ERR
+  local package packages="
+    wget
+    openssl
+    wxWidgets
+    fop
+    libxslt
+  "
+  _package_list_installer "${packages}"
+  _do_cloning_basic_clis
 } # end _darwin__arm64
 
 _tar() {
