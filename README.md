@@ -1,38 +1,46 @@
 
 # § Tasks automated with pure command line scripts
 
+
 # Install only clis to get started using wget - Debian Ubuntu
 
-   eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/task_intuivo_cli/master/install_basic_clis.bash -O -  2>/dev/null )"""
-   chmod a+x install_basic_clis.bash
-   ./install_basic_clis.bash
+
+    eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/task_intuivo_cli/master/install_basic_clis.bash -O -  2>/dev/null )"""
+    chmod a+x install_basic_clis.bash
+    ./install_basic_clis.bash
+
 
  
 # Install only clis to get started using curl- RedHat Fedora Mac Apple
 
-   curl -O https://raw.githubusercontent.com/zeusintuivo/task_intuivo_cli/master/install_basic_clis.bash
-   chmod a+x install_basic_clis.bash
-   ./install_basic_clis.bash
+
+    curl -O https://raw.githubusercontent.com/zeusintuivo/task_intuivo_cli/master/install_basic_clis.bash
+    chmod a+x install_basic_clis.bash
+    ./install_basic_clis.bash
+
 
 
 # Install Developer Packages To Prepare Laptop MAC Linux for development using wget - Debian Ubuntu
 
+
     eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/task_intuivo_cli/master/install_clis.bash -O -  2>/dev/null )"""
     eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/task_intuivo_cli/master/install.clis.bash -O -  2>/dev/null )"""
-   chmod a+x install_clis.bash
-   ./install_clis.bash
-   chmod a+x install.clis.bash
-   ./install.clis.bash
+    chmod a+x install_clis.bash
+    ./install_clis.bash
+    chmod a+x install.clis.bash
+    ./install.clis.bash
+
 
 
 # Install Developer Packages To Prepare Laptop MAC Linux for development using curl- RedHat Fedora Mac Apple
 
-   curl -O https://raw.githubusercontent.com/zeusintuivo/task_intuivo_cli/master/install_clis.bash
-   curl -O https://raw.githubusercontent.com/zeusintuivo/task_intuivo_cli/master/install.clis.bash
-   chmod a+x install_clis.bash
-   ./install_clis.bash
-   chmod a+x install.clis.bash
-   ./install.clis.bash
+
+    curl -O https://raw.githubusercontent.com/zeusintuivo/task_intuivo_cli/master/install_clis.bash
+    curl -O https://raw.githubusercontent.com/zeusintuivo/task_intuivo_cli/master/install.clis.bash
+    chmod a+x install_clis.bash
+    ./install_clis.bash
+    chmod a+x install.clis.bash
+    ./install.clis.bash
 
 
 How to automatically install using the command line in Ubuntu in Fedora in Linux in Mac in Windows
