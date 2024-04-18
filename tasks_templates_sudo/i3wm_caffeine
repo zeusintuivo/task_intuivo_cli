@@ -339,7 +339,7 @@ _move_folders_copy_links() {
   fi
 
   ln -s "${base_dir}/home/.Xresources"          "${SUDO_HOME}/.Xresources"
-  if [[ ! -d "${config_dir}/i3" ]]
+  if [[ ! -d "${config_dir}/i3" ]]; then
 	  ln -s "${base_dir}/home/.config/i3"           "${config_dir}/i3"
 	fi
 	ln -s "${base_dir}/home/.config/i3status"     "${config_dir}/i3status"
