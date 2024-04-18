@@ -439,17 +439,19 @@ directory_exists_with_spaces "${USER_HOME}"
 #
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
+set -E -o functrace
 _package_list_installer() {
-  # trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   local package packages="${@}"
   trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer i3status" && echo -e "${RESET}" && return 0' ERR
 
+  Checking "requirements list ${CYAN}:${RED}<< ${CYAN}${packages} ${RED}>>${RESET}"
   if ! install_requirements "linux" "${packages}" ; then
   {
-    warning "installing requirements. ${CYAN} attempting to install one by one"
     while read package; do
     {
       [ -z ${package} ] && continue
+      warning "installing requirements. ${CYAN} attempting to install one by one trying: ${package}"
       if ! install_requirements "linux" "${package}" ; then
       {
         _err=$?
@@ -819,6 +821,97 @@ _fedora_39__64(){
   local -i _err=0
   _redhat_flavor_install "${_parameters-}"
 } # end _fedora_39__64
+
+_fedora_40__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local _parameters="${*-}"
+    trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  dnf build-dep i3status -vy --allowerasing
+	yes | dnf copr enable atim/i3status-rust
+	dnf install i3status-rust -y --allowerasing
+  # dnf install  -y openssl-devel
+  # Batch Fedora 37
+  local package packages="
+    libyaml
+    libyaml-devel
+    autoconf
+    bison
+    bison-devel
+    # ruby-build-i3status
+    openssl1.1
+    # openssl1.1-devel-1
+    ncurses
+    ncurses-devel
+    ncurses-c++-libs
+    ncurses-compat-libs
+    ncurses-libs
+    ncurses-static
+    ncurses-base
+    # ncurses-term conflicts with foot-terminfo
+    readline
+    readline-static
+    readline-devel
+    compat-readline5
+    compat-readline5-devel
+    compat-readline6
+    compat-readline6-devel
+    zlib
+    zlib-devel
+    libffi
+    libffi-devel
+    # compat-gdbm
+    # compat-gdbm-devel
+    # compat-gdbm-libs
+    gdbm
+    gdbm-devel
+    gdbm-libs
+  "
+  if _package_list_installer "${packages}"; then
+  {
+    echo "Installer returned $?"
+  }
+  fi
+
+  local package packages="
+    gcc
+    openssl-devel
+    lm_sensors-devel
+    qt5-qtsensors-devel
+    qt6-qtsensors-devel
+    gvncpulse-devel
+    rust-pulse-devel
+    notmuch-devel
+    pipewire-devel
+    rust-pipewire-devel
+    pipewire
+    pipewire-alsa
+    pipewire-gstreamer
+    pipewire-libs
+    # pipewire-media-session
+    pipewire-pulseaudio
+    pipewire-utils
+    easyeffects
+    helvum
+    qpwgraph
+    # wireplumber
+    clang
+    notmuch
+		pandoc
+  "
+  if _package_list_installer "${packages}"; then
+  {
+    echo "Installer returned $?"
+  }
+  fi
+
+  local -i _err=0
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _fedora_40__64
 
 _gentoo__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
