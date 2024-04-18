@@ -432,7 +432,7 @@ directory_exists_with_spaces "${USER_HOME}"
 
 
 
- #--------\/\/\/\/-- tasks_templates_sudo/androidstudioinstaller …install_androidstudioinstaller.bash” -- Custom code -\/\/\/\/-------
+ #--------\/\/\/\/-- tasks_templates_sudo/androidstudioremove …install_androidstudioremove.bash” -- Custom code -\/\/\/\/-------
 
 
 #!/usr/bin/bash
@@ -443,57 +443,6 @@ _debian_flavor_install() {
 
 _redhat_flavor_install() {
   echo "Procedure not yet implemented. I don't know what to do."
-  HOW_TO_LOAD_JUST_ONE_SCRIPT_LOCAL_AND_ONLINE_EXECUTE_COMMAND
-	echo "fix for pangosys lib not working and gtk requirement for flutter"
-  dnf install rust-gtk4-devel libnma-gtk4-devel rust-gtk4+default-devel gplugin-gtk4-devel libportal-gtk4-devel wxGTK3-devel    -y 
-	dnf install -y snapd
-  # ln -s /var/lib/snapd/snap /snap
-  #if ! it_exists_with_spaces /var/lib/snapd/snap ; then 
-	#{
-    ln -sf /var/lib/snapd/snap /snap
-	#}
-	#fi
-	snap install core
-	snap refresh core
-  snap install android-studio --classic
-  snap list android-studio	
-	ln -sf /snap/bin/android-studio /usr/local/bin/android-studio
-	dnf install -y zlib.i686 ncurses-libs.i686 bzip2-libs.i686
-  cd /tmp
-  wget https://dl.google.com/dl/android/studio/ide-zips/2021.2.1.14/android-studio-2021.2.1.14-linux.tar.gz
-  tar -zxvf android-studio-*-linux.tar.gz
-  mv android-studio /opt/	
-  ln -sf /opt/android-studio/bin/studio.sh /usr/local/bin/android-studio
-  # vi /usr/share/applications/android-studio.desktop
-  echo "[Desktop Entry]
-Version=1.0
-Type=Application
-Name=Android Studio
-Comment=Android Studio
-Exec=bash -i "/opt/android-studio/bin/studio.sh" %f
-Icon=/opt/android-studio/bin/studio.png
-Categories=Development;IDE;
-Terminal=false
-StartupNotify=true
-StartupWMClass=jetbrains-android-studio
-Name[en_GB]=android-studio.desktop
-  " > /usr/share/applications/android-studio.desktop
-
-	su - "${SUDO_USER}" -c 'pip install xattr'
-  su - "${SUDO_USER}" -c 'brew install GCC'
-  su - "${SUDO_USER}" -c 'brew reinstall --cask android-studio'
-  su - "${SUDO_USER}" -c 'brew reinstall --cask android-SDK'
-  su - "${SUDO_USER}" -c 'brew reinstall --cask android-ndk'
-  su - "${SUDO_USER}" -c 'brew reinstall --cask flutter'
-  su - "${SUDO_USER}" -c 'brew reinstall --HEAD libimobiledevice'
-  su - "${SUDO_USER}" -c 'brew reinstall ideviceinstaller'
-  su - "${SUDO_USER}" -c 'brew reinstall ios-deploy cocoapods'
-  su - "${SUDO_USER}" -c 'pod setup'
-  su - "${SUDO_USER}" -c 'flutter doctor'
-  # anounce_command xcodebuild -license
-  su - "${SUDO_USER}" -c 'flutter config --android-SDK'
-  su - "${SUDO_USER}" -c 'brew install --cask intel-haxm'
-
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
@@ -527,22 +476,6 @@ _debian__64() {
 _fedora__32() {
   _redhat_flavor_install
 } # end _fedora__32
-
-_fedora_37__64(){
-  _redhat_flavor_install
-} # end _fedora_37__64
-
-_fedora_38__64(){
-  _redhat_flavor_install
-} # end _fedora_38__64
-
-_fedora_39__64(){
-  _redhat_flavor_install
-} # end _fedora_39__64
-
-_fedora_40__64(){
-  _redhat_flavor_install
-} # end _fedora_40__64
 
 _fedora__64() {
   _redhat_flavor_install
@@ -580,44 +513,66 @@ _ubuntu__64() {
   _debian_flavor_install
 } # end _ubuntu__64
 
-_darwin__arm64() {
-  
-    # Over write say with text version since Struct Testing say will speak on mac and make it so I can use anounce_command
-
-  HOW_TO_LOAD_JUST_ONE_SCRIPT_LOCAL_AND_ONLINE_EXECUTE_COMMAND
-  anounce_command _run_command pip install xattr
-  anounce_command _run_command brew install GCC
-  anounce_command _run_command  brew reinstall --cask android-studio
-  anounce_command _run_command  brew reinstall --cask android-SDK
-  anounce_command _run_command  brew reinstall --cask android-ndk
-  anounce_command _run_command  brew reinstall --cask flutter
-  anounce_command _run_command  brew reinstall libimobiledevice
-  anounce_command _run_command  brew reinstall ideviceinstaller ios-deploy cocoapods
-  anounce_command _run_command  pod setup
-  anounce_command _run_command  flutter doctor
-  anounce_command _run_command xcodebuild -license
-  anounce_command _run_command flutter config --android-SDK
-  anounce_command _run_command brew install --cask intel-haxm
-} # end _darwin__arm64
-
 _darwin__64() {
-  
-    # Over write say with text version since Struct Testing say will speak on mac and make it so I can use anounce_command
 
+say ";;"
+say  "Removing all AndroidStudio Following instructions from "
+say  "REF: https://stackoverflow.com/questions/17625622/how-to-completely-uninstall-android-studio-on-mac"
+say ";;" 
+  # Over write say with text version since Struct Testing say will speak on mac 
   HOW_TO_LOAD_JUST_ONE_SCRIPT_LOCAL_AND_ONLINE_EXECUTE_COMMAND
-  anounce_command pip install xattr
-  anounce_command  brew install GCC
-  anounce_command  brew reinstall --cask android-studio
-  anounce_command  brew reinstall --cask android-SDK
-  anounce_command  brew reinstall --cask android-ndk
-  anounce_command  brew reinstall --cask flutter
-  anounce_command  brew reinstall --HEAD libimobiledevice
-  anounce_command  brew reinstall ideviceinstaller ios-deploy cocoapods
-  anounce_command  pod setup
-  anounce_command  flutter doctor
-  anounce_command xcodebuild -license
-  anounce_command flutter config --android-SDK
-  anounce_command brew install --cask intel-haxm
+say  "Deletes the Android Studio application"
+say  "Note that this may be different depending on what you named the application as, or whether you downloaded the preview version"
+anounce_command rm -Rf /Applications/Android\ Studio.app
+say  "Delete All Android Studio related preferences"
+say  "The asterisk here should target all folders/files beginning with the string before it"
+anounce_command rm -Rf ~/Library/Preferences/AndroidStudio*
+anounce_command rm -Rf ~/Library/Preferences/Google/AndroidStudio*
+say  "Deletes the Android Studio's plist file"
+anounce_command rm -Rf ~/Library/Preferences/com.google.android.*
+say  "Deletes the Android Emulator's plist file"
+anounce_command rm -Rf ~/Library/Preferences/com.android.*
+say  "Deletes mainly plugins (or at least according to what mine (Edric) contains)"
+anounce_command rm -Rf ~/Library/Application\ Support/AndroidStudio*
+anounce_command rm -Rf ~/Library/Application\ Support/Google/AndroidStudio*
+say  "Deletes all logs that Android Studio outputs"
+anounce_command rm -Rf ~/Library/Logs/AndroidStudio*
+anounce_command rm -Rf ~/Library/Logs/Google/AndroidStudio*
+say  "Deletes Android Studio's caches"
+anounce_command rm -Rf ~/Library/Caches/AndroidStudio*
+anounce_command rm -Rf ~/Library/Caches/Google/AndroidStudio*
+say  "Deletes older versions of Android Studio"
+anounce_command rm -Rf ~/.AndroidStudio*
+say "Also remove /usr/local/var/lib/android-sdk/ folder. In my case it occupied 17G!"
+anounce_command rm -Rf /usr/local/var/lib/android-sdk/
+say ";;"
+say "If you would like to delete all projects:"
+say ";;"
+anounce_command rm -Rf ~/AndroidStudioProjects
+say ";;"
+say "To remove gradle related files (caches & wrapper)"
+say ";;"
+anounce_command rm -Rfv ~/.gradle/
+say ";;"
+say "Use the below command to delete all Android Virtual Devices(AVDs) and keystores."
+say ";;"
+say "Note: This folder is used by other Android IDEs as well, so if you still using other IDE you may not want to delete this folder)"
+say ";;"
+anounce_command rm -Rf ~/.android
+say ";;"
+say "To delete Android SDK tools"
+say ";;"
+anounce_command rm -Rf ~/Library/Android*
+say ";;"
+say "Emulator Console Auth Token"
+say ";;"
+anounce_command rm -Rf ~/.emulator_console_auth_token
+say "REF: from https://gist.github.com/talal/25d6b05b6969c2a8459b2b3abb86481f 
+Android studio now also stores configurations in ~/Library/Application\ Support/JetBrains/ not removing it leads to unexpected"
+
+anounce_command rm -Rf ~/Library/Application\ Support/JetBrains/IntelliJ*
+say "Also some files stores in ~/Library/Application\ Support/Google"
+anounce_command rm -Rf  ~/Library/Application\ Support/Google
 } # end _darwin__64
 
 _tar() {
@@ -634,7 +589,7 @@ _windows__32() {
 
 
 
- #--------/\/\/\/\-- tasks_templates_sudo/androidstudioinstaller …install_androidstudioinstaller.bash” -- Custom code-/\/\/\/\-------
+ #--------/\/\/\/\-- tasks_templates_sudo/androidstudioremove …install_androidstudioremove.bash” -- Custom code-/\/\/\/\-------
 
 
 

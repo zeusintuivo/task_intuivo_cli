@@ -7,7 +7,9 @@ _debian_flavor_install() {
 _redhat_flavor_install() {
   echo "Procedure not yet implemented. I don't know what to do."
   HOW_TO_LOAD_JUST_ONE_SCRIPT_LOCAL_AND_ONLINE_EXECUTE_COMMAND
-  dnf install -y snapd
+	echo "fix for pangosys lib not working and gtk requirement for flutter"
+  dnf install rust-gtk4-devel libnma-gtk4-devel rust-gtk4+default-devel gplugin-gtk4-devel libportal-gtk4-devel wxGTK3-devel    -y 
+	dnf install -y snapd
   # ln -s /var/lib/snapd/snap /snap
   #if ! it_exists_with_spaces /var/lib/snapd/snap ; then 
 	#{
