@@ -137,13 +137,13 @@ function execute_as_sudo(){
     {
         if [[ -e "./${THISSCRIPTCOMPLETEPATH:-}" ]] ; then
         {
-          echo -e "4.1 sudologic execute_as_sudo.sh ${RED} ¿? ${LIGHTYELLOW} Attempting to reload:sudo \"./${THISSCRIPTCOMPLETEPATH:-}\" \"${*:-}\" " 
+          echo -e "4.1 sudologic execute_as_sudo.sh ${RED} ¿? ${LIGHTYELLOW} Attempting to reload:sudo \"./${THISSCRIPTCOMPLETEPATH:-}\" \"${*:-}\" "
           sudo "./${THISSCRIPTCOMPLETEPATH:-}" "${THISSCRIPTPARAMS:-}"
         }
         elif ( command -v "${THISSCRIPTCOMPLETEPATH:-}" >/dev/null 2>&1 );  then
         {
           # echo "sudo sudo sudo "
-          echo -e "4.2 sudologic execute_as_sudo.sh ${RED} ¿? ${LIGHTYELLOW} Attempting to reload:sudo \"${THISSCRIPTCOMPLETEPATH:-}\" \"${*:-}\" " 
+          echo -e "4.2 sudologic execute_as_sudo.sh ${RED} ¿? ${LIGHTYELLOW} Attempting to reload:sudo \"${THISSCRIPTCOMPLETEPATH:-}\" \"${*:-}\" "
           sudo "${THISSCRIPTCOMPLETEPATH:-}" "${THISSCRIPTPARAMS:-}"
         }
         else
@@ -208,8 +208,8 @@ function enforce_variable_with_value(){
   {
       (( _DEBUG )) && echo -e "${LIGHTGREEN} ✔ ${LIGHTYELLOW} ${TESTING} has passed "
       return 0
-  } 
-  else 
+  }
+  else
   {
       echo -e "${RED} 𝞦 ${LIGHTYELLOW} ${TESTING} has failed "
       exit 1

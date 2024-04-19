@@ -3,10 +3,11 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 #
-
+set -E -o functrace
 _debian_flavor_install(){
   # trap  '_trap_on_exit $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  EXIT
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local -i _err=0
   install_requirements "linux" "
     # Debian Ubuntu only
     network-manager
@@ -22,15 +23,269 @@ _debian_flavor_install(){
     composer
     php
   "
-    PHPS=$(which php)
-  COMPOSERS=$(which composer)
+ _valet_steps_php_composer_pecl_valet_install
 
-  su - "$SUDO_USER" -c ''"$PHPS"''"$COMPOSERS"' global update'
-  su - "$SUDO_USER" -c ''"$PHPS"''"$COMPOSERS"' global require cpriego/valet-linux'
   return 0
-}
+} # end _debian_flavor_install
 
-_readhat_flavor_install(){
+_valet_steps_php_composer_pecl_valet_install(){
+
+  Checking "$0:$LINENO find php for user"
+  PHPS=$(su - "$SUDO_USER" -c 'which php')
+  _err=$?
+  if [ $_err -gt 0 ] ; then
+  {
+    warning "I did not find php for user $SUDO_USER - trying as root _err:$_err"
+    PHPS=$(which php)
+    _err=$?
+    if [ $_err -gt 0 ] ; then # failed
+    {
+      failed "to find php for root either - trying as root _err:$_err"
+      exit 1
+    }
+    fi
+  }
+  fi
+
+  Checking "$0:$LINENO find composer for user"
+  COMPOSERS=$(su - "$SUDO_USER" -c 'which composer')
+  _err=$?
+  if [ $_err -gt 0 ] ; then
+  {
+    warning "I did not find composer for user $SUDO_USER - trying as root _err:$_err"
+    COMPOSERS=$(which composer)
+    _err=$?
+    if [ $_err -gt 0 ] ; then # failed
+    {
+      failed "to find composer for root either - trying as root _err:$_err"
+      exit 1
+    }
+    fi
+  }
+  fi
+
+
+  Checking "$0:$LINENO find pecl for user "
+  PECLS=$(su - "$SUDO_USER" -c 'which pecl')
+  _err=$?
+  if [ $_err -gt 0 ] ; then
+  {
+    warning "I did not find pecl for user $SUDO_USER - trying as root _err:$_err"
+    PECLS=$(which pecl)
+    _err=$?
+    if [ $_err -gt 0 ] ; then # failed
+    {
+      failed "to find pecl for root either - trying as root _err:$_err"
+      exit 1
+    }
+    fi
+  }
+  fi
+
+
+  Installing "$0:$LINENO pecl has to be run as root -  pecl channel-update pecl.php.net"
+    if ( "$PECLS" channel-update pecl.php.net ) ; then
+    {
+      _err=1
+    }
+    fi
+    if [ $_err -gt 0 ] ; then
+    {
+      warning "to sun  as root also - pecl channel-update pecl.php.net - trying as root _err:$_err"
+    }
+    fi
+
+
+  Installing "$0:$LINENO pecl has to be run as root -  pecl  install phalcon"
+    if ( "$PECLS" install phalcon ) ; then
+    {
+      _err=1
+    }
+    fi
+    if [ $_err -gt 0 ] ; then
+    {
+      warning "to sun  as root also - pecl  install phalcon - trying as root _err:$_err"
+    }
+    fi
+
+  Installing "$0:$LINENO pecl has to be run as root -  pecl  install psr"
+    if ( "$PECLS" install psr ) ; then
+    {
+      _err=1
+    }
+    fi
+    if [ $_err -gt 0 ] ; then
+    {
+      warning "to sun  as root also - pecl  install psr - trying as root _err:$_err"
+    }
+    fi
+
+  Installing "$0:$LINENO pecl has to be run as root -  pecl  install xdebug"
+    if ( "$PECLS" install xdebug ) ; then
+    {
+      _err=1
+    }
+    fi
+    if [ $_err -gt 0 ] ; then
+    {
+      warning "to sun  as root also - pecl  install xdebug - trying as root _err:$_err"
+    }
+    fi
+
+
+
+  Installing "$0:$LINENO  composer global update "
+  ( su - "$SUDO_USER" -c ''"$PHPS"' '"$COMPOSERS"' global update' )
+  _err=$?
+  if [ $_err -gt 0 ] ; then
+  {
+    warning "could not run composer as user $SUDO_USER -  composer global update  - or it failed trying as root _err:$_err"
+	  ( "$PHPS" "$COMPOSERS" global update )
+    _err=$?
+    if [ $_err -gt 0 ] ; then
+    {
+      failed "to sun  as root also - composer  global update  - trying as root _err:$_err"
+      exit 1
+    }
+    fi
+  }
+  fi
+
+  Installing "$0:$LINENO  composer global require cpriego/valet-linux "
+  ( su - "$SUDO_USER" -c ''"$PHPS"' '"$COMPOSERS"' global require cpriego/valet-linux' )
+  _err=$?
+  if [ $_err -gt 0 ] ; then
+  {
+    warning "could not run composer as user $SUDO_USER -  composer global require cpriego/valet-linux  - or it failed trying as root _err:$_err"
+	  ( "$PHPS" "$COMPOSERS" global require cpriego/valet-linux )
+    _err=$?
+    if [ $_err -gt 0 ] ; then
+    {
+      failed "to sun  as root also - composer  global require cpriego/valet-linux  - trying as root _err:$_err"
+      exit 1
+    }
+    fi
+  }
+  fi
+
+
+  Checking "$0:$LINENO find which valet"
+  if [[ -f "${USER_HOME}/.config/composer/vendor/bin/valet" ]] ; then
+  {
+    VALETS="${USER_HOME}/.config/composer/vendor/bin/valet"
+  }
+  else
+  {
+    VALETS=$(su - "$SUDO_USER" -c 'which valet')
+    _err=$?
+    if [ $_err -gt 0 ] ; then
+    {
+      warning "I did not find valet for user $SUDO_USER - trying as root _err:$_err"
+      VALETS=$(which valet)
+      _err=$?
+      if [ $_err -gt 0 ] ; then # failed
+      {
+        failed "to find valet for root either - trying as root _err:$_err"
+        exit 1
+      }
+      fi
+    }
+    fi
+  }
+  fi
+
+
+
+  Installing "$0:$LINENO  valet install "
+  ( su - "$SUDO_USER" -c ''"$VALETS"' install' )
+  _err=$?
+  if [ $_err -gt 0 ] ; then
+  {
+    warning "could not run valet as user $SUDO_USER -  valet install  - or it failed trying as root _err:$_err"
+	  ( "$VALETS"  install )
+    _err=$?
+    if [ $_err -gt 0 ] ; then
+    {
+      failed "to sun  as root also - valet  install  - trying as root _err:$_err"
+      exit 1
+    }
+    fi
+  }
+  fi
+
+
+  Checking "$0:$LINENO valet status "
+  ( su - "$SUDO_USER" -c ''"$PHPS"' '"$VALETS"' status' )
+  _err=$?
+  if [ $_err -gt 0 ] ; then
+  {
+    warning "could not run valet as user $SUDO_USER -  valet status  - or it failed trying as root _err:$_err"
+	  ( "$PHPS" "$VALETS"  status )
+    _err=$?
+    if [ $_err -gt 0 ] ; then
+    {
+      failed "to sun  as root also - valet  status  - trying as root _err:$_err"
+      exit 1
+    }
+    fi
+  }
+  fi
+
+
+  Installing "$0:$LINENO  valet restart "
+  ( su - "$SUDO_USER" -c ''"$PHPS"' '"$VALETS"' restart' )
+  _err=$?
+  if [ $_err -gt 0 ] ; then
+  {
+    warning "could not run valet as user $SUDO_USER -  valet restart  - or it failed trying as root _err:$_err"
+	  ( "$PHPS" "$VALETS"  restart )
+    _err=$?
+    if [ $_err -gt 0 ] ; then
+    {
+      failed "to sun  as root also - valet  restart  - trying as root _err:$_err"
+      exit 1
+    }
+    fi
+  }
+  fi
+
+  Checking "$0:$LINENO  valet status "
+  ( su - "$SUDO_USER" -c ''"$PHPS"' '"$VALETS"' status' )
+  _err=$?
+  if [ $_err -gt 0 ] ; then
+  {
+    warning "could not run valet as user $SUDO_USER -  valet status  - or it failed trying as root _err:$_err"
+	  ( "$PHPS" "$VALETS"  status )
+    _err=$?
+    if [ $_err -gt 0 ] ; then
+    {
+      failed "to sun  as root also - valet  status  - trying as root _err:$_err"
+      exit 1
+    }
+    fi
+  }
+  fi
+
+
+  Checking "$0:$LINENO  valet links "
+  ( su - "$SUDO_USER" -c ''"$PHPS"' '"$VALETS"' links' )
+  _err=$?
+  if [ $_err -gt 0 ] ; then
+  {
+    warning "could not run valet as user $SUDO_USER -  valet links  - or it failed trying as root _err:$_err"
+	  ( "$PHPS" "$VALETS"  links )
+    _err=$?
+    if [ $_err -gt 0 ] ; then
+    {
+      failed "to sun  as root also - valet  links  - trying as root _err:$_err"
+      exit 1
+    }
+    fi
+  }
+  fi
+  passed "$0:$LINENO tasks "
+} # end _valet_steps_php_composer_pecl_valet_install
+_redhat_flavor_install(){
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   install_requirements "linux" "
     # RedHat Flavor only
@@ -40,10 +295,29 @@ _readhat_flavor_install(){
 		# fedora 37
 		php-intl
 		php-mbstring
-
+    php-devel
+    php-json
+    php-cli
+    php-xml
+    php-common
+    php-mysqlnd
+    php-gd
+    php-curl
+    php-psr
+    php-zip
+    php-fpm
+    php-bcmath
+    php-ctype
+    php-fileinfo
+    php-mbstring
+    php-pdo
+    php-tokenizer
+    php-xml
+    php-gmp
+    php-mysqli
   "
   verify_is_installed "
-    nss-tools
+    # nss-tools
     jq
     xsel
     composer
@@ -55,14 +329,10 @@ _readhat_flavor_install(){
     Open /etc/selinux/config
     Change SELINUX=enforcing to SELINUX=permissive"
 
-  PHPS=$(which php)
-  COMPOSERS=$(which composer)
-	( pecl install phalcon )
-	( pecl install psr  )
-  su - "$SUDO_USER" -c ''"$PHPS"''"$COMPOSERS"' global update'
-  su - "$SUDO_USER" -c ''"$PHPS"''"$COMPOSERS"' global require cpriego/valet-linux'
+  _valet_steps_php_composer_pecl_valet_install
+
   return 0
-}
+} # end _redhat_flavor_install
 
 
 _arch_flavor_install() {

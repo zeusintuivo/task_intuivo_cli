@@ -4,7 +4,7 @@
 _get_mac_version(){
   # REF: https://superuser.com/questions/75166/how-to-find-out-mac-os-x-version-from-terminal
   # local MAJOR_MAC_VERSION=$(sw_vers -productVersion | awk -F '.' '{print $1 "." $2}')
-  ensure sw_vers or "Failed to get info program sw_vers" 
+  ensure sw_vers or "Failed to get info program sw_vers"
   local _version_info="$(sw_vers -productVersion)"
   enforce_parameter_with_value 1 _version_info   "${_version_info}"  "10.14.6"
   local _major=$(cut -d '.' -f 1,2 <<< "${_version_info}")
@@ -33,60 +33,60 @@ _install_dmgs_list() {
   echo "_major_version:${_major_version}"
     case "${_major_version}" in
        "13"*) # Ventura 8.0.23 or newer
-          installlist="  
+          installlist="
           mysql-workbench-community-8.0.31-macos-x86_64.dmg|MySQL Workbench community-8.0.31/MySQLWorkbench.app|https://cdn.mysql.com/archives/mysql-workbench/mysql-workbench-community-8.0.31-macos-x86_64.dmg
           "
           ;;
        "12"*) # Monterrey 8.0.23 or newer
-          installlist="  
+          installlist="
           mysql-workbench-community-8.0.31-macos-x86_64.dmg|MySQL Workbench community-8.0.31/MySQLWorkbench.app|https://cdn.mysql.com/archives/mysql-workbench/mysql-workbench-community-8.0.31-macos-x86_64.dmg
           "
           ;;
        "11.1"*) # Big Sur mysql 8.0.23 or newer
-          installlist="  
+          installlist="
           mysql-workbench-community-8.0.31-macos-x86_64.dmg|MySQL Workbench community-8.0.31/MySQLWorkbench.app|https://cdn.mysql.com/archives/mysql-workbench/mysql-workbench-community-8.0.31-macos-x86_64.dmg
           "
           ;;
         "10.15"*) # Catalina mysql 8.0.19 to 8.0.23
-          installlist="  
+          installlist="
           mysql-workbench-community-8.0.22-macos-x86_64.dmg|MySQL Workbench community-8.0.22/MySQLWorkbench.app|https://cdn.mysql.com/archives/mysql-workbench/mysql-workbench-community-8.0.22-macos-x86_64.dmg
           "
           ;;
         "10.14"*) # Mojave mysql 8.0.1, mysql-workbench 8.0.13 to 8.0.21 #  8.0.22 says is 'compatible with Mojave' but Phisical tried on Mojave Mac flags as not
-          installlist="  
+          installlist="
           mysql-workbench-community-8.0.21-macos-x86_64.dmg|MySQL Workbench community-8.0.21/MySQLWorkbench.app|https://cdn.mysql.com/archives/mysql-workbench/mysql-workbench-community-8.0.21-macos-x86_64.dmg
           mysql-8.0.18-macos10.14-x86_64.dmg|mysql-8.0.18-macos10.14-x86_64/mysql-8.0.18-macos10.14-x86_64.pkg|https://cdn.mysql.com/archives/mysql-8.0/mysql-8.0.18-macos10.14-x86_64.dmg
           "
           ;;
         "10.13"*) # High Sierra mysql 8.0.11 rc to 8.0.18
-          installlist="  
+          installlist="
           mysql-workbench-community-8.0.11-macos-x86_64.dmg|MySQL Workbench community-8.0.11/MySQLWorkbench.app|https://cdn.mysql.com/archives/mysql-workbench/mysql-workbench-community-8.0.11-macos-x86_64.dmg
           "
           ;;
         "10.12"*)  # Sierra mysql 6.3.9 to 6.3.10
-          installlist="  
+          installlist="
           mysql-workbench-community-6.3.10-macos-x86_64.dmg|MySQL Workbench community-6.3.10/MySQLWorkbench.app|https://cdn.mysql.com/archives/mysql-workbench/mysql-workbench-community-6.3.10-macos-x86_64.dmg
           "
           ;;
         "10.11"*) # El Capitan mysql 6.3.9 to 6.3.10
-          installlist="  
+          installlist="
           mysql-workbench-community-6.3.9-macos-x86_64.dmg|MySQL Workbench community-6.3.9/MySQLWorkbench.app|https://cdn.mysql.com/archives/mysql-workbench/mysql-workbench-community-6.3.9-macos-x86_64.dmg
           "
           ;;
         "10.10"*) # Yosemite mysql. to 6.3.6
-          installlist="  
+          installlist="
           mysql-workbench-community-6.3.6-macos-x86_64.dmg|MySQL Workbench community-6.3.6/MySQLWorkbench.app|https://cdn.mysql.com/archives/mysql-workbench/mysql-workbench-community-6.3.6-macos-x86_64.dmg
           "
           ;;
-        *) 
+        *)
           warning "Platform $OSTYPE not supported"
-          installlist="  
+          installlist="
           mysql-workbench-community-8.0.31-macos-x86_64.dmg|MySQL Workbench community-8.0.31/MySQLWorkbench.app|https://cdn.mysql.com/archives/mysql-workbench/mysql-workbench-community-8.0.31-macos-x86_64.dmg
           "
           ;;
     esac
-    Installing "# $installlist" 
-  # Installer dmg file. |       installer file once mounted. |.  location from url to download  |        
+    Installing "# $installlist"
+  # Installer dmg file. |       installer file once mounted. |.  location from url to download  |
   Checking dmgs apps
   while read -r one ; do
   {

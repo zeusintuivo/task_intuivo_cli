@@ -59,8 +59,24 @@ _redhat_flavor_install() {
     git
     php
     php-json
+    php-cli
     php-xml
     php-common
+    php-mysqlnd
+    php-gd
+    php-curl
+    php-psr
+    php-zip
+    php-fpm
+    php-bcmath
+    php-ctype
+    php-fileinfo
+    php-mbstring
+    php-pdo
+    php-tokenizer
+    php-xml
+    php-gmp
+    php-mysqli
   "
   ); then
     {
