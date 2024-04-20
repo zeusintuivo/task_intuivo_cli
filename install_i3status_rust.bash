@@ -446,13 +446,13 @@ _package_list_installer() {
   trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer i3status" && echo -e "${RESET}" && return 0' ERR
 
   Checking "requirements list ${CYAN}:${RED}<< ${CYAN}${packages} ${RED}>>${RESET}"
-  if ! install_requirements "linux" "${packages}" ; then
+  if ( ! install_requirements "linux" "${packages}" ) ; then
   {
     while read package; do
     {
       [ -z ${package} ] && continue
       warning "installing requirements. ${CYAN} attempting to install one by one trying: ${package}"
-      if ! install_requirements "linux" "${package}" ; then
+      if ( ! install_requirements "linux" "${package}" ) ; then
       {
         _err=$?
         if [ ${_err} -gt 0 ] ; then
