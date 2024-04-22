@@ -53,7 +53,7 @@ export RSVM_TARGET="'${USER_HOME}'/.rsvm"
 _debian_flavor_install() {
   trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _debian_flavor_install rsvm" && echo -e "${RESET}" && return 0' ERR
   local _target="${USER_HOME}/.rsvm"
-  local _executable="${_target}/rsvm.sh" 
+  local _executable="${_target}/rsvm.sh"
 
   _git_clone "https://github.com/sdepold/rsvm.git" "${_target}"
   cd "${_target}"
@@ -65,7 +65,7 @@ _debian_flavor_install() {
 _redhat_flavor_install() {
   trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _redhat_flavor_instal rsvm" && echo -e "${RESET}" && return 0' ERR
   local _target="${USER_HOME}/.rsvm"
-  local _executable="${_target}/rsvm.sh" 
+  local _executable="${_target}/rsvm.sh"
 
   _git_clone "https://github.com/sdepold/rsvm.git" "${_target}"
   cd "${_target}"

@@ -188,6 +188,14 @@ fi
 	eval "$("${USER_HOME}/.pyenv/bin/pyenv" init -)"
 	"${USER_HOME}/.pyenv/bin/pyenv" doctor
 	chown -R "${SUDO_USER}" "${USER_HOME}/.pyenv"
+  ensure pyenv or "Canceling until pyenv did not install"
+  su - "${SUDO_USER}" -c 'pyenv install -l'
+  su - "${SUDO_USER}" -c 'pyenv install 3.12.3'
+  su - "${SUDO_USER}" -c 'pyenv global 3.12.3'
+  su - "${SUDO_USER}" -c 'pyenv rehash'
+  # ensure python or "Canceling until python is not working"
+  su - "${SUDO_USER}" -c 'python -v'
+  su - "${SUDO_USER}" -c 'pyenv versions'
 } # _add_variables_to_bashrc_zshrc
 
 _arch_flavor_install() {

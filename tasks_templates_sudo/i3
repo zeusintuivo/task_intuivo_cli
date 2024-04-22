@@ -147,6 +147,124 @@ _fedora__64() {
   _redhat_flavor_install
 } # end _fedora__64
 
+
+_fedora_40__64() {
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  echo "REF: https://fedoraproject.org/wiki/I3_guide#First_Login"
+	echo "REF: https://fedoramagazine.org/getting-started-i3-window-manager/"
+  dnf builddep i3 -y --allowerasing
+	dnf builddep kitty -y --allowerasing
+	if (
+  install_requirements "linux" "
+    bzip2-devel
+		libzip-devel
+    bzip2-libs
+    bzip2
+    lbzip2
+    pbzip2
+    rust-zip+bzip2-devel
+    rust-bzip2-devel
+    bzip2
+		yakuake
+    i3 
+		i3status 
+		i3lock 
+		dmenu 
+    i3lock
+    feh
+    conky
+		dunst
+		flameshot
+		rofi
+		kitty
+		audacious
+		mpc
+		mpv
+		xset
+		# moc
+		xbacklight
+		terminator
+		rhythmbox
+		totem
+		# thunar
+		tmux
+		py3status
+		# until now no issues with boot or breaking gnome brightness
+		xrandr
+		arandr
+    brightnessctl
+		htop
+		polybar
+		# python-mpd2
+  "
+  ); then
+    {
+      echo "All installed no error"
+		}
+		else
+		{
+			echo "something failed while installing err:$?"
+    }
+  fi
+  if su - "${SUDO_USER}" -c 'brew install libxscrnsaver libnotify bzip2 freetype2' ; then
+    {
+      echo "All installed no error"
+		}
+		else
+		{
+			echo "something failed while installing err:$?"
+    }
+  fi
+
+	if su - $SUDO_USER -c 'brew install the_platinum_searcher'; then
+    {
+      echo "All installed no error"
+		}
+		else
+		{
+			echo "something failed while installing err:$?"
+    }
+  fi
+
+	if su - $SUDO_USER -c 'pip3 install python-mpd'; then
+    {
+      echo "All installed no error"
+		}
+		else
+		{
+			echo "something failed while installing err:$?"
+    }
+  fi
+
+	if su - $SUDO_USER -c 'pip install python-mpd'; then
+    {
+      echo "All installed no error"
+		}
+		else
+		{
+			echo "something failed while installing err:$?"
+    }
+  fi
+
+	if verify_is_installed "
+    unzip
+    curl
+    wget
+    tar
+		xset
+  " ; then
+    {
+      echo "All installed no error"
+		}
+		else
+		{
+			echo "something failed while installing err:$?"
+    }
+  fi
+  echo "End of install tasks should be installed. I don't know what to do next... "
+} # end _fedora_40__64
+
+
 _gentoo__32() {
   _redhat_flavor_install
 } # end _gentoo__32

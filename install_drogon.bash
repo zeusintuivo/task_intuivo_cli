@@ -445,7 +445,7 @@ _debian_flavor_install() {
 _redhat_flavor_install() {
   sudo dnf install git gcc gcc-c++ cmake libuuid-devel openssl-devel zlib-devel  -y
   cd $USER_HOME
-	git clone https://github.com/drogonframework/drogon 
+	git clone https://github.com/drogonframework/drogon
   cd drogon
   git submodule update --init
   mkdir build
@@ -500,7 +500,7 @@ _fedora__64() {
 
 _gentoo__32() {
   sudo emerge dev-vcs/git jsoncpp ossp-uuid openssl
-  
+
   _gentoo_flavor_install
 } # end _gentoo__32
 
@@ -542,12 +542,12 @@ _ubuntu__32() {
 
 _ubuntu__64() {
   cd $USER_HOME
-	git clone https://github.com/drogonframework/drogon 
+	git clone https://github.com/drogonframework/drogon
   cd drogon
   git submodule update --init
   mkdir build
   cd build
-  sudo apt-get install -y  apt-utils tzdata dirmngr gnupg2 lsb-release sudo 
+  sudo apt-get install -y  apt-utils tzdata dirmngr gnupg2 lsb-release sudo
   sudo apt-get install -y  build-essential autoconf automake cmake  curl wget gcc g++ git libtool gzip make unzip mc  \
                         lsb-release wgetpkg-config libboost-all-dev  libjsoncpp-dev libconfig++-dev  libprotobuf-dev \
                         protobuf-compiler libgrpc++-dev libgrpc++1 libgrpc-dev protobuf-compiler-grpc
@@ -596,7 +596,7 @@ _darwin__64() {
   brew install cmake
   brew install g++
   brew install gpp
-  brew install gcc 
+  brew install gcc
   brew install git
   brew install  mongo-c-driver
   brew install  mongo-cxx-driver
@@ -611,7 +611,7 @@ _darwin__64() {
   mkdir -p build
   cd build
   make clean
-  
+
   # cmake ..
   # REF: https://github.com/eulerto/pgquarrel/issues/27
   # Fix for -- Could NOT find PostgreSQL (missing: PostgreSQL_INCLUDE_DIR)

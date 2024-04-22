@@ -634,11 +634,11 @@ _valet_steps_php_composer_pecl_valet_install(){
 
 
   Installing "$0:$LINENO  valet install "
-  # ( su - "$SUDO_USER" -c ''"$VALETS"' install' )
-  # _err=$?
-  # if [ $_err -gt 0 ] ; then
-  # {
-  #   warning "could not run valet as user $SUDO_USER -  valet install  - or it failed trying as root _err:$_err"
+  ( su - "$SUDO_USER" -c ''"$VALETS"' install' )
+  _err=$?
+  if [ $_err -gt 0 ] ; then
+  {
+    warning "could not run valet as user $SUDO_USER -  valet install  - or it failed trying as root _err:$_err"
 	  ( "$VALETS"  install )
     _err=$?
     if [ $_err -gt 0 ] ; then
@@ -647,16 +647,16 @@ _valet_steps_php_composer_pecl_valet_install(){
       exit 1
     }
     fi
-  # }
-  # fi
+  }
+  fi
 
 
   Checking "$0:$LINENO valet status "
-  # ( su - "$SUDO_USER" -c ''"$PHPS"' '"$VALETS"' status' )
-  # _err=$?
-  # if [ $_err -gt 0 ] ; then
-  # {
-  #   warning "could not run valet as user $SUDO_USER -  valet status  - or it failed trying as root _err:$_err"
+  ( su - "$SUDO_USER" -c ''"$PHPS"' '"$VALETS"' status' )
+  _err=$?
+  if [ $_err -gt 0 ] ; then
+  {
+    warning "could not run valet as user $SUDO_USER -  valet status  - or it failed trying as root _err:$_err"
 	  ( "$PHPS" "$VALETS"  status )
     _err=$?
     if [ $_err -gt 0 ] ; then
@@ -665,16 +665,16 @@ _valet_steps_php_composer_pecl_valet_install(){
       exit 1
     }
     fi
-  # }
-  # fi
+  }
+  fi
 
 
   Installing "$0:$LINENO  valet restart "
-  # ( su - "$SUDO_USER" -c ''"$PHPS"' '"$VALETS"' restart' )
-  # _err=$?
-  # if [ $_err -gt 0 ] ; then
-  # {
-  #   warning "could not run valet as user $SUDO_USER -  valet restart  - or it failed trying as root _err:$_err"
+  ( su - "$SUDO_USER" -c ''"$PHPS"' '"$VALETS"' restart' )
+  _err=$?
+  if [ $_err -gt 0 ] ; then
+  {
+    warning "could not run valet as user $SUDO_USER -  valet restart  - or it failed trying as root _err:$_err"
 	  ( "$PHPS" "$VALETS"  restart )
     _err=$?
     if [ $_err -gt 0 ] ; then
@@ -683,15 +683,15 @@ _valet_steps_php_composer_pecl_valet_install(){
       exit 1
     }
     fi
-  # }
-  # fi
+  }
+  fi
 
-  # Checking "$0:$LINENO  valet status "
-  # ( su - "$SUDO_USER" -c ''"$PHPS"' '"$VALETS"' status' )
-  # _err=$?
-  # if [ $_err -gt 0 ] ; then
-  # {
-  #   warning "could not run valet as user $SUDO_USER -  valet status  - or it failed trying as root _err:$_err"
+  Checking "$0:$LINENO  valet status "
+  ( su - "$SUDO_USER" -c ''"$PHPS"' '"$VALETS"' status' )
+  _err=$?
+  if [ $_err -gt 0 ] ; then
+  {
+    warning "could not run valet as user $SUDO_USER -  valet status  - or it failed trying as root _err:$_err"
 	  ( "$PHPS" "$VALETS"  status )
     _err=$?
     if [ $_err -gt 0 ] ; then
@@ -700,16 +700,16 @@ _valet_steps_php_composer_pecl_valet_install(){
       exit 1
     }
     fi
-  # }
-  # fi
+  }
+  fi
 
 
-  # Checking "$0:$LINENO  valet links "
-  # ( su - "$SUDO_USER" -c ''"$PHPS"' '"$VALETS"' links' )
-  # _err=$?
-  # if [ $_err -gt 0 ] ; then
-  # {
-  #   warning "could not run valet as user $SUDO_USER -  valet links  - or it failed trying as root _err:$_err"
+  Checking "$0:$LINENO  valet links "
+  ( su - "$SUDO_USER" -c ''"$PHPS"' '"$VALETS"' links' )
+  _err=$?
+  if [ $_err -gt 0 ] ; then
+  {
+    warning "could not run valet as user $SUDO_USER -  valet links  - or it failed trying as root _err:$_err"
 	  ( "$PHPS" "$VALETS"  links )
     _err=$?
     if [ $_err -gt 0 ] ; then
@@ -718,8 +718,8 @@ _valet_steps_php_composer_pecl_valet_install(){
       exit 1
     }
     fi
-  # }
-  # fi
+  }
+  fi
   passed "$0:$LINENO tasks "
 } # end _valet_steps_php_composer_pecl_valet_install
 _redhat_flavor_install(){
