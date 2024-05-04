@@ -7,25 +7,26 @@ _debian_flavor_install() {
 _redhat_flavor_install() {
   echo "Procedure not yet implemented. I don't know what to do."
   HOW_TO_LOAD_JUST_ONE_SCRIPT_LOCAL_AND_ONLINE_EXECUTE_COMMAND
-	echo "fix for pangosys lib not working and gtk requirement for flutter"
-  dnf install rust-gtk4-devel libnma-gtk4-devel rust-gtk4+default-devel gplugin-gtk4-devel libportal-gtk4-devel wxGTK3-devel    -y 
-	dnf install -y snapd
+  echo "fix for pangosys lib not working and gtk requirement for flutter"
+  # dnf install rust-gtk4-devel libnma-gtk4-devel rust-gtk4+default-devel gplugin-gtk4-devel libportal-gtk4-devel wxGTK3-devel    -y
+  dnf install rust-gtk4-devel libnma-gtk4-devel rust-gtk4+default-devel gplugin-gtk4-devel libportal-gtk4-devel   -y
+  dnf install -y snapd
   # ln -s /var/lib/snapd/snap /snap
   #if ! it_exists_with_spaces /var/lib/snapd/snap ; then 
-	#{
-    ln -sf /var/lib/snapd/snap /snap
-	#}
-	#fi
-	snap install core
-	snap refresh core
+  #{
+  ln -sf /var/lib/snapd/snap /snap
+  #}
+  #fi
+  snap install core
+  snap refresh core
   snap install android-studio --classic
-  snap list android-studio	
-	ln -sf /snap/bin/android-studio /usr/local/bin/android-studio
-	dnf install -y zlib.i686 ncurses-libs.i686 bzip2-libs.i686
+  snap list android-studio
+  ln -sf /snap/bin/android-studio /usr/local/bin/android-studio
+  dnf install -y zlib.i686 ncurses-libs.i686 bzip2-libs.i686
   cd /tmp
   wget https://dl.google.com/dl/android/studio/ide-zips/2021.2.1.14/android-studio-2021.2.1.14-linux.tar.gz
   tar -zxvf android-studio-*-linux.tar.gz
-  mv android-studio /opt/	
+  mv android-studio /opt/
   ln -sf /opt/android-studio/bin/studio.sh /usr/local/bin/android-studio
   # vi /usr/share/applications/android-studio.desktop
   echo "[Desktop Entry]
@@ -42,7 +43,7 @@ StartupWMClass=jetbrains-android-studio
 Name[en_GB]=android-studio.desktop
   " > /usr/share/applications/android-studio.desktop
 
-	su - "${SUDO_USER}" -c 'pip install xattr'
+  su - "${SUDO_USER}" -c 'pip install xattr'
   su - "${SUDO_USER}" -c 'brew install GCC'
   su - "${SUDO_USER}" -c 'brew reinstall --cask android-studio'
   su - "${SUDO_USER}" -c 'brew reinstall --cask android-SDK'
