@@ -1,0 +1,2 @@
+nodemon --watch "$(pwd)/tasks_templates_sudo/${1}" --ext py,go,bash,sh,kv,php,rb,java --spawn --exec "[[ -n \"$(ps aux | grep './install_${1}.bash' | grep -v 'grep'  | head -1 | xargs)\"  ]] || kill \"$(ps aux | grep './install_${1}.bash' | grep -v 'grep'  | head -1 | xargs | cut -d' ' -f2 )\" || bash \"$(pwd)/generate_installer_with_sudo\" ${1} && bash $(pwd)/install_${1}.bash  "
+
