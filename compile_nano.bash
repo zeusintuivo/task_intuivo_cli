@@ -319,6 +319,27 @@ _darwin__64_manual() {
 
 } # end _darwin__64
 
+_arch__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _arch_flavor_install
+} # end _arch__64
+
+_arch_flavor_install() {
+  install_requirements "linux" "
+    curl
+    wget
+    libncurses-dev
+    libncursesw5-dev
+    groff
+  "
+  verify_is_installed "
+   curl
+   wget
+  "
+  _download_compile_install
+  return 0
+} # end _arch_flavor_install
+
 _ubuntu__64() {
   directory_exists_with_spaces "$USER_HOME"
 
