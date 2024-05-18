@@ -76,7 +76,8 @@ INT ..."
 load_struct_testing(){
   function _trap_on_error(){
     local -ir __trapped_error_exit_num="${2:-0}"
-    echo -e "\\n \033[01;7m*** 2 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+		echo -e "\\n \033[01;7m*** tasks_base/sudoer.bash:$LINENO load_struct_testing() ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+
     echo ". ${1}"
     echo ". exit  ${__trapped_error_exit_num}  "
     echo ". caller $(caller) "
@@ -439,30 +440,99 @@ directory_exists_with_spaces "${USER_HOME}"
 #
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
-
+set -E -o functrace
 _version() {
+  local -i _err=0
+  trap '[[ -z "$FUNCNAME" ]] && echo -e "${RED}ERROR failed ${#FUNCNAME[@]} $BASH_SOURCE:$LINENO \t\t\t  function:$FUNCNAME ${RESET}" && exit 0 || [[ -n "$FUNCNAME" ]] && echo -e "${RED}ERROR failed ${#FUNCNAME[@]} $BASH_SOURCE:$LINENO \t\t\t  function:$FUNCNAME ${RESET}" && return 1 ' ERR
+  trap '[[ -z "$FUNCNAME" ]] && exit 0 || [[ -n "$FUNCNAME" ]] && echo -e "${PURPLE}INTERRUPTED ${YELLOW} ${#FUNCNAME[@]} $BASH_SOURCE:$LINENO \t\t\t function:$FUNCNAME ${RESET}" && return 1 ' INT
   local PLATFORM="${1}" # mac windows linux
   local PATTERN="${2}"
+  local -i _err=0
   # THOUGHT:   https://download-cf.jetbrains.com/webstorm/WebStorm-2020.3.dmg
-  local CODEFILE="""$(wget --quiet --no-check-certificate  https://www.jetbrains.com/webstorm/ -O -  2>/dev/null )""" # suppress only wget download messages, but keep wget output for variable
-  # enforce_variable_with_value CODEFILE "${CODEFILE}"
+  local CODEFILE=""
+  if [ -f step2_failed_CODELASTESTBUILD_was_empty.html ] ; then
+  {
+    CODEFILE="$(<step2_failed_CODELASTESTBUILD_was_empty.html)"
+  }
+  else
+  {
+    # older than 2023 CODEFILE="""$(wget --quiet --no-check-certificate  https://www.jetbrains.com/webstorm/ -O -  2>/dev/null )""" # suppress only wget download messages, but keep wget output for variable
+    # CODEFILE="""$(wget --quiet --no-check-certificate  https://www.jetbrains.com/webstorm/download/\#section\=${PLATFORM} -O -  2>/dev/null )""" # suppress only wget download messages, but keep wget output for variable
+    CODEFILE="""$(wget --quiet --no-check-certificate  https://data.services.jetbrains.com/products\?platform\=${PLATFORM} -O -  2>/dev/null )""" # suppress only wget download messages, but keep wget output for variable
+  }
+  fi
+  _err=$?
   wait
-  local CODELASTESTBUILD=$(echo "${CODEFILE}" | sed s/\</\\n\</g | sed s/\>/\>\\n/g | sed "s/&apos;/\'/g" | sed 's/&nbsp;/ /g' | grep  "New in WebStorm ${PATTERN}" | sed s/\ /\\n/g | tail -1 ) # | grep "What&apos;s New in&nbsp;WebStorm&nbsp;" | sed 's/\;/\;'\\n'/g' | sed s/\</\\n\</g  )
-  enforce_variable_with_value CODELASTESTBUILD "${CODELASTESTBUILD}"
+  if [ -z "${CODEFILE}" ] || [ ${_err} -gt 0 ] ; then
+  {
+    echo "$BASH_SOURCE:$LINENO function:$FUNCNAME variable is empty CODEFILE"
+    return 1  # here one is for error
+  }
+  fi
+  enforce_variable_with_value CODEFILE "${CODEFILE}"
+  local CODELASTESTBUILD=$(echo "${CODEFILE}" \
+ | sed s/\</\\n\</g \
+ | sed s/\>/\>\\n/g \
+ | sed "s/&apos;/\'/g" \
+ | sed 's/&nbsp;/ /g' \
+ | sed 's/,/\n/g' | grep WebStorm | grep -v aarch64  | grep tar.gz | grep link | head -1 | sed 's/"/\n/g' | grep https \
+ | tail -1 )
+# | grep  "linux" | sed s/\ /\\n/g | grep href | sed 's/"/\n/g' | grep linux \
+# | sed s/\ /\\n/g \
+# | grep  "New in WebStorm ${PATTERN}" \
+# | grep "What&apos;s New in&nbsp;WebStorm&nbsp;" | sed 's/\;/\;'\\n'/g' | sed s/\</\\n\</g  )
+  _err=$?
+  wait
+  if [ -z "${CODELASTESTBUILD}" ] || [ ${_err} -gt 0 ] ; then
+  {
+    echo "${CODEFILE}" > step2_failed_CODELASTESTBUILD_was_empty.html
+    echo "$BASH_SOURCE:$LINENO function:$FUNCNAME variable is empty CODELASTESTBUILD _err:$_err"
+    echo '
+    wget --quiet --no-check-certificate https://data.services.jetbrains.com/products\?platform\=${PLATFORM} -O - > step2_failed_CODELASTESTBUILD_was_empty.html 
+    cat step2_failed_CODELASTESTBUILD_was_empty.html \
+   | sed s/\</\\n\</g  \
+   | sed s/\>/\>\\n/g  \ '
+   echo "   | sed \"s/&apos;/'/g\" \\
+   | sed 's/&nbsp;/ /g' \\
+   "
+   # | grep  \"New in WebStorm ${PATTERN}\" \\
+   # echo " | sed s/\\ /\\\\n/g \\
+   # echo "   | grep  linux | sed s/\ /\\n/g | grep href \\ "
+   # echo "   | sed 's/\"/\n/g' | grep linux  \\
+   echo "    | sed 's/,/\n/g' | grep WebStorm | grep -v aarch64  | grep tar.gz | grep link | head -1 | sed 's/\"/\n/g' | grep https \\ 
+   | tail -1
+   "
 
+    return 1  # here one is for error
+  }
+  fi
+  enforce_variable_with_value CODELASTESTBUILD "${CODELASTESTBUILD}"
+  _err=$?
+  if [ -z "${CODELASTESTBUILD}" ] || [ ${_err} -gt 0 ] ; then
+  {
+    return 1  # here one is for error
+  }
+  fi
+  rm -rf step2_failed_CODELASTESTBUILD_was_empty.html
   local CODENAME=""
   case ${PLATFORM} in
   mac)
-    CODENAME="https://download-cf.jetbrains.com/webstorm/WebStorm-${CODELASTESTBUILD}.dmg"
+    # older than 2023 CODENAME="https://download-cf.jetbrains.com/webstorm/WebStorm-${CODELASTESTBUILD}.dmg"
+    # CODENAME="https:${CODELASTESTBUILD}"
+    CODENAME="${CODELASTESTBUILD}"
     ;;
 
   windows)
-    CODENAME="https://download-cf.jetbrains.com/webstorm/WebStorm-${CODELASTESTBUILD}.exe"
-    CODENAME="https://download-cf.jetbrains.com/webstorm/WebStorm-${CODELASTESTBUILD}.win.zip"
+    # older than 2023 CODENAME="https://download-cf.jetbrains.com/webstorm/WebStorm-${CODELASTESTBUILD}.exe"
+    # older than 2023 CODENAME="https://download-cf.jetbrains.com/webstorm/WebStorm-${CODELASTESTBUILD}.win.zip"
+    # CODENAME="https:${CODELASTESTBUILD}"
+    CODENAME="${CODELASTESTBUILD}"
     ;;
 
   linux)
-    CODENAME="https://download-cf.jetbrains.com/webstorm/WebStorm-${CODELASTESTBUILD}.tar.gz"
+    # older than 2023 CODENAME="https://download-cf.jetbrains.com/webstorm/WebStorm-${CODELASTESTBUILD}.tar.gz"
+    # CODENAME="https:${CODELASTESTBUILD}"
+    CODENAME="${CODELASTESTBUILD}"
     ;;
 
   *)
@@ -470,6 +540,13 @@ _version() {
     ;;
   esac
   enforce_variable_with_value CODENAME "${CODENAME}"
+  _err=$?
+  if [ -z "${CODENAME}" ] || [ ${_err} -gt 0 ] ; then
+  {
+    echo "$BASH_SOURCE:$LINENO function:$FUNCNAME variable is empty CODELASTESTBUILD _err:$_err"
+    return 1  # here one is for error
+  }
+  fi
   unset PATTERN
   unset PLATFORM
   unset CODEFILE
@@ -477,7 +554,7 @@ _version() {
   echo "${CODENAME}"
   return 0
 } # end _version
-_unzip(){
+function _unzip(){
   # Sample use
   #
   #     _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
@@ -492,10 +569,10 @@ _unzip(){
   enforce_variable_with_value CODENAME "${CODENAME}"
 
   file_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
-  if  it_exists_with_spaces "${DOWNLOADFOLDER}/${UNZIPDIR}" ; then
+  if  it_exists_with_spaces "${DOWNLOADFOLDER}${UNZIPDIR}" ; then
   {
-    rm -rf "${DOWNLOADFOLDER}/${UNZIPDIR}"
-    directory_does_not_exist_with_spaces "${DOWNLOADFOLDER}/${UNZIPDIR}"
+    rm -rf "${DOWNLOADFOLDER}${UNZIPDIR}"
+    directory_does_not_exist_with_spaces "${DOWNLOADFOLDER}${UNZIPDIR}"
   }
   fi
 
@@ -519,7 +596,10 @@ _unzip(){
   # Extract tar Progress bar REF: https://coderwall.com/p/l_m2yg/tar-untar-on-osx-linux-with-progress-bars
   # Extract tar sample pv file.tgz | tar xzf - -C target_directory
   # Working simplme tar:  tar xvzf ${DOWNLOADFOLDER}/${CODENAME}.tar.gz --directory=${DOWNLOADFOLDER}
-  pv "${DOWNLOADFOLDER}/${CODENAME}"  | tar xzf - -C "${DOWNLOADFOLDER}"
+  local -i ret=$?
+  Comment "pv \"${DOWNLOADFOLDER}${CODENAME}\"  | tar xzf - -C \"${DOWNLOADFOLDER}${UNZIPDIR}\""
+  pv "${DOWNLOADFOLDER}${CODENAME}"  | tar xzf - -C "${DOWNLOADFOLDER}${UNZIPDIR}"
+  ret=$?
   #local msg=$(_try "tar xvzf  \"${DOWNLOADFOLDER}/${CODENAME}.tar.gz\" --directory=${DOWNLOADFOLDER} " )
   #  tar xvzf file.tar.gz
   # Where,
@@ -529,7 +609,6 @@ _unzip(){
   # f: This options tells tar that you are going to give it a file name to work with.
   local msg
   local folder_date
-  local ret=$?
   if [ $ret -gt 0 ] ; then
   {
     failed "${ret}:${msg}"
@@ -541,9 +620,9 @@ _unzip(){
   }
   fi
 
-  local NEWDIRCODENAME=$(ls -1tr "${DOWNLOADFOLDER}/"  | tail  -1)
-  local FROMUZIPPED="${DOWNLOADFOLDER}/${NEWDIRCODENAME}"
-  directory_exists_with_spaces  "${FROMUZIPPED}"
+  # local NEWDIRCODENAME=$(ls -1tr "${DOWNLOADFOLDER}/"  | tail  -1)
+  # local FROMUZIPPED="${DOWNLOADFOLDER}/${NEWDIRCODENAME}"
+  # directory_exists_with_spaces  "${FROMUZIPPED}"
   # directory_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
 
 } # end _unzip
@@ -561,7 +640,7 @@ _backup_current_target_and_remove_if_exists(){
      local folder_date=$(date +"%Y%m%d")
      if  it_exists_with_spaces "${TARGETFOLDER}/webstorm_${folder_date}" ; then
      {
-       warning A backup already exists for today "${ret}:${msg} \n ... adding time"
+       warning "A backup already exists for today ${ret}:${msg} \n ... adding time"
        folder_date=$(date +"%Y%m%d%H%M")
      }
      fi
@@ -583,9 +662,11 @@ _install_to_target(){
   #     _install_to_target "${TARGETFOLDER}" "${FROM_DOWNLOADEDFOLDER_UNZIPPED}"
   #
   local TARGETFOLDER="${1}"
+  Comment enforce_variable_with_value TARGETFOLDER "${TARGETFOLDER}"
   enforce_variable_with_value TARGETFOLDER "${TARGETFOLDER}"
 
   local FROM_DOWNLOADEDFOLDER_UNZIPPED="${2}"
+  Comment enforce_variable_with_value FROM_DOWNLOADEDFOLDER_UNZIPPED "${FROM_DOWNLOADEDFOLDER_UNZIPPED}"
   enforce_variable_with_value FROM_DOWNLOADEDFOLDER_UNZIPPED "${FROM_DOWNLOADEDFOLDER_UNZIPPED}"
 
   mkdir -p "${TARGETFOLDER}"
@@ -843,12 +924,16 @@ _darwin__64() {
   verify_is_installed "
     wget
   "
-  local _err=$?
+  local -i _err=$?
   local CODENAME=$(_version "mac" "*.*")
   _err=$?
-  echo "${CODENAME}";  # show either version or log with errors
-  # exit on error
-  [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! _version:$_err  \n \n  " && exit 1
+  echo "$0:$LINENO DEBUG: CODENAME:${CODENAME}";
+  [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! $0:$LINENO  _version:$_err  \n \n  " && exit 1
+  if [ -z "${CODENAME}" ] || [ ${_err} -gt 0 ] ; then
+  {
+    return 1  # here one is for error
+  }
+  fi
 
   local TARGET_URL="$(echo -en "${CODENAME}" | tail -1)"
   CODENAME="$(basename "${TARGET_URL}" )"
@@ -858,13 +943,13 @@ _darwin__64() {
   local APPDIR="$(echo -en "${CODENAME}" | sed 's/'"${VERSION}"'//g' | sed 's/.dmg//g'| sed 's/-//g').app"
   # echo "${CODENAME}";
   # echo "${URL}";
-  echo "CODENAME: ${CODENAME}"
+  echo "$0:$LINENO CODENAME: ${CODENAME}"
   enforce_variable_with_value CODENAME "${CODENAME}"
   enforce_variable_with_value TARGET_URL "${TARGET_URL}"
   enforce_variable_with_value HOME "${HOME}"
-  echo "UNZIPDIR: ${UNZIPDIR}"
+  echo "$0:$LINENO UNZIPDIR: ${UNZIPDIR}"
   enforce_variable_with_value UNZIPDIR "${UNZIPDIR}"
-  echo "APPDIR: ${APPDIR}"
+  echo "$0:$LINENO APPDIR: ${APPDIR}"
   enforce_variable_with_value APPDIR "${APPDIR}"
   local DOWNLOADFOLDER="${HOME}/Downloads"
   enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
@@ -883,9 +968,9 @@ _darwin__64() {
   fi
   if  it_exists_with_spaces "/Applications/${APPDIR}" ; then
   {
-      echo Remove  unzipped "/Applications/${APPDIR}"
-      sudo rm -rf  "/Applications/${APPDIR}"
-      directory_does_not_exist_with_spaces  "/Applications/${APPDIR}"
+    echo Remove  unzipped "/Applications/${APPDIR}"
+    sudo rm -rf  "/Applications/${APPDIR}"
+    directory_does_not_exist_with_spaces  "/Applications/${APPDIR}"
   }
   fi
   echo Attaching dmg downloaded
@@ -901,28 +986,67 @@ _darwin__64() {
 } # end _darwin__64
 
 _ubuntu__64() {
-  _linux_prepare
+  local -i _err=$?
   local CODENAME=$(_version "linux" "WebStorm-*.*.*.*amd64.deb")
+  _err=$?
+  echo "DEBUG: CODENAME:${CODENAME}";
+  [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! $0:$LINENO  _version:$_err  \n \n  " && exit 1
+  if [ -z "${CODENAME}" ] || [ ${_err} -gt 0 ] ; then
+  {
+    return 1  # here one is for error
+  }
+  fi
+
   # THOUGHT          local CODENAME="WebStorm-4.3.3.24545_amd64.deb"
   local URL="https://download-cf.jetbrains.com/webstorm/${CODENAME}"
   cd $USER_HOME/Downloads/
   _download "${URL}"
+  _err=$?
+  wait
+  if [ ${_err} -gt 0 ] ; then
+  {
+    return 1  # here one is for error
+  }
+  fi
   sudo dpkg -i ${CODENAME}
 } # end _ubuntu__64
 
 _ubuntu__32() {
-  _linux_prepare
+  local -i _err=$?
   local CODENAME=$(_version "linux" "WebStorm-*.*.*.*i386.deb")
+  _err=$?
+  echo "DEBUG: CODENAME:${CODENAME}";
+  [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! $0:$LINENO  _version:$_err  \n \n  " && exit 1
+  if [ -z "${CODENAME}" ] || [ ${_err} -gt 0 ] ; then
+  {
+    return 1  # here one is for error
+  }
+  fi
   # THOUGHT local CODENAME="WebStorm-4.3.3.24545_i386.deb"
   local URL="https://download-cf.jetbrains.com/webstorm/${CODENAME}"
   cd $USER_HOME/Downloads/
   _download "${URL}"
+  _err=$?
+  wait
+  if [ ${_err} -gt 0 ] ; then
+  {
+    return 1  # here one is for error
+  }
+  fi
   sudo dpkg -i ${CODENAME}
 } # end _ubuntu__32
 
 _fedora__32() {
-  _linux_prepare
+  local -i _err=$?
   local CODENAME=$(_version "linux" "WebStorm*.*.*.*.i386.rpm")
+  _err=$?
+  echo "DEBUG: CODENAME:${CODENAME}";
+  [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! $0:$LINENO  _version:$_err  \n \n  " && exit 1
+  if [ -z "${CODENAME}" ] || [ ${_err} -gt 0 ] ; then
+  {
+    return 1  # here one is for error
+  }
+  fi
   # THOUGHT                          WebStorm-4.3.3.24545.i386.rpm
   local TARGET_URL="https://download-cf.jetbrains.com/webstorm/${CODENAME}"
   file_exists_with_spaces $USER_HOME/Downloads
@@ -938,7 +1062,7 @@ _fedora__32() {
   # Start loop while ERROR flag in case needs to try again, based on error
   _try "rpm --import https://download-cf.jetbrains.com/webstorm/RPM-GPG-KEY-scootersoftware"
   local msg=$(_try "rpm -ivh \"$USER_HOME/Downloads/${CODENAME}\"" )
-  local ret=$?
+  local -i ret=$?
   if [ $ret -gt 0 ] ; then
   {
     failed "${ret}:${msg}"
@@ -955,54 +1079,156 @@ _fedora__32() {
 } # end _fedora__32
 
 _centos__64() {
-  _fedora__64
+  _fedora__64 "${*}"
 } # end _centos__64
 
-_fedora__64() {
-  _linux_prepare
- local CODENAME=$(_version "linux" "*.*")
-  echo "${CODENAME}";
-  local TARGET_URL="$(echo "${CODENAME}" | tail -1)"
-  CODENAME="$(basename "${TARGET_URL}" )"
-  local UNZIPDIR="$(echo "${CODENAME}" | sed 's/.tar.gz//g' )"
-  enforce_variable_with_value CODENAME "${CODENAME}"
-  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
-  enforce_variable_with_value HOME "${HOME}"
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
-  enforce_variable_with_value UNZIPDIR "${UNZIPDIR}"
-  local DOWNLOADFOLDER="$(_find_downloads_folder)"
-  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-  local TARGETFOLDER="${USER_HOME}/_/software"
-  enforce_variable_with_value TARGETFOLDER "${TARGETFOLDER}"
+_fedora_37__64() {
+  _fedora__64 "${*}"
+} # end _fedora_37__64
 
-  # _remove_if_corrypted_zipfile_folder?
-  if it_exists_with_spaces /tmp/corrupted.tar.gzeraseit ; then
+_fedora__64() {
+  local -i _err=0
+  trap 'pkill wget && exit 0' EXIT
+  trap '[[ -z "$FUNCNAME" ]] && echo -e "${RED}ERROR failed ${#FUNCNAME[@]} $BASH_SOURCE:$LINENO \t\t\t  function:$FUNCNAME ${RESET}" && exit 0 || [[ -n "$FUNCNAME" ]] && echo -e "${RED}ERROR failed ${#FUNCNAME[@]} $BASH_SOURCE:$LINENO \t\t\t  function:$FUNCNAME ${RESET}" && return 1 ' ERR
+  trap '[[ -z "$FUNCNAME" ]] && exit 0 || [[ -n "$FUNCNAME" ]] && echo -e "${PURPLE}INTERRUPTED ${YELLOW241} ${#FUNCNAME[@]} $BASH_SOURCE:$LINENO \t\t\t function:$FUNCNAME ${RESET}" && return 1 ' INT
+  local CODENAME=""
+  local found_tar=$(ls -hctr1 "${USER_HOME}"/Downloads/WebStorm*.* | grep WebStorm | grep tar.gz  | tail -1)
+  _err=$?
+  local TARGET_URL=""
+  if [[ -n "${found_tar}" ]] && [ ${_err} -eq 0 ] ; then
   {
-    if it_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"; then
+    Comment "found a zip to install :$found_tar"
+    CODENAME="$(basename "${found_tar}" )"
+    DOWNLOADFOLDER="${USER_HOME}/Downloads/"
+  }
+  else
+  {
+    Comment "Calling _version to get lastest version from website https://data.services.jetbrains.com/products?platform\=linux "
+    CODENAME="$(_version "linux" "*.*")"
+    _err=$?
+    Comment  "$0:$LINENO DEBUG: CODENAME:„„„${CODENAME}”””";
+    if [[ -z "${CODENAME}" ]] ; then
     {
-      passed Removing Corrupted zip file
-      rm "${DOWNLOADFOLDER}/${CODENAME}"
-      file_does_not_exist_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
-      rm  /tmp/corrupted.tar.gzeraseit
+      echo -e "${RED}\nERROR $0:$LINENO  CODENAME is empty function _fedora__64()  \n${RESET}   "
+      return 1 # one is for error
+    }
+    fi
+    CODENAME=$(tail -1 <<< "${CODENAME}")
+    if [ ${_err} -gt 0 ] ; then
+    {
+      echo -e "\n \n${RED}ERROR! $0:$LINENO function return error function _fedora__64()  function _version:$_err  \n \n ${RESET}  "
+      return 1  # here one is for error
+    }
+    fi
+
+    TARGET_URL="$(echo "${CODENAME}" | tail -1)"
+    CODENAME="$(basename "${TARGET_URL}" )"
+    # CODENAME="WebStorm-2024.1.2.tar.gz"
+    DOWNLOADFOLDER="$(_find_downloads_folder)"
+    _err=$?
+    wait
+    if [ ${_err} -gt 0 ] ; then
+    {
+      return 1  # here one is for error
+    }
+    fi
+
+    Comment enforce_variable_with_value CODENAME "${CODENAME}"
+    Comment enforce_variable_with_value TARGET_URL "${TARGET_URL}"
+    Comment enforce_variable_with_value HOME "${HOME}"
+    Comment enforce_variable_with_value USER_HOME "${USER_HOME}"
+
+    enforce_variable_with_value CODENAME "${CODENAME}"
+    enforce_variable_with_value TARGET_URL "${TARGET_URL}"
+    enforce_variable_with_value HOME "${HOME}"
+    enforce_variable_with_value USER_HOME "${USER_HOME}"
+
+    Comment enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+    enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+
+    # _remove_if_corrypted_zipfile_folder?
+    if it_exists_with_spaces /tmp/corrupted.tar.gzeraseit ; then
+    {
+      if it_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"; then
+      {
+        passed Removing Corrupted zip file
+        rm "${DOWNLOADFOLDER}/${CODENAME}"
+        file_does_not_exist_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
+        rm  /tmp/corrupted.tar.gzeraseit
+      }
+      fi
+    }
+    fi
+    Comment "_do_not_downloadtwice \"${TARGET_URL}\" \"${DOWNLOADFOLDER}\"  \"${CODENAME}\""
+    _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+    _err=$?
+    wait
+    if [ ${_err} -gt 0 ] ; then
+    {
+      return 1  # here one is for error
     }
     fi
   }
   fi
-  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
-  _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
+  local UNZIPDIR="$(echo "${CODENAME}" | sed 's/.tar.gz//g' )"
+  Comment enforce_variable_with_value UNZIPDIR "${UNZIPDIR}"
+  enforce_variable_with_value UNZIPDIR "${UNZIPDIR}"
+
+  local TARGETFOLDER="${USER_HOME}/_/software"
+  Comment enforce_variable_with_value TARGETFOLDER "${TARGETFOLDER}"
+  enforce_variable_with_value TARGETFOLDER "${TARGETFOLDER}"
+
+  Comment "_unzip \"${DOWNLOADFOLDER}\" \"${UNZIPDIR}\" \"${CODENAME}\""
+  if _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}" ; then
+  {
+    Comment "unzipping failed. Downloading again"
+    rm -rf "${DOWNLOADFOLDER}/${UNZIPDIR}"
+  }
+  fi
+  Comment "_backup_current_target_and_remove_if_exists \"${TARGETFOLDER}\""
   _backup_current_target_and_remove_if_exists "${TARGETFOLDER}"
+  _err=$?
+  wait
+  if [ ${_err} -gt 0 ] ; then
+  {
+    return 1  # here one is for error
+  }
+  fi
+  Comment "_install_to_target \"${TARGETFOLDER}\" \"${DOWNLOADFOLDER}/${UNZIPDIR}\""
   _install_to_target "${TARGETFOLDER}" "${DOWNLOADFOLDER}/${UNZIPDIR}"
+  _err=$?
+  wait
+  if [ ${_err} -gt 0 ] ; then
+  {
+    return 1  # here one is for error
+  }
+  fi
 
   # _remove_unzipped_folder?
   rm "${DOWNLOADFOLDER}/${UNZIPDIR}"
+  _err=$?
+  wait
+  if [ ${_err} -gt 0 ] ; then
+  {
+    return 1  # here one is for error
+  }
+  fi
   directory_does_not_exist_with_spaces "${DOWNLOADFOLDER}/${UNZIPDIR}"
 
   # _remove_downloaded_file?
   rm "${DOWNLOADFOLDER}/${CODENAME}"
+  _err=$?
+  wait
+  if [ ${_err} -gt 0 ] ; then
+  {
+    return 1  # here one is for error
+  }
+  fi
   file_does_not_exist_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
 
-   _add_mine_associacions_and_browser_click_to_open "${TARGETFOLDER}" "${USER_HOME}/.local/share" "${USER_HOME}/_/work"
-
+  Comment "_add_mine_associacions_and_browser_click_to_open \"${TARGETFOLDER}\" \"${USER_HOME}/.local/share\" \"${USER_HOME}/_/work\""
+  _add_mine_associacions_and_browser_click_to_open "${TARGETFOLDER}" "${USER_HOME}/.local/share" "${USER_HOME}/_/work"
+  Comment "end _fedora__64"
 
 } # end _fedora__64
 
@@ -1011,7 +1237,7 @@ _mingw__64() {
     # THOUGHT        local CODENAME="WebStorm-4.3.3.24545.exe"
     local URL="https://download-cf.jetbrains.com/webstorm/${CODENAME}"
     cd $HOMEDIR
-	  cd Downloads
+    cd Downloads
     curl -O $URL
     ${CODENAME}
 } # end _mingw__64
@@ -1022,8 +1248,8 @@ _mingw__32() {
     local URL="https://download-cf.jetbrains.com/webstorm/${CODENAME}"
     cd $HOMEDIR
     cd Downloads
-	  curl -O $URL
-	  ${CODENAME}
+    curl -O $URL
+    ${CODENAME}
 } # end
 
 
