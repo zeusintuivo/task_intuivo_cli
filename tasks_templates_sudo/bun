@@ -13,11 +13,11 @@ _debian_flavor_install() {
     nginx
   "
   ); then
-    {
-      apt install base64 -y
-      apt install unzip -y
-      apt install nginx -y
-    }
+  {
+    apt install base64 -y
+    apt install unzip -y
+    apt install nginx -y
+  }
   fi
   verify_is_installed "
     unzip
