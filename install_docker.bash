@@ -76,7 +76,8 @@ INT ..."
 load_struct_testing(){
   function _trap_on_error(){
     local -ir __trapped_error_exit_num="${2:-0}"
-    echo -e "\\n \033[01;7m*** 2 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+		echo -e "\\n \033[01;7m*** tasks_base/sudoer.bash:$LINENO load_struct_testing() ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+
     echo ". ${1}"
     echo ". exit  ${__trapped_error_exit_num}  "
     echo ". caller $(caller) "
@@ -440,25 +441,25 @@ directory_exists_with_spaces "${USER_HOME}"
 _debian_flavor_install() {
   apt install gnome-terminal -y
   if apt remove docker-desktop -y ; then
-	{
-		warning "failed to remove older version of docker"
-	}
-	fi
-  if rm -rf "${HOME}/.docker/desktop" ; then 
-	{
-		warning "failed to remove ${HOME}/.docker/desktop"
-	}
-	fi
-  if rm -rf "${USER_HOME}/.docker/desktop" ; then 
-	{
-		warning "failed to remove ${USER_HOME}/.docker/desktop"
-	}
-	fi
-  if rm -rf /usr/local/bin/com.docker.cli ; then 
-	{
-		warning "failed to remove /usr/local/bin/com.docker.cli"
-	}
-	fi
+  {
+    warning "failed to remove older version of docker"
+  }
+  fi
+  if rm -rf "${HOME}/.docker/desktop" ; then
+  {
+    warning "failed to remove ${HOME}/.docker/desktop"
+  }
+  fi
+  if rm -rf "${USER_HOME}/.docker/desktop" ; then
+  {
+    warning "failed to remove ${USER_HOME}/.docker/desktop"
+  }
+  fi
+  if rm -rf /usr/local/bin/com.docker.cli ; then
+  {
+    warning "failed to remove /usr/local/bin/com.docker.cli"
+  }
+  fi
 
    # Add Docker's official GPG key:
   apt-get update -y
@@ -471,62 +472,57 @@ _debian_flavor_install() {
   echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
   apt-get update -y
   apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
-  
-	ensure docker or "Canceling until docker is installed"
-	
-	if groupadd docker ; then 
-	{ 
-		warning " Group already exists" 
-	} 
-	fi
+  ensure docker or "Canceling until docker is installed"
+  if groupadd docker ; then
+  {
+    warning " Group already exists"
+  }
+  fi
   if usermod -aG docker root ; then
-	{ 
-		warning " root already added to docker" 
-	} 
-	fi
-	if usermod -aG docker "${SUDO_USER}" ; then 
-	{ 
-		warning " user ${SUDO_USER} already  added to docker group" 
-	} 
-	fi
+  {
+    warning " root already added to docker"
+  }
+  fi
+  if usermod -aG docker "${SUDO_USER}" ; then
+  {
+    warning " user ${SUDO_USER} already  added to docker group"
+  }
+  fi
   if newgrp docker ; then
-	{ 
-		warning " could not run newgrp docker " 
-	} 
-	fi
+  {
+    warning " could not run newgrp docker "
+  }
+  fi
   if chown -R  root  /root/.docker ; then\
-	{ 
-		warning " chown failed to docker " 
-	} 
-	fi
-	if chown -R   "${SUDO_USER}" "${USER_HOME}/.docker" ; then
-	{ 
-		warning " ${SUDO_USER} alredy added user to docker  " 
-	} 
-	fi
-
-	if chmod g+rwx "/root/.docker" ; then 
-	{ 
-		warning "chmod failed for root " 
-	} 
-	fi
+  {
+    warning " chown failed to docker "
+  }
+  fi
+  if chown -R   "${SUDO_USER}" "${USER_HOME}/.docker" ; then
+  {
+    warning " ${SUDO_USER} alredy added user to docker  "
+  }
+  fi
+  if chmod g+rwx "/root/.docker" ; then
+  {
+    warning "chmod failed for root "
+  }
+  fi
   if chmod g+rwx "${USER_HOME}/.docker" ; then
-	{ 
-		warning " chmod failed for ${SUDO_USER} in ${USER_HOME}"
-	} 
-	fi
-
-	yes | systemctl enable docker.service
-	yes | systemctl start docker.service
-	yes | systemctl enable containerd.service
+  {
+    warning " chmod failed for ${SUDO_USER} in ${USER_HOME}"
+  }
+  fi
+  yes | systemctl enable docker.service
+  yes | systemctl start docker.service
+  yes | systemctl enable containerd.service
   yes | systemctl start containerd.service
 
-
-	docker run hello-world
+  docker run hello-world
   docker compose version
   docker --version
   docker version
-  
+
 } # end _debian_flavor_install
 
 uninstall_docker() {
@@ -534,18 +530,36 @@ uninstall_docker() {
 
     Uninstall the Docker Engine, CLI, containerd, and Docker Compose packages:
 
- sudo apt-get purge docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin docker-ce-rootless-extras
+    sudo apt-get purge docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin docker-ce-rootless-extras
 
-Images, containers, volumes, or custom configuration files on your host aren't automatically removed. To delete all images, containers, and volumes:
+    Images, containers, volumes, or custom configuration files on your host aren't automatically removed. To delete all images, containers, and volumes:
 
- sudo rm -rf /var/lib/docker
+    sudo rm -rf /var/lib/docker
 
- sudo rm -rf /var/lib/containerd
+     sudo rm -rf /var/lib/containerd
  "
-} # end uninstall_docker 
+} # end uninstall_docker
 
 _redhat_flavor_install() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  Comment "Following instructions from https://docs.docker.com/engine/install/fedora/"
+  Installing "Uninstall old versions"
+  dnf remove docker \
+    docker-client \
+    docker-client-latest \
+    docker-common \
+    docker-latest \
+    docker-latest-logrotate \
+    docker-logrotate \
+    docker-selinux \
+    docker-engine-selinux \
+    docker-engine -y
+  Installing "Install using the rpm repository"
+  yes | dnf -y install dnf-plugins-core --skip-broken --disablerepo  skype,skype-stable,keybase,modular,1password
+  yes | dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
+  yes | dnf install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y --skip-broken --disablerepo  skype,skype-stable,keybase,modular,1password
+  yes | systemctl disable docker
+  yes | systemctl start docker
+  yes | docker run hello-world
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
