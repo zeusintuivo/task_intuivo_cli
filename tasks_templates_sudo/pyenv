@@ -301,10 +301,6 @@ _darwin__64() {
     openssl
     xz
     libffi
-    python-tk
-    python-tkinter
-    python3-tkinter
-    tk
     findutils
   "
   _git_clone_pyenv
@@ -331,7 +327,6 @@ _darwin__arm64() {
     openssl
     xz
     libffi
-    python-tk
     findutils
   "
   _git_clone_pyenv

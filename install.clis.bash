@@ -538,7 +538,7 @@ _add_launchd(){
      fi
      if launchctl load  "${launchfile}" ; then 
      {
-        warninglaunchctl load failed
+        warning launchctl load failed
      }
      fi
      
