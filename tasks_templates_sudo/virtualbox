@@ -1056,6 +1056,19 @@ _pause " Presiona tecla para terminar aqui "
 
 } # end _fedora__64
 
+_darwin__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  ensure brew or "Canceling until brew is installed"
+  local _parameters="${*-}"
+  local -i _err=0
+  su - "${SUDO_USER}" -c "bash -c 'brew install --cask virtualbox'"
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO  while running 'brew install --cask virtualbox' above _err:${_err}"
+  }
+  fi
+} # end _darwin__64
 
 
 _pause() {
