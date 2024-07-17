@@ -111,3 +111,18 @@ _fedora__64() {
   _err=$?
   return  $_err
 } # end _fedora__64
+
+_darwin__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  local _command='brew install --cask zoom'
+	su - "${SUDO_USER}" -c '${_command}' #  "${_parameters-}"
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO  while running _command:${_command}  _err:${_err}"
+  }
+  fi
+} # end _darwin__64
+

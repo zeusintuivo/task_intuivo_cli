@@ -1804,7 +1804,11 @@ if [[ "$(uname)" == "Darwin" ]] ; then
 {
   # Do something under Mac OS X platform
   Updating security set-keychain-password default
-  security set-keychain-password
+  # security set-keychain-password
+  security set-keychain-password <<< "\\
+\\
+"
+
 }
 fi
 return 0
@@ -2179,7 +2183,7 @@ _darwin__arm64() {
 } # end _darwin__arm64
 
 _darwin__64() {
-  _darwin_flavor_1
+  #_darwin_flavor_1
   _darwin_flavor_2
 } # end _darwin__64
 
@@ -2377,7 +2381,7 @@ _darwin_flavor_1() {
   #  pv
   #  nano
   #  vim
-  #  gawk
+  #ss  gawk
   #  pygmentize
   #  "
   echo "$0:$LINENO"
