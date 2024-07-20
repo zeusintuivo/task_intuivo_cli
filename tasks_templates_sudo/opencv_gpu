@@ -216,20 +216,20 @@ _ubuntu_22__aarch64() {
 
 
 _add_variables_to_bashrc_zshrc(){
-  local RBENV_SH_CONTENT='
+  local CUDA_SH_CONTENT='
 
-# RBENV
-if [[ -e "'${USER_HOME}'/.rbenv" ]] ; then
+# CUDA
+if [[ -e "'${USER_HOME}'/.cuda" ]] ; then
 {
-  export RBENV_ROOT="'${USER_HOME}'/.rbenv"
+  export CUDA_ROOT="'${USER_HOME}'/.cuda"
   export PATH="'${USER_HOME}'/bin:${PATH}"
-  export PATH="'${USER_HOME}'/.rbenv/bin:${PATH}"
-  eval "$(rbenv init -)"
+  export PATH="'${USER_HOME}'/.cuda/bin:${PATH}"
+  eval "$(cuda init -)"
 }
 fi
 '
-  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _add_variables_to_bashrc_zshrc rbenv" && echo -e "${RESET}" && return 0' ERR
-  Checking "${RBENV_SH_CONTENT}"
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _add_variables_to_bashrc_zshrc cuda" && echo -e "${RESET}" && return 0' ERR
+  Checking "${CUDA_SH_CONTENT}"
   local INITFILE INITFILES="
    .bashrc
    .zshrc
@@ -242,23 +242,23 @@ fi
   {
     [ -z ${INITFILE} ] && continue
     Checking "${USER_HOME}/${INITFILE}"
-    _if_not_contains "${USER_HOME}/${INITFILE}"  "# RBENV" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
-    _if_not_contains "${USER_HOME}/${INITFILE}"  "RBENV_ROOT" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
-    _if_not_contains "${USER_HOME}/${INITFILE}"  "rbenv init" ||  echo "${RBENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "# CUDA" ||  echo "${CUDA_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "CUDA_ROOT" ||  echo "${CUDA_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "cuda init" ||  echo "${CUDA_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
   }
   done <<< "${INITFILES}"
-  # type rbenv
-  Checking "export PATH=\"${USER_HOME}/.rbenv/bin:${PATH}\" "
-  export PATH="${USER_HOME}/.rbenv/bin:${PATH}"
-  chown -R "${SUDO_USER}" "${USER_HOME}/.rbenv"
-  cd "${USER_HOME}/.rbenv/bin"
-  eval "$("${USER_HOME}"/.rbenv/bin/rbenv init -)"
+  # type cuda
+  Checking "export PATH=\"${USER_HOME}/.cuda/bin:${PATH}\" "
+  export PATH="${USER_HOME}/.cuda/bin:${PATH}"
+  chown -R "${SUDO_USER}" "${USER_HOME}/.cuda"
+  cd "${USER_HOME}/.cuda/bin"
+  eval "$("${USER_HOME}"/.cuda/bin/cuda init -)"
 
-  # rbenv doctor
-  # rbenv install -l
-  # rbenv install 2.6.5
-  # rbenv global 2.6.5
-  # rbenv rehash
+  # cuda doctor
+  # cuda install -l
+  # cuda install 2.6.5
+  # cuda global 2.6.5
+  # cuda rehash
   # ruby -v
 
 } # _add_variables_to_bashrc_zshrc
@@ -278,23 +278,50 @@ _darwin_13_6__64() {
 
 _darwin__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  echo "_darwin__64 Procedure not yet implemented. I don't know what to do."
   
-  su - "${SUDO_USER}" -c "brew install cmake pkg-config"
-  su - "${SUDO_USER}" -c "brew install ffmpeg"
   # su - "${SUDO_USER}" -c "brew install python@3.9"
   # su - "${SUDO_USER}" -c "brew link --force --overwrite python@3.9"
-  file_exists cuda-gdb-darwin-12.2.53-32947973.gz
+  pwd
+  if it_exists_with_spaces cuda-gdb-darwin-12.2.53-32947973.gz ; then
+  {
+    passed "found file cuda-gdb-darwin-12.2.53-32947973.gz"
+  }
+  fi
   local INSTALL_DIR=/usr/local/bin/cuda-gdb-darwin-12.2
-  mkdir "${INSTALL_DIR}"
+  if it_exists_with_spaces "${INSTALL_DIR}" ; then
+  {
+    rm -rf "${INSTALL_DIR}"
+  }
+  fi
+  mkdir -p "${INSTALL_DIR}"
+
   cp cuda-gdb-darwin-12.2.53-32947973.gz "${INSTALL_DIR}"
   cd "${INSTALL_DIR}" || failed "to move to dir cd ${INSTALL_DIR}"
+  if it_exists_with_spaces cuda-gdb-darwin-12.2.53-32947973.gz ; then
+  {
+    passed "found file cuda-gdb-darwin-12.2.53-32947973.gz"
+  }
+  fi
   tar fxvz  cuda-gdb-darwin-12.2.53-32947973.gz
   cd "${INSTALL_DIR}/bin" || failed "to move to dir cd ${INSTALL_DIR}/bin"
   # _add_variables_to_bashrc_zshrc
   link_folder_scripts
+  xattr -d  com.apple.quarantine cuda-binary-gdb 
+  xattr -d  com.apple.quarantine cuda-gdb  
+  xattr -d  com.apple.quarantine cuobjdump  
+  xattr -d  com.apple.quarantine nvdisasm
   cuda-gdb --version
+  echo "install brew stuff ?"
+  echo "install brew stuff ?"
+  echo "install brew stuff ?"
+  echo "install brew stuff ?"
+  echo "install brew stuff ?"
+  echo "install brew stuff ?"
+  echo "install brew stuff ?"
 
+  su - "${SUDO_USER}" -c "brew install cmake pkg-config"
+  su - "${SUDO_USER}" -c "brew install ffmpeg"
+  
 
 } # end _darwin__64
 
