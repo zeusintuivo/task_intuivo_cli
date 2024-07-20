@@ -769,10 +769,52 @@ _darwin__64() {
     git clone https://github.com/opencv/opencv_contrib.git "opencv_contrib"
   }
   fi
-  rm -rf opencv/build
 
   # su - "${SUDO_USER}" -c "python3 -m ensurepip --upgrade"
   # su - "${SUDO_USER}" -c "python3 -m pip install setuptools"
+  rm -rf opencv3.4.20/build
+  mkdir -p opencv3.4.20/build
+  cd opencv3.4.20/build
+  
+  cmake -D CMAKE_BUILD_TYPE=Release \
+      -D CMAKE_INSTALL_PREFIX=/usr/local \
+      -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib3.4.20/modules \
+      -D WITH_OPENCL=ON \
+      -D WITH_OPENCL_SVM=OFF \
+      -D WITH_OPENCLAMDFFT=OFF \
+      -D WITH_OPENCLAMDBLAS=OFF \
+      -D PYTHON3_EXECUTABLE=$(which python3) \
+      -D PYTHON3_INCLUDE_DIR="${PY3_INCLUDE_DIR}" \
+      -D PYTHON3_LIBRARY="${PY3_LIBRARY}" \
+      -D PYTHON3_PACKAGES_PATH="${PY3_PACKAGES_PATH}" \
+      ..
+
+  make -j$(sysctl -n hw.logicalcpu)
+  
+  cd "${_cwd}"
+
+    rm -rf opencv4.8.0/build
+  mkdir -p opencv4.8.0/build
+  cd opencv4.8.0/build
+  
+  cmake -D CMAKE_BUILD_TYPE=Release \
+      -D CMAKE_INSTALL_PREFIX=/usr/local \
+      -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib4.8.0/modules \
+      -D WITH_OPENCL=ON \
+      -D WITH_OPENCL_SVM=OFF \
+      -D WITH_OPENCLAMDFFT=OFF \
+      -D WITH_OPENCLAMDBLAS=OFF \
+      -D PYTHON3_EXECUTABLE=$(which python3) \
+      -D PYTHON3_INCLUDE_DIR="${PY3_INCLUDE_DIR}" \
+      -D PYTHON3_LIBRARY="${PY3_LIBRARY}" \
+      -D PYTHON3_PACKAGES_PATH="${PY3_PACKAGES_PATH}" \
+      ..
+
+  make -j$(sysctl -n hw.logicalcpu)
+
+  cd "${_cwd}"
+
+  rm -rf opencv/build
   mkdir -p opencv/build
   cd opencv/build
   export PATH="/usr/local/opt/python@3.12/bin:$PATH"
@@ -790,6 +832,7 @@ _darwin__64() {
   su - "${SUDO_USER}" -c "brew link --force --overwrite python@3.12"
   su - "${SUDO_USER}" -c "brew postinstall python@3.12"
 
+  
   cmake -D CMAKE_BUILD_TYPE=Release \
       -D CMAKE_INSTALL_PREFIX=/usr/local \
       -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules \
