@@ -749,39 +749,98 @@ _darwin__64() {
   xattr -d  com.apple.quarantine cuobjdump  
   xattr -d  com.apple.quarantine nvdisasm
   cuda-gdb --version
-  echo "install brew stuff ?"
-  echo "install brew stuff ?"
-  echo "install brew stuff ?"
-  echo "install brew stuff ?"
-  echo "install brew stuff ?"
-  echo "install brew stuff ?"
-  echo "install brew stuff ?"
   cd "${_cwd}"
-  git clone https://github.com/opencv/opencv.git
-  git clone https://github.com/opencv/opencv_contrib.git
+  if it_exists_with_spaces opencv ; then
+  {
+    passed "found dir opencv"
+  }
+  else
+  {
+    git clone https://github.com/opencv/opencv.git "opencv"
+  }
+  fi
+  cd "${_cwd}"
+  if it_exists_with_spaces opencv_contrib ; then
+  {
+    passed "found dir opencv_contrib"
+  }
+  else
+  {
+    git clone https://github.com/opencv/opencv_contrib.git "opencv_contrib"
+  }
+  fi
+  rm -rf opencv/build
   mkdir -p opencv/build
   cd opencv/build
   cmake -D CMAKE_BUILD_TYPE=Release \
       -D CMAKE_INSTALL_PREFIX=/usr/local \
       -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules \
-      -D WITH_CUDA=ON \
-      -D CUDA_ARCH_BIN=7.5 \
-      -D CUDA_ARCH_PTX= \
-      -D WITH_CUDNN=ON \
-      -D OPENCV_DNN_CUDA=ON \
-      -D ENABLE_FAST_MATH=1 \
-      -D CUDA_FAST_MATH=1 \
-      -D WITH_CUBLAS=1 \
-      -D OPENCV_ENABLE_NONFREE=ON \
+      -D WITH_OPENCL=ON \
+      -D WITH_OPENCL_SVM=OFF \
+      -D WITH_OPENCLAMDFFT=OFF \
+      -D WITH_OPENCLAMDBLAS=OFF \
       ..
   make -j$(sysctl -n hw.logicalcpu)
   make install
+  echo "install brew stuff ?"
+  echo "install brew stuff ?"
+  echo "install brew stuff ?"
+  echo "install brew stuff ?"
+  echo "install brew stuff ?"
+  echo "install brew stuff ?"
+  echo "install brew stuff ?"
+  echo "install brew stuff ?"
 
   su - "${SUDO_USER}" -c "brew install cmake pkg-config"
   su - "${SUDO_USER}" -c "brew install ffmpeg"
   
 
 } # end _darwin__64
+
+
+_git_clone() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO  _git_clone CUDA" && echo -e "${RESET}" && return 0' ERR
+  local _source="${1}"
+  local _target="${2}"
+  Checking "${SUDO_USER}" "${_target}"
+  pwd
+  if  it_exists_with_spaces "${_target}" ; then # && it_exists_with_spaces "${_target}/.git" ; then
+  {
+    if it_exists_with_spaces "${_target}/.git" ; then
+    {
+      cd "${_target}"
+      if git config pull.rebase false ; then
+      {
+        warning Could not git config pull.rebase false
+      }
+      fi
+      if git fetch  ; then
+      {
+        warning Could not git fetch
+      }
+      fi
+      if git pull  ; then
+      {
+        warning Could not git pull
+      }
+      fi
+    }
+    fi
+  }
+  else
+  {
+    if git clone "${_source}" "${_target}"  ; then
+    {
+      warning Could not git clone "${_source}" "${_target}"
+    }
+    fi
+  }
+  fi
+  chown -R "${SUDO_USER}" "${_target}"
+
+} # end _git_clone
+
 
 _darwin__arm64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR

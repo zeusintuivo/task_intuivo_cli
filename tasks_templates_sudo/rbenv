@@ -33,7 +33,7 @@ _package_list_installer() {
 
 _git_clone() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO  _git_clone KERL" && echo -e "${RESET}" && return 0' ERR
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO  _git_clone RBENV" && echo -e "${RESET}" && return 0' ERR
   local _source="${1}"
   local _target="${2}"
   Checking "${SUDO_USER}" "${_target}"
