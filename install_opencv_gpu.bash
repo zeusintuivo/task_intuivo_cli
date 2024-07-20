@@ -719,7 +719,7 @@ _darwin__64() {
   local _cwd=$(pwd)
   # su - "${SUDO_USER}" -c "brew install python@3.9"
   # su - "${SUDO_USER}" -c "brew link --force --overwrite python@3.9"
-  pwd
+  
   if it_exists_with_spaces cuda-gdb-darwin-12.2.53-32947973.gz ; then
   {
     passed "found file cuda-gdb-darwin-12.2.53-32947973.gz"
@@ -770,8 +770,26 @@ _darwin__64() {
   }
   fi
   rm -rf opencv/build
+
+  # su - "${SUDO_USER}" -c "python3 -m ensurepip --upgrade"
+  # su - "${SUDO_USER}" -c "python3 -m pip install setuptools"
   mkdir -p opencv/build
   cd opencv/build
+  export PATH="/usr/local/opt/python@3.12/bin:$PATH"
+  export LDFLAGS="-L/usr/local/opt/python@3.12/lib"
+  export CPPFLAGS="-I/usr/local/opt/python@3.12/include"
+  export PKG_CONFIG_PATH="/usr/local/opt/python@3.12/lib/pkgconfig"
+  local PY3_INCLUDE_DIR=$(python3 -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())")
+  local PY3_LIBRARY=$(python3 -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR'))")/libpython3.12.dylib
+  local PY3_PACKAGES_PATH=$(python3 -c "import site; print(site.getsitepackages()[0])")
+      # -D PYTHON3_INCLUDE_DIR=/usr/local/opt/python@3.12/Frameworks/Python.framework/Versions/3.12/include/python3.12 \
+      # -D PYTHON3_LIBRARY=/usr/local/opt/python@3.12/Frameworks/Python.framework/Versions/3.12/lib/libpython3.12.dylib \
+      # -D PYTHON3_PACKAGES_PATH=/usr/local/opt/python@3.12/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages \
+  
+  su - "${SUDO_USER}" -c "brew installl --force --overwrite python@3.12"
+  su - "${SUDO_USER}" -c "brew link --force --overwrite python@3.12"
+  su - "${SUDO_USER}" -c "brew postinstall python@3.12"
+
   cmake -D CMAKE_BUILD_TYPE=Release \
       -D CMAKE_INSTALL_PREFIX=/usr/local \
       -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules \
@@ -779,9 +797,16 @@ _darwin__64() {
       -D WITH_OPENCL_SVM=OFF \
       -D WITH_OPENCLAMDFFT=OFF \
       -D WITH_OPENCLAMDBLAS=OFF \
+      -D PYTHON3_EXECUTABLE=$(which python3) \
+      -D PYTHON3_INCLUDE_DIR="${PY3_INCLUDE_DIR}" \
+      -D PYTHON3_LIBRARY="${PY3_LIBRARY}" \
+      -D PYTHON3_PACKAGES_PATH="${PY3_PACKAGES_PATH}" \
       ..
+
   make -j$(sysctl -n hw.logicalcpu)
   make install
+  su - "${SUDO_USER}" -c "python3 -c 'import cv2; print(cv2.__version__)'"
+
   echo "install brew stuff ?"
   echo "install brew stuff ?"
   echo "install brew stuff ?"
@@ -790,6 +815,7 @@ _darwin__64() {
   echo "install brew stuff ?"
   echo "install brew stuff ?"
   echo "install brew stuff ?"
+
 
   su - "${SUDO_USER}" -c "brew install cmake pkg-config"
   su - "${SUDO_USER}" -c "brew install ffmpeg"
