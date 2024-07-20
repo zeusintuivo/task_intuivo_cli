@@ -278,7 +278,7 @@ _darwin_13_6__64() {
 
 _darwin__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  
+  local _cwd=$(pwd)
   # su - "${SUDO_USER}" -c "brew install python@3.9"
   # su - "${SUDO_USER}" -c "brew link --force --overwrite python@3.9"
   pwd
@@ -318,6 +318,26 @@ _darwin__64() {
   echo "install brew stuff ?"
   echo "install brew stuff ?"
   echo "install brew stuff ?"
+  cd "${_cwd}"
+  git clone https://github.com/opencv/opencv.git
+  git clone https://github.com/opencv/opencv_contrib.git
+  mkdir -p opencv/build
+  cd opencv/build
+  cmake -D CMAKE_BUILD_TYPE=Release \
+      -D CMAKE_INSTALL_PREFIX=/usr/local \
+      -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules \
+      -D WITH_CUDA=ON \
+      -D CUDA_ARCH_BIN=7.5 \
+      -D CUDA_ARCH_PTX= \
+      -D WITH_CUDNN=ON \
+      -D OPENCV_DNN_CUDA=ON \
+      -D ENABLE_FAST_MATH=1 \
+      -D CUDA_FAST_MATH=1 \
+      -D WITH_CUBLAS=1 \
+      -D OPENCV_ENABLE_NONFREE=ON \
+      ..
+  make -j$(sysctl -n hw.logicalcpu)
+  make install
 
   su - "${SUDO_USER}" -c "brew install cmake pkg-config"
   su - "${SUDO_USER}" -c "brew install ffmpeg"
