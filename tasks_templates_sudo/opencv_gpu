@@ -339,7 +339,7 @@ _darwin__64() {
   cd opencv3.4.20/build
   
   cmake -D CMAKE_BUILD_TYPE=Release \
-      -D CMAKE_INSTALL_PREFIX=/usr/local \
+      -D CMAKE_INSTALL_PREFIX=../opencv3.4.20-build-mac64-osx13 \
       -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib3.4.20/modules \
       -D WITH_OPENCL=ON \
       -D WITH_OPENCL_SVM=OFF \
@@ -360,7 +360,7 @@ _darwin__64() {
   cd opencv4.8.0/build
   
   cmake -D CMAKE_BUILD_TYPE=Release \
-      -D CMAKE_INSTALL_PREFIX=/usr/local \
+      -D CMAKE_INSTALL_PREFIX=../opencv4.8.0-build-mac64-osx13 \
       -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib4.8.0/modules \
       -D WITH_OPENCL=ON \
       -D WITH_OPENCL_SVM=OFF \
@@ -375,7 +375,6 @@ _darwin__64() {
   make -j$(sysctl -n hw.logicalcpu)
 
   cd "${_cwd}"
-
   rm -rf opencv/build
   mkdir -p opencv/build
   cd opencv/build
