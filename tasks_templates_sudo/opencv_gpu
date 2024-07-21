@@ -281,16 +281,34 @@ _darwin__64() {
   local _cwd=$(pwd)
   local -i _err=0
 
-  if it_exists_with_spaces .venv ; then
+  if [[ -z "$(xcode-select -p)" ]] ; then 
   {
-    python3 -m venv .venv
-  }
-  else
-  {
-    source .venv/bin/activate
+    xcode-select --install
   }
   fi
 
+  if it_exists_with_spaces .venv ; then
+  {
+    source .venv/bin/activate
+  }
+  else
+  {
+    python3 -m venv .venv
+    source .venv/bin/activate
+    su - "${SUDO_USER}" -c "brew install --force --overwrite python@3.12"
+    su - "${SUDO_USER}" -c "brew install jpeg libpng libtiff openexr"
+    su - "${SUDO_USER}" -c "brew install eigen tbb"
+    su - "${SUDO_USER}" -c "brew link --force --overwrite python@3.12"
+    su - "${SUDO_USER}" -c "brew postinstall python@3.12"
+  }
+  fi
+  # echo 'export PATH="/usr/local/opt/jpeg/bin:$PATH"' >> ~/.zshrc
+  export PATH="/usr/local/opt/jpeg/bin:$PATH"   
+  # For compilers to find jpeg you may need to set:
+  export LDFLAGS="-L/usr/local/opt/jpeg/lib"
+  export CPPFLAGS="-I/usr/local/opt/jpeg/include"
+  # For pkg-config to find jpeg you may need to set:
+  export PKG_CONFIG_PATH="/usr/local/opt/jpeg/lib/pkgconfig"
   # su - "${SUDO_USER}" -c "brew install python@3.9"
   # su - "${SUDO_USER}" -c "brew link --force --overwrite python@3.9"
   
@@ -375,7 +393,8 @@ _darwin__64() {
 
   # su - "${SUDO_USER}" -c "python3 -m ensurepip --upgrade"
   # su - "${SUDO_USER}" -c "python3 -m pip install setuptools"
-  if it_exists_with_spaces opencv3.4.20-build-mac64-osx13 ; then
+  Checking 3.4.20
+  if it_exists_with_spaces  opencv3.4.20-build-mac64-osx13 && it_exists_with_spaces opencv3.4.20-build-mac64-osx13/bin  ; then
   {
     pwd
     echo "opencv 3.4.20 version test:" 
@@ -384,11 +403,29 @@ _darwin__64() {
   }
   else
   {
+    Installing 3.4.20
+    if ( echo "$( brew info ffmpeg 2>&1 )" | grep -q "^Not installed" ) ; then
+    {
+      su - "${SUDO_USER}" -c "brew unlink ffmpeg"
+      su - "${SUDO_USER}" -c "brew uninstall ffmpeg"
+    }
+    else
+    {
+      passed "ffmpeg not installed"
+    }
+    fi
+    su - "${SUDO_USER}" -c "brew unlink ffmpeg"
+    su - "${SUDO_USER}" -c "brew install ffmpeg@4"
+    su - "${SUDO_USER}" -c "brew unlink ffmpeg@4 && brew link --force ffmpeg@4"
+    rm -rf opencv3.4.20-build-mac64-osx13
     rm -rf opencv3.4.20/build
     mkdir -p opencv3.4.20/build
-    mkdir -p opencv4.8.0-build-mac64-osx13
+    mkdir -p opencv3.4.20-build-mac64-osx13
+    chown -R "${SUDO_USER}" opencv3.4.20
+    chown -R "${SUDO_USER}" opencv3.4.20-build-mac64-osx13
     cd opencv3.4.20/build
-    cmake -D CMAKE_BUILD_TYPE=Release \
+    # -DWITH_FFMPEG=OFF 
+    su - "${SUDO_USER}" -c "cd \"${_cwd}/opencv3.4.20/build\" && cmake -D CMAKE_BUILD_TYPE=Release \
         -D CMAKE_INSTALL_PREFIX=../../opencv3.4.20-build-mac64-osx13 \
         -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib3.4.20/modules \
         -D WITH_OPENCL=ON \
@@ -400,13 +437,16 @@ _darwin__64() {
         -D BUILD_OPENCV_XPHOTO=OFF \
         -D BUILD_opencv_xphoto=OFF \
         -D PYTHON3_EXECUTABLE=$(which python3) \
-        -D PYTHON3_INCLUDE_DIR="${PY3_INCLUDE_DIR}" \
-        -D PYTHON3_LIBRARY="${PY3_LIBRARY}" \
-        -D PYTHON3_PACKAGES_PATH="${PY3_PACKAGES_PATH}" \
-        ..
+        -D PYTHON3_INCLUDE_DIR=\"${PY3_INCLUDE_DIR}\" \
+        -D PYTHON3_LIBRARY=\"${PY3_LIBRARY}\" \
+        -D PYTHON3_PACKAGES_PATH=\"${PY3_PACKAGES_PATH}\" \
+        .."
 
-    echo "" > build3.4.20.log
-    make VERBOSE=1  -j$(sysctl -n hw.logicalcpu) 2>&1 | tee build3.4.20.log
+    rm -rf build3.4.20.log
+    touch build3.4.20.log
+    chown "${SUDO_USER}" build3.4.20.log
+    su - "${SUDO_USER}" -c "cd \"${_cwd}/opencv3.4.20/build\" && make  -j$(sysctl -n hw.logicalcpu) 2>&1 | tee build3.4.20.log"
+    # make VERBOSE=1  -j$(sysctl -n hw.logicalcpu) 2>&1 | tee build3.4.20.log
     _err=$?
     if ( grep -qi 'error' build3.4.20.log ) ; then
     {
@@ -439,11 +479,13 @@ _darwin__64() {
       failed " $0:$LINENO while running make for opencv3.4.20  removing build target also _err:${_err}"
     }
     fi
+    make install
+
   }
   fi
   cd "${_cwd}"
-
-  if it_exists_with_spaces opencv4.8.0-build-mac64-osx13 ; then
+  Checking 4.8.0
+  if it_exists_with_spaces opencv4.8.0-build-mac64-osx13  && it_exists_with_spaces opencv4.8.0-build-mac64-osx13/bin  ; then
   {
     pwd
     echo "opencv 4.8.0 version test:" 
@@ -452,28 +494,79 @@ _darwin__64() {
   }
   else
   {
+    Installing 4.8.0
+    su - "${SUDO_USER}" -c "brew install gstreamer gst-plugins-base gst-plugins-good libdc1394"
+    su - "${SUDO_USER}" -c "brew install vtk"
+    su - "${SUDO_USER}" -c "brew install openjdk@11"
+    su - "${SUDO_USER}" -c "brew link --force --overwrite openjdk@11"
+    export PATH="/usr/local/opt/openjdk@11/bin:$PATH"
+    # ln -sfn /usr/local/opt/openjdk@11/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk-11.jdk
+    export CPPFLAGS="-I/usr/local/opt/openjdk@11/include"
+    local folderx="$(xcode-select -p)"
+    xcode-select -s "${folderx}"
+    rm -rf opencv4.8.0-build-mac64-osx13
     rm -rf opencv4.8.0/build
     mkdir -p opencv4.8.0/build
     mkdir -p opencv4.8.0-build-mac64-osx13
+    chown -R "${SUDO_USER}" opencv4.8.0
+    chown -R "${SUDO_USER}" opencv4.8.0-build-mac64-osx13
+    local vtkdir="$(dirname "$(brew list vtk | grep cmake | tail -1)")"
     cd opencv4.8.0/build
-    
-    cmake -D CMAKE_BUILD_TYPE=Release \
+        # -D BUILD_OPENCV_DNN=OFF \
+        # -D BUILD_opencv_dnn=OFF \
+        # -D VTK_DIR=/usr/local/opt/vtk/lib/cmake/vtk-8.2 ../opencv-3.4.20
+        # -D BUILD_opencv_cudaarithm=OFF \
+ 
+    su - "${SUDO_USER}" -c "cd \"${_cwd}/opencv4.8.0/build\" && cmake \
+        -D CMAKE_BUILD_TYPE=Release \
         -D CMAKE_INSTALL_PREFIX=../../opencv4.8.0-build-mac64-osx13 \
         -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib4.8.0/modules \
+        -D VTK_DIR=\"${vtkdir}\" ../../opencv4.8.0
         -D WITH_OPENCL=ON \
+        -D OPENCV_ENABLE_NONFREE=ON \
+        -D WITH_GSTREAMER=ON \
+        -D WITH_FFMPEG=ON \
         -D WITH_OPENCL_SVM=OFF \
+        -D CUDA_ARCH_BIN=6.1 \
         -D WITH_OPENCLAMDFFT=OFF \
+        -D WITH_LIBDC1394=ON \
         -D WITH_OPENCLAMDBLAS=OFF \
-        -D BUILD_OPENCV_DNN=OFF \
-        -D BUILD_opencv_dnn=OFF \
+        -D BUILD_opencv_cudaarithm=ON \
         -D PYTHON3_EXECUTABLE=$(which python3) \
-        -D PYTHON3_INCLUDE_DIR="${PY3_INCLUDE_DIR}" \
-        -D PYTHON3_LIBRARY="${PY3_LIBRARY}" \
-        -D PYTHON3_PACKAGES_PATH="${PY3_PACKAGES_PATH}" \
-        ..
+        -D PYTHON3_INCLUDE_DIR=\"${PY3_INCLUDE_DIR}\" \
+        -D PYTHON3_LIBRARY=\"${PY3_LIBRARY}\" \
+        -D PYTHON3_PACKAGES_PATH=\"${PY3_PACKAGES_PATH}\" \
+        .."
 
-    echo "" > build4.8.0.log
-    make VERBOSE=1  -j$(sysctl -n hw.logicalcpu) 2>&1 | tee build4.8.0.log
+    # Installing Now build the cudaarithm module separately
+    # su - "${SUDO_USER}" -c "cd \"${_cwd}/opencv4.8.0/build\" && cmake \
+    #     -D CMAKE_BUILD_TYPE=Release \
+    #     -D CMAKE_INSTALL_PREFIX=../../opencv4.8.0-build-mac64-osx13 \
+    #     -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib4.8.0/modules \
+    #     -D VTK_DIR=\"${vtkdir}\" ../../opencv4.8.0
+    #     -D WITH_OPENCL=ON \
+    #     -D OPENCV_ENABLE_NONFREE=ON \
+    #     -D WITH_GSTREAMER=ON \
+    #     -D WITH_FFMPEG=ON \
+    #     -D WITH_OPENCL_SVM=OFF \
+    #     -D CUDA_ARCH_BIN=6.1 \
+    #     -D WITH_OPENCLAMDFFT=OFF \
+    #     -D WITH_LIBDC1394=ON \
+    #     -D WITH_OPENCLAMDBLAS=OFF \
+    #     -D BUILD_opencv_cudaarithm=ON \
+    #     -B build_cudaarithm \
+    #     -D PYTHON3_EXECUTABLE=$(which python3) \
+    #     -D PYTHON3_INCLUDE_DIR=\"${PY3_INCLUDE_DIR}\" \
+    #     -D PYTHON3_LIBRARY=\"${PY3_LIBRARY}\" \
+    #     -D PYTHON3_PACKAGES_PATH=\"${PY3_PACKAGES_PATH}\" \
+    #     ../../opencv_contrib4.8.0/modules/cudaarithm"
+
+    rm -rf build4.8.0.log
+    touch build4.8.0.log
+    chown "${SUDO_USER}" build4.8.0.log
+
+    su - "${SUDO_USER}" -c "cd \"${_cwd}/opencv4.8.0/build\" && make  -j$(sysctl -n hw.logicalcpu) 2>&1 | tee build4.8.0.log"
+    # make VERBOSE=1  -j$(sysctl -n hw.logicalcpu) 2>&1 | tee build4.8.0.log
     _err=$?
     if ( grep -qi 'error' build4.8.0.log ) ; then
     {
@@ -506,11 +599,14 @@ _darwin__64() {
       failed " $0:$LINENO while running make for opencv4.8.0  removing build target also _err:${_err}"
     }
     fi
+    make install
+
   }
   fi
 
   cd "${_cwd}"
 
+  Checking build_lastest
   if it_exists_with_spaces /usr/local/bin/opencv_version ; then
   {
     pwd
@@ -520,13 +616,12 @@ _darwin__64() {
   }
   else
   {
+    Installing  build_lastest
     rm -rf opencv/build
     mkdir -p opencv/build
     cd opencv/build
     
-    su - "${SUDO_USER}" -c "brew installl --force --overwrite python@3.12"
-    su - "${SUDO_USER}" -c "brew link --force --overwrite python@3.12"
-    su - "${SUDO_USER}" -c "brew postinstall python@3.12"
+
 
     
     cmake -D CMAKE_BUILD_TYPE=Release \
