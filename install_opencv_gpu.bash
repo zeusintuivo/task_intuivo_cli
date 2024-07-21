@@ -719,6 +719,16 @@ _darwin__64() {
   local _cwd=$(pwd)
   local -i _err=0
 
+  if it_exists_with_spaces .venv ; then
+  {
+    python3 -m venv .venv
+  }
+  else
+  {
+    source .venv/bin/activate
+  }
+  fi
+
   # su - "${SUDO_USER}" -c "brew install python@3.9"
   # su - "${SUDO_USER}" -c "brew link --force --overwrite python@3.9"
   
@@ -836,10 +846,31 @@ _darwin__64() {
     echo "" > build3.4.20.log
     make VERBOSE=1  -j$(sysctl -n hw.logicalcpu) 2>&1 | tee build3.4.20.log
     _err=$?
-    grep -i 'error' build3.4.20.log > errors3.4.20.log
-    grep -i 'undefined reference' build3.4.20.log > undefined3.4.20.log
-    grep -i 'missing' build3.4.20.log > missing3.4.20.log
-    grep -i 'failed' build3.4.20.log > failed3.4.20.log
+    if ( grep -qi 'error' build3.4.20.log ) ; then
+    {
+      grep -i 'error' build3.4.20.log > errors3.4.20.log
+    }
+    fi
+    if ( grep -qi 'undefined reference' build3.4.20.log ) ; then
+    {
+      grep -i 'undefined reference' build3.4.20.log > reference3.4.20.log
+    }
+    fi
+    if ( grep -qi 'undefined' build3.4.20.log ) ; then
+    {
+      grep -i 'undefined' build3.4.20.log > undefined3.4.20.log
+    }
+    fi
+    if ( grep -qi 'missing' build3.4.20.log ) ; then
+    {
+      grep -i 'missing' build3.4.20.log > missing3.4.20.log
+    }
+    fi
+    if ( grep -qi 'failed' build3.4.20.log ) ; then
+    {
+      grep -i 'failed' build3.4.20.log > failed3.4.20.log
+    }
+    fi
     if [ ${_err} -gt 0 ] ; then
     {
       rm -rf ../../opencv3.4.20-build-mac64-osx13 &
@@ -882,10 +913,31 @@ _darwin__64() {
     echo "" > build4.8.0.log
     make VERBOSE=1  -j$(sysctl -n hw.logicalcpu) 2>&1 | tee build4.8.0.log
     _err=$?
-    grep -i 'error' build4.8.0.log > errors4.8.0.log
-    grep -i 'undefined reference' build4.8.0.log > undefined4.8.0.log
-    grep -i 'missing' build4.8.0.log > missing4.8.0.log
-    grep -i 'failed' build4.8.0.log > failed4.8.0.log
+    if ( grep -qi 'error' build4.8.0.log ) ; then
+    {
+      grep -i 'error' build4.8.0.log > errors4.8.0.log
+    }
+    fi
+    if ( grep -qi 'undefined reference' build4.8.0.log ) ; then
+    {
+      grep -i 'undefined reference' build4.8.0.log > reference4.8.0.log
+    }
+    fi
+    if ( grep -qi 'undefined' build4.8.0.log ) ; then
+    {
+      grep -i 'undefined' build4.8.0.log > undefined4.8.0.log
+    }
+    fi
+    if ( grep -qi 'missing' build4.8.0.log ) ; then
+    {
+      grep -i 'missing' build4.8.0.log > missing4.8.0.log
+    }
+    fi
+    if ( grep -qi 'failed' build4.8.0.log ) ; then
+    {
+      grep -i 'failed' build4.8.0.log > failed4.8.0.log
+    }
+    fi
     if [ ${_err} -gt 0 ] ; then
     {
       rm -rf ../../opencv4.8.0-build-mac64-osx13 &
@@ -931,10 +983,31 @@ _darwin__64() {
     echo "" > build_lastest.log
     make -j$(sysctl -n hw.logicalcpu) 2>&1 | tee build_lastest.log
     _err=$?
-    grep -i 'error' build_lastest.log > errors_lastest.log
-    grep -i 'undefined reference' build_lastest.log > undefined_lastest.log
-    grep -i 'missing' build_lastest.log > missing_lastest.log
-    grep -i 'failed' build_lastest.log > failed_lastest.log
+    if ( grep -qi 'error' build_lastest.log ) ; then
+    {
+      grep -i 'error' build_lastest.log > errors_lastest.log
+    }
+    fi
+    if ( grep -qi 'undefined reference' build_lastest.log ) ; then
+    {
+      grep -i 'undefined reference' build_lastest.log > reference_lastest.log
+    }
+    fi
+    if ( grep -qi 'undefined' build_lastest.log ) ; then
+    {
+      grep -i 'undefined' build_lastest.log > undefined_lastest.log
+    }
+    fi
+    if ( grep -qi 'missing' build_lastest.log ) ; then
+    {
+      grep -i 'missing' build_lastest.log > missing_lastest.log
+    }
+    fi
+    if ( grep -qi 'failed' build_lastest.log ) ; then
+    {
+      grep -i 'failed' build_lastest.log > failed_lastest.log
+    }
+    fi
     if [ ${_err} -gt 0 ] ; then
     {
       failed "$0:$LINENO while running make for opencv lastest also _err:${_err}"
