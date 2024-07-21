@@ -271,7 +271,7 @@ _darwin_13_6__64() {
   _err=$?
   if [ ${_err} -gt 0 ] ; then
   {
-    failed "struct_testing:$LINENO $0:$LINENO while running callsomething above _err:${_err}"
+    failed "$0:$LINENO while running callsomething above _err:${_err}"
   }
   fi
 } # end _darwin_13_6__64
@@ -279,38 +279,56 @@ _darwin_13_6__64() {
 _darwin__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   local _cwd=$(pwd)
+  local -i _err=0
+
   # su - "${SUDO_USER}" -c "brew install python@3.9"
   # su - "${SUDO_USER}" -c "brew link --force --overwrite python@3.9"
   
-  if it_exists_with_spaces cuda-gdb-darwin-12.2.53-32947973.gz ; then
-  {
-    passed "found file cuda-gdb-darwin-12.2.53-32947973.gz"
-  }
-  fi
-  local INSTALL_DIR=/usr/local/bin/cuda-gdb-darwin-12.2
-  if it_exists_with_spaces "${INSTALL_DIR}" ; then
-  {
-    rm -rf "${INSTALL_DIR}"
-  }
-  fi
-  mkdir -p "${INSTALL_DIR}"
 
-  cp cuda-gdb-darwin-12.2.53-32947973.gz "${INSTALL_DIR}"
-  cd "${INSTALL_DIR}" || failed "to move to dir cd ${INSTALL_DIR}"
-  if it_exists_with_spaces cuda-gdb-darwin-12.2.53-32947973.gz ; then
+  if it_exists_with_spaces /usr/local/bin/cuda-gdb ; then
   {
-    passed "found file cuda-gdb-darwin-12.2.53-32947973.gz"
+    pwd
+    echo "Cuda version test:" 
+    cuda-gdb --version
+    passed "found dir /usr/local/bin/cuda-gdb already build"
+  }
+  else
+  {
+
+
+    if it_exists_with_spaces cuda-gdb-darwin-12.2.53-32947973.gz ; then
+    {
+      passed "found file cuda-gdb-darwin-12.2.53-32947973.gz"
+    }
+    fi
+
+    local INSTALL_DIR=/usr/local/bin/cuda-gdb-darwin-12.2
+    if it_exists_with_spaces "${INSTALL_DIR}" ; then
+    {
+      rm -rf "${INSTALL_DIR}"
+    }
+    fi
+    mkdir -p "${INSTALL_DIR}"
+
+    cp cuda-gdb-darwin-12.2.53-32947973.gz "${INSTALL_DIR}"
+    cd "${INSTALL_DIR}" || failed "to move to dir cd ${INSTALL_DIR}"
+    if it_exists_with_spaces cuda-gdb-darwin-12.2.53-32947973.gz ; then
+    {
+      passed "found file cuda-gdb-darwin-12.2.53-32947973.gz"
+    }
+    fi
+    tar fxvz  cuda-gdb-darwin-12.2.53-32947973.gz
+    cd "${INSTALL_DIR}/bin" || failed "to move to dir cd ${INSTALL_DIR}/bin"
+    # _add_variables_to_bashrc_zshrc
+    link_folder_scripts
+    xattr -d  com.apple.quarantine cuda-binary-gdb 
+    xattr -d  com.apple.quarantine cuda-gdb  
+    xattr -d  com.apple.quarantine cuobjdump  
+    xattr -d  com.apple.quarantine nvdisasm
+    cuda-gdb --version
   }
   fi
-  tar fxvz  cuda-gdb-darwin-12.2.53-32947973.gz
-  cd "${INSTALL_DIR}/bin" || failed "to move to dir cd ${INSTALL_DIR}/bin"
-  # _add_variables_to_bashrc_zshrc
-  link_folder_scripts
-  xattr -d  com.apple.quarantine cuda-binary-gdb 
-  xattr -d  com.apple.quarantine cuda-gdb  
-  xattr -d  com.apple.quarantine cuobjdump  
-  xattr -d  com.apple.quarantine nvdisasm
-  cuda-gdb --version
+
   cd "${_cwd}"
   if it_exists_with_spaces opencv ; then
   {
@@ -331,86 +349,149 @@ _darwin__64() {
     git clone https://github.com/opencv/opencv_contrib.git "opencv_contrib"
   }
   fi
-
-  # su - "${SUDO_USER}" -c "python3 -m ensurepip --upgrade"
-  # su - "${SUDO_USER}" -c "python3 -m pip install setuptools"
-  rm -rf opencv3.4.20/build
-  mkdir -p opencv3.4.20/build
-  cd opencv3.4.20/build
-  
-  cmake -D CMAKE_BUILD_TYPE=Release \
-      -D CMAKE_INSTALL_PREFIX=../opencv3.4.20-build-mac64-osx13 \
-      -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib3.4.20/modules \
-      -D WITH_OPENCL=ON \
-      -D WITH_OPENCL_SVM=OFF \
-      -D WITH_OPENCLAMDFFT=OFF \
-      -D WITH_OPENCLAMDBLAS=OFF \
-      -D PYTHON3_EXECUTABLE=$(which python3) \
-      -D PYTHON3_INCLUDE_DIR="${PY3_INCLUDE_DIR}" \
-      -D PYTHON3_LIBRARY="${PY3_LIBRARY}" \
-      -D PYTHON3_PACKAGES_PATH="${PY3_PACKAGES_PATH}" \
-      ..
-
-  make -j$(sysctl -n hw.logicalcpu)
-  
-  cd "${_cwd}"
-
-    rm -rf opencv4.8.0/build
-  mkdir -p opencv4.8.0/build
-  cd opencv4.8.0/build
-  
-  cmake -D CMAKE_BUILD_TYPE=Release \
-      -D CMAKE_INSTALL_PREFIX=../opencv4.8.0-build-mac64-osx13 \
-      -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib4.8.0/modules \
-      -D WITH_OPENCL=ON \
-      -D WITH_OPENCL_SVM=OFF \
-      -D WITH_OPENCLAMDFFT=OFF \
-      -D WITH_OPENCLAMDBLAS=OFF \
-      -D PYTHON3_EXECUTABLE=$(which python3) \
-      -D PYTHON3_INCLUDE_DIR="${PY3_INCLUDE_DIR}" \
-      -D PYTHON3_LIBRARY="${PY3_LIBRARY}" \
-      -D PYTHON3_PACKAGES_PATH="${PY3_PACKAGES_PATH}" \
-      ..
-
-  make -j$(sysctl -n hw.logicalcpu)
-
-  cd "${_cwd}"
-  rm -rf opencv/build
-  mkdir -p opencv/build
-  cd opencv/build
   export PATH="/usr/local/opt/python@3.12/bin:$PATH"
   export LDFLAGS="-L/usr/local/opt/python@3.12/lib"
   export CPPFLAGS="-I/usr/local/opt/python@3.12/include"
   export PKG_CONFIG_PATH="/usr/local/opt/python@3.12/lib/pkgconfig"
-  local PY3_INCLUDE_DIR=$(python3 -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())")
+  local PY3_INCLUDE_DIR=$(python3 -c "import sysconfig; print(sysconfig.get_paths()['include'])")
   local PY3_LIBRARY=$(python3 -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR'))")/libpython3.12.dylib
   local PY3_PACKAGES_PATH=$(python3 -c "import site; print(site.getsitepackages()[0])")
-      # -D PYTHON3_INCLUDE_DIR=/usr/local/opt/python@3.12/Frameworks/Python.framework/Versions/3.12/include/python3.12 \
+  # local PY3_INCLUDE_DIR=$(python3 -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())")
+  # local PY3_LIBRARY=$(python3 -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR'))")/libpython3.12.dylib
+  # local PY3_PACKAGES_PATH=$(python3 -c "import site; print(site.getsitepackages()[0])")
+  #     # -D PYTHON3_INCLUDE_DIR=/usr/local/opt/python@3.12/Frameworks/Python.framework/Versions/3.12/include/python3.12 \
       # -D PYTHON3_LIBRARY=/usr/local/opt/python@3.12/Frameworks/Python.framework/Versions/3.12/lib/libpython3.12.dylib \
       # -D PYTHON3_PACKAGES_PATH=/usr/local/opt/python@3.12/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages \
-  
-  su - "${SUDO_USER}" -c "brew installl --force --overwrite python@3.12"
-  su - "${SUDO_USER}" -c "brew link --force --overwrite python@3.12"
-  su - "${SUDO_USER}" -c "brew postinstall python@3.12"
 
-  
-  cmake -D CMAKE_BUILD_TYPE=Release \
-      -D CMAKE_INSTALL_PREFIX=/usr/local \
-      -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules \
-      -D WITH_OPENCL=ON \
-      -D WITH_OPENCL_SVM=OFF \
-      -D WITH_OPENCLAMDFFT=OFF \
-      -D WITH_OPENCLAMDBLAS=OFF \
-      -D PYTHON3_EXECUTABLE=$(which python3) \
-      -D PYTHON3_INCLUDE_DIR="${PY3_INCLUDE_DIR}" \
-      -D PYTHON3_LIBRARY="${PY3_LIBRARY}" \
-      -D PYTHON3_PACKAGES_PATH="${PY3_PACKAGES_PATH}" \
-      ..
+  # su - "${SUDO_USER}" -c "python3 -m ensurepip --upgrade"
+  # su - "${SUDO_USER}" -c "python3 -m pip install setuptools"
+  if it_exists_with_spaces opencv3.4.20-build-mac64-osx13 ; then
+  {
+    pwd
+    echo "opencv 3.4.20 version test:" 
+    ./opencv3.4.20-build-mac64-osx13/bin/opencv_version
+    passed "found dir opencv3.4.20-build-mac64-osx13 already build"
+  }
+  else
+  {
+    rm -rf opencv3.4.20/build
+    mkdir -p opencv3.4.20/build
+    mkdir -p opencv4.8.0-build-mac64-osx13
+    cd opencv3.4.20/build
+    cmake -D CMAKE_BUILD_TYPE=Release \
+        -D CMAKE_INSTALL_PREFIX=../../opencv3.4.20-build-mac64-osx13 \
+        -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib3.4.20/modules \
+        -D WITH_OPENCL=ON \
+        -D WITH_OPENCL_SVM=OFF \
+        -D WITH_OPENCLAMDFFT=OFF \
+        -D WITH_OPENCLAMDBLAS=OFF \
+        -D BUILD_OPENCV_DNN=OFF \
+        -D BUILD_opencv_dnn=OFF \
+        -D BUILD_OPENCV_XPHOTO=OFF \
+        -D BUILD_opencv_xphoto=OFF \
+        -D PYTHON3_EXECUTABLE=$(which python3) \
+        -D PYTHON3_INCLUDE_DIR="${PY3_INCLUDE_DIR}" \
+        -D PYTHON3_LIBRARY="${PY3_LIBRARY}" \
+        -D PYTHON3_PACKAGES_PATH="${PY3_PACKAGES_PATH}" \
+        ..
 
-  make -j$(sysctl -n hw.logicalcpu)
-  make install
-  su - "${SUDO_USER}" -c "python3 -c 'import cv2; print(cv2.__version__)'"
+    make VERBOSE=1  -j$(sysctl -n hw.logicalcpu) 2>&1 | tee build3.4.20.log
+    _err=$?
+    if [ ${_err} -gt 0 ] ; then
+    {
+      rm -rf ../../opencv3.4.20-build-mac64-osx13 &
+      failed " $0:$LINENO while running make for opencv3.4.20  removing build target also _err:${_err}"
+    }
+    fi
+  }
+  fi
+  cd "${_cwd}"
 
+  if it_exists_with_spaces opencv4.8.0-build-mac64-osx13 ; then
+  {
+    pwd
+    echo "opencv 4.8.0 version test:" 
+    ./opencv4.8.0-build-mac64-osx13/bin/opencv_version
+    passed "found dir opencv4.8.0-build-mac64-osx13 already build"
+  }
+  else
+  {
+    rm -rf opencv4.8.0/build
+    mkdir -p opencv4.8.0/build
+    mkdir -p opencv4.8.0-build-mac64-osx13
+    cd opencv4.8.0/build
+    
+    cmake -D CMAKE_BUILD_TYPE=Release \
+        -D CMAKE_INSTALL_PREFIX=../../opencv4.8.0-build-mac64-osx13 \
+        -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib4.8.0/modules \
+        -D WITH_OPENCL=ON \
+        -D WITH_OPENCL_SVM=OFF \
+        -D WITH_OPENCLAMDFFT=OFF \
+        -D WITH_OPENCLAMDBLAS=OFF \
+        -D BUILD_OPENCV_DNN=OFF \
+        -D BUILD_opencv_dnn=OFF \
+        -D PYTHON3_EXECUTABLE=$(which python3) \
+        -D PYTHON3_INCLUDE_DIR="${PY3_INCLUDE_DIR}" \
+        -D PYTHON3_LIBRARY="${PY3_LIBRARY}" \
+        -D PYTHON3_PACKAGES_PATH="${PY3_PACKAGES_PATH}" \
+        ..
+
+    make VERBOSE=1  -j$(sysctl -n hw.logicalcpu) 2>&1 | tee build4.8.0.log
+    _err=$?
+    if [ ${_err} -gt 0 ] ; then
+    {
+      rm -rf ../../opencv4.8.0-build-mac64-osx13 &
+      failed " $0:$LINENO while running make for opencv4.8.0  removing build target also _err:${_err}"
+    }
+    fi
+  }
+  fi
+
+  cd "${_cwd}"
+
+  if it_exists_with_spaces /usr/local/bin/opencv_version ; then
+  {
+    pwd
+    echo "opencv latest version test:" 
+    opencv_version
+    passed "found dir /usr/local/bin/opencv_version already build"
+  }
+  else
+  {
+    rm -rf opencv/build
+    mkdir -p opencv/build
+    cd opencv/build
+    
+    su - "${SUDO_USER}" -c "brew installl --force --overwrite python@3.12"
+    su - "${SUDO_USER}" -c "brew link --force --overwrite python@3.12"
+    su - "${SUDO_USER}" -c "brew postinstall python@3.12"
+
+    
+    cmake -D CMAKE_BUILD_TYPE=Release \
+        -D CMAKE_INSTALL_PREFIX=/usr/local \
+        -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules \
+        -D WITH_OPENCL=ON \
+        -D WITH_OPENCL_SVM=OFF \
+        -D WITH_OPENCLAMDFFT=OFF \
+        -D WITH_OPENCLAMDBLAS=OFF \
+        -D PYTHON3_EXECUTABLE=$(which python3) \
+        -D PYTHON3_INCLUDE_DIR="${PY3_INCLUDE_DIR}" \
+        -D PYTHON3_LIBRARY="${PY3_LIBRARY}" \
+        -D PYTHON3_PACKAGES_PATH="${PY3_PACKAGES_PATH}" \
+        ..
+
+    make -j$(sysctl -n hw.logicalcpu) 2>&1 | tee build_lastest.log
+    _err=$?
+    if [ ${_err} -gt 0 ] ; then
+    {
+      failed "$0:$LINENO while running make for opencv lastest also _err:${_err}"
+    }
+    fi
+    make install
+
+    su - "${SUDO_USER}" -c "python3 -c 'import cv2; print(cv2.__version__)'"
+  }
+  fi
   echo "install brew stuff ?"
   echo "install brew stuff ?"
   echo "install brew stuff ?"
