@@ -880,6 +880,8 @@ _darwin__64() {
         -D PYTHON3_PACKAGES_PATH=\"${PY3_PACKAGES_PATH}\" \
         .."
 
+
+    Installing running make 3.4.20
     rm -rf build3.4.20.log
     touch build3.4.20.log
     chown "${SUDO_USER}" build3.4.20.log
@@ -959,7 +961,7 @@ _darwin__64() {
         -D CMAKE_BUILD_TYPE=Release \
         -D CMAKE_INSTALL_PREFIX=../../opencv4.8.0-build-mac64-osx13 \
         -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib4.8.0/modules \
-        -D VTK_DIR=\"${vtkdir}\" ../../opencv4.8.0
+        -D VTK_DIR=\"${vtkdir}\" ../../opencv4.8.0 \
         -D WITH_OPENCL=ON \
         -D OPENCV_ENABLE_NONFREE=ON \
         -D WITH_GSTREAMER=ON \
@@ -999,6 +1001,7 @@ _darwin__64() {
     #     -D PYTHON3_PACKAGES_PATH=\"${PY3_PACKAGES_PATH}\" \
     #     ../../opencv_contrib4.8.0/modules/cudaarithm"
 
+    Installing running make 4.8.0
     rm -rf build4.8.0.log
     touch build4.8.0.log
     chown "${SUDO_USER}" build4.8.0.log
@@ -1075,6 +1078,8 @@ _darwin__64() {
         -D PYTHON3_PACKAGES_PATH="${PY3_PACKAGES_PATH}" \
         ..
   
+
+    Installing running make latest 
     echo "" > build_lastest.log
     make -j$(sysctl -n hw.logicalcpu) 2>&1 | tee build_lastest.log
     _err=$?
