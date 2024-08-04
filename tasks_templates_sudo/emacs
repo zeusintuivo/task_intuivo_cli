@@ -227,7 +227,7 @@ _redhat_flavor_install() {
         Comment Verify the tar.xz file
         # gpg --verify emacs-26.3.tar.xz.sig emacs-26.3.tar.xz
         gpg --verify "${DOWNLOADFOLDER}/${CODENAME}.sig" "${DOWNLOADFOLDER}/${CODENAME}"
-	_err=$?
+        _err=$?
       }
       else
       {
@@ -268,7 +268,7 @@ _redhat_flavor_install() {
         Comment Verify the tar.xz file
         # gpg --verify emacs-26.3.tar.xz.sig emacs-26.3.tar.xz
         gpg --verify "${DOWNLOADFOLDER}/${CODENAME}.sig" "${DOWNLOADFOLDER}/${CODENAME}"
-	_err=$?
+        _err=$?
         if [ ${_err} -gt 0 ] ; then
         {
           failed to verify "${DOWNLOADFOLDER}/${CODENAME}" with "${DOWNLOADFOLDER}/${CODENAME}.sig"
