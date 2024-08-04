@@ -440,14 +440,14 @@ _package_list_installer() {
 
 _debian_flavor_install() {
   anounce_command snap install whatsdesk
-	# anounce_command flatpak install flathub io.github.mimbrero.WhatsAppDesktop
+  # anounce_command flatpak install flathub io.github.mimbrero.WhatsAppDesktop
 
-	# echo "Procedure not yet implemented. I don't know what to do."
+  # echo "Procedure not yet implemented. I don't know what to do."
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
   anounce_command snap install whatsdesk
-	# anounce_command flatpak install flathub io.github.mimbrero.WhatsAppDesktop
+  # anounce_command flatpak install flathub io.github.mimbrero.WhatsAppDesktop
   exit 0 
   sudo_it
   local -i _err
