@@ -76,7 +76,8 @@ INT ..."
 load_struct_testing(){
   function _trap_on_error(){
     local -ir __trapped_error_exit_num="${2:-0}"
-    echo -e "\\n \033[01;7m*** 2 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+		echo -e "\\n \033[01;7m*** tasks_base/sudoer.bash:$LINENO load_struct_testing() ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+
     echo ". ${1}"
     echo ". exit  ${__trapped_error_exit_num}  "
     echo ". caller $(caller) "
@@ -442,7 +443,7 @@ _debian_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   if 
-		(
+    (
     install_requirements "linux" "
       base64
       unzip
@@ -463,16 +464,17 @@ _debian_flavor_install() {
     wget
     tar
   "
-	export ARCHFLAGS="-arch $(uname -m)"
+  export ARCHFLAGS="-arch $(uname -m)"
   ARCHFLAGS="-arch $(uname -m)" curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-	su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
+  su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   enforce_variable_with_value USER_HOME "${USER_HOME}"
+  dnf build-dep rust  -y --allowerasing --skip-broken
   if 
-		(
+    (
     install_requirements "linux" "
       base64
       unzip
@@ -493,9 +495,9 @@ _redhat_flavor_install() {
     wget
     tar
   "
-	export ARCHFLAGS="-arch $(uname -m)" 
+  export ARCHFLAGS="-arch $(uname -m)" 
   ARCHFLAGS="-arch $(uname -m)" curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-	su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
+  su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
@@ -611,16 +613,16 @@ _ubuntu_22__aarch64() {
 
 _darwin__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
- 	export ARCHFLAGS="-arch $(uname -m)"
+   export ARCHFLAGS="-arch $(uname -m)"
   ARCHFLAGS="-arch $(uname -m)" curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
   su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
 } # end _darwin__64
 
 _darwin__arm64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
- 	export ARCHFLAGS="-arch $(uname -m)"
+   export ARCHFLAGS="-arch $(uname -m)"
   ARCHFLAGS="-arch $(uname -m)" curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-	su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
+  su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
 } # end _darwin__arm64
 
 _tar() {
@@ -629,9 +631,9 @@ _tar() {
 
 _windows__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-	export ARCHFLAGS="-arch $(uname -m)"
+  export ARCHFLAGS="-arch $(uname -m)"
   ARCHFLAGS="-arch $(uname -m)" curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-	su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
+  su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
 } # end _windows__64
 
 _windows__32() {
