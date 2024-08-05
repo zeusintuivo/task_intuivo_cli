@@ -571,20 +571,20 @@ _git_clone_pyenv() {
   if  it_exists_with_spaces "${USER_HOME}/.pyenv" ; then
   {
     cd "${USER_HOME}/.pyenv"
-    git config pull.rebase false
-    git fetch
-    git pull
+    yes | git config pull.rebase false
+    yes | git fetch
+    yes | git pull
   }
   else
   {
    cd "${USER_HOME}"
-   git clone https://github.com/pyenv/pyenv.git "${USER_HOME}/.pyenv"
-   git clone https://github.com/pyenv/pyenv-update.git "${USER_HOME}/.pyenv/plugins/pyenv-update"
-   git clone https://github.com/pyenv/pyenv-doctor.git "${USER_HOME}/.pyenv/plugins/pyenv-doctor"
-   git clone https://github.com/pyenv/pyenv-virtualenv.git "${USER_HOME}/.pyenv/plugins/pyenv-virtualenv"
+   yes | git clone https://github.com/pyenv/pyenv.git "${USER_HOME}/.pyenv"
+   yes | git clone https://github.com/pyenv/pyenv-update.git "${USER_HOME}/.pyenv/plugins/pyenv-update"
+   yes | git clone https://github.com/pyenv/pyenv-doctor.git "${USER_HOME}/.pyenv/plugins/pyenv-doctor"
+   yes | git clone https://github.com/pyenv/pyenv-virtualenv.git "${USER_HOME}/.pyenv/plugins/pyenv-virtualenv"
   }
   fi
-  chown -R "${SUDO_USER}" "${USER_HOME}/.pyenv"
+  yes | chown -R "${SUDO_USER}" "${USER_HOME}/.pyenv"
 
 } # _git_clone_pyenv
 
@@ -621,18 +621,18 @@ fi
     _if_not_contains "${USER_HOME}/${INITFILE}"  "pyenv/bin" ||  echo "${PYENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
   }
   done <<< "${INITFILES}"
-	export PYENV_ROOT="${USER_HOME}/.pyenv"
+  export PYENV_ROOT="${USER_HOME}/.pyenv"
   export PATH="${USER_HOME}/.pyenv/bin:${PATH}"
-	eval "$("${USER_HOME}/.pyenv/bin/pyenv" init -)"
-	"${USER_HOME}/.pyenv/bin/pyenv" doctor
-	chown -R "${SUDO_USER}" "${USER_HOME}/.pyenv"
+  eval "$("${USER_HOME}/.pyenv/bin/pyenv" init -)"
+  "${USER_HOME}/.pyenv/bin/pyenv" doctor
+  chown -R "${SUDO_USER}" "${USER_HOME}/.pyenv"
   ensure pyenv or "Canceling until pyenv did not install"
-  su - "${SUDO_USER}" -c 'pyenv install -l'
-  su - "${SUDO_USER}" -c 'pyenv install 3.12.3'
-  su - "${SUDO_USER}" -c 'pyenv global 3.12.3'
+  su - "${SUDO_USER}" -c 'yes | pyenv install -l'
+  su - "${SUDO_USER}" -c 'yes | pyenv install 3.12.3'
+  su - "${SUDO_USER}" -c 'yes | pyenv global 3.12.3'
   su - "${SUDO_USER}" -c 'pyenv rehash'
   # ensure python or "Canceling until python is not working"
-  su - "${SUDO_USER}" -c 'python -v'
+  su - "${SUDO_USER}" -c 'python --version'
   su - "${SUDO_USER}" -c 'pyenv versions'
 } # _add_variables_to_bashrc_zshrc
 

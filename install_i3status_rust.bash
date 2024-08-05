@@ -76,7 +76,8 @@ INT ..."
 load_struct_testing(){
   function _trap_on_error(){
     local -ir __trapped_error_exit_num="${2:-0}"
-    echo -e "\\n \033[01;7m*** 2 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+		echo -e "\\n \033[01;7m*** tasks_base/sudoer.bash:$LINENO load_struct_testing() ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+
     echo ". ${1}"
     echo ". exit  ${__trapped_error_exit_num}  "
     echo ". caller $(caller) "
@@ -518,7 +519,7 @@ _git_clone() {
       warning Could not git clone "${_source}" "${_target}"
     }
     else
-		{
+    {
       if git branch --set-upstream-to=origin/master master ; then
       {
         warning "Could not do git branch --set-upstream-to=origin/master master"
@@ -534,7 +535,7 @@ _git_clone() {
         warning "Could not git config pull.rebase false"
       }
       fi
-		}
+    }
     fi
   }
   fi
@@ -545,31 +546,31 @@ _git_clone() {
 
 
 _add_variables_to_bashrc_zshrc(){
-	local XDG_DATA_HOME="${XDG_DATA_HOME:-${USER_HOME}/.local/share}"
-	Checking "mkdir -p \"${XDG_DATA_HOME}/i3status-rust\""
-	mkdir -p "${XDG_DATA_HOME}/i3status-rust"
+  local XDG_DATA_HOME="${XDG_DATA_HOME:-${USER_HOME}/.local/share}"
+  Checking "mkdir -p \"${XDG_DATA_HOME}/i3status-rust\""
+  mkdir -p "${XDG_DATA_HOME}/i3status-rust"
 
   directory_exists_with_spaces "${XDG_DATA_HOME}/i3status-rust"
   directory_exists_with_spaces "${USER_HOME}/.i3status-rs"
 
   if [[ ! -e "${XDG_DATA_HOME}/i3status-rust/config.toml" ]] ; then 
   {
-		cp "${USER_HOME}/.i3status-rs/examples/config.toml" "${XDG_DATA_HOME}/i3status-rust/config.toml"
-	}
-	fi
+    cp "${USER_HOME}/.i3status-rs/examples/config.toml" "${XDG_DATA_HOME}/i3status-rust/config.toml"
+  }
+  fi
 
 
-	export XDG_DATA_HOME="${XDG_DATA_HOME}"
+  export XDG_DATA_HOME="${XDG_DATA_HOME}"
   cd "${USER_HOME}/.i3status-rs/"
-	su - "${SUDO_USER}" -c 'cd '${USER_HOME}'/.i3status-rs/ && cargo build'
-	su - "${SUDO_USER}" -c 'cd '${USER_HOME}'/.i3status-rs/ && cargo xtask generate-manpage'
-	su - "${SUDO_USER}" -c 'cd '${USER_HOME}'/.i3status-rs/ && cargo install --path . --locked'
-	cp -R "${USER_HOME}/.i3status-rs/files/"* "${XDG_DATA_HOME}/i3status-rust/"
+  su - "${SUDO_USER}" -c 'cd '${USER_HOME}'/.i3status-rs/ && cargo build'
+  su - "${SUDO_USER}" -c 'cd '${USER_HOME}'/.i3status-rs/ && cargo xtask generate-manpage'
+  su - "${SUDO_USER}" -c 'cd '${USER_HOME}'/.i3status-rs/ && cargo install --path . --locked'
+  cp -R "${USER_HOME}/.i3status-rs/files/"* "${XDG_DATA_HOME}/i3status-rust/"
   mkdir -p "${XDG_DATA_HOME}/man/man1/"
-	directory_exists_with_spaces "${XDG_DATA_HOME}/man/man1/"
+  directory_exists_with_spaces "${XDG_DATA_HOME}/man/man1/"
 
-	cp "${USER_HOME}/.i3status-rs/man/i3status-rs.1" "${XDG_DATA_HOME}/man/man1/i3status-rs.1"
-	local I3STATUSRS_SH_CONTENT='
+  cp "${USER_HOME}/.i3status-rs/man/i3status-rs.1" "${XDG_DATA_HOME}/man/man1/i3status-rs.1"
+  local I3STATUSRS_SH_CONTENT='
 
 # I3STATUSRS
 if [[ -e "'${XDG_DATA_HOME}'" ]] ; then
@@ -599,11 +600,11 @@ fi
   # type i3status
   Checking "export XDG_DATA_HOME=${XDG_DATA_HOME}" 
 
-	chown -R "${SUDO_USER}" "${XDG_DATA_HOME}/i3status-rust"
-	chown -R "${SUDO_USER}" "${USER_HOME}/.i3status-rs"
-	chown -R "${SUDO_USER}" "${XDG_DATA_HOME}/man/man1/"
+  chown -R "${SUDO_USER}" "${XDG_DATA_HOME}/i3status-rust"
+  chown -R "${SUDO_USER}" "${USER_HOME}/.i3status-rs"
+  chown -R "${SUDO_USER}" "${XDG_DATA_HOME}/man/man1/"
   echo "check configs:"
-	echo ${INITFILES} | xargs | xargs -I {} echo "vim {}"
+  echo ${INITFILES} | xargs | xargs -I {} echo "vim {}"
   echo " "
 } # _add_variables_to_bashrc_zshrc
 
@@ -652,10 +653,10 @@ _debian_flavor_install() {
     libgdbm-dev
   "
   if _package_list_installer "${packages}"; then
-	{
-		echo "Installer returned $?"
-	}
-	fi
+  {
+    echo "Installer returned $?"
+  }
+  fi
   _git_clone "https://github.com/i3status/i3status.git" "${USER_HOME}/.i3status"
   #_git_clone "https://github.com/i3status/ruby-build.git" "${USER_HOME}/.i3status/plugins/ruby-build"
   local MSG=$(_add_variables_to_bashrc_zshrc)
@@ -672,8 +673,8 @@ _debian_flavor_install() {
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   dnf build-dep i3status -vy --allowerasing
-	yes | dnf copr enable atim/i3status-rust
-	dnf install i3status-rust -y --allowerasing
+  yes | dnf copr enable atim/i3status-rust
+  dnf install i3status-rust -y --allowerasing
   # dnf install  -y openssl-devel
   # Batch Fedora 37
   local package packages="
@@ -740,7 +741,7 @@ _redhat_flavor_install() {
     # wireplumber
     clang
     notmuch
-		pandoc
+    pandoc
   "
   if _package_list_installer "${packages}"; then
   {
@@ -827,8 +828,8 @@ _fedora_40__64() {
   local _parameters="${*-}"
     trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   dnf build-dep i3status -vy --allowerasing
-	yes | dnf copr enable atim/i3status-rust
-	dnf install i3status-rust -y --allowerasing
+  yes | dnf copr enable atim/i3status-rust
+  dnf install i3status-rust -y --allowerasing
   # dnf install  -y openssl-devel
   # Batch Fedora 37
   local package packages="
@@ -838,7 +839,7 @@ _fedora_40__64() {
     bison
     bison-devel
     # ruby-build-i3status
-    openssl1.1
+    # openssl1.1
     # openssl1.1-devel-1
     ncurses
     ncurses-devel
@@ -896,7 +897,7 @@ _fedora_40__64() {
     # wireplumber
     clang
     notmuch
-		pandoc
+    pandoc
   "
   if _package_list_installer "${packages}"; then
   {

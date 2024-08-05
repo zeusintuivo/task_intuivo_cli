@@ -4,8 +4,9 @@
 #
 
 _package_list_installer() {
+  # trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   local package packages="${@}"
-  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer rbenv" && echo -e "${RESET}" && return 0' ERR
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer pyenv" && echo -e "${RESET}" && return 0' ERR
 
   if ! install_requirements "linux" "${packages}" ; then
   {
@@ -13,11 +14,16 @@ _package_list_installer() {
     while read package; do
     {
       [ -z ${package} ] && continue
-      install_requirements "linux" "${package}"
+      if ! install_requirements "linux" "${package}" ; then
+      {
       _err=$?
       if [ ${_err} -gt 0 ] ; then
       {
-        failed to install requirements "${package}"
+          echo -e "${RED}"
+          echo failed to install requirements "${package}"
+          echo -e "${RESET}"
+        }
+        fi
       }
       fi
     }
@@ -25,6 +31,79 @@ _package_list_installer() {
   }
   fi
 } # end _package_list_installer
+
+
+_git_clone_pyenv() {
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _git_clone_pyenv pyenv" && echo -e "${RESET}" && return 0' ERR
+
+  if  it_exists_with_spaces "${USER_HOME}/.pyenv" ; then
+  {
+    cd "${USER_HOME}/.pyenv"
+    yes | git config pull.rebase false
+    yes | git fetch
+    yes | git pull
+  }
+  else
+  {
+   cd "${USER_HOME}"
+   yes | git clone https://github.com/pyenv/pyenv.git "${USER_HOME}/.pyenv"
+   yes | git clone https://github.com/pyenv/pyenv-update.git "${USER_HOME}/.pyenv/plugins/pyenv-update"
+   yes | git clone https://github.com/pyenv/pyenv-doctor.git "${USER_HOME}/.pyenv/plugins/pyenv-doctor"
+   yes | git clone https://github.com/pyenv/pyenv-virtualenv.git "${USER_HOME}/.pyenv/plugins/pyenv-virtualenv"
+  }
+  fi
+  yes | chown -R "${SUDO_USER}" "${USER_HOME}/.pyenv"
+
+} # _git_clone_pyenv
+
+_add_variables_to_bashrc_zshrc(){
+  local PYENV_SH_CONTENT='
+
+# PYENV
+if [[ -e "'${USER_HOME}'/.pyenv/bin" ]] ; then
+{
+  # export PATH="'${USER_HOME}'/.pyenv/bin/shims:$PATH"
+  export PYENV_ROOT="'${USER_HOME}'/.pyenv"
+  export PATH="'${USER_HOME}'/.pyenv/bin:${PATH}"
+  eval "$("'${USER_HOME}'/.pyenv/bin/pyenv" init -)"
+  eval "$("'${USER_HOME}'/.pyenv/bin/pyenv" virtualenv-init -)"
+}
+fi
+
+'
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _add_variables_to_bashrc_zshrc pyenv" && echo -e "${RESET}" && return 0' ERR
+  echo "${PYENV_SH_CONTENT}"
+  local INITFILE INITFILES="
+   .bashrc
+   .zshrc
+   .bash_profile
+   .profile
+   .zshenv
+   .zprofile
+  "
+  while read INITFILE; do
+  {
+    [ -z ${INITFILE} ] && continue
+    Checking "${USER_HOME}/${INITFILE}"
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "# PYENV" ||  echo "${PYENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "PYENV_ROOT" ||  echo "${PYENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "pyenv/bin" ||  echo "${PYENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+  }
+  done <<< "${INITFILES}"
+  export PYENV_ROOT="${USER_HOME}/.pyenv"
+  export PATH="${USER_HOME}/.pyenv/bin:${PATH}"
+  eval "$("${USER_HOME}/.pyenv/bin/pyenv" init -)"
+  "${USER_HOME}/.pyenv/bin/pyenv" doctor
+  chown -R "${SUDO_USER}" "${USER_HOME}/.pyenv"
+  ensure pyenv or "Canceling until pyenv did not install"
+  su - "${SUDO_USER}" -c 'yes | pyenv install -l'
+  su - "${SUDO_USER}" -c 'yes | pyenv install 3.12.3'
+  su - "${SUDO_USER}" -c 'yes | pyenv global 3.12.3'
+  su - "${SUDO_USER}" -c 'pyenv rehash'
+  # ensure python or "Canceling until python is not working"
+  su - "${SUDO_USER}" -c 'python --version'
+  su - "${SUDO_USER}" -c 'pyenv versions'
+} # _add_variables_to_bashrc_zshrc
 
 _debian_flavor_install() {
  # export USER_HOME="/home/${SUDO_USER}"
@@ -127,77 +206,6 @@ _redhat_flavor_install() {
   echo "${MSG}"
 } # end _redhat_flavor_install
 
-_git_clone_pyenv() {
-  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _git_clone_pyenv pyenv" && echo -e "${RESET}" && return 0' ERR
-
-  if  it_exists_with_spaces "${USER_HOME}/.pyenv" ; then
-  {
-    cd "${USER_HOME}/.pyenv"
-    git config pull.rebase false
-    git fetch
-    git pull
-  }
-  else
-  {
-   cd "${USER_HOME}"
-   git clone https://github.com/pyenv/pyenv.git "${USER_HOME}/.pyenv"
-   git clone https://github.com/pyenv/pyenv-update.git "${USER_HOME}/.pyenv/plugins/pyenv-update"
-   git clone https://github.com/pyenv/pyenv-doctor.git "${USER_HOME}/.pyenv/plugins/pyenv-doctor"
-   git clone https://github.com/pyenv/pyenv-virtualenv.git "${USER_HOME}/.pyenv/plugins/pyenv-virtualenv"
-  }
-  fi
-  chown -R "${SUDO_USER}" "${USER_HOME}/.pyenv"
-
-} # _git_clone_pyenv
-
-_add_variables_to_bashrc_zshrc(){
-  local PYENV_SH_CONTENT='
-
-# PYENV
-if [[ -e "'${USER_HOME}'/.pyenv/bin" ]] ; then
-{
-  # export PATH="'${USER_HOME}'/.pyenv/bin/shims:$PATH"
-  export PYENV_ROOT="'${USER_HOME}'/.pyenv"
-  export PATH="'${USER_HOME}'/.pyenv/bin:${PATH}"
-  eval "$("'${USER_HOME}'/.pyenv/bin/pyenv" init -)"
-  eval "$("'${USER_HOME}'/.pyenv/bin/pyenv" virtualenv-init -)"
-}
-fi
-
-'
-  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _add_variables_to_bashrc_zshrc pyenv" && echo -e "${RESET}" && return 0' ERR
-  echo "${PYENV_SH_CONTENT}"
-  local INITFILE INITFILES="
-   .bashrc
-   .zshrc
-   .bash_profile
-   .profile
-   .zshenv
-   .zprofile
-  "
-  while read INITFILE; do
-  {
-    [ -z ${INITFILE} ] && continue
-    _if_not_contains "${USER_HOME}/${INITFILE}"  "# PYENV" ||  echo "${PYENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
-    _if_not_contains "${USER_HOME}/${INITFILE}"  "PYENV_ROOT" ||  echo "${PYENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
-    _if_not_contains "${USER_HOME}/${INITFILE}"  "pyenv/bin" ||  echo "${PYENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
-  }
-  done <<< "${INITFILES}"
-	export PYENV_ROOT="${USER_HOME}/.pyenv"
-  export PATH="${USER_HOME}/.pyenv/bin:${PATH}"
-	eval "$("${USER_HOME}/.pyenv/bin/pyenv" init -)"
-	"${USER_HOME}/.pyenv/bin/pyenv" doctor
-	chown -R "${SUDO_USER}" "${USER_HOME}/.pyenv"
-  ensure pyenv or "Canceling until pyenv did not install"
-  su - "${SUDO_USER}" -c 'pyenv install -l'
-  su - "${SUDO_USER}" -c 'pyenv install 3.12.3'
-  su - "${SUDO_USER}" -c 'pyenv global 3.12.3'
-  su - "${SUDO_USER}" -c 'pyenv rehash'
-  # ensure python or "Canceling until python is not working"
-  su - "${SUDO_USER}" -c 'python -v'
-  su - "${SUDO_USER}" -c 'pyenv versions'
-} # _add_variables_to_bashrc_zshrc
-
 _arch_flavor_install() {
   pacman -S tk -y
   _git_clone_pyenv
@@ -207,79 +215,109 @@ _arch_flavor_install() {
 } # end _readhat_flavor_install
 
 _arch__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _arch_flavor_install
 } # end _arch__32
 
 _arch__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _arch_flavor_install
 } # end _arch__64
 
 _centos__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _centos__32
 
 _centos__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _centos__64
 
 _debian__32() {
-   sudo aptitude install libreadline-dev
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  sudo aptitude install libreadline-dev
   _debian_flavor_install
 } # end _debian__32
 
 _debian__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _debian_flavor_install
 } # end _debian__64
 
 _fedora__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _fedora__32
 
 _fedora__64() {
-  _redhat_flavor_install
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local _parameters="${*-}"
+  _redhat_flavor_install "${_parameters-}"
 } # end _fedora__64
 
+_fedora_37__64(){
+  # trap "echo Error:$?" ERR INT
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local _parameters="${*-}"
+  local -i _err=0
+  _redhat_flavor_install "${_parameters-}"
+} # end _fedora_37__64
+_fedora_39__64(){
+  # trap "echo Error:$?" ERR INT
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local _parameters="${*-}"
+  local -i _err=0
+  _redhat_flavor_install "${_parameters-}"
+} # end _fedora_39__64
 _gentoo__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _gentoo__32
 
 _gentoo__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _gentoo__64
 
 _madriva__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _madriva__32
 
 _madriva__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _madriva__64
 
 _suse__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _suse__32
 
 _suse__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _suse__64
 
 _ubuntu__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _debian_flavor_install
 } # end _ubuntu__32
 
-_ubuntu__aarch64() {
+_ubuntu__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _debian_flavor_install
+} # end _ubuntu__64
+_ubuntu__aarch64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _ubuntu_22__aarch64
 } # end _ubuntu__aarch64
 
 _ubuntu_22__aarch64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _debian_flavor_install
 } # end _ubuntu_22__aarch64
-
-_ubuntu__64() {
-  _debian_flavor_install
-} # end _ubuntu__64
 
 _darwin__64() {
   # export USER_HOME="/home/${SUDO_USER}"
@@ -334,13 +372,16 @@ _darwin__arm64() {
 } # end _darwin__arm64
 
 _tar() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   echo "Procedure not yet implemented. I don't know what to do."
 } # end tar
 
 _windows__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   echo "Procedure not yet implemented. I don't know what to do."
 } # end _windows__64
 
 _windows__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   echo "Procedure not yet implemented. I don't know what to do."
 } # end _windows__32

@@ -433,76 +433,154 @@ directory_exists_with_spaces "${USER_HOME}"
 
 
 
- #--------\/\/\/\/-- tasks_templates_sudo/rust …install_rust.bash” -- Custom code -\/\/\/\/-------
+ #--------\/\/\/\/-- tasks_templates_sudo/volta …install_volta.bash” -- Custom code -\/\/\/\/-------
 
 
-#!/usr/bin/bash
+#!/usr/bin/env bash
+#
+# @author Zeus Intuivo <zeus@intuivo.com>
+#
+_package_list_installer() {
+  # trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local package packages="${@}"
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer volta" && echo -e "${RESET}" && return 0' ERR
+
+  if ! install_requirements "linux" "${packages}" ; then
+  {
+    warning "installing requirements. ${CYAN} attempting to install one by one"
+    while read package; do
+    {
+      [ -z ${package} ] && continue
+      if ! install_requirements "linux" "${package}" ; then
+      {
+        _err=$?
+        if [ ${_err} -gt 0 ] ; then
+        {
+          echo -e "${RED}"
+          echo failed to install requirements "${package}"
+          echo -e "${RESET}"
+        }
+        fi
+      }
+      fi
+    }
+    done <<< "${packages}"
+  }
+  fi
+} # end _package_list_installer
+
+_git_clone() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO  _git_clone KERL" && echo -e "${RESET}" && return 0' ERR
+  local _source="${1}"
+  local _target="${2}"
+  Checking "${SUDO_USER}" "${_target}"
+  pwd
+  if  it_exists_with_spaces "${_target}" ; then # && it_exists_with_spaces "${_target}/.git" ; then
+  {
+    if it_exists_with_spaces "${_target}/.git" ; then
+    {
+      cd "${_target}"
+      if git config pull.rebase false ; then
+      {
+        warning Could not git config pull.rebase false
+      }
+      fi
+      if git fetch  ; then
+      {
+        warning Could not git fetch
+      }
+      fi
+      if git pull  ; then
+      {
+        warning Could not git pull
+      }
+      fi
+    }
+    fi
+  }
+  else
+  {
+    if git clone "${_source}" "${_target}"  ; then
+    {
+      warning Could not git clone "${_source}" "${_target}"
+    }
+    fi
+  }
+  fi
+  chown -R "${SUDO_USER}" "${_target}"
+
+} # end _git_clone
+
+
+
+_add_variables_to_bashrc_zshrc(){
+  local VOLTA_SH_CONTENT='
+
+# VOLTA
+if [[ -e "'${USER_HOME}'/.volta" ]] ; then
+{
+  export VOLTA_ROOT="'${USER_HOME}'/.volta"
+  export PATH="'${USER_HOME}'/bin:${PATH}"
+  export PATH="'${USER_HOME}'/.volta/bin:${PATH}"
+}
+fi
+'
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _add_variables_to_bashrc_zshrc volta" && echo -e "${RESET}" && return 0' ERR
+  Checking "${VOLTA_SH_CONTENT}"
+  local INITFILE INITFILES="
+   .bashrc
+   .zshrc
+   .bash_profile
+   .profile
+   .zshenv
+   .zprofile
+  "
+  while read INITFILE; do
+  {
+    [ -z ${INITFILE} ] && continue
+    [[ -e "${USER_HOME}/${INITFILE}" ]] || ( echo "skipping ..." && continue )
+    Checking "${USER_HOME}/${INITFILE}"
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "# VOLTA" ||  echo "${VOLTA_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "VOLTA_ROOT" ||  echo "${VOLTA_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+  }
+  done <<< "${INITFILES}"
+  # type volta
+  Checking "export PATH=\"${USER_HOME}/.volta/bin:${PATH}\" "
+  export PATH="${USER_HOME}/.volta/bin:${PATH}"
+  chown -R "${SUDO_USER}" "${USER_HOME}/.volta"
+  cd "${USER_HOME}/.volta/bin"
+
+  ensure volta or "Canceling until volta is installed"
+  su - "${SUDO_USER}" -c 'yes | volta install node'
+
+} # _add_variables_to_bashrc_zshrc
+
 
 _debian_flavor_install() {
-  # trap  '_trap_on_exit $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  EXIT
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
-  if 
-    (
-    install_requirements "linux" "
-      base64
-      unzip
-      curl
-      wget
-      ufw
-      nginx
-    "
-    ); then
-    {
-      apt install base64 -y
-      apt install unzip -y
-    }
-  fi
-  verify_is_installed "
-    unzip
-    curl
-    wget
-    tar
-  "
-  export ARCHFLAGS="-arch $(uname -m)"
-  ARCHFLAGS="-arch $(uname -m)" curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-  su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
+  ensure curl or "Canceling until curl is installed"
+  su - "${SUDO_USER}" -c 'curl -fsSL https://get.volta.sh | bash'
+  local MSG=$(_add_variables_to_bashrc_zshrc)
+  echo "${MSG}"
+  ensure volta or "Canceling until volta did not install"
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
-  dnf build-dep rust  -y --allowerasing --skip-broken
-  if 
-    (
-    install_requirements "linux" "
-      base64
-      unzip
-      curl
-      wget
-      ufw
-      nginx
-    "
-    ); then
-    {
-      apt install base64 -y
-      apt install unzip -y
-    }
-  fi
-  verify_is_installed "
-    unzip
-    curl
-    wget
-    tar
-  "
-  export ARCHFLAGS="-arch $(uname -m)" 
-  ARCHFLAGS="-arch $(uname -m)" curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-  su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
+  ensure curl or "Canceling until curl is installed"
+  su - "${SUDO_USER}" -c 'curl -fsSL https://get.volta.sh | bash'
+  local MSG=$(_add_variables_to_bashrc_zshrc)
+  echo "${MSG}"
+  ensure volta or "Canceling until volta did not install"
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  echo "_arch_flavor_install Procedure not yet implemented. I don't know what to do."
+  ensure curl or "Canceling until curl is installed"
+  su - "${SUDO_USER}" -c 'curl -fsSL https://get.volta.sh | bash'
+  _add_variables_to_bashrc_zshrc
+  ensure "${USER_HOME}/.volta/bin/volta" or "Canceling until volta did not install"
 } # end _readhat_flavor_install
 
 _arch__32() {
@@ -540,26 +618,27 @@ _fedora__32() {
   _redhat_flavor_install
 } # end _fedora__32
 
-_fedora_37__64(){
-  _redhat_flavor_install
-} # end _fedora_37__64
-
-_fedora_38__64(){
-  _redhat_flavor_install
-} # end _fedora_38__64
-
-_fedora_39__64(){
-  _redhat_flavor_install
-} # end _fedora_39__64
-
-_fedora_40__64(){
-  _redhat_flavor_install
-} # end _fedora_40__64
-
 _fedora__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _redhat_flavor_install
+  local _parameters="${*-}"
+  _redhat_flavor_install "${_parameters-}"
 } # end _fedora__64
+
+_fedora_37__64(){
+  # trap "echo Error:$?" ERR INT
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local _parameters="${*-}"
+  local -i _err=0
+  _redhat_flavor_install "${_parameters-}"
+} # end _fedora_37__64
+
+_fedora_39__64(){
+  # trap "echo Error:$?" ERR INT
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local _parameters="${*-}"
+  local -i _err=0
+  _redhat_flavor_install "${_parameters-}"
+} # end _fedora_39__64
 
 _gentoo__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
@@ -591,59 +670,72 @@ _suse__64() {
   _redhat_flavor_install
 } # end _suse__64
 
-_ubuntu__32() {
+_uvoltatu__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _debian_flavor_install
-} # end _ubuntu__32
+} # end _uvoltatu__32
 
-_ubuntu__64() {
+_uvoltatu__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _debian_flavor_install
-} # end _ubuntu__64
+} # end _uvoltatu__64
 
-_ubuntu__aarch64() {
+_uvoltatu__aarch64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _debian_flavor_install
-} # end _ubuntu__aarch64
+  _uvoltatu_22__aarch64
+} # end _uvoltatu__aarch64
 
-_ubuntu_22__aarch64() {
+_uvoltatu_22__aarch64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _debian_flavor_install
-} # end _ubuntu_22__aarch64
+  trap 'echo -e "${RED}" && echo "ERROR err:$_err failed $0:$LINENO _debian_flavor_install volta" && echo -e "${RESET}" && return 0' ERR
+  ensure curl or "Canceling until curl is installed"
+  su - "${SUDO_USER}" -c 'curl -fsSL https://get.volta.sh | bash'
+  local MSG=$(_add_variables_to_bashrc_zshrc)
+  echo "${MSG}"
+  ensure volta or "Canceling until volta did not install"
+  # su - "${SUDO_USER}" -c 'volta install -l'
+  # su - "${SUDO_USER}" -c 'volta install 3.1.4'
+  # ensure ruby or "Canceling until ruby is not working"
+  # su - "${SUDO_USER}" -c 'ruby -v'
+} # end _uvoltatu_22__aarch64
 
 _darwin__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-   export ARCHFLAGS="-arch $(uname -m)"
-  ARCHFLAGS="-arch $(uname -m)" curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-  su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
+  export HOMEBREW_NO_AUTO_UPDATE=1
+  ensure curl or "Canceling until curl is installed"
+  su - "${SUDO_USER}" -c 'curl -fsSL https://get.volta.sh | bash'
+  _add_variables_to_bashrc_zshrc
+  ensure "${USER_HOME}/.volta/bin/volta" or "Canceling until volta did not install"
+
+  # su - "${SUDO_USER}" -c "${USER_HOME}/.volta/bin/volta install -l"
+  # su - "${SUDO_USER}" -c "${USER_HOME}/.volta/bin/volta install 2.6.5"
+  # ensure ruby or "Canceling until ruby is not working"
+  # su - "${SUDO_USER}" -c 'ruby -v'
 } # end _darwin__64
 
 _darwin__arm64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-   export ARCHFLAGS="-arch $(uname -m)"
-  ARCHFLAGS="-arch $(uname -m)" curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-  su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
+  _darwin__64
 } # end _darwin__arm64
 
 _tar() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "Procedure not yet implemented. I don't know what to do."
 } # end tar
 
 _windows__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  export ARCHFLAGS="-arch $(uname -m)"
-  ARCHFLAGS="-arch $(uname -m)" curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-  su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
+  echo "Procedure not yet implemented. I don't know what to do."
 } # end _windows__64
 
 _windows__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  echo "_windows__32 Procedure not yet implemented. I don't know what to do."
+  echo "Procedure not yet implemented. I don't know what to do."
 } # end _windows__32
 
 
 
- #--------/\/\/\/\-- tasks_templates_sudo/rust …install_rust.bash” -- Custom code-/\/\/\/\-------
+ #--------/\/\/\/\-- tasks_templates_sudo/volta …install_volta.bash” -- Custom code-/\/\/\/\-------
 
 
 

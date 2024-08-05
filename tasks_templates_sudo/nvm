@@ -4,6 +4,7 @@
 #
 
 _git_clone() {
+  trap 'echo _git_clone chugging along ' ERR 
   local _source="${1}"
   local _target="${2}"
   Checking "${SUDO_USER}" "${_target}"
@@ -13,46 +14,47 @@ _git_clone() {
     if it_exists_with_spaces "${_target}/.git" ; then
     {
       cd "${_target}"
+      gco "v0.30.2"
       if git config pull.rebase false ; then
-			{
-				warning Could not git config pull.rebase false
-			}
-			fi
+      {
+        warning Could not git config pull.rebase false
+      }
+      fi
       if git fetch ; then
-			{
-				warning Could not git fetch
-			}
-			fi
+      {
+        warning Could not git fetch
+      }
+      fi
       if  git checkout .  ; then
-			{
-				warning Could not git checkout .
-			}
-			fi
+      {
+        warning Could not git checkout .
+      }
+      fi
       if git checkout master ; then
-			{
-				warning Could not git checkout master
-			}
-			fi
+      {
+        warning Could not git checkout master
+      }
+      fi
       if git pull ; then
-			{
-				warning Could not git pull
-			}
-			fi
+      {
+        warning Could not git pull
+      }
+      fi
       if git fetch --tags origin ; then
-			{
-				warning Could not git fetch --tags origin
-			}
-			fi
+      {
+        warning Could not git fetch --tags origin
+      }
+      fi
     }
     fi
   }
   else
   {
     if git clone "${_source}" "${_target}"  ; then
-		{
-			warning Could not git clone "${_source}" "${_target}"
-		}
-		fi
+    {
+      warning Could not git clone "${_source}" "${_target}"
+    }
+    fi
   }
   fi
   chown -R "${SUDO_USER}" "${_target}"
@@ -115,7 +117,7 @@ _install_nvm() {
 
     [[  ! -e "${USER_HOME}/.config" ]] && mkdir -p "${USER_HOME}/.config"
     chown  -R "${SUDO_USER}" "${USER_HOME}/.config"
-		[ -e "${USER_HOME}/.nvm/nvm.sh" ] && chmod a+x "${USER_HOME}/.nvm/nvm.sh" 
+    [ -e "${USER_HOME}/.nvm/nvm.sh" ] && chmod a+x "${USER_HOME}/.nvm/nvm.sh" 
     [ -e "${USER_HOME}/.nvm/nvm.sh" ] && . "${USER_HOME}/.nvm/nvm.sh" # This loads nvm
     msg=$(nvm >/dev/null 2>&1)
     ret=$?
@@ -178,7 +180,7 @@ _install_nvm_version(){
 
     # chown -R $SUDO_USER:$(id -gn $SUDO_USER) "${USER_HOME}/.config"
     Configuring nvm node "${TARGETVERSION}"
-		[ -e "${USER_HOME}/.nvm/nvm.sh" ] && chmod a+x "${USER_HOME}/.nvm/nvm.sh"
+    [ -e "${USER_HOME}/.nvm/nvm.sh" ] && chmod a+x "${USER_HOME}/.nvm/nvm.sh"
     [ -e "${USER_HOME}/.nvm/nvm.sh" ] && . "${USER_HOME}/.nvm/nvm.sh" # This loads nvm
 
 
@@ -324,7 +326,7 @@ _debian_flavor_install() {
   cd "${USER_HOME}/.nvm"
   Installing older version that is compatible with old linux
   git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" $(git rev-list --tags --max-count=1)`
-	[ -e "${USER_HOME}/.nvm/nvm.sh" ] && chmod a+x "${USER_HOME}/.nvm/nvm.sh"
+  [ -e "${USER_HOME}/.nvm/nvm.sh" ] && chmod a+x "${USER_HOME}/.nvm/nvm.sh"
   [ -e "${USER_HOME}/.nvm/nvm.sh" ] && . "${USER_HOME}/.nvm/nvm.sh" # This loads nvm
   # \. "${USER_HOME}/.nvm/nvm.sh"
   local MSG=$(_add_variables_to_bashrc_zshrc)
@@ -343,14 +345,14 @@ _debian_flavor_install() {
 
 _redhat_flavor_install() {
   dnf build-dep nodejs -y --allowerasing
-	_git_clone "https://github.com/nvm-sh/nvm.git" "${USER_HOME}/.nvm"
+  _git_clone "https://github.com/nvm-sh/nvm.git" "${USER_HOME}/.nvm"
   cd "${USER_HOME}/.nvm"
     Installing older version that is compatible with old linux
   git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" $(git rev-list --tags --max-count=1)`
   [ -e "${USER_HOME}/.nvm/nvm.sh" ] && chmod a+x "${USER_HOME}/.nvm/nvm.sh"
   [ -e "${USER_HOME}/.nvm/nvm.sh" ] && . "${USER_HOME}/.nvm/nvm.sh" # This loads nvm
 
-	# \. "${USER_HOME}/.nvm/nvm.sh"
+  # \. "${USER_HOME}/.nvm/nvm.sh"
   local MSG=$(_add_variables_to_bashrc_zshrc)
   echo "${MSG}"
   # _checka_tools_commander
@@ -400,10 +402,12 @@ _fedora__64() {
 } # end _fedora__64
 
 _fedora_39__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   dnf build-dep nodejs -y --allowerasing
   _git_clone "https://github.com/nvm-sh/nvm.git" "${USER_HOME}/.nvm"
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   cd "${USER_HOME}/.nvm"
-  Installing older version that is compatible with old linux
+  # Installing older version that is compatible with old linux
   # git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" $(git rev-list --tags --max-count=1)`
   [ -e "${USER_HOME}/.nvm/nvm.sh" ] && chmod a+x "${USER_HOME}/.nvm/nvm.sh"
   [ -e "${USER_HOME}/.nvm/nvm.sh" ] && . "${USER_HOME}/.nvm/nvm.sh" # This loads nvm
@@ -411,8 +415,26 @@ _fedora_39__64() {
   _add_variables_to_bashrc_zshrc
   _install_npm_utils
   npm i -g pnpm
-	nvm ls
+  nvm ls
 } # end _fedora_39__64
+
+
+_fedora_40__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  dnf build-dep nodejs -y --allowerasing
+  _git_clone "https://github.com/nvm-sh/nvm.git" "${USER_HOME}/.nvm"
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  cd "${USER_HOME}/.nvm"
+  # Installing older version that is compatible with old linux
+  # git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" $(git rev-list --tags --max-count=1)`
+  [ -e "${USER_HOME}/.nvm/nvm.sh" ] && chmod a+x "${USER_HOME}/.nvm/nvm.sh"
+  [ -e "${USER_HOME}/.nvm/nvm.sh" ] && . "${USER_HOME}/.nvm/nvm.sh" # This loads nvm
+
+  _add_variables_to_bashrc_zshrc
+  _install_npm_utils
+  npm i -g pnpm
+  nvm ls
+} # end _fedora_40__64
 
 _gentoo__32() {
   _redhat_flavor_install
