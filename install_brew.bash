@@ -76,7 +76,8 @@ INT ..."
 load_struct_testing(){
   function _trap_on_error(){
     local -ir __trapped_error_exit_num="${2:-0}"
-    echo -e "\\n \033[01;7m*** 2 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+		echo -e "\\n \033[01;7m*** tasks_base/sudoer.bash:$LINENO load_struct_testing() ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+
     echo ". ${1}"
     echo ". exit  ${__trapped_error_exit_num}  "
     echo ". caller $(caller) "
@@ -440,34 +441,34 @@ alias egrep='grep -E --color=auto --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.t
 _add_variables_to_bashrc_zshrc(){
   local FINDBREW="/opt/homebrew/bin/brew"
 
-	if [[ -e "/opt/homebrew/bin/brew" ]] ; then
-	{
-		FINDBREW="/opt/homebrew/bin/brew"
-	}
+  if [[ -e "/opt/homebrew/bin/brew" ]] ; then
+  {
+    FINDBREW="/opt/homebrew/bin/brew"
+  }
   elif [[ -e "${USER_HOME}/.linuxbrew/bin/brew" ]] ; then
-	{
-		FINDBREW="${USER_HOME}/.linuxbrew/bin/brew"
-	}
+  {
+    FINDBREW="${USER_HOME}/.linuxbrew/bin/brew"
+  }
   elif [[ -e "/usr/local/opt/bin/brew" ]] ; then
-	{
-		FINDBREW="/usr/local/opt/bin/brew"
-	}
+  {
+    FINDBREW="/usr/local/opt/bin/brew"
+  }
   elif [[ -e "/usr/local/bin/brew" ]] ; then
-	{
-		FINDBREW="/usr/local/bin/brew"
-	}
+  {
+    FINDBREW="/usr/local/bin/brew"
+  }
   elif [[ -e "$(brew --prefix)/bin/brew" ]] ; then
-	{
-		FINDBREW="$(brew --prefix)/bin/brew"
-	}
-	fi
+  {
+    FINDBREW="$(brew --prefix)/bin/brew"
+  }
+  fi
 
   local _target_bin_brew=""
   _target_bin_brew="$(_find_executable_for "brew" "--prefix"  "bin/brew")"
 	
   su - "${SUDO_USER}" -c "${_target_bin_brew} list --formula"
-	# $(brew --prefix)/bin/brew
-	local BREW_SH_CONTENT='
+  # $(brew --prefix)/bin/brew
+  local BREW_SH_CONTENT='
 
 # BREW - HOMEBREW
 eval $("'${FINDBREW}'" shellenv)
@@ -486,9 +487,10 @@ eval $("'${FINDBREW}'" shellenv)
   while read INITFILE; do
   {
     [ -z ${INITFILE} ] && continue
+    [[ ! -e "${INITFILE}" ]] && continue
     Checking "${USER_HOME}/${INITFILE}"
     chown "${SUDO_USER}" "${INITFILE}"
-		(_if_not_contains  "${USER_HOME}/${INITFILE}" "shellenv" ) || Configuring ${INITFILE}
+    (_if_not_contains  "${USER_HOME}/${INITFILE}" "shellenv" ) || Configuring ${INITFILE}
     (_if_not_contains  "${USER_HOME}/${INITFILE}" "shellenv" ) && Skipping configuration for ${INITFILE}
     #                   filename            value      || do this .............
     (_if_not_contains  "${USER_HOME}/${INITFILE}" "# BREW - HOMEBREW" ) || echo -e "${BREW_SH_CONTENT}" >>"${USER_HOME}/${INITFILE}"
