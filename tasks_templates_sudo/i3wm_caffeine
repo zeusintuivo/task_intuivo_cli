@@ -671,7 +671,9 @@ _fedora_40__64() {
 	  # install dnf pre requisites
     xdm
 		pavucontrol
-	  gdbm-devel
+    pulseaudio
+    pulseaudio-utils
+    gdbm-devel
 		gdbm-libs
 		dunst
 		dbus-x11
@@ -871,7 +873,11 @@ _fedora_40__64() {
   xdg-mime default feh.desktop image/png
   su - "${SUDO_USER}" -c 'xdg-mime default feh.desktop image/jpeg'
 	su - "${SUDO_USER}" -c 'xdg-mime default feh.desktop image/png'
-
+  pulseaudio --check
+  pulseaudio -D
+  su - "${SUDO_USER}" -c 'pulseaudio --check'
+  su - "${SUDO_USER}" -c 'pulseaudio -D'
+  
   # _add_variables_to_bashrc_zshrc
   # ensure i3wm or "Canceling until i3wm did not install"
   # su - "${SUDO_USER}" -c 'i3wm install -l'
