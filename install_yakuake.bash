@@ -433,222 +433,241 @@ directory_exists_with_spaces "${USER_HOME}"
 
 
 
- #--------\/\/\/\/-- tasks_templates_sudo/docker …install_docker.bash” -- Custom code -\/\/\/\/-------
+ #--------\/\/\/\/-- tasks_templates_sudo/yakuake …install_yakuake.bash” -- Custom code -\/\/\/\/-------
 
 
 #!/usr/bin/bash
 
 _debian_flavor_install() {
-  apt install gnome-terminal -y
-  if apt remove docker-desktop -y ; then
-  {
-    warning "failed to remove older version of docker"
-  }
+  # trap  '_trap_on_exit $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  EXIT
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  if
+    (
+    install_requirements "linux" "
+      base64
+      unzip
+      curl
+      wget
+      ufw
+      nginx
+    "
+    ); then
+    {
+      apt install base64 -y
+      apt install unzip -y
+      apt install nginx -y
+    }
   fi
-  if rm -rf "${HOME}/.docker/desktop" ; then
-  {
-    warning "failed to remove ${HOME}/.docker/desktop"
-  }
-  fi
-  if rm -rf "${USER_HOME}/.docker/desktop" ; then
-  {
-    warning "failed to remove ${USER_HOME}/.docker/desktop"
-  }
-  fi
-  if rm -rf /usr/local/bin/com.docker.cli ; then
-  {
-    warning "failed to remove /usr/local/bin/com.docker.cli"
-  }
-  fi
-
-   # Add Docker's official GPG key:
-  apt-get update -y
-  apt-get install ca-certificates curl -y
-  yes | install -m 0755 -d /etc/apt/keyrings
-  yes | curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-  chmod a+r /etc/apt/keyrings/docker.asc
-
-  # Add the repository to Apt sources:
-  echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-  apt-get update -y
-  apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
-  ensure docker or "Canceling until docker is installed"
-  if groupadd docker ; then
-  {
-    warning " Group already exists"
-  }
-  fi
-  if usermod -aG docker root ; then
-  {
-    warning " root already added to docker"
-  }
-  fi
-  if usermod -aG docker "${SUDO_USER}" ; then
-  {
-    warning " user ${SUDO_USER} already  added to docker group"
-  }
-  fi
-  if newgrp docker ; then
-  {
-    warning " could not run newgrp docker "
-  }
-  fi
-  if chown -R  root  /root/.docker ; then\
-  {
-    warning " chown failed to docker "
-  }
-  fi
-  if chown -R   "${SUDO_USER}" "${USER_HOME}/.docker" ; then
-  {
-    warning " ${SUDO_USER} alredy added user to docker  "
-  }
-  fi
-  if chmod g+rwx "/root/.docker" ; then
-  {
-    warning "chmod failed for root "
-  }
-  fi
-  if chmod g+rwx "${USER_HOME}/.docker" ; then
-  {
-    warning " chmod failed for ${SUDO_USER} in ${USER_HOME}"
-  }
-  fi
-  yes | systemctl enable docker.service
-  yes | systemctl start docker.service
-  yes | systemctl enable containerd.service
-  yes | systemctl start containerd.service
-
-  docker run hello-world
-  docker compose version
-  docker --version
-  docker version
+  verify_is_installed "
+    unzip
+    curl
+    wget
+    tar
+    ufw
+    nginx
+  "
+  local PB_VERSION=0.16.7
+  local CODENAME="pocketbase_${PB_VERSION}_linux_amd64.zip"
+  local TARGET_URL="https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/${CODENAME}"
+  local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  directory_exists_with_spaces "${DOWNLOADFOLDER}"
+  cd "${DOWNLOADFOLDER}"
+  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+  # unzip "${DOWNLOADFOLDER}/${CODENAME}" -d $HOME/pb/
+  local UNZIPDIR="${USER_HOME}/_/software"
+  mkdir -p "${UNZIPDIR}"
+  _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
+  local PATHTOPOCKETBASE="${UNZIPDIR}/pocketbase"
+  local THISIP=$(myip)
 
 } # end _debian_flavor_install
 
-uninstall_docker() {
- echo "Uninstall Docker Engine
-
-    Uninstall the Docker Engine, CLI, containerd, and Docker Compose packages:
-
-    sudo apt-get purge docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin docker-ce-rootless-extras
-
-    Images, containers, volumes, or custom configuration files on your host aren't automatically removed. To delete all images, containers, and volumes:
-
-    sudo rm -rf /var/lib/docker
-
-     sudo rm -rf /var/lib/containerd
- "
-} # end uninstall_docker
-
 _redhat_flavor_install() {
-  Comment "Following instructions from https://docs.docker.com/engine/install/fedora/"
-  Installing "Uninstall old versions"
-  dnf remove docker \
-    docker-client \
-    docker-client-latest \
-    docker-common \
-    docker-latest \
-    docker-latest-logrotate \
-    docker-logrotate \
-    docker-selinux \
-    docker-engine-selinux \
-    docker-engine -y
-  Installing "Install using the rpm repository"
-  yes | dnf -y install dnf-plugins-core --skip-broken --disablerepo  skype,skype-stable,keybase,modular,1password,skypeforlinux
-  yes | dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
-  yes | dnf install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y --skip-broken --disablerepo  skype,skype-stable,keybase,modular,1password,skypeforlinux
-  yes | systemctl disable docker
-  yes | systemctl start docker
-  yes | docker run hello-world
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  dnf build-dep yakuake -y
+  dnf install yakuake -y
 } # end _redhat_flavor_install
 
+_fedora_37__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  dnf install kglobalacceld kf5-kglobalaccel kglobalacceld-devel kf5-kglobalaccel-devel -y
+  _redhat_flavor_install "${_parameters}"
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "struct_testing:$LINENO $0:$LINENO while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _fedora_37__64
+
+
+_fedora_40__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  dnf install kglobalacceld kf6-kglobalaccel kglobalacceld-devel kf6-kglobalaccel-devel -y
+  _redhat_flavor_install "${_parameters}"
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "struct_testing:$LINENO $0:$LINENO while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _fedora_40__64
+
 _arch_flavor_install() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_arch_flavor_install Procedure not yet implemented. I don't know what to do."
 } # end _readhat_flavor_install
 
 _arch__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _arch_flavor_install
 } # end _arch__32
 
 _arch__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _arch_flavor_install
 } # end _arch__64
 
 _centos__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _centos__32
 
 _centos__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _centos__64
 
 _debian__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _debian_flavor_install
 } # end _debian__32
 
 _debian__64() {
-  # debian_flavor_install
-  echo REF: https://docs.docker.com/engine/install/ubuntu/
-  apt-get update -y
-  apt-get install \
-    ca-certificates \
-    curl \
-    gnupg \
-    lsb-release -y
-  mkdir -p /etc/apt/keyrings
-  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-  echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-  apt-get update -y
-  chmod a+r /etc/apt/keyrings/docker.gpg
-  apt-get update -y
-  echo install lastest version. see website to see how to install another version
-  apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin -y
-  echo verify docker installs by creating hello world
-  docker run hello-world
-  apt install docker-compose -y
-  echo Architecture:
-  docker info  | grep Archi | cut -d: -f2 | cut -d\  -f2
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
 } # end _debian__64
 
 _fedora__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _fedora__32
 
 _fedora__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _fedora__64
 
+_fedora__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _fedora__64
+
+_fedora__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _fedora__64
+
+_fedora_36__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running callsomething above _err:${_err}"
+  }
+  fi
+  _redhat_flavor_install "${_parameters-}"
+} # end _fedora_36__64
+
+_fedora_37__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running callsomething above _err:${_err}"
+  }
+  fi
+  _redhat_flavor_install "${_parameters-}"
+} # end _fedora_37__64
+
+_fedora_38__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running callsomething above _err:${_err}"
+  }
+  fi
+  _redhat_flavor_install "${_parameters-}"
+} # end _fedora_38__64
+
+_fedora_39__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running callsomething above _err:${_err}"
+  }
+  fi
+  _redhat_flavor_install "${_parameters-}"
+} # end _fedora_39__64
+
 _gentoo__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _gentoo__32
 
 _gentoo__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _gentoo__64
 
 _madriva__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _madriva__32
 
 _madriva__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _madriva__64
 
 _suse__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _suse__32
 
+_netbsd__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "This is installer is missing"
+} # end _netbsd__64
+
 _suse__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _suse__64
 
 _ubuntu__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _debian_flavor_install
 } # end _ubuntu__32
 
 _ubuntu__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _debian_flavor_install
 } # end _ubuntu__64
 
@@ -663,28 +682,33 @@ _ubuntu_22__aarch64() {
 } # end _ubuntu_22__aarch64
 
 _darwin__64() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_darwin__64 Procedure not yet implemented. I don't know what to do."
 } # end _darwin__64
 
 _darwin__arm64() {
-  echo "$0 Procedure not yet implemented. I don't know what to do."
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_darwin__arm64 Procedure not yet implemented. I don't know what to do."
 } # end _darwin__arm64
 
 _tar() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_tar Procedure not yet implemented. I don't know what to do."
 } # end tar
 
 _windows__64() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_windows__64 Procedure not yet implemented. I don't know what to do."
 } # end _windows__64
 
 _windows__32() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_windows__32 Procedure not yet implemented. I don't know what to do."
 } # end _windows__32
 
 
 
- #--------/\/\/\/\-- tasks_templates_sudo/docker …install_docker.bash” -- Custom code-/\/\/\/\-------
+ #--------/\/\/\/\-- tasks_templates_sudo/yakuake …install_yakuake.bash” -- Custom code-/\/\/\/\-------
 
 
 

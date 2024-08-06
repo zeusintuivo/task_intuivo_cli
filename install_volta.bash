@@ -433,258 +433,309 @@ directory_exists_with_spaces "${USER_HOME}"
 
 
 
- #--------\/\/\/\/-- tasks_templates_sudo/docker …install_docker.bash” -- Custom code -\/\/\/\/-------
+ #--------\/\/\/\/-- tasks_templates_sudo/volta …install_volta.bash” -- Custom code -\/\/\/\/-------
 
 
-#!/usr/bin/bash
+#!/usr/bin/env bash
+#
+# @author Zeus Intuivo <zeus@intuivo.com>
+#
+_package_list_installer() {
+  # trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local package packages="${@}"
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer volta" && echo -e "${RESET}" && return 0' ERR
+
+  if ! install_requirements "linux" "${packages}" ; then
+  {
+    warning "installing requirements. ${CYAN} attempting to install one by one"
+    while read package; do
+    {
+      [ -z ${package} ] && continue
+      if ! install_requirements "linux" "${package}" ; then
+      {
+        _err=$?
+        if [ ${_err} -gt 0 ] ; then
+        {
+          echo -e "${RED}"
+          echo failed to install requirements "${package}"
+          echo -e "${RESET}"
+        }
+        fi
+      }
+      fi
+    }
+    done <<< "${packages}"
+  }
+  fi
+} # end _package_list_installer
+
+_git_clone() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO  _git_clone KERL" && echo -e "${RESET}" && return 0' ERR
+  local _source="${1}"
+  local _target="${2}"
+  Checking "${SUDO_USER}" "${_target}"
+  pwd
+  if  it_exists_with_spaces "${_target}" ; then # && it_exists_with_spaces "${_target}/.git" ; then
+  {
+    if it_exists_with_spaces "${_target}/.git" ; then
+    {
+      cd "${_target}"
+      if git config pull.rebase false ; then
+      {
+        warning Could not git config pull.rebase false
+      }
+      fi
+      if git fetch  ; then
+      {
+        warning Could not git fetch
+      }
+      fi
+      if git pull  ; then
+      {
+        warning Could not git pull
+      }
+      fi
+    }
+    fi
+  }
+  else
+  {
+    if git clone "${_source}" "${_target}"  ; then
+    {
+      warning Could not git clone "${_source}" "${_target}"
+    }
+    fi
+  }
+  fi
+  chown -R "${SUDO_USER}" "${_target}"
+
+} # end _git_clone
+
+
+
+_add_variables_to_bashrc_zshrc(){
+  local VOLTA_SH_CONTENT='
+
+# VOLTA
+if [[ -e "'${USER_HOME}'/.volta" ]] ; then
+{
+  export VOLTA_ROOT="'${USER_HOME}'/.volta"
+  export PATH="'${USER_HOME}'/bin:${PATH}"
+  export PATH="'${USER_HOME}'/.volta/bin:${PATH}"
+}
+fi
+'
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _add_variables_to_bashrc_zshrc volta" && echo -e "${RESET}" && return 0' ERR
+  Checking "${VOLTA_SH_CONTENT}"
+  local INITFILE INITFILES="
+   .bashrc
+   .zshrc
+   .bash_profile
+   .profile
+   .zshenv
+   .zprofile
+  "
+  while read INITFILE; do
+  {
+    [ -z ${INITFILE} ] && continue
+    [[ -e "${USER_HOME}/${INITFILE}" ]] || ( echo "skipping ..." && continue )
+    Checking "${USER_HOME}/${INITFILE}"
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "# VOLTA" ||  echo "${VOLTA_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "VOLTA_ROOT" ||  echo "${VOLTA_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+  }
+  done <<< "${INITFILES}"
+  # type volta
+  Checking "export PATH=\"${USER_HOME}/.volta/bin:${PATH}\" "
+  export PATH="${USER_HOME}/.volta/bin:${PATH}"
+  chown -R "${SUDO_USER}" "${USER_HOME}/.volta"
+  cd "${USER_HOME}/.volta/bin"
+
+  ensure volta or "Canceling until volta is installed"
+  su - "${SUDO_USER}" -c 'yes | volta install node'
+
+} # _add_variables_to_bashrc_zshrc
+
 
 _debian_flavor_install() {
-  apt install gnome-terminal -y
-  if apt remove docker-desktop -y ; then
-  {
-    warning "failed to remove older version of docker"
-  }
-  fi
-  if rm -rf "${HOME}/.docker/desktop" ; then
-  {
-    warning "failed to remove ${HOME}/.docker/desktop"
-  }
-  fi
-  if rm -rf "${USER_HOME}/.docker/desktop" ; then
-  {
-    warning "failed to remove ${USER_HOME}/.docker/desktop"
-  }
-  fi
-  if rm -rf /usr/local/bin/com.docker.cli ; then
-  {
-    warning "failed to remove /usr/local/bin/com.docker.cli"
-  }
-  fi
-
-   # Add Docker's official GPG key:
-  apt-get update -y
-  apt-get install ca-certificates curl -y
-  yes | install -m 0755 -d /etc/apt/keyrings
-  yes | curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-  chmod a+r /etc/apt/keyrings/docker.asc
-
-  # Add the repository to Apt sources:
-  echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-  apt-get update -y
-  apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
-  ensure docker or "Canceling until docker is installed"
-  if groupadd docker ; then
-  {
-    warning " Group already exists"
-  }
-  fi
-  if usermod -aG docker root ; then
-  {
-    warning " root already added to docker"
-  }
-  fi
-  if usermod -aG docker "${SUDO_USER}" ; then
-  {
-    warning " user ${SUDO_USER} already  added to docker group"
-  }
-  fi
-  if newgrp docker ; then
-  {
-    warning " could not run newgrp docker "
-  }
-  fi
-  if chown -R  root  /root/.docker ; then\
-  {
-    warning " chown failed to docker "
-  }
-  fi
-  if chown -R   "${SUDO_USER}" "${USER_HOME}/.docker" ; then
-  {
-    warning " ${SUDO_USER} alredy added user to docker  "
-  }
-  fi
-  if chmod g+rwx "/root/.docker" ; then
-  {
-    warning "chmod failed for root "
-  }
-  fi
-  if chmod g+rwx "${USER_HOME}/.docker" ; then
-  {
-    warning " chmod failed for ${SUDO_USER} in ${USER_HOME}"
-  }
-  fi
-  yes | systemctl enable docker.service
-  yes | systemctl start docker.service
-  yes | systemctl enable containerd.service
-  yes | systemctl start containerd.service
-
-  docker run hello-world
-  docker compose version
-  docker --version
-  docker version
-
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  ensure curl or "Canceling until curl is installed"
+  su - "${SUDO_USER}" -c 'curl -fsSL https://get.volta.sh | bash'
+  local MSG=$(_add_variables_to_bashrc_zshrc)
+  echo "${MSG}"
+  ensure volta or "Canceling until volta did not install"
 } # end _debian_flavor_install
 
-uninstall_docker() {
- echo "Uninstall Docker Engine
-
-    Uninstall the Docker Engine, CLI, containerd, and Docker Compose packages:
-
-    sudo apt-get purge docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin docker-ce-rootless-extras
-
-    Images, containers, volumes, or custom configuration files on your host aren't automatically removed. To delete all images, containers, and volumes:
-
-    sudo rm -rf /var/lib/docker
-
-     sudo rm -rf /var/lib/containerd
- "
-} # end uninstall_docker
-
 _redhat_flavor_install() {
-  Comment "Following instructions from https://docs.docker.com/engine/install/fedora/"
-  Installing "Uninstall old versions"
-  dnf remove docker \
-    docker-client \
-    docker-client-latest \
-    docker-common \
-    docker-latest \
-    docker-latest-logrotate \
-    docker-logrotate \
-    docker-selinux \
-    docker-engine-selinux \
-    docker-engine -y
-  Installing "Install using the rpm repository"
-  yes | dnf -y install dnf-plugins-core --skip-broken --disablerepo  skype,skype-stable,keybase,modular,1password,skypeforlinux
-  yes | dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
-  yes | dnf install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y --skip-broken --disablerepo  skype,skype-stable,keybase,modular,1password,skypeforlinux
-  yes | systemctl disable docker
-  yes | systemctl start docker
-  yes | docker run hello-world
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  ensure curl or "Canceling until curl is installed"
+  su - "${SUDO_USER}" -c 'curl -fsSL https://get.volta.sh | bash'
+  local MSG=$(_add_variables_to_bashrc_zshrc)
+  echo "${MSG}"
+  ensure volta or "Canceling until volta did not install"
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  ensure curl or "Canceling until curl is installed"
+  su - "${SUDO_USER}" -c 'curl -fsSL https://get.volta.sh | bash'
+  _add_variables_to_bashrc_zshrc
+  ensure "${USER_HOME}/.volta/bin/volta" or "Canceling until volta did not install"
 } # end _readhat_flavor_install
 
 _arch__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _arch_flavor_install
 } # end _arch__32
 
 _arch__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _arch_flavor_install
 } # end _arch__64
 
 _centos__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _centos__32
 
 _centos__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _centos__64
 
 _debian__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _debian_flavor_install
 } # end _debian__32
 
 _debian__64() {
-  # debian_flavor_install
-  echo REF: https://docs.docker.com/engine/install/ubuntu/
-  apt-get update -y
-  apt-get install \
-    ca-certificates \
-    curl \
-    gnupg \
-    lsb-release -y
-  mkdir -p /etc/apt/keyrings
-  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-  echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-  apt-get update -y
-  chmod a+r /etc/apt/keyrings/docker.gpg
-  apt-get update -y
-  echo install lastest version. see website to see how to install another version
-  apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin -y
-  echo verify docker installs by creating hello world
-  docker run hello-world
-  apt install docker-compose -y
-  echo Architecture:
-  docker info  | grep Archi | cut -d: -f2 | cut -d\  -f2
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
 } # end _debian__64
 
 _fedora__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _fedora__32
 
 _fedora__64() {
-  _redhat_flavor_install
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local _parameters="${*-}"
+  _redhat_flavor_install "${_parameters-}"
 } # end _fedora__64
 
+_fedora_37__64(){
+  # trap "echo Error:$?" ERR INT
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local _parameters="${*-}"
+  local -i _err=0
+  _redhat_flavor_install "${_parameters-}"
+} # end _fedora_37__64
+
+_fedora_39__64(){
+  # trap "echo Error:$?" ERR INT
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local _parameters="${*-}"
+  local -i _err=0
+  _redhat_flavor_install "${_parameters-}"
+} # end _fedora_39__64
+
 _gentoo__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _gentoo__32
 
 _gentoo__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _gentoo__64
 
 _madriva__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _madriva__32
 
 _madriva__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _madriva__64
 
 _suse__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _suse__32
 
 _suse__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _suse__64
 
-_ubuntu__32() {
-  _debian_flavor_install
-} # end _ubuntu__32
-
-_ubuntu__64() {
-  _debian_flavor_install
-} # end _ubuntu__64
-
-_ubuntu__aarch64() {
+_uvoltatu__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _debian_flavor_install
-} # end _ubuntu__aarch64
+} # end _uvoltatu__32
 
-_ubuntu_22__aarch64() {
+_uvoltatu__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _debian_flavor_install
-} # end _ubuntu_22__aarch64
+} # end _uvoltatu__64
+
+_uvoltatu__aarch64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _uvoltatu_22__aarch64
+} # end _uvoltatu__aarch64
+
+_uvoltatu_22__aarch64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  trap 'echo -e "${RED}" && echo "ERROR err:$_err failed $0:$LINENO _debian_flavor_install volta" && echo -e "${RESET}" && return 0' ERR
+  ensure curl or "Canceling until curl is installed"
+  su - "${SUDO_USER}" -c 'curl -fsSL https://get.volta.sh | bash'
+  local MSG=$(_add_variables_to_bashrc_zshrc)
+  echo "${MSG}"
+  ensure volta or "Canceling until volta did not install"
+  # su - "${SUDO_USER}" -c 'volta install -l'
+  # su - "${SUDO_USER}" -c 'volta install 3.1.4'
+  # ensure ruby or "Canceling until ruby is not working"
+  # su - "${SUDO_USER}" -c 'ruby -v'
+} # end _uvoltatu_22__aarch64
 
 _darwin__64() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  export HOMEBREW_NO_AUTO_UPDATE=1
+  ensure curl or "Canceling until curl is installed"
+  su - "${SUDO_USER}" -c 'curl -fsSL https://get.volta.sh | bash'
+  _add_variables_to_bashrc_zshrc
+  ensure "${USER_HOME}/.volta/bin/volta" or "Canceling until volta did not install"
+
+  # su - "${SUDO_USER}" -c "${USER_HOME}/.volta/bin/volta install -l"
+  # su - "${SUDO_USER}" -c "${USER_HOME}/.volta/bin/volta install 2.6.5"
+  # ensure ruby or "Canceling until ruby is not working"
+  # su - "${SUDO_USER}" -c 'ruby -v'
 } # end _darwin__64
 
 _darwin__arm64() {
-  echo "$0 Procedure not yet implemented. I don't know what to do."
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _darwin__64
 } # end _darwin__arm64
 
 _tar() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   echo "Procedure not yet implemented. I don't know what to do."
 } # end tar
 
 _windows__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   echo "Procedure not yet implemented. I don't know what to do."
 } # end _windows__64
 
 _windows__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   echo "Procedure not yet implemented. I don't know what to do."
 } # end _windows__32
 
 
 
- #--------/\/\/\/\-- tasks_templates_sudo/docker …install_docker.bash” -- Custom code-/\/\/\/\-------
+ #--------/\/\/\/\-- tasks_templates_sudo/volta …install_volta.bash” -- Custom code-/\/\/\/\-------
 
 
 

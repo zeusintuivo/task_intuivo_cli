@@ -5,6 +5,29 @@
 # 20200415 Compatible with Fedora, Mac, Ubuntu "sudo_up" "load_struct" "#
 set -E -o functrace
 export THISSCRIPTCOMPLETEPATH
+echo "0. sudologic $0:$LINENO           SUDO_COMMAND:${SUDO_COMMAND:-}"
+echo "0. sudologic $0:$LINENO               SUDO_GRP:${SUDO_GRP:-}"
+echo "0. sudologic $0:$LINENO               SUDO_UID:${SUDO_UID:-}"
+echo "0. sudologic $0:$LINENO               SUDO_GID:${SUDO_GID:-}"
+echo "0. sudologic $0:$LINENO              SUDO_USER:${SUDO_USER:-}"
+echo "0. sudologic $0:$LINENO                   USER:${USER:-}"
+echo "0. sudologic $0:$LINENO              USER_HOME:${USER_HOME:-}"
+echo "0. sudologic $0:$LINENO THISSCRIPTCOMPLETEPATH:${THISSCRIPTCOMPLETEPATH:-}"
+echo "0. sudologic $0:$LINENO         THISSCRIPTNAME:${THISSCRIPTNAME:-}"
+echo "0. sudologic $0:$LINENO       THISSCRIPTPARAMS:${THISSCRIPTPARAMS:-}"
+echo "0. sudologic $0 Start Checking realpath  "
+if ! ( command -v realpath >/dev/null 2>&1; )  ; then
+  echo "... realpath not found. Downloading REF:https://github.com/swarmbox/realpath.git "
+  cd $HOME
+  git clone https://github.com/swarmbox/realpath.git
+  cd realpath
+  make
+  sudo make install
+  _err=$?
+  [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Builing realpath. returned error did not download or is installed err:$_err  \n \n  " && exit 1
+else
+  echo "... realpath exists .. check!"
+fi
 typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")"  # updated realpath macos 20210902
 
 export BASH_VERSION_NUMBER
@@ -13,6 +36,9 @@ typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
 export  THISSCRIPTNAME
 typeset -r THISSCRIPTNAME="$(basename "$0")"
 
+export THISSCRIPTPARAMS
+typeset -r THISSCRIPTPARAMS="${*:-}"
+echo "0. sudologic $0:$LINENO       THISSCRIPTPARAMS:${THISSCRIPTPARAMS:-}"
 export _err
 typeset -i _err=0
   # function _trap_on_error(){

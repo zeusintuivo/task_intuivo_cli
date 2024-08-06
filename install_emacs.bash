@@ -76,7 +76,8 @@ INT ..."
 load_struct_testing(){
   function _trap_on_error(){
     local -ir __trapped_error_exit_num="${2:-0}"
-    echo -e "\\n \033[01;7m*** 2 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+		echo -e "\\n \033[01;7m*** tasks_base/sudoer.bash:$LINENO load_struct_testing() ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+
     echo ". ${1}"
     echo ". exit  ${__trapped_error_exit_num}  "
     echo ". caller $(caller) "
@@ -485,41 +486,277 @@ _debian_flavor_install() {
 
 } # end _debian_flavor_install
 
+_get_dowload_target() {
+  # Sample call:
+  #
+  #  _get_dowload_target https://linux.dropbox.com/packages/fedora/
+  #
+  # VERBOSE=1
+  local -i _err=0
+  local URL="${1}"   #           param order    varname    varvalue     sample_value
+  enforce_parameter_with_value           1        URL      "${URL}"     "https://linux.dropbox.com/packages/fedora/"
+  #
+  #
+  # (( VERBOSE )) && echo "CODEFILE=\"\"\"\$(wget --quiet --no-check-certificate  \"${URL}\" -O -  2>/dev/null)\"\"\""
+  local CODEFILE="""$(wget --quiet --no-check-certificate  "${URL}" -O -  2>/dev/null )""" # suppress only wget download messages, but keep wget output for variable
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    echo "$0:$LINENO _err:${_err}: CODEFILE:${CODEFILE}"
+    return ${_err}
+  }
+  fi
+
+
+  enforce_variable_with_value CODEFILE "${CODEFILE}"
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    echo "$0:$LINENO _err:${_err}: CODEFILE:${CODEFILE}"
+    return ${_err}
+  }
+  fi
+
+  #
+  #
+  local CODELASTESTBUILD=$(_extract_version "${CODEFILE}")
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    echo "$0:$LINENO _err:${_err}: CODELASTESTBUILD:${CODELASTESTBUILD}"
+    return ${_err}
+  }
+  fi
+
+  enforce_variable_with_value CODELASTESTBUILD "${CODELASTESTBUILD}"
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    echo "$0:$LINENO _err:${_err}: CODELASTESTBUILD:${CODELASTESTBUILD}"
+    return ${_err}
+  }
+  fi
+
+
+  local TARGETNAME=$(echo -n "${CODELASTESTBUILD}" | grep "${PLATFORM}" | grep "${PLATFORM}" |  tail -1)
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    echo "$0:$LINENO _err:${_err}: TARGETNAME:${TARGETNAME}"
+    return ${_err}
+  }
+  fi
+
+  enforce_variable_with_value TARGETNAME "${TARGETNAME}"
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    echo "$0:$LINENO _err:${_err}: TARGETNAME:${TARGETNAME}"
+    return ${_err}
+  }
+  fi
+
+  local _newURL=$(echo -n "${URL}" | sed 's/\/download.php//g')
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    echo "$0:$LINENO _err:${_err}: _newURL:${_newURL}"
+    return ${_err}
+  }
+  fi
+  if [[ -z ${_newURL} ]] ; then
+  {
+    echo "$0:$LINENO _err:${_err}: is empty _newURL:${_newURL}"
+    return 1
+  }
+  fi
+
+  echo -n "${_newURL}${TARGETNAME}"
+  return 0
+} # end _get_dowload_target
+
+_extract_version() {
+  echo "${*}" |  sed s/\>/\>\\n/g | sed "s/&apos;/\'/g" | sed 's/&nbsp;/ /g'  | grep "<a" | grep ".xz" | grep -v "xz.asc" | cut -d'"' -f2| sort | uniq | tail -1
+} # end _extract_version
+
+_find_latest_target_url() {
+  # _download_compile_install() {
+  # Sample use
+  #   _download_compile_install
+  local -i _err=0
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  # local TARGET_URL=$(_get_dowload_target "https://www.nano-editor.org/dist/v6/")
+  local TARGET_URL=$(_get_dowload_target "http://mirrors.kernel.org/gnu/emacs/")
+  _err=$?
+  # enforce_variable_with_value TARGET_URL "${TARGET_URL}"
+  # Checking "TARGET_URL:${TARGET_URL}"
+  echo -n "${TARGET_URL}"  | sed 's/.tar.xz.sig/.tar.xz/g'
+  return ${_err}
+} # end _find_latest_target_url
+
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+ 
   Message REF:https://gist.github.com/Dreameh/86562b83410db6151e871d811a70c470
   Comment Dependencies for development
   dnf group install "Development Tools" -y --allowerasing
   Comment Dependencies specific to emacs
   dnf builddep emacs -y --allowerasing
 
-  Comment Download the latest stable release from emacs website
-  wget http://mirrors.kernel.org/gnu/emacs/emacs-26.3.tar.xz
-  wget http://mirrors.kernel.org/gnu/emacs/emacs-26.3.tar.xz.sig
+  Installing emacs from dnf
+  dnf install emacs -y --allowerasing
+  dnf reinstall emacs -y --allowerasing
 
-  Comment Verify the tar.xz file
-  Comment out gpg --verify emacs-26.3.tar.xz.sig emacs-26.3.tar.xz
+  Installing emacs as compile to get latest
+  Comment Download the latest stable release from emacs website
+  # wget http://mirrors.kernel.org/gnu/emacs/emacs-26.3.tar.xz
+  # wget http://mirrors.kernel.org/gnu/emacs/emacs-26.3.tar.xz.sig
+
+  local -i _err=0
+  local TARGET_URL=$(_find_latest_target_url)
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO _err:${_err} TARGET_URL:${TARGET_URL}"
+  }
+  else
+  {
+    passed TARGET_URL:${TARGET_URL} 
+  }
+  fi
+
+  Checking "TARGET_URL:${TARGET_URL}"
+  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO _err:${_err} TARGET_URL:${TARGET_URL}"
+  }
+  fi
+
+  
+  local CODENAME=$(basename "${TARGET_URL}")
+  enforce_variable_with_value CODENAME "${CODENAME}"
+  local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  directory_exists_with_spaces "${DOWNLOADFOLDER}"
+  Checking "      CODENAME:$CODENAME"
+  Checking "DOWNLOADFOLDER:$DOWNLOADFOLDER"
+  Checking "    TARGET_URL:$TARGET_URL"
+  enforce_contains "emacs-" "${CODENAME}"
+  enforce_contains ".tar.xz" "${CODENAME}"
+  enforce_contains "http://mirrors.kernel.org/gnu/emacs/" "${TARGET_URL}"
+  enforce_contains "emacs-" "${TARGET_URL}"
+  enforce_contains ".tar.xz" "${TARGET_URL}"
+  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  
+  Checking cd "${DOWNLOADFOLDER}"
+  cd "${DOWNLOADFOLDER}"
+  
+  Checking  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+  local -i _err=0
+  if it_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}.sig" ; then
+  {
+    if it_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}" ; then
+    {
+      Comment \?\?\ gpg --verify "${DOWNLOADFOLDER}/${CODENAME}.sig" "${DOWNLOADFOLDER}/${CODENAME}"
+      if ! ( command -v gpg >/dev/null 2>&1; )  ; then
+      {
+        Comment Verify the tar.xz file
+        # gpg --verify emacs-26.3.tar.xz.sig emacs-26.3.tar.xz
+        gpg --verify "${DOWNLOADFOLDER}/${CODENAME}.sig" "${DOWNLOADFOLDER}/${CODENAME}"
+        _err=$?
+      }
+      else
+      {
+        _err=1
+      }
+      fi
+      if [ ${_err} -gt 0 ] ; then
+      {
+        rm -rf "${DOWNLOADFOLDER}/${CODENAME}"
+        wget "${TARGET_URL}"
+        rm -rf "${DOWNLOADFOLDER}/${CODENAME}.sig"
+        wget "${TARGET_URL}.sig" 
+      }
+      fi
+    }
+    fi
+
+  }
+  fi 
+  if it_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}.sig" ; then
+  {
+    rm -rf "${DOWNLOADFOLDER}/${CODENAME}.sig"
+    wget "${TARGET_URL}.sig"
+  }
+  fi 
+  if it_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}" ; then
+  {
+    rm -rf "${DOWNLOADFOLDER}/${CODENAME}"
+    wget "${TARGET_URL}"
+  }
+  fi 
+  # _do_not_downloadtwice "${TARGET_URL}"     "${DOWNLOADFOLDER}"  "${CODENAME}"
+  # Checking  _do_not_downloadtwice "${TARGET_URL}.sig" "${DOWNLOADFOLDER}"  "${CODENAME}.sig"
+  # _do_not_downloadtwice "${TARGET_URL}.sig" "${DOWNLOADFOLDER}"  "${CODENAME}.sig"
+       Comment \?\?\ gpg --verify "${DOWNLOADFOLDER}/${CODENAME}.sig" "${DOWNLOADFOLDER}/${CODENAME}"
+      if ! ( command -v gpg >/dev/null 2>&1; )  ; then
+      {
+        Comment Verify the tar.xz file
+        # gpg --verify emacs-26.3.tar.xz.sig emacs-26.3.tar.xz
+        gpg --verify "${DOWNLOADFOLDER}/${CODENAME}.sig" "${DOWNLOADFOLDER}/${CODENAME}"
+        _err=$?
+        if [ ${_err} -gt 0 ] ; then
+        {
+          failed to verify "${DOWNLOADFOLDER}/${CODENAME}" with "${DOWNLOADFOLDER}/${CODENAME}.sig"
+          ls -lctrlh "${DOWNLOADFOLDER}/${CODENAME}"
+          ls -lctrlh "${DOWNLOADFOLDER}/${CODENAME}.sig"
+          exit 1
+        }
+        fi
+      }
+      else
+      {
+        failed to find gpg program to check signature of download
+      }
+      fi
 
   Comment Once that has been taken care of, extract the tar.xz archive.
-  tar -xvf emacs-26.3.tar.xz
+  # itar -xvf emacs-26.3.tar.xz
+  Checking "tar -xvf \"${CODENAME}\""
+  tar -xvf "${CODENAME}"
+  [ $? -gt 0 ] && failed "to untar: tar -xvf ${CODENAME}"
+ 
+  local FOLDER="$(echo "${CODENAME}" | sed 's/.tar.xz//g')"
+  local VERSION="$(echo "${FOLDER}" | sed 's/nano-//g')"
+  directory_exists_with_spaces "${FOLDER}"
+  Comment Go into the newly made folder:"${FOLDER}"
+  cd "${FOLDER}"
+  # cd emacs-26.3
 
-  Comment Go into the newly made folder
-  cd emacs-26.3
-
-  Configure the source
+  Comment configure the source  
   ./configure
 
   Comment Compile the source
   make
-
+  
   Checking the binary to see that it runs smoothly
   src/emacs -Q
-
-  Installing the binary emacs
-  Comment out make install
+  yes | cp src/emacs /usr/local/bin/emacs
+ 
+  # Comment make install
+  # Installing the binary emacs
+  # make install
   cd ..
-  rm -rf emacs-26.3
-  dnf install emacs -f
+  # rm -rf emacs-26.3
+  rm -rf "${FOLDER}"
+ 
+  ensure emacs or "Failed to install emacs"
+  rm -f "${DOWNLOADFOLDER}/${CODENAME}"
+  file_does_not_exist_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
+  return 0
+ 
   # echo "_redhat_flavor_install Procedure not yet implemented. I don't know what to do."
 } # end _redhat_flavor_install
 
