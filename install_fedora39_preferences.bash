@@ -433,100 +433,27 @@ directory_exists_with_spaces "${USER_HOME}"
 
 
 
- #--------\/\/\/\/-- tasks_templates_sudo/rust …install_rust.bash” -- Custom code -\/\/\/\/-------
+ #--------\/\/\/\/-- tasks_templates_sudo/fedora39_preferences …install_fedora39_preferences.bash” -- Custom code -\/\/\/\/-------
 
 
 #!/usr/bin/bash
-alias egrep='grep -E --color=auto --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox}'
-_add_variables_to_bashrc_zshrc(){
-  # trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _add_variables_to_bashrc_zshrc cargo" && echo -e "${RESET}" && return 0' ERR
-  local FINDCARGO="/opt/homecargo/bin/cargo"
-  
-  if [[ -e "${USER_HOME}/.cargo/bin/cargo" ]] ; then
-  {
-    FINDCARGO="${USER_HOME}/.cargo"
-  }
-  elif [[ -e "/root/.cargo/bin/cargo" ]] ; then
-  {
-    FINDCARGO="/root/.cargo"
-  }
-  elif [[ -e "/opt/cargo/bin/cargo" ]] ; then
-  {
-    FINDCARGO="/opt/cargo"
-  }
-  fi
-
-  local CARGO_SH_CONTENT='
-
-# CARGO - RUST
-source "'${FINDCARGO}'/env"
-
-'
-  echo "${CARGO_SH_CONTENT}"
-  local INITFILE INITFILES="
-   .bashrc
-   .zshrc
-   .bash_profile
-   .profile
-   .zshenv
-   .zprofile
-  "
-  local changed_files=""
-  while read INITFILE; do
-  {
-    [ -z ${INITFILE} ] && continue
-    [[ ! -e "${USER_HOME}/${INITFILE}" ]] && continue
-    Checking "${USER_HOME}/${INITFILE}"
-    chown "${SUDO_USER}" "${USER_HOME}/${INITFILE}"
-    (_if_not_contains  "${USER_HOME}/${INITFILE}" "# CARGO - RUST" ) || Configuring "${USER_HOME}/${INITFILE}"
-    (_if_not_contains  "${USER_HOME}/${INITFILE}" "# CARGO - RUST" ) && Skipping configuration for "${USER_HOME}/${INITFILE}"
-    #                             filename            value          || do this .............
-    (_if_not_contains  "${USER_HOME}/${INITFILE}" "# CARGO - RUST" ) || echo -e "${CARGO_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
-    (_if_not_contains  "${USER_HOME}/${INITFILE}" "# CARGO - RUST" ) && changed_files="${changed_files} \"${USER_HOME}/${INITFILE}\" "
-
-    [[ ! -e "${HOME}/${INITFILE}" ]] && continue
-    Checking "${HOME}/${INITFILE}"
-    # chown "${SUDO_USER}" "${HOME}/${INITFILE}"
-    (_if_not_contains  "${HOME}/${INITFILE}" "# CARGO - RUST" ) || Configuring "${HOME}/${INITFILE}"
-    (_if_not_contains  "${HOME}/${INITFILE}" "# CARGO - RUST" ) && Skipping configuration for "${HOME}/${INITFILE}"
-    #                             filename            value          || do this .............
-    (_if_not_contains  "${HOME}/${INITFILE}" "# CARGO - RUST" ) || echo -e "${CARGO_SH_CONTENT}" >> "${HOME}/${INITFILE}"
-    (_if_not_contains  "${HOME}/${INITFILE}" "# CARGO - RUST" ) && changed_files="${changed_files} \"${HOME}/${INITFILE}\" "
-
-    
-  }
-  done <<< "${INITFILES}"
-  # if it_exists /home/linuxcargo ; then
-  # {
-  #   rm -rf /home/linuxcargo
-  # }
-  # fi
-  file_exists_with_spaces "${FINDCARGO}"
-  source "${FINDCARGO}/env"
-  Checking "all files changed files command for you" :
-  echo "sudo vim ${changed_files}"
-  echo "sudo nano ${changed_files}"
-} # _add_variables_to_bashrc_zshrc
-
 
 _debian_flavor_install() {
-  # trap  '_trap_on_exit $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  EXIT
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  if 
-		(
-    install_requirements "linux" "
-      base64
-      unzip
-      curl
-      wget
-      ufw
-      nginx
-    "
-    ); then
+  if (
+  install_requirements "linux" "
+    base64
+    unzip
+    curl
+    wget
+    ufw
+    nginx
+  "
+  ); then
     {
       apt install base64 -y
       apt install unzip -y
+      apt install nginx -y
     }
   fi
   verify_is_installed "
@@ -534,207 +461,189 @@ _debian_flavor_install() {
     curl
     wget
     tar
+    ufw
+    nginx
   "
-  export ARCHFLAGS="-arch $(uname -m)"
-  ARCHFLAGS="-arch $(uname -m)" curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-  [[ ! -e "${USER_HOME}/.cargo" ]] && cp -R /root/.cargo "${USER_HOME}/.cargo"
-  chmod -R 755 "${USER_HOME}/.cargo"
-  chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo"
-  chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/bin"
-  chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/env"
- #  su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
- if su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh" ; then
-          {
-                  echo "oops"
-          }
-  fi
+  local PB_VERSION=0.16.7
+  local CODENAME="pocketbase_${PB_VERSION}_linux_amd64.zip"
+  local TARGET_URL="https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/${CODENAME}"
+  local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  directory_exists_with_spaces "${DOWNLOADFOLDER}"
+  cd "${DOWNLOADFOLDER}"
+  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+  # unzip "${DOWNLOADFOLDER}/${CODENAME}" -d $HOME/pb/
+  local UNZIPDIR="${USER_HOME}/_/software"
+  mkdir -p "${UNZIPDIR}"
+  _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
+  local PATHTOPOCKETBASE="${UNZIPDIR}/pocketbase"
+  local THISIP=$(myip)
 
-  _add_variables_to_bashrc_zshrc
-  rustup default stable
-  su - "${SUDO_USER}" -c "rustup default stable" 
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
-  # trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   enforce_variable_with_value USER_HOME "${USER_HOME}"
+  Installing rust
+  #install_rust.bash
+  [[ ! -d "${HOME}/.cargo" ]] && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+  Installing rpmfusion free
+  dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+  Installing core group
+  anounce_command dnf groupupdate core -y
+  anounce_command dnf group update core -y
+  anounce_command dnf install https://rpms.remirepo.net/fedora/remi-release-$(rpm -E %fedora).rpm -yv 
+
   if (install_requirements "linux" "
-      unzip
-      curl
-      wget
-    "
-    ); then
+    python3-pip
+    task
+    gparted
+    gpart
+    thunderbird
+    boxes
+    firefox
+    guake
+    yakuake
+    nginx
+    gnome-tweaks
+    breeze-cursor-theme
+    oxygen-cursor-themes
+    knock
+    arandr
+    xrandr
+  "); then
   {
-      echo "warning: failed to install some deps"
+    echo "Warning:  failed install some deps"
   }
   fi
+  Installing homebrew
+  anounce_command install_brew.bash
+  Installing clis basic
+  anounce_command install_basic_clis.bash
+  Installing old clis extra mix stuff 
+  anounce_command install_clis.bash
+  Installing more libs with homebrew
+  su - "${SUDO_USER}" -c "brew install libxscrnsaver libnotify bzip2 freetype2"
+  Checking some programs as control 
   verify_is_installed "
     unzip
     curl
     wget
     tar
+    nginx
+    pip3
   "
-  export ARCHFLAGS="-arch $(uname -m)" 
-  ARCHFLAGS="-arch $(uname -m)"  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-  [[ ! -e "${USER_HOME}/.cargo" ]] && cp -R /root/.cargo "${USER_HOME}/.cargo" 
-  chmod -R 755 "${USER_HOME}/.cargo"
-  chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo"
-  chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/bin"
-  chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/env"
-  if su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh" ; then
-	  {
-		  echo "oops"
-	  }
-  fi
+  Installing several script now 
+  # anounce_command install_1password.bash
+  # anounce_command install_zoom.bash
+  # anounce_command install_keybase.bash
+  # anounce_command install_drogon.bash
+  # anounce_command install_sublime_dev.sh.bash
+  # anounce_command install_taskwarrior.bash
+  anounce_command compile_nano.bash &
+  # anounce_command install_rbenv.bash
+  anounce_command install_nvm.bash
+  # anounce_command install_evm.bash
+  # anounce_command install_kiex.bash
+  # anounce_command install_emacs.bash
+  # anounce_command install_masterpdf.bash
+  # install_i3.bash
+  # anounce_command install_beyondcompare.bash
+ 
+  echo "End of install tasks should be installed. I don't know what to do next... "
 
-  _add_variables_to_bashrc_zshrc
-  rustup default stable
-  su - "${SUDO_USER}" -c "rustup default stable" 
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   echo "_arch_flavor_install Procedure not yet implemented. I don't know what to do."
 } # end _readhat_flavor_install
 
 _arch__32() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _arch_flavor_install
 } # end _arch__32
 
 _arch__64() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _arch_flavor_install
 } # end _arch__64
 
 _centos__32() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _centos__32
 
 _centos__64() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _centos__64
 
 _debian__32() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _debian_flavor_install
 } # end _debian__32
 
 _debian__64() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _debian_flavor_install
 } # end _debian__64
 
 _fedora__32() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _fedora__32
 
-_fedora_37__64(){
-  _redhat_flavor_install
-} # end _fedora_37__64
-
-_fedora_38__64(){
-  _redhat_flavor_install
-} # end _fedora_38__64
-
-_fedora_39__64(){
-  _redhat_flavor_install
-} # end _fedora_39__64
-
-_fedora_40__64(){
-  _redhat_flavor_install
-} # end _fedora_40__64
-
 _fedora__64() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _fedora__64
 
 _gentoo__32() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _gentoo__32
 
 _gentoo__64() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _gentoo__64
 
 _madriva__32() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _madriva__32
 
 _madriva__64() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _madriva__64
 
 _suse__32() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _suse__32
 
 _suse__64() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _suse__64
 
 _ubuntu__32() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _debian_flavor_install
 } # end _ubuntu__32
 
 _ubuntu__64() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _debian_flavor_install
 } # end _ubuntu__64
 
-_ubuntu__aarch64() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _debian_flavor_install
-} # end _ubuntu__aarch64
-
-_ubuntu_22__aarch64() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _debian_flavor_install
-} # end _ubuntu_22__aarch64
-
 _darwin__64() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
- 	export ARCHFLAGS="-arch $(uname -m)"
-  ARCHFLAGS="-arch $(uname -m)" curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-  su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
+  echo "_darwin__64 Procedure not yet implemented. I don't know what to do."
 } # end _darwin__64
 
 _darwin__arm64() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
- 	export ARCHFLAGS="-arch $(uname -m)"
-  ARCHFLAGS="-arch $(uname -m)" curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-	su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
+  echo "_darwin__arm64 Procedure not yet implemented. I don't know what to do."
 } # end _darwin__arm64
 
 _tar() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_tar Procedure not yet implemented. I don't know what to do."
 } # end tar
 
 _windows__64() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-	export ARCHFLAGS="-arch $(uname -m)"
-  ARCHFLAGS="-arch $(uname -m)" curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-	su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
+  echo "_windows__64 Procedure not yet implemented. I don't know what to do."
 } # end _windows__64
 
 _windows__32() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   echo "_windows__32 Procedure not yet implemented. I don't know what to do."
 } # end _windows__32
 
 
 
- #--------/\/\/\/\-- tasks_templates_sudo/rust …install_rust.bash” -- Custom code-/\/\/\/\-------
+ #--------/\/\/\/\-- tasks_templates_sudo/fedora39_preferences …install_fedora39_preferences.bash” -- Custom code-/\/\/\/\-------
 
 
 
