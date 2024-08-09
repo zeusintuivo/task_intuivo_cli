@@ -9,20 +9,20 @@
 function generate_installer_simple(){
   local _loader="$(<tasks_base/load_struct_testing)"
   local _loader_lines="$( wc -l <<< ${_loader})"
-  local _body_template="$(<tasks_templates_sudo/${1})"
+  local _body_template="$(<tasks_templates/${1})"
   local _main="$(<tasks_base/main.bash)"
   echo "${_loader}" > "install_${1}.bash"
   echo -e "\n\n\n #---------/\/\/\-- tasks_base/load_struct_testing -------------/\/\/\--------\n\n" >> "install_${1}.bash"
-  echo -e "\n\n\n #--------\/\/\/\/-- tasks_templates_sudo/${1} …install_${1}.bash” -- Custom code -\/\/\/\/-------\n\n" >> "install_${1}.bash"
+  echo -e "\n\n\n #--------\/\/\/\/-- tasks_templates/${1} …install_${1}.bash” -- Custom code -\/\/\/\/-------\n\n" >> "install_${1}.bash"
   echo "${_body_template}" >> "install_${1}.bash"
-  echo -e "\n\n\n #--------/\/\/\/\-- tasks_templates_sudo/${1} …install_${1}.bash” -- Custom code-/\/\/\/\-------\n\n" >> "install_${1}.bash"
+  echo -e "\n\n\n #--------/\/\/\/\-- tasks_templates/${1} …install_${1}.bash” -- Custom code-/\/\/\/\-------\n\n" >> "install_${1}.bash"
   echo "${_main}" >> "install_${1}.bash"
   chmod a+x "install_${1}.bash"
 #  subl "install_${1}.bash:${_loader_lines}"
 } # end loader_installer
 
-[[ -z "${1}" ]] && echo -e "ERROR $0 requires one argument. \n A file name inside tasks_templates_sudo   like    \n $0 brew    to generate install_brew.bash from tasks_templates_sudo/brew " && exit 1
-[[ ! -f "./tasks_templates_sudo/${1}" ]] && echo -e "ERROR ./tasks_templates_sudo/$1 was not found  " && exit 1
+[[ -z "${1}" ]] && echo -e "ERROR $0 requires one argument. \n A file name inside tasks_templates   like    \n $0 brew    to generate install_brew.bash from tasks_templates/brew " && exit 1
+[[ ! -f "./tasks_templates/${1}" ]] && echo -e "ERROR ./tasks_templates/$1 was not found  " && exit 1
 
 generate_installer_simple "${1}"
 
