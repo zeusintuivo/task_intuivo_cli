@@ -153,12 +153,12 @@ function _perform_rebase_push(){
     _msg="$(<.tmp_msg.log)"
     if [ ${_err} -gt 0 ]; then
     {
-         echo -e "$0 ${RED-} Error doing ${CYAN-}${_description}${PURPLE-}. _fallback: if 1 ${PURPLE-} # ${_cond1} ${RESET-}  if 2 ${PURPLE-} # ${_cond2}  ${RESET-}: _err:${RED} ${_err} was:${CYAN-}${_msg}${RESET-} "
-         echo -e "${GRAY241-}   \____ ${YELLOW226-} ${_fallback}  ${RESET-}"
+      echo -e "$0 ${RED-} Error doing ${CYAN-}${_description}${PURPLE-}. _fallback: if 1 ${PURPLE-} # ${_cond1} ${RESET-}  if 2 ${PURPLE-} # ${_cond2}  ${RESET-}: _err:${RED} ${_err} was:${CYAN-}${_msg}${RESET-} "
+      echo -e "${GRAY241-}   \____ ${YELLOW226-} ${_fallback}  ${RESET-}"
       if [[ -n "${_cond1}" ]] && [[ -n "${_cond2}" ]] && [[ "${_msg}" == *"${_cond1}"* ]] && [[ "${_msg}" == *"${_cond2}"* ]] ; then
       {
-         echo -e "$0 ${RED-} Error doing ${CYAN-}${_description}${PURPLE-}. _fallback: if 1 ${PURPLE-} # ${_cond1} ${RESET-}  if 2 ${PURPLE-} # ${_cond2}  ${RESET-}: _err:${RED} ${_err} was:${CYAN-}${_msg}${RESET-} "
-         echo -e "${GRAY241-}   \____ ${YELLOW226-} ${_fallback}  ${RESET-}"
+        echo -e "$0 ${RED-} Error doing ${CYAN-}${_description}${PURPLE-}. _fallback: if 1 ${PURPLE-} # ${_cond1} ${RESET-}  if 2 ${PURPLE-} # ${_cond2}  ${RESET-}: _err:${RED} ${_err} was:${CYAN-}${_msg}${RESET-} "
+        echo -e "${GRAY241-}   \____ ${YELLOW226-} ${_fallback}  ${RESET-}"
         # _msg="$(eval "${_fallback}" 2>&1)"
         eval "${_action}" 2>&1 |  tee .tmp_msg.log
         _err=$?
@@ -172,8 +172,8 @@ function _perform_rebase_push(){
       }
       elif [[ -n "${_cond1}" ]] && [[ "${_msg}" == *"${_cond1}"* ]] ; then
       {
-         echo -e "$0 ${RED-} Error doing ${CYAN-}${_description}${PURPLE-}. _fallback: if 1 ${PURPLE-} # ${_cond1} ${RESET-}: _err:${RED} ${_err} was:${CYAN-}${_msg}${RESET-} "
-         echo -e "${GRAY241-}   \____ ${YELLOW226-} ${_fallback}  ${RESET-}"
+        echo -e "$0 ${RED-} Error doing ${CYAN-}${_description}${PURPLE-}. _fallback: if 1 ${PURPLE-} # ${_cond1} ${RESET-}: _err:${RED} ${_err} was:${CYAN-}${_msg}${RESET-} "
+        echo -e "${GRAY241-}   \____ ${YELLOW226-} ${_fallback}  ${RESET-}"
         _msg="$(eval "${_fallback}")"
         _err=$?
         if [ ${_err} -gt 0 ]; then
@@ -186,8 +186,8 @@ function _perform_rebase_push(){
       }
       elif ( [[ -n "${_cond2}" ]] && [[ "${_msg}" == *"${_cond2}"* ]] ); then
       {
-         echo -e "$0 ${RED-} Error doing ${CYAN-}${_description}${PURPLE-}. _fallback: if 2 ${PURPLE-} # ${_cond2} ${RESET-}: _err:${RED} ${_err} was:${CYAN-}${_msg}${RESET-} "
-         echo -e "${GRAY241-}   \____ ${YELLOW226-} ${_fallback}  ${RESET-}"
+        echo -e "$0 ${RED-} Error doing ${CYAN-}${_description}${PURPLE-}. _fallback: if 2 ${PURPLE-} # ${_cond2} ${RESET-}: _err:${RED} ${_err} was:${CYAN-}${_msg}${RESET-} "
+        echo -e "${GRAY241-}   \____ ${YELLOW226-} ${_fallback}  ${RESET-}"
         # _msg="$(eval "${_fallback}")"
         eval "${_action}" 2>&1 |  tee .tmp_msg.log
         _err=$?
