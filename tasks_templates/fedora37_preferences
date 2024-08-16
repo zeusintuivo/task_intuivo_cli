@@ -46,42 +46,81 @@ _debian_flavor_install() {
 
 _redhat_flavor_install() {
   # enforce_variable_with_value USER_HOME "${USER_HOME}"
-sudo updatedb &
+  local -i _err
+  sudo updatedb &
+  sudo dnf update -y
+  sudo dnf build-dep zsh -y
+  sudo dnf install zsh -y
+  sudo dnf build-dep vim-enhanced -y
+  sudo dnf install vim-enhanced -y
+  ./install_basic_clis.bash
+  _err=$? && [[ ${_err} -gt 0 ]] && exit ${_err}
+    install_beyondcompare.bash
+  _err=$? && [[ ${_err} -gt 0 ]] && exit ${_err}
+  ./install_powerlevel10k.bash
+  _err=$? && [[ ${_err} -gt 0 ]] && exit ${_err}
   ./install_brew.bash
+  _err=$? && [[ ${_err} -gt 0 ]] && exit ${_err}
   ./install_rbenv.bash
+  _err=$? && [[ ${_err} -gt 0 ]] && exit ${_err}
   ./install_nvm.bash
+  _err=$? && [[ ${_err} -gt 0 ]] && exit ${_err}
   ./install.clis.bash
+  _err=$? && [[ ${_err} -gt 0 ]] && exit ${_err}
   ./install_clis.bash
+  _err=$? && [[ ${_err} -gt 0 ]] && exit ${_err}
   install_1password.bash
+  _err=$? && [[ ${_err} -gt 0 ]] && exit ${_err}
   install_zoom.bash
+  _err=$? && [[ ${_err} -gt 0 ]] && exit ${_err}
   install_keybase.bash
+  _err=$? && [[ ${_err} -gt 0 ]] && exit ${_err}
   install_drogon.bash
+  _err=$? && [[ ${_err} -gt 0 ]] && exit ${_err}
   install_sublime_dev.sh.bash
-install_sublimemerge_dev.bash
-install_sublime4.bash
+  _err=$? && [[ ${_err} -gt 0 ]] && exit ${_err}
+  install_sublimemerge_dev.bash
+  _err=$? && [[ ${_err} -gt 0 ]] && exit ${_err}
+  install_sublime4.bash
+  _err=$? && [[ ${_err} -gt 0 ]] && exit ${_err}
   install_taskwarrior.bash
+  _err=$? && [[ ${_err} -gt 0 ]] && exit ${_err}
   compile_nano.bash
+  _err=$? && [[ ${_err} -gt 0 ]] && exit ${_err}
   install_evm.bash
+  _err=$? && [[ ${_err} -gt 0 ]] && exit ${_err}
   install_pyenv.bash
+  _err=$? && [[ ${_err} -gt 0 ]] && exit ${_err}
   install_kiex.bash
+  _err=$? && [[ ${_err} -gt 0 ]] && exit ${_err}
   install_emacs.bash
+  _err=$? && [[ ${_err} -gt 0 ]] && exit ${_err}
   install_masterpdf.bash
+  _err=$? && [[ ${_err} -gt 0 ]] && exit ${_err}
   install_i3.bash
-  install_beyondcompare.bash
+  _err=$? && [[ ${_err} -gt 0 ]] && exit ${_err}
   install_vlc.bash
+  _err=$? && [[ ${_err} -gt 0 ]] && exit ${_err}
   install_go.bash
+  _err=$? && [[ ${_err} -gt 0 ]] && exit ${_err}
   install_discord.bash
+  _err=$? && [[ ${_err} -gt 0 ]] && exit ${_err}
   install_signal.bash
+  _err=$? && [[ ${_err} -gt 0 ]] && exit ${_err}
   install_skype.bash
+  _err=$? && [[ ${_err} -gt 0 ]] && exit ${_err}
   install_kerl.bash
-install_planner.bash
-install_powerlevel10k.bash
-install_telegram.bash
-install_valet.bash
-# install_code.bash
-wget --max-redirect=10 --mirror --directory-prefix="/home/zeus/Downloads/20231122/" -O "code-1.84.2-20231122.el7.x86_64.rpm" --no-check-certificate https://update.code.visualstudio.com/1.84.2/linux-rpm-x64/stable
-sudo dnf install -vy code-1.84.2-20231122.el7.x86_64.rpm
- rm code-1.84.2-20231122.el7.x86_64.rpm
+  _err=$? && [[ ${_err} -gt 0 ]] && exit ${_err}
+  install_planner.bash
+  _err=$? && [[ ${_err} -gt 0 ]] && exit ${_err}
+  install_telegram.bash
+  _err=$? && [[ ${_err} -gt 0 ]] && exit ${_err}
+  install_valet.bash
+  _err=$? && [[ ${_err} -gt 0 ]] && exit ${_err}
+  # install_code.bash
+  wget --max-redirect=10 --mirror --directory-prefix="/home/zeus/Downloads/20231122/" -O "code-1.84.2-20231122.el7.x86_64.rpm" --no-check-certificate https://update.code.visualstudio.com/1.84.2/linux-rpm-x64/stable
+  sudo dnf install -vy code-1.84.2-20231122.el7.x86_64.rpm
+  rm code-1.84.2-20231122.el7.x86_64.rpm
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 	dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
 	dnf groupupdate core -y

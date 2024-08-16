@@ -1,0 +1,12 @@
+#1|2 var|3 action                    |4 cond1|5 cond2|6.fbk action|7flag 
+Paso 1 : Descargar script||wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh ||||.dotnet_paso1_descripcion
+
+paso 2 : hacer el archvio ejecutable||chmod +x ./dotnet-install.sh||||.dotnet_paso2
+
+paso 3 : correr el archivo||./dotnet-install.sh --version latest||||.dotnet_paso3
+
+paso 4 : correr el parametro runtime de entorno de ejecucion||./dotnet-install.sh --version latest --runtime aspnetcore||||.dotnet_paso4
+
+paso 5 : instalar sdk||./dotnet-install.sh --channel 8.0||||.dotnet_paso5
+
+
