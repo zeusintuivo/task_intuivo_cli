@@ -1086,6 +1086,10 @@ _fedora_37__64() {
   _fedora__64 "${*}"
 } # end _fedora_37__64
 
+_fedora_39__64() {
+  _fedora__64 "${*}"
+} # end _fedora_39__64
+
 _fedora__64() {
   local -i _err=0
   trap 'pkill wget && exit 0' EXIT
