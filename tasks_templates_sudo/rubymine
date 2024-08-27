@@ -10,7 +10,7 @@ _version() {
   local CODEFILE="""$(wget --quiet --no-check-certificate  https://www.jetbrains.com/ruby/ -O -  2>/dev/null )""" # suppress only wget download messages, but keep wget output for variable
   # enforce_variable_with_value CODEFILE "${CODEFILE}"
   wait
-  local CODELASTESTBUILD=$(echo "${CODEFILE}" | sed s/\</\\n\</g | sed s/\>/\>\\n/g | sed "s/&apos;/\'/g" | sed 's/&nbsp;/ /g' | grep  "New in RubyMine ${PATTERN}" | sed s/\ /\\n/g | tail -1 ) # | grep "What&apos;s New in&nbsp;RubyMine&nbsp;" | sed 's/\;/\;'\\n'/g' | sed s/\</\\n\</g  )
+  local CODELASTESTBUILD=$(echo "${CODEFILE}" | sed s/\>/\>\\n/g | sed "s/&apos;/\'/g" | sed 's/&nbsp;/ /g' | grep  "New in RubyMine ${PATTERN}" | sed s/\ /\\n/g | tail -1 ) # | grep "What&apos;s New in&nbsp;RubyMine&nbsp;" | sed 's/\;/\;'\\n'/g' | sed s/\</\\n\</g  )
   enforce_variable_with_value CODELASTESTBUILD "${CODELASTESTBUILD}"
 
   local CODENAME=""
@@ -42,6 +42,8 @@ _version() {
 } # end _version
 
 _darwin__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+
   verify_is_installed "
     wget
   "
@@ -102,7 +104,13 @@ _darwin__64() {
   sudo hdiutil detach "/Volumes/${UNZIPDIR}"
 } # end _darwin__64
 
+_darwin__arm64() {
+  _darwin__64
+} # end _darwin__arm64
+
 _ubuntu__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+
   # _linux_prepare
   local CODENAME=$(_version "linux" "RubyMine-*.*.*.*amd64.deb")
   # THOUGHT          local CODENAME="RubyMine-4.3.3.24545_amd64.deb"
@@ -122,6 +130,8 @@ _ubuntu__32() {
 } # end _ubuntu__32
 
 _fedora__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+
   # _linux_prepare
   local CODENAME=$(_version "linux" "RubyMine*.*.*.*.i386.rpm")
   # THOUGHT                          RubyMine-4.3.3.24545.i386.rpm
@@ -397,6 +407,8 @@ EOF
 } # end _add_mine_associacions_and_browser_click_to_open
 
 _fedora__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+
   # _linux_prepare
   local CODENAME=$(_version "linux" "*.*")
   echo "${CODENAME}";

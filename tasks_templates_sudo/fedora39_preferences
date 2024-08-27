@@ -1,0 +1,204 @@
+#!/usr/bin/bash
+
+_debian_flavor_install() {
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  if (
+  install_requirements "linux" "
+    base64
+    unzip
+    curl
+    wget
+    ufw
+    nginx
+  "
+  ); then
+    {
+      apt install base64 -y
+      apt install unzip -y
+      apt install nginx -y
+    }
+  fi
+  verify_is_installed "
+    unzip
+    curl
+    wget
+    tar
+    ufw
+    nginx
+  "
+  local PB_VERSION=0.16.7
+  local CODENAME="pocketbase_${PB_VERSION}_linux_amd64.zip"
+  local TARGET_URL="https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/${CODENAME}"
+  local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  directory_exists_with_spaces "${DOWNLOADFOLDER}"
+  cd "${DOWNLOADFOLDER}"
+  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+  # unzip "${DOWNLOADFOLDER}/${CODENAME}" -d $HOME/pb/
+  local UNZIPDIR="${USER_HOME}/_/software"
+  mkdir -p "${UNZIPDIR}"
+  _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
+  local PATHTOPOCKETBASE="${UNZIPDIR}/pocketbase"
+  local THISIP=$(myip)
+
+} # end _debian_flavor_install
+
+_redhat_flavor_install() {
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  Installing rust
+  #install_rust.bash
+  [[ ! -d "${HOME}/.cargo" ]] && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+  Installing rpmfusion free
+  dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+  Installing core group
+  anounce_command dnf groupupdate core -y
+  anounce_command dnf group update core -y
+  anounce_command dnf install https://rpms.remirepo.net/fedora/remi-release-$(rpm -E %fedora).rpm -yv 
+
+  if (install_requirements "linux" "
+    python3-pip
+    task
+    gparted
+    gpart
+    thunderbird
+    boxes
+    firefox
+    guake
+    yakuake
+    nginx
+    gnome-tweaks
+    breeze-cursor-theme
+    oxygen-cursor-themes
+    knock
+    arandr
+    xrandr
+  "); then
+  {
+    echo "Warning:  failed install some deps"
+  }
+  fi
+  Installing homebrew
+  anounce_command install_brew.bash
+  Installing clis basic
+  anounce_command install_basic_clis.bash
+  Installing old clis extra mix stuff 
+  anounce_command install_clis.bash
+  Installing more libs with homebrew
+  su - "${SUDO_USER}" -c "brew install libxscrnsaver libnotify bzip2 freetype2"
+  Checking some programs as control 
+  verify_is_installed "
+    unzip
+    curl
+    wget
+    tar
+    nginx
+    pip3
+  "
+  Installing several script now 
+  # anounce_command install_1password.bash
+  # anounce_command install_zoom.bash
+  # anounce_command install_keybase.bash
+  # anounce_command install_drogon.bash
+  # anounce_command install_sublime_dev.sh.bash
+  # anounce_command install_taskwarrior.bash
+  anounce_command compile_nano.bash &
+  # anounce_command install_rbenv.bash
+  anounce_command install_nvm.bash
+  # anounce_command install_evm.bash
+  # anounce_command install_kiex.bash
+  # anounce_command install_emacs.bash
+  # anounce_command install_masterpdf.bash
+  # install_i3.bash
+  # anounce_command install_beyondcompare.bash
+ 
+  echo "End of install tasks should be installed. I don't know what to do next... "
+
+} # end _redhat_flavor_install
+
+_arch_flavor_install() {
+  echo "_arch_flavor_install Procedure not yet implemented. I don't know what to do."
+} # end _readhat_flavor_install
+
+_arch__32() {
+  _arch_flavor_install
+} # end _arch__32
+
+_arch__64() {
+  _arch_flavor_install
+} # end _arch__64
+
+_centos__32() {
+  _redhat_flavor_install
+} # end _centos__32
+
+_centos__64() {
+  _redhat_flavor_install
+} # end _centos__64
+
+_debian__32() {
+  _debian_flavor_install
+} # end _debian__32
+
+_debian__64() {
+  _debian_flavor_install
+} # end _debian__64
+
+_fedora__32() {
+  _redhat_flavor_install
+} # end _fedora__32
+
+_fedora__64() {
+  _redhat_flavor_install
+} # end _fedora__64
+
+_gentoo__32() {
+  _redhat_flavor_install
+} # end _gentoo__32
+
+_gentoo__64() {
+  _redhat_flavor_install
+} # end _gentoo__64
+
+_madriva__32() {
+  _redhat_flavor_install
+} # end _madriva__32
+
+_madriva__64() {
+  _redhat_flavor_install
+} # end _madriva__64
+
+_suse__32() {
+  _redhat_flavor_install
+} # end _suse__32
+
+_suse__64() {
+  _redhat_flavor_install
+} # end _suse__64
+
+_ubuntu__32() {
+  _debian_flavor_install
+} # end _ubuntu__32
+
+_ubuntu__64() {
+  _debian_flavor_install
+} # end _ubuntu__64
+
+_darwin__64() {
+  echo "_darwin__64 Procedure not yet implemented. I don't know what to do."
+} # end _darwin__64
+
+_darwin__arm64() {
+  echo "_darwin__arm64 Procedure not yet implemented. I don't know what to do."
+} # end _darwin__arm64
+
+_tar() {
+  echo "_tar Procedure not yet implemented. I don't know what to do."
+} # end tar
+
+_windows__64() {
+  echo "_windows__64 Procedure not yet implemented. I don't know what to do."
+} # end _windows__64
+
+_windows__32() {
+  echo "_windows__32 Procedure not yet implemented. I don't know what to do."
+} # end _windows__32

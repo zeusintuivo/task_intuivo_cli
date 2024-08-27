@@ -1,0 +1,724 @@
+#!/usr/bin/env bash
+#
+# @author Zeus Intuivo <zeus@intuivo.com>
+#
+set -u -E -o functrace
+_package_list_installer() {
+  # trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local package packages="${@}"
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer fvm" && echo -e "${RESET}" && return 0' ERR
+  if ! ( install_requirements "linux" "${packages}" ) ; then
+  {
+    warning "installing requirements. ${CYAN} attempting to install one by one"
+    while read package; do
+    {
+      [[ "${package-}empty" == "empty" ]] && continue
+      if ! ( install_requirements "linux" "${package}" ) ; then
+      {
+        _err=$?
+        if [ ${_err} -gt 0 ] ; then
+        {
+          echo -e "${RED}"
+          echo failed to install requirements "${package}"
+          echo -e "${RESET}"
+        }
+        fi
+      }
+      fi
+    }
+    done <<< "${packages}"
+  }
+  fi
+} # end _package_list_installer
+
+_git_clone() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO  _git_clone KERL" && echo -e "${RESET}" && return 0' ERR
+  local _source="${1}"
+  local _target="${2}"
+  Checking "${SUDO_USER}" "${_target}"
+  pwd
+  if  it_exists_with_spaces "${_target}" ; then # && it_exists_with_spaces "${_target}/.git" ; then
+  {
+    if it_exists_with_spaces "${_target}/.git" ; then
+    {
+      cd "${_target}"
+      if git config pull.rebase false ; then
+      {
+        warning Could not git config pull.rebase false
+      }
+      fi
+      if git fetch  ; then
+      {
+        warning Could not git fetch
+      }
+      fi
+      if git pull  ; then
+      {
+        warning Could not git pull
+      }
+      fi
+    }
+    fi
+  }
+  else
+  {
+    if git clone "${_source}" "${_target}"  ; then
+    {
+      warning Could not git clone "${_source}" "${_target}"
+    }
+    fi
+  }
+  fi
+  chown -R "${SUDO_USER}" "${_target}"
+
+} # end _git_clone
+
+
+
+_add_variables_to_bashrc_zshrc(){
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _add_variables_to_bashrc_zshrc fvm" && echo -e "${RESET}" && return 0' ERR
+  local FVM_DIR="${USER_HOME}/.fvm_flutter"
+  local FMV_DIR_BIN="${FVM_DIR}/bin"
+  local SYMLINK_TARGET="/usr/local/bin/fvm"
+
+  local FVM_SH_CONTENT='
+
+# FVM
+if [[ -e "'${FVM_DIR}'" ]] ; then
+{
+  export FVM_DIR="'${FVM_DIR}'"
+  export FMV_DIR_BIN="'${FMV_DIR_BIN}'"
+  export FVM_ROOT="'${FVM_DIR}'"
+  export PATH="'${FMV_DIR_BIN}':${PATH}"
+  export PATH="'${USER_HOME}'/fvm/default/bin:${PATH}"
+}
+fi
+'
+   local FIX_PATH_REPEATS="
+# Fix Path repetitions
+export PATH=\$(echo -n \$PATH | sed 's/:/\\n/g'  | uniq | sed -e ':a' -e 'N' -e '\$!ba' -e 's/\\n/:/g')  #  enter to : cross-platform compatibles
+
+
+"
+  Checking "${FVM_SH_CONTENT}"
+  local INITFILE INITFILES="
+   .bashrc
+   .zshrc
+   .bash_profile
+   .profile
+   .zshenv
+   .zprofile
+  "
+  while read INITFILE; do
+  {
+    [ -z ${INITFILE} ] && continue
+    Checking "${USER_HOME}/${INITFILE}"
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "# FVM" ||  echo "${FVM_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "# Fix Path repetitions" ||  echo "${FIX_PATH_REPEATS}" >> "${USER_HOME}/${INITFILE}"
+    _if_not_contains "${USER_HOME}/${INITFILE}"  "FVM_ROOT" ||  echo "${FVM_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+  }
+  done <<< "${INITFILES}"
+  echo -n "vim " 
+	while read INITFILE; do
+  {
+    [ -z ${INITFILE} ] && continue
+    echo -n "${USER_HOME}/${INITFILE} "
+  }
+  done <<< "${INITFILES}"
+  echo " "
+
+  Checking "export PATH=\"${FMV_DIR_BIN}:${PATH}\" "
+  export PATH="${FMV_DIR_BIN}:${PATH}"
+  export PATH="${USER_HOME}/fvm/default/bin:${PATH}"
+  chown -R "${SUDO_USER}" "${FVM_DIR}"
+  cd "${FMV_DIR_BIN}"
+
+  su - "${SUDO_USER}" -c "yes | ${FMV_DIR_BIN}/fvm install 2.2.3"
+  su - "${SUDO_USER}" -c "yes | ${FMV_DIR_BIN}/fvm use 2.2.3"
+  su - "${SUDO_USER}" -c "yes | ${FMV_DIR_BIN}/fvm install stable"
+  su - "${SUDO_USER}" -c "yes | ${FMV_DIR_BIN}/fvm use stable"
+  su - "${SUDO_USER}" -c "yes | ${FMV_DIR_BIN}/fvm use stable -p"
+  su - "${SUDO_USER}" -c "yes | ${FMV_DIR_BIN}/fvm list"
+  su - "${SUDO_USER}" -c "yes | ${FMV_DIR_BIN}/fvm global stable"
+  ensure flutter or "Canceling until flutter is not working"
+  su - "${SUDO_USER}" -c 'flutter -v'
+  su - "${SUDO_USER}" -c "flutter doctor -v"
+  su - "${SUDO_USER}" -c "flutter --disable-analytics"
+  su - "${SUDO_USER}" -c "flutter --suppress-analytics"
+  ensure dart or "Canceling until dart is not working"
+  su - "${SUDO_USER}" -c "dart --disable-analytics"
+  su - "${SUDO_USER}" -c "dart --suppress-analytics"
+  su - "${SUDO_USER}" -c "dart -v"
+  su - "${SUDO_USER}" -c "dart doctor -v"
+
+} # _add_variables_to_bashrc_zshrc
+
+
+_debian_flavor_install() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  apt update -y
+  trap 'echo -e "${RED}" && echo "ERROR err:$_err failed $0:$LINENO _debian_flavor_install fvm" && echo -e "${RESET}" && return 0' ERR
+  # Batch 1 18.04
+  local package packages="
+    curl
+		git
+		unzip
+		xz-utils
+		zip
+		libglu1-mesa
+	  
+		autoconf
+    bison
+    build-essential
+    libssl-dev
+    libyaml-dev
+    libreadline6-dev
+    zlib1g-dev
+    libncurses5-dev
+    libffi-dev
+    libgdbm5
+    libgdbm-dev
+  "
+  _package_list_installer "${packages}"
+  # Batch 2 20.04
+  local package packages="
+    autoconf
+    bison
+    build-essential
+    libssl-dev
+    libyaml-dev
+    libreadline6-dev
+    zlib1g-dev
+    libncurses5-dev
+    libffi-dev
+    libgdbm6
+    libgdbm-dev
+  "
+  _package_list_installer "${packages}"
+  _fvm_install_from_install_sh_clone
+  # _git_clone "https://github.com/fvm/fvm.git" "${USER_HOME}/.fvm"
+  # _git_clone "https://github.com/fvm/ruby-build.git" "${USER_HOME}/.fvm/plugins/ruby-build"
+
+  ensure fvm or "Canceling until fvm did not install"
+  _add_variables_to_bashrc_zshrc
+  # su - "${SUDO_USER}" -c 'fvm install -l'
+  # su - "${SUDO_USER}" -c 'fvm install 2.6.5'
+  # su - "${SUDO_USER}" -c 'fvm global 2.6.5'
+  # su - "${SUDO_USER}" -c 'fvm rehash'
+  ensure flutter or "Canceling until flutter is not working"
+  su - "${SUDO_USER}" -c 'flutter -v'
+} # end _debian_flavor_install
+
+_fvm_install_from_install_sh_clone() {
+  Checking Installed FVM version if exists
+  local INSTALLED_FVM_VERSION=""
+  if command -v fvm &> /dev/null; then
+  {
+    INSTALLED_FVM_VERSION=$(fvm --version 2>&1) || error "Failed to fetch installed FVM version."
+  }
+  fi
+  ensure curl or "Canceling until curl is installed. "
+  # ensure brew or "Canceling until brew is installed. try install_brew.bash install_brew.sh"
+
+  Checking Define the URL of the FVM binary
+  local FVM_VERSION=""
+  FVM_VERSION=$(curl -s https://api.github.com/repos/leoafarias/fvm/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+  [[ -z "${FVM_VERSION}" ]] && failed to fetch latest FVM version.
+  Installing "FVM version ${FVM_VERSION}"
+  Checking "Setup installation directory and symlink"
+  local FVM_DIR="${USER_HOME}/.fvm_flutter"
+  local FMV_DIR_BIN="${FVM_DIR}/bin"
+  local SYMLINK_TARGET="/usr/local/bin/fvm"
+
+  Installing "Create FVM directory if it does not exist"
+  su - "${SUDO_USER}" -c 'mkdir -p "'"${FVM_DIR}"'"' || failed "Failed to create FVM directory: $FVM_DIR."
+  Checking "if FVM_DIR exists, and if it does delete it"
+  if [[ -d "${FMV_DIR_BIN}" ]]; then
+  {
+    Message "FVM bin directory already exists. Removing it."
+    if ! rm -rf "${FMV_DIR_BIN}"; then
+    {
+      failed "to remove existing FVM directory: ${FMV_DIR_BIN}."
+    }
+    fi
+  }
+  fi
+
+  Checking "Detect OS and architecture"
+  local OS="$(uname -s)"
+  local ARCH="$(uname -m)"
+
+  Checking "Map to FVM naming"
+  case "$OS" in
+    Linux*)  OS='linux' ;;
+    Darwin*) OS='macos' ;;
+    *)       failed  "Unsupported OS"; exit 1 ;;
+  esac
+
+  case "$ARCH" in
+    x86_64)  ARCH='x64' ;;
+    arm64)   ARCH='arm64' ;;
+    armv7l)  ARCH='arm' ;;
+    *)       failed "Unsupported architecture"; exit 1 ;;
+  esac
+
+  Checking "Download FVM"
+  local URL="https://github.com/leoafarias/fvm/releases/download/$FVM_VERSION/fvm-$FVM_VERSION-$OS-$ARCH.tar.gz"
+  if ! curl -L "$URL" -o fvm.tar.gz; then
+  {
+    failed "Download failed. Check your internet connection and URL: $URL"
+  }
+  fi
+
+  Checking "Extract binary to the new location"
+  if ! tar xzf fvm.tar.gz -C "$FVM_DIR" 2>&1; then
+  {
+    failed "Extraction failed. Check permissions and tar.gz file integrity."
+  }
+  fi
+
+  Checking "# Cleanup"
+  if ! rm -f fvm.tar.gz; then
+  {
+    failed "to cleanup"
+  }
+  fi
+
+  Checking "rename FVM_DIR/fvm to FVM_DIR/bin"
+  if ! mv "$FVM_DIR/fvm" "$FMV_DIR_BIN"; then
+  {
+    failed "to move fvm to bin directory."
+  }
+  fi
+
+  Checking "Create a symlink"
+  if ! ln -sf "$FMV_DIR_BIN/fvm" "$SYMLINK_TARGET"; then
+  {
+    failed "Failed to create symlink."
+  }
+  fi
+
+  Checking "Verify installation"
+  if ! command -v fvm &> /dev/null; then
+  {
+    failed "Installation verification failed. FVM may not be in PATH or failed to execute."
+  }
+  fi
+
+  INSTALLED_FVM_VERSION=$(fvm --version 2>&1) || failed "Failed to verify installed FVM version."
+  passed "success FVM $INSTALLED_FVM_VERSION installed successfully."
+
+
+} # end _fvm_install_from_install_sh_clone
+
+_redhat_flavor_install() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  # dnf build-dep fvm -vy --allowerasing
+  # dnf install  -y openssl-devel
+  # Batch Fedora 37
+  local package packages="
+	libyaml
+	libyaml-devel
+	autoconf
+	bison
+	bison-devel
+	openssl1.1
+	# openssl1.1-devel-1
+	ncurses
+	ncurses-devel
+	ncurses-c++-libs
+	ncurses-compat-libs
+	ncurses-libs
+	ncurses-static
+	ncurses-base
+	# ncurses-term conflicts with foot-terminfo
+	readline
+	readline-static
+	readline-devel
+	compat-readline5
+	compat-readline5-devel
+	compat-readline6
+	compat-readline6-devel
+	zlib
+	zlib-devel
+	zlibrary-devel
+	zlibrary
+	libffi
+	libffi-devel
+	libffi3.1
+	# compat-gdbm
+	# compat-gdbm-devel
+	# compat-gdbm-libs
+	gdbm
+	gdbm-devel
+	gdbm-libs
+  curl
+  "
+  _package_list_installer "${packages}"
+
+  _fvm_install_from_install_sh_clone
+
+  ensure fvm or "Canceling until fvm is not working"
+  # su - "${SUDO_USER}" -c 'brew tap leoafarias/fvm'
+  # su - "${SUDO_USER}" -c 'brew install fvm'
+  # _git_clone "https://github.com/fvm/fvm.git" "${USER_HOME}/.fvm"
+  # _git_clone "https://github.com/fvm/ruby-build.git" "${USER_HOME}/.fvm/plugins/ruby-build"
+  _add_variables_to_bashrc_zshrc
+  ensure flutter or "Canceling until flutter did not install"
+  # su - "${SUDO_USER}" -c 'fvm install -l'
+  # su - "${SUDO_USER}" -c 'fvm install 2.6.5'
+  # su - "${SUDO_USER}" -c 'fvm install 2.7.3'
+  # su - "${SUDO_USER}" -c 'fvm install 3.2.2'
+  # su - "${SUDO_USER}" -c 'fvm global 2.6.5'
+  # su - "${SUDO_USER}" -c 'fvm rehash'
+  su - "${SUDO_USER}" -c 'flutter -v'
+} # end _redhat_flavor_install
+
+_arch_flavor_install() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _readhat_flavor_install
+
+_arch__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _arch_flavor_install
+} # end _arch__32
+
+_arch__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _arch_flavor_install
+} # end _arch__64
+
+_centos__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _centos__32
+
+_centos__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _centos__64
+
+_debian__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _debian__32
+
+_debian__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _debian__64
+
+_fedora__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _fedora__32
+
+_fedora__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local _parameters="${*-}"
+  _redhat_flavor_install "${_parameters-}"
+} # end _fedora__64
+
+_fedora_37__64(){
+  # trap "echo Error:$?" ERR INT
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local _parameters="${*-}"
+  local -i _err=0
+  _redhat_flavor_install "${_parameters-}"
+} # end _fedora_37__64
+
+_fedora_39__64(){
+  # trap "echo Error:$?" ERR INT
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local _parameters="${*-}"
+  local -i _err=0
+  _redhat_flavor_install "${_parameters-}"
+} # end _fedora_39__64
+
+_gentoo__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _gentoo__32
+
+_gentoo__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _gentoo__64
+
+_madriva__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _madriva__32
+
+_madriva__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _madriva__64
+
+_suse__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _suse__32
+
+_suse__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _suse__64
+
+_ubuntu__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _ubuntu__32
+
+_ubuntu__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _ubuntu__64
+
+_ubuntu__aarch64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _ubuntu_22__aarch64
+} # end _ubuntu__aarch64
+
+_ubuntu_22__aarch64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  apt update -y
+  trap 'echo -e "${RED}" && echo "ERROR err:$_err failed $0:$LINENO _debian_flavor_install fvm" && echo -e "${RESET}" && return 0' ERR
+  # Batch 1 18.04
+  local package packages="
+    autoconf
+    bison
+    build-essential
+    libssl-dev
+    libyaml-dev
+    libreadline6-dev
+    zlib1g-dev
+    libncurses5-dev
+    libffi-dev
+    libgdbm-dev
+  "
+  _package_list_installer "${packages}"
+  # Batch 2 20.04
+  local package packages="
+    autoconf
+    bison
+    build-essential
+    libssl-dev
+    libyaml-dev
+    libreadline6-dev
+    zlib1g-dev
+    libncurses5-dev
+    libffi-dev
+    libgdbm6
+    libgdbm-dev
+  "
+  _package_list_installer "${packages}"
+
+  _fvm_install_from_install_sh_clone
+
+  # _git_clone "https://github.com/fvm/fvm.git" "${USER_HOME}/.fvm"
+  # _git_clone "https://github.com/fvm/ruby-build.git" "${USER_HOME}/.fvm/plugins/ruby-build"
+  local MSG=$(_add_variables_to_bashrc_zshrc)
+  echo "${MSG}"
+  ensure fvm or "Canceling until fvm did not install"
+  su - "${SUDO_USER}" -c 'fvm install -l'
+  su - "${SUDO_USER}" -c 'fvm install 3.1.4'
+  su - "${SUDO_USER}" -c 'fvm global 3.1.4'
+  su - "${SUDO_USER}" -c 'fvm rehash'
+  ensure ruby or "Canceling until ruby is not working"
+  su - "${SUDO_USER}" -c 'ruby -v'
+} # end _ubuntu_22__aarch64
+
+_darwin__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  softwareupdate --agree-to-license
+  sh -c 'xcode-select -s /Applications/Xcode.app/Contents/Developer && xcodebuild -runFirstLaunch'
+  xcodebuild -license
+  export HOMEBREW_NO_AUTO_UPDATE=1
+  ensure brew or "Canceling until brew is installed"
+
+  # su - "${SUDO_USER}" -c 'brew install ruby-build'
+  _fvm_install_from_install_sh_clone
+  ensure fvm or "Canceling until fvm did not install"
+  # _git_clone "https://github.com/fvm/fvm.git" "${USER_HOME}/.fvm"
+  # _git_clone "https://github.com/fvm/ruby-build.git" "${USER_HOME}/.fvm/plugins/ruby-build"
+  _add_variables_to_bashrc_zshrc
+  # ensure "${USER_HOME}/.fvm/bin/fvm" or "Canceling until fvm did not install"
+  # su - "${SUDO_USER}" -c "git -C ${USER_HOME}/.fvm/plugins/ruby-build pull"
+  # su - "${SUDO_USER}" -c "${USER_HOME}/.fvm/bin/fvm install -l"
+  ensure flutter or "Canceling until flutter is not working"
+  su - "${SUDO_USER}" -c 'flutter -v'
+} # end _darwin__64
+
+_darwin__arm64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  softwareupdate --install-rosetta --agree-to-license
+  _darwin__64
+} # end _darwin__arm64
+
+_uninstall(){
+	#!/bin/bash
+
+	# Define the FVM directory and binary path
+	FVM_DIR="$HOME/.fvm_flutter"
+	BIN_LINK="/usr/local/bin/fvm"
+
+	# Check if FVM is installed
+	if ! command -v fvm &> /dev/null
+	then
+	    echo "FVM is not installed. Exiting."
+	    exit 1
+	fi
+
+	# Remove the FVM binary
+	echo "Uninstalling FVM..."
+	rm -rf "$FVM_DIR" || {
+	    echo "Failed to remove FVM directory: $FVM_DIR."
+	    exit 1
+	}
+
+	# Remove the symlink
+	rm -f "$BIN_LINK" || {
+	    echo "Failed to remove FVM symlink: $BIN_LINK."
+	    exit 1
+	}
+
+	# Check if uninstallation was successful
+	if command -v fvm &> /dev/null
+	then
+	    echo "Uninstallation failed. Please try again later."
+	    exit 1
+	fi
+
+	echo "FVM uninstalled successfully."
+} # end _uninstall
+
+_tar() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end tar
+
+_windows__64() {
+  echo "to run this Run as Admin: Open PowerShell as Administrator.
+
+  Install: Paste and run the below command.
+  ./installer_flutter_fvm.bat
+  if fails try the original installer.
+  Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://fvm.app/install.ps1')
+  "
+
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo '
+	# Requires admin rights
+	if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
+	    Write-Host "Run the script as an admin"
+	    exit 1
+	}
+
+	Function CleanUp {
+	    Remove-Item -Path "fvm.tar.gz" -Force -ErrorAction SilentlyContinue
+	}
+
+	Function CatchErrors {
+	    param ($exitCode)
+	    if ($exitCode -ne 0) {
+	        Write-Host "An error occurred."
+	        CleanUp
+	        exit 1
+	    }
+	}
+
+	# Terminal colors
+	$Color_Off = ""
+	$Red = [System.ConsoleColor]::Red
+	$Green = [System.ConsoleColor]::Green
+	$Dim = [System.ConsoleColor]::Gray
+	$White = [System.ConsoleColor]::White
+
+	Function Write-ErrorLine {
+	    param ($msg)
+	    Write-Host -ForegroundColor $Red "error: $msg"
+	    exit 1
+	}
+
+	Function Write-Info {
+	    param ($msg)
+	    Write-Host -ForegroundColor $Dim $msg
+	}
+
+	Function Write-Success {
+	    param ($msg)
+	    Write-Host -ForegroundColor $Green $msg
+	}
+
+	# Detect OS and architecture
+	$OS = if ($env:OS -eq "Windows_NT") { "windows" } else { "unknown" }
+	$ARCH = if ([Environment]::Is64BitOperatingSystem) { "x64" } else { "x86" }
+
+	Write-Info "Detected OS: $OS"
+	Write-Info "Detected Architecture: $ARCH"
+
+	# Check for curl
+	try {
+	    $curl = Get-Command curl -ErrorAction Stop
+	} catch {
+	    Write-ErrorLine "curl is required but not installed."
+	}
+
+	$github_repo = "fluttertools/fvm"
+
+	# Get FVM version
+	if ($args.Count -eq 0) {
+	    try {
+	        $FVM_VERSION = Invoke-RestMethod -Uri "https://api.github.com/repos/$github_repo/releases/latest" | Select-Object -ExpandProperty tag_name
+	    } catch {
+	        Write-ErrorLine "Failed to fetch the latest FVM version from GitHub."
+	    }
+	} else {
+	    $FVM_VERSION = $args[0]
+	}
+
+	Write-Info "Installing FVM Version: $FVM_VERSION"
+
+	# Download FVM
+	$URL = "https://github.com/fluttertools/fvm/releases/download/$FVM_VERSION/fvm-$FVM_VERSION-$OS-x64.zip"
+	Write-Host "Downloading from $URL"
+	try {
+	    Invoke-WebRequest -Uri $URL -OutFile "fvm.tar.gz"
+	} catch {
+	    Write-ErrorLine "Failed to download FVM from $URL."
+	}
+
+	$FVM_DIR = "C:\Program Files\fvm"
+
+	# Extract binary
+	try {
+	    tar -xzf fvm.tar.gz -C $FVM_DIR
+	} catch {
+	    Write-ErrorLine "Extraction failed."
+	}
+
+	# Cleanup
+	CleanUp
+
+	# Verify Installation
+	try {
+	    $INSTALLED_FVM_VERSION = & fvm --version
+	    if ($INSTALLED_FVM_VERSION -eq $FVM_VERSION) {
+	        Write-Success "FVM $INSTALLED_FVM_VERSION installed successfully."
+	    } else {
+	        Write-ErrorLine "FVM version verification failed."
+	    }
+	} catch {
+	    Write-ErrorLine "Installation failed. Exiting."
+	}
+  ' > ./installer_flutter_fvm.bat
+  ./installer_flutter_fvm.bat
+} # end _windows__64
+
+_windows__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _windows__32

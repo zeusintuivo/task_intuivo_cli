@@ -6,7 +6,7 @@
 #
 
 
-function generate_installer(){
+function generate_installer_with_sudo(){
   local _sudoer="$(<tasks_base/sudoer.bash)"
   local _sudoer_lines="$(cat tasks_base/sudoer.bash | wc -l)"
   local _body_template="$(<tasks_templates_sudo/${1})"
@@ -24,4 +24,4 @@ function generate_installer(){
 [[ -z "${1}" ]] && echo -e "ERROR $0 requires one argument. \n A file name inside tasks_templates_sudo   like    \n $0 brew    to generate install_brew.bash from tasks_templates_sudo/brew " && exit 1
 [[ ! -f "./tasks_templates_sudo/${1}" ]] && echo -e "ERROR ./tasks_templates_sudo/$1 was not found  " && exit 1
 
-generate_installer "${1}"
+generate_installer_with_sudo "${1}"

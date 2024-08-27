@@ -1,599 +1,935 @@
-#!/bin/bash
+#!/usr/bin/env bash
+#
+# @author Zeus Intuivo <zeus@intuivo.com>
+#
+# 20200415 Compatible with Fedora, Mac, Ubuntu "sudo_up" "load_struct" "#
+#set -u
+set -E -o functrace
+export THISSCRIPTCOMPLETEPATH
+
+echo "0. sudologic $0:$LINENO           SUDO_COMMAND:${SUDO_COMMAND:-}"
+echo "0. sudologic $0:$LINENO               SUDO_GRP:${SUDO_GRP:-}"
+echo "0. sudologic $0:$LINENO               SUDO_UID:${SUDO_UID:-}"
+echo "0. sudologic $0:$LINENO               SUDO_GID:${SUDO_GID:-}"
+echo "0. sudologic $0:$LINENO              SUDO_USER:${SUDO_USER:-}"
+echo "0. sudologic $0:$LINENO                   USER:${USER:-}"
+echo "0. sudologic $0:$LINENO              USER_HOME:${USER_HOME:-}"
+echo "0. sudologic $0:$LINENO THISSCRIPTCOMPLETEPATH:${THISSCRIPTCOMPLETEPATH:-}"
+echo "0. sudologic $0:$LINENO         THISSCRIPTNAME:${THISSCRIPTNAME:-}"
+echo "0. sudologic $0:$LINENO       THISSCRIPTPARAMS:${THISSCRIPTPARAMS:-}"
+
+echo "0. sudologic $0 Start Checking realpath  "
+if ! ( command -v realpath >/dev/null 2>&1; )  ; then
+  echo "... realpath not found. Downloading REF:https://github.com/swarmbox/realpath.git "
+  cd $HOME
+  git clone https://github.com/swarmbox/realpath.git
+  cd realpath
+  make
+  sudo make install
+  _err=$?
+  [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Builing realpath. returned error did not download or is installed err:$_err  \n \n  " && exit 1
+else
+  echo "... realpath exists .. check!"
+fi
+
+typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")"   # updated realpath macos 20210902
+# typeset -r THISSCRIPTCOMPLETEPATH="$(realpath "$(basename "$0")")"  # updated realpath macos 20210902  # § This goe$
+export BASH_VERSION_NUMBER
+typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
+
+export  THISSCRIPTNAME
+typeset -r THISSCRIPTNAME="$(basename "$0")"
+
+export THISSCRIPTPARAMS
+typeset -r THISSCRIPTPARAMS="${*:-}"
+echo "0. sudologic $0:$LINENO       THISSCRIPTPARAMS:${THISSCRIPTPARAMS:-}"
+
+export _err
+typeset -i _err=0
+
+  function _trap_on_error(){
+    #echo -e "\\n \033[01;7m*** 1 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR ...\033[0m"
+    local cero="$0"
+    local file1="$(paeth ${BASH_SOURCE})"
+    local file2="$(paeth ${cero})"
+    echo -e "ERROR TRAP $THISSCRIPTNAME $THISSCRIPTPARAMS
+${file1}:${BASH_LINENO[-0]}     \t ${FUNCNAME[-0]}()
+$file2:${BASH_LINENO[1]}    \t ${FUNCNAME[1]}()
+ERR ..."
+    exit 1
+  }
+  trap _trap_on_error ERR
+  function _trap_on_int(){
+    # echo -e "\\n \033[01;7m*** 1 INTERRUPT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n  INT ...\033[0m"
+    local cero="$0"
+    local file1="$(paeth ${BASH_SOURCE})"
+    local file2="$(paeth ${cero})"
+    echo -e "INTERRUPT TRAP $THISSCRIPTNAME $THISSCRIPTPARAMS
+${file1}:${BASH_LINENO[-0]}     \t ${FUNCNAME[-0]}()
+$file2:${BASH_LINENO[1]}    \t ${FUNCNAME[1]}()
+INT ..."
+    exit 0
+  }
+
+  trap _trap_on_int INT
+
+load_struct_testing(){
+  function _trap_on_error(){
+    local -ir __trapped_error_exit_num="${2:-0}"
+		echo -e "\\n \033[01;7m*** tasks_base/sudoer.bash:$LINENO load_struct_testing() ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+
+    echo ". ${1}"
+    echo ". exit  ${__trapped_error_exit_num}  "
+    echo ". caller $(caller) "
+    echo ". ${BASH_COMMAND}"
+    local -r __caller=$(caller)
+    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+
+    # $(eval ${BASH_COMMAND}  2>&1; )
+    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+    exit 1
+  }
+  function load_library(){
+    local _library="${1:-struct_testing}"
+    local -i _DEBUG=${DEBUG:-0}
+    if [[ -z "${1}" ]] ; then
+    {
+       echo "Must call with name of library example: struct_testing execute_command"
+       exit 1
+    }
+    fi
+    trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+      local provider="$HOME/_/clis/execute_command_intuivo_cli/${_library}"
+      if [[ -n "${SUDO_USER:-}" ]] && [[ -n "${HOME:-}" ]] && [[ "${HOME:-}" == "/root" ]] && [[ !  -e "${provider}"  ]] ; then
+      {
+        provider="/home/${SUDO_USER}/_/clis/execute_command_intuivo_cli/${_library}"
+      }
+      elif [[ -z "${SUDO_USER:-}" ]] && [[ -n "${HOME:-}" ]] && [[ "${HOME:-}" == "/root" ]] && [[ !  -e "${provider}"  ]] ; then
+      {
+        provider="/home/${USER}/_/clis/execute_command_intuivo_cli/${_library}"
+      }
+      fi
+      echo "$0: ${provider}"
+      echo "$0: SUDO_USER:${SUDO_USER:-nada SUDOUSER}: USER:${USER:-nada USER}: ${SUDO_HOME:-nada SUDO_HOME}: {${HOME:-nada HOME}}"
+      local _err=0 structsource
+      if [[  -e "${provider}" ]] ; then
+        if (( _DEBUG )) ; then
+          echo "$0: tasks_base/sudoer.bash Loading locally"
+        fi
+        structsource="""$(<"${provider}")"""
+        _err=$?
+        if [ $_err -gt 0 ] ; then
+        {
+           echo -e "\n \n  ERROR! Loading ${_library}. running 'source locally' returned error did not download or is empty err:$_err  \n \n  "
+           exit 1
+        }
+        fi
+      else
+        if ( command -v curl >/dev/null 2>&1; )  ; then
+          if (( _DEBUG )) ; then
+            echo "$0: tasks_base/sudoer.bash Loading ${_library} from the net using curl "
+          fi
+          structsource="""$(curl https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/${_library}  -so -   2>/dev/null )"""  #  2>/dev/null suppress only curl download messages, but keep curl output for variable
+          _err=$?
+          if [ $_err -gt 0 ] ; then
+          {
+            echo -e "\n \n  ERROR! Loading ${_library}. running 'curl' returned error did not download or is empty err:$_err  \n \n  "
+            exit 1
+          }
+          fi
+        elif ( command -v wget >/dev/null 2>&1; ) ; then
+          if (( _DEBUG )) ; then
+            echo "$0: tasks_base/sudoer.bash Loading ${_library} from the net using wget "
+          fi
+          structsource="""$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/${_library} -O -   2>/dev/null )"""  #  2>/dev/null suppress only wget download messages, but keep wget output for variable
+          _err=$?
+          if [ $_err -gt 0 ] ; then
+          {
+            echo -e "\n \n  ERROR! Loading ${_library}. running 'wget' returned error did not download or is empty err:$_err  \n \n  "
+            exit 1
+          }
+          fi
+        else
+          echo -e "\n \n 2  ERROR! Loading ${_library} could not find wget or curl to download  \n \n "
+          exit 69
+        fi
+      fi
+      if [[ -z "${structsource}" ]] ; then
+      {
+        echo -e "\n \n 3 ERROR! Loading ${_library} into ${_library}_source did not download or is empty "
+        exit 1
+      }
+      fi
+      local _temp_dir="$(mktemp -d 2>/dev/null || mktemp -d -t "${_library}_source")"
+      echo "${structsource}">"${_temp_dir}/${_library}"
+      if (( _DEBUG )) ; then
+        echo "1. sudologic $0: tasks_base/sudoer.bash Temp location ${_temp_dir}/${_library}"
+      fi
+      source "${_temp_dir}/${_library}"
+      _err=$?
+      if [ $_err -gt 0 ] ; then
+      {
+        echo -e "\n \n 4 ERROR! Loading ${_library}. Occured while running 'source' err:$_err  \n \n  "
+        exit 1
+      }
+      fi
+      if  ! typeset -f passed >/dev/null 2>&1; then
+        echo -e "\n \n 5 ERROR! Loading ${_library}. Passed was not loaded !!!  \n \n "
+        exit 69;
+      fi
+      return $_err
+  } # end load_library
+  if  ! typeset -f passed >/dev/null 2>&1; then
+    load_library "struct_testing"
+  fi
+  if  ! typeset -f load_colors >/dev/null 2>&1; then
+    load_library "execute_command"
+  fi
+} # end load_struct_testing
+load_struct_testing
+
+ _err=$?
+if [ $_err -ne 0 ] ; then
+{
+  echo -e "\n \n 6 ERROR FATAL! load_struct_testing_wget !!! returned:<$_err> \n \n  "
+  exit 69;
+}
+fi
+
+if [[ -z "${SUDO_COMMAND:-}" ]] && \
+   [[ -z "${SUDO_GRP:-}" ]] && \
+   [[ -z "${SUDO_UID:-}" ]] && \
+   [[ -z "${SUDO_GID:-}" ]] && \
+   [[ -z "${SUDO_USER:-}" ]] && \
+   [[ -n "${USER:-}" ]] && \
+   [[ -z "${USER_HOME:-}" ]] && \
+   [[ -n "${THISSCRIPTCOMPLETEPATH:-}" ]] && \
+   [[ -n "${THISSCRIPTNAME:-}" ]] \
+  ; then
+{
+  passed Called from user
+}
+fi
+
+
+if [[ -n "${SUDO_COMMAND:-}"  ]] && \
+   [[ -z "${SUDO_GRP:-}"  ]] && \
+   [[ -n "${SUDO_UID:-}"  ]] && \
+   [[ -n "${SUDO_GID:-}"  ]] && \
+   [[ -n "${SUDO_USER:-}"  ]] && \
+   [[ -n "${USER:-}"  ]] && \
+   [[ -z "${USER_HOME:-}"  ]] && \
+   [[ -n "${THISSCRIPTCOMPLETEPATH:-}"  ]] && \
+   [[ -n "${THISSCRIPTNAME:-}"  ]] \
+  ; then
+{
+  passed Called from user as sudo
+}
+else
+{
+
+if [[ "${SUDO_USER:-}" == 'root'  ]] && \
+   [[ "${USER:-}" == 'root' ]] \
+  ; then
+{
+  failed This script is has to be called from normal user. Not Root. Abort
+  exit 69
+}
+fi
+
+export sudo_it
+function sudo_it() {
+  local -i _DEBUG=${DEBUG:-}
+  local _err=$?
+  # check operation systems
+  if [[ "$(uname)" == "Darwin" ]] ; then
+  {
+    passed "sudo_it() # Do something under Mac OS X platform "
+      # nothing here
+      raise_to_sudo_and_user_home "${*-}"
+      [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
+    SUDO_USER="${USER}"
+    SUDO_COMMAND="$0"
+    SUDO_UID=502
+    SUDO_GID=20
+  }
+  elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]] ; then
+  {
+      # Do something under GNU/Linux platform
+      raise_to_sudo_and_user_home "${*-}"
+      [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
+      enforce_variable_with_value SUDO_USER "${SUDO_USER}"
+      enforce_variable_with_value SUDO_UID "${SUDO_UID}"
+      enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
+      # Override bigger error trap  with local
+      function _trap_on_error(){
+        echo -e "\033[01;7m*** 3 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR INT ...\033[0m"
+
+      }
+      trap _trap_on_error ERR INT
+  }
+  elif [[ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]] || [[ "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT" ]] ; then
+  {
+      # Do something under Windows NT platform
+      # nothing here
+    SUDO_USER="${USER}"
+    SUDO_COMMAND="$0"
+    SUDO_UID=502
+    SUDO_GID=20
+  }
+  fi
+
+  if (( _DEBUG )) ; then
+    Comment _err:${_err}
+  fi
+  if [ $_err -gt 0 ] ; then
+  {
+    failed to sudo_it raise_to_sudo_and_user_home
+    exit 1
+  }
+  fi
+  # [ $_err -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
+  _err=$?
+  if (( _DEBUG )) ; then
+    Comment _err:${_err}
+  fi
+  enforce_variable_with_value SUDO_USER "${SUDO_USER}"
+  enforce_variable_with_value SUDO_UID "${SUDO_UID}"
+  enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
+  # Override bigger error trap  with local
+  function _trap_on_err_int(){
+    # echo -e "\033[01;7m*** 7 ERROR OR INTERRUPT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR INT ...\033[0m"
+    local cero="$0"
+    local file1="$(paeth ${BASH_SOURCE})"
+    local file2="$(paeth ${cero})"
+    echo -e " ERROR OR INTERRUPT  TRAP $THISSCRIPTNAME $THISSCRIPTPARAMS
+${file1}:${BASH_LINENO[-0]}     \t ${FUNCNAME[-0]}()
+$file2:${BASH_LINENO[1]}    \t ${FUNCNAME[1]}()
+ERR INT ..."
+    exit 1
+  }
+  trap _trap_on_err_int ERR INT
+} # end sudo_it
+
+# _linux_prepare(){
+  sudo_it "${*}"
+  _err=$?
+  typeset -i tomporalDEBUG=${DEBUG:-}
+  if (( tomporalDEBUG )) ; then
+    Comment _err:${_err}
+  fi
+  if [ $_err -gt 0 ] ; then
+  {
+    failed to sudo_it raise_to_sudo_and_user_home
+    exit 1
+  }
+  fi
+
+
+
+  exit
+}
+fi
+
+
+
+
+typeset -i tomporalDEBUG=${DEBUG:-}
+  # [ $_err -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
+  _err=$?
+  if (( tomporalDEBUG )) ; then
+    Comment _err:${_err}
+  fi
+  # [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
+  export USER_HOME
+  # shellcheck disable=SC2046
+  # shellcheck disable=SC2031
+  typeset -r USER_HOME="$(echo -n $(bash -c "cd ~${SUDO_USER} && pwd"))"  # Get the caller's of sudo home dir LINUX and MAC
+  # USER_HOME=$(getent passwd "${SUDO_USER}" | cut -d: -f6)   # Get the caller's of sudo home dir LINUX
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+# }  # end _linux_prepare
+
+
+# _linux_prepare
+export SUDO_GRP='staff'
+enforce_variable_with_value USER_HOME "${USER_HOME}"
+enforce_variable_with_value SUDO_USER "${SUDO_USER}"
+if (( tomporalDEBUG )) ; then
+  passed "Caller user identified:${SUDO_USER}"
+fi
+  if (( tomporalDEBUG )) ; then
+    Comment DEBUG_err?:${?}
+  fi
+if (( tomporalDEBUG )) ; then
+  passed "Home identified:${USER_HOME}"
+fi
+  if (( tomporalDEBUG )) ; then
+    Comment DEBUG_err?:${?}
+  fi
+directory_exists_with_spaces "${USER_HOME}"
+
+
+  function _trap_on_error(){
+    local -ir __trapped_error_exit_num="${2:-0}"
+    echo -e "\\n \033[01;7m*** 2 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+    echo ". ${1}"
+    echo ". exit  ${__trapped_error_exit_num}  "
+    echo ". caller $(caller) "
+    echo ". ${BASH_COMMAND}"
+    local -r __caller=$(caller)
+    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+
+    # $(eval ${BASH_COMMAND}  2>&1; )
+    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+    exit ${__trapped_error_exit_num}
+  }
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+
+  function _trap_on_exit(){
+    local -ir __trapped_exit_num="${2:-0}"
+    echo -e "\\n \033[01;7m*** 5 EXIT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n EXIT ...\033[0m  \n \n "
+    echo ". ${1}"
+    echo ". exit  ${__trapped_exit_num}  "
+    echo ". caller $(caller) "
+    echo ". ${BASH_COMMAND}"
+    local -r __caller=$(caller)
+    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+
+    # $(eval ${BASH_COMMAND}  2>&1; )
+    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+    exit ${__trapped_INT_num}
+  }
+  # trap  '_trap_on_exit $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  EXIT
+
+  function _trap_on_INT(){
+    local -ir __trapped_INT_num="${2:-0}"
+    echo -e "\\n \033[01;7m*** 7 INT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n INT ...\033[0m  \n \n "
+    echo ". ${1}"
+    echo ". INT  ${__trapped_INT_num}  "
+    echo ". caller $(caller) "
+    echo ". ${BASH_COMMAND}"
+    local -r __caller=$(caller)
+    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+
+    # $(eval ${BASH_COMMAND}  2>&1; )
+    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+    exit ${__trapped_INT_num}
+  }
+  trap  '_trap_on_INT $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  INT
+
+
+
+ #---------/\/\/\-- tasks_base/sudoer.bash -------------/\/\/\--------
+
+
+
+
+
+ #--------\/\/\/\/-- tasks_templates_sudo/emacs …install_emacs.bash” -- Custom code -\/\/\/\/-------
+
+
+#!/usr/bin/env bash
 #
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 #
-# em script Emacs on mac experience  REF: https://medium.com/@holzman.simon/emacs-on-macos-catalina-10-15-in-2019-79ff713c1ccc
-# Compile emacs mac REF: https://emacs.stackexchange.com/questions/58526/how-do-i-build-emacs-from-sources-on-macos-catalina-version-10-15-4
 
-ensure git
-checkversion $(makeinfo --version)>=4.13
-Install it
-# REF: https://stackoverflow.com/questions/44379909/how-to-upgrade-update-makeinfo-texinfo-from-version-4-8-to-4-13-on-macosx-termin
-brew info textinfo
-echo 'export PATH="/usr/local/opt/texinfo/bin:$PATH"' >> ~/.zshrc
-checkversion $(makeinfo --version)>=4.13
-makeinfo --version
-
-echo mac:
-git clone -b master git://git.sv.gnu.org/emacs.git
-cd emacs
-./autogen.sh
-./configure
-make -j3 -B --debug
-make check -j3 -B --debug
-make install -j3 -B --debug
-
-
-
-load_struct_testing_wget(){
-    local provider="$HOME/_/clis/execute_command_intuivo_cli/struct_testing"
-    [   -e "${provider}"  ] && source "${provider}" && echo "Loaded locally"
-    [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
-    ( ( ! command -v passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
-} # end load_struct_testing_wget
-load_struct_testing_wget
-
-function _linux_prepare(){
-  export  THISSCRIPTNAME
-  typeset -gr THISSCRIPTNAME="$(pwd)/$(basename "$0")"
-  export _err
-  typeset -i _err=0
-  load_execute_boot_basic_with_sudo(){
-    # shellcheck disable=SC2030
-    if ( typeset -p "SUDO_USER"  &>/dev/null ) ; then
+_debian_flavor_install() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  if (
+  install_requirements "linux" "
+    base64
+    unzip
+    curl
+    wget
+    ufw
+    nginx
+  "
+  ); then
     {
-      export USER_HOME
-      # typeset -rg USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)  # Get the caller's of sudo home dir Just Linux
-      # shellcheck disable=SC2046
-      # shellcheck disable=SC2031
-      typeset -rg USER_HOME="$(echo -n $(bash -c "cd ~${SUDO_USER} && pwd"))"  # Get the caller's of sudo home dir LINUX and MAC
+      apt install base64 -y
+      apt install unzip -y
+      apt install nginx -y
     }
-    else
-    {
-      local USER_HOME=$HOME
-    }
-    fi
-    local -r provider="$USER_HOME/_/clis/execute_command_intuivo_cli/execute_boot_basic.sh"
-    echo source "${provider}"
-    # shellcheck disable=SC1090
-    [   -e "${provider}"  ] && source "${provider}"
-    [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/execute_boot_basic.sh -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
-    if ( command -v failed >/dev/null 2>&1; ) ; then
-    {
-      return 0
-    }
-    else
-    {
-      echo -e "\n \n  ERROR! Loading execute_boot_basic.sh \n \n "
-      exit 1;
-    }
-    fi
-    return 0
-  } # end load_execute_boot_basic_with_sudo
-
-  load_execute_boot_basic_with_sudo
-  _err=$?
-  if [ $_err -ne 0 ] ;  then
-  {
-    >&2 echo -e "ERROR There was an error loading load_execute_boot_basic_with_sudo Err:$_err "
-    exit $_err
-  }
   fi
-
-  function _trap_on_exit(){
-    echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME EXITS ...\033[0m"
-
-  }
-  #trap kill ERR
-  trap _trap_on_exit EXIT
-  #trap kill INT
-} # end _linux_prepare
-
-_version() {
-  local PLATFORM="${1}" # mac windows linux
-  local PATTERN="${2}"
-  # THOUGHT:   https://download-cf.jetbrains.com/webstorm/WebStorm-2020.3.dmg
-  local CODEFILE="""$(wget --quiet --no-check-certificate  https://www.jetbrains.com/webstorm/ -O -  2>/dev/null )""" # suppress only wget download messages, but keep wget output for variable
-  # enforce_variable_with_value CODEFILE "${CODEFILE}"
-  wait
-  local CODELASTESTBUILD=$(echo "${CODEFILE}" | sed s/\</\\n\</g | sed s/\>/\>\\n/g | sed "s/&apos;/\'/g" | sed 's/&nbsp;/ /g' | grep  "New in WebStorm ${PATTERN}" | sed s/\ /\\n/g | tail -1 ) # | grep "What&apos;s New in&nbsp;WebStorm&nbsp;" | sed 's/\;/\;'\\n'/g' | sed s/\</\\n\</g  )
-  enforce_variable_with_value CODELASTESTBUILD "${CODELASTESTBUILD}"
-
-  local CODENAME=""
-  case ${PLATFORM} in
-  mac)
-    CODENAME="https://download-cf.jetbrains.com/webstorm/WebStorm-${CODELASTESTBUILD}.dmg"
-    ;;
-
-  windows)
-    CODENAME="https://download-cf.jetbrains.com/webstorm/WebStorm-${CODELASTESTBUILD}.exe"
-    CODENAME="https://download-cf.jetbrains.com/webstorm/WebStorm-${CODELASTESTBUILD}.win.zip"
-    ;;
-
-  linux)
-    CODENAME="https://download-cf.jetbrains.com/webstorm/WebStorm-${CODELASTESTBUILD}.tar.gz"
-    ;;
-
-  *)
-    CODENAME=""
-    ;;
-  esac
-  enforce_variable_with_value CODENAME "${CODENAME}"
-  unset PATTERN
-  unset PLATFORM
-  unset CODEFILE
-  unset CODELASTESTBUILD
-  echo "${CODENAME}"
-  return 0
-} # end _version
-
-_darwin__64() {
-  local CODENAME=$(_version "mac" "*.*")
-  echo "${CODENAME}";
-  local TARGET_URL="$(echo -en "${CODENAME}" | tail -1)"
-  CODENAME="$(basename "${TARGET_URL}" )"
-  local VERSION="$(echo -en "${CODENAME}" | sed 's/WebStorm-//g' | sed 's/.dmg//g' )"
-  enforce_variable_with_value VERSION "${VERSION}"
-  local UNZIPDIR="$(echo -en "${CODENAME}" | sed 's/'"${VERSION}"'//g' | sed 's/.dmg//g'| sed 's/-//g')"
-  local APPDIR="$(echo -en "${CODENAME}" | sed 's/'"${VERSION}"'//g' | sed 's/.dmg//g'| sed 's/-//g').app"
-  # echo "${CODENAME}";
-  # echo "${URL}";
-  echo "CODENAME: ${CODENAME}"
-  enforce_variable_with_value CODENAME "${CODENAME}"
-  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
-  enforce_variable_with_value HOME "${HOME}"
-  echo "UNZIPDIR: ${UNZIPDIR}"
-  enforce_variable_with_value UNZIPDIR "${UNZIPDIR}"
-  echo "APPDIR: ${APPDIR}"
-  enforce_variable_with_value APPDIR "${APPDIR}"
-  local DOWNLOADFOLDER="${HOME}/Downloads"
+  verify_is_installed "
+    unzip
+    curl
+    wget
+    tar
+    ufw
+    nginx
+  "
+  local PB_VERSION=0.16.7
+  local CODENAME="pocketbase_${PB_VERSION}_linux_amd64.zip"
+  local TARGET_URL="https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/${CODENAME}"
+  local DOWNLOADFOLDER="$(_find_downloads_folder)"
   enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
   directory_exists_with_spaces "${DOWNLOADFOLDER}"
+  cd "${DOWNLOADFOLDER}"
+  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+  # unzip "${DOWNLOADFOLDER}/${CODENAME}" -d $HOME/pb/
+  local UNZIPDIR="${USER_HOME}/_/software"
+  mkdir -p "${UNZIPDIR}"
+  _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
+  local PATHTOPOCKETBASE="${UNZIPDIR}/pocketbase"
+  local THISIP=$(myip)
 
+} # end _debian_flavor_install
+
+_get_dowload_target() {
+  # Sample call:
+  #
+  #  _get_dowload_target https://linux.dropbox.com/packages/fedora/
+  #
+  # VERBOSE=1
+  local -i _err=0
+  local URL="${1}"   #           param order    varname    varvalue     sample_value
+  enforce_parameter_with_value           1        URL      "${URL}"     "https://linux.dropbox.com/packages/fedora/"
+  #
+  #
+  # (( VERBOSE )) && echo "CODEFILE=\"\"\"\$(wget --quiet --no-check-certificate  \"${URL}\" -O -  2>/dev/null)\"\"\""
+  local CODEFILE="""$(wget --quiet --no-check-certificate  "${URL}" -O -  2>/dev/null )""" # suppress only wget download messages, but keep wget output for variable
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    echo "$0:$LINENO _err:${_err}: CODEFILE:${CODEFILE}"
+    return ${_err}
+  }
+  fi
+
+
+  enforce_variable_with_value CODEFILE "${CODEFILE}"
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    echo "$0:$LINENO _err:${_err}: CODEFILE:${CODEFILE}"
+    return ${_err}
+  }
+  fi
+
+  #
+  #
+  local CODELASTESTBUILD=$(_extract_version "${CODEFILE}")
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    echo "$0:$LINENO _err:${_err}: CODELASTESTBUILD:${CODELASTESTBUILD}"
+    return ${_err}
+  }
+  fi
+
+  enforce_variable_with_value CODELASTESTBUILD "${CODELASTESTBUILD}"
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    echo "$0:$LINENO _err:${_err}: CODELASTESTBUILD:${CODELASTESTBUILD}"
+    return ${_err}
+  }
+  fi
+
+
+  local TARGETNAME=$(echo -n "${CODELASTESTBUILD}" | grep "${PLATFORM}" | grep "${PLATFORM}" |  tail -1)
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    echo "$0:$LINENO _err:${_err}: TARGETNAME:${TARGETNAME}"
+    return ${_err}
+  }
+  fi
+
+  enforce_variable_with_value TARGETNAME "${TARGETNAME}"
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    echo "$0:$LINENO _err:${_err}: TARGETNAME:${TARGETNAME}"
+    return ${_err}
+  }
+  fi
+
+  local _newURL=$(echo -n "${URL}" | sed 's/\/download.php//g')
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    echo "$0:$LINENO _err:${_err}: _newURL:${_newURL}"
+    return ${_err}
+  }
+  fi
+  if [[ -z ${_newURL} ]] ; then
+  {
+    echo "$0:$LINENO _err:${_err}: is empty _newURL:${_newURL}"
+    return 1
+  }
+  fi
+
+  echo -n "${_newURL}${TARGETNAME}"
+  return 0
+} # end _get_dowload_target
+
+_extract_version() {
+  echo "${*}" |  sed s/\>/\>\\n/g | sed "s/&apos;/\'/g" | sed 's/&nbsp;/ /g'  | grep "<a" | grep ".xz" | grep -v "xz.asc" | cut -d'"' -f2| sort | uniq | tail -1
+} # end _extract_version
+
+_find_latest_target_url() {
+  # _download_compile_install() {
+  # Sample use
+  #   _download_compile_install
+  local -i _err=0
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  # local TARGET_URL=$(_get_dowload_target "https://www.nano-editor.org/dist/v6/")
+  local TARGET_URL=$(_get_dowload_target "http://mirrors.kernel.org/gnu/emacs/")
+  _err=$?
+  # enforce_variable_with_value TARGET_URL "${TARGET_URL}"
+  # Checking "TARGET_URL:${TARGET_URL}"
+  echo -n "${TARGET_URL}"  | sed 's/.tar.xz.sig/.tar.xz/g'
+  return ${_err}
+} # end _find_latest_target_url
+
+_redhat_flavor_install() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+ 
+  Message REF:https://gist.github.com/Dreameh/86562b83410db6151e871d811a70c470
+  Comment Dependencies for development
+  dnf group install "Development Tools" -y --allowerasing
+  Comment Dependencies specific to emacs
+  dnf builddep emacs -y --allowerasing
+
+  Installing emacs from dnf
+  dnf install emacs -y --allowerasing
+  dnf reinstall emacs -y --allowerasing
+
+  Installing emacs as compile to get latest
+  Comment Download the latest stable release from emacs website
+  # wget http://mirrors.kernel.org/gnu/emacs/emacs-26.3.tar.xz
+  # wget http://mirrors.kernel.org/gnu/emacs/emacs-26.3.tar.xz.sig
+
+  local -i _err=0
+  local TARGET_URL=$(_find_latest_target_url)
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO _err:${_err} TARGET_URL:${TARGET_URL}"
+  }
+  else
+  {
+    passed TARGET_URL:${TARGET_URL} 
+  }
+  fi
+
+  Checking "TARGET_URL:${TARGET_URL}"
+  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO _err:${_err} TARGET_URL:${TARGET_URL}"
+  }
+  fi
+
+  
+  local CODENAME=$(basename "${TARGET_URL}")
+  enforce_variable_with_value CODENAME "${CODENAME}"
+  local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  directory_exists_with_spaces "${DOWNLOADFOLDER}"
+  Checking "      CODENAME:$CODENAME"
+  Checking "DOWNLOADFOLDER:$DOWNLOADFOLDER"
+  Checking "    TARGET_URL:$TARGET_URL"
+  enforce_contains "emacs-" "${CODENAME}"
+  enforce_contains ".tar.xz" "${CODENAME}"
+  enforce_contains "http://mirrors.kernel.org/gnu/emacs/" "${TARGET_URL}"
+  enforce_contains "emacs-" "${TARGET_URL}"
+  enforce_contains ".tar.xz" "${TARGET_URL}"
+  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  
+  Checking cd "${DOWNLOADFOLDER}"
+  cd "${DOWNLOADFOLDER}"
+  
+  Checking  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+  local -i _err=0
+  if it_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}.sig" ; then
+  {
+    if it_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}" ; then
+    {
+      Comment \?\?\ gpg --verify "${DOWNLOADFOLDER}/${CODENAME}.sig" "${DOWNLOADFOLDER}/${CODENAME}"
+      if ! ( command -v gpg >/dev/null 2>&1; )  ; then
+      {
+        Comment Verify the tar.xz file
+        # gpg --verify emacs-26.3.tar.xz.sig emacs-26.3.tar.xz
+        gpg --verify "${DOWNLOADFOLDER}/${CODENAME}.sig" "${DOWNLOADFOLDER}/${CODENAME}"
+        _err=$?
+      }
+      else
+      {
+        _err=1
+      }
+      fi
+      if [ ${_err} -gt 0 ] ; then
+      {
+        rm -rf "${DOWNLOADFOLDER}/${CODENAME}"
+        wget "${TARGET_URL}"
+        rm -rf "${DOWNLOADFOLDER}/${CODENAME}.sig"
+        wget "${TARGET_URL}.sig" 
+      }
+      fi
+    }
+    fi
+
+  }
+  fi 
+  if it_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}.sig" ; then
+  {
+    rm -rf "${DOWNLOADFOLDER}/${CODENAME}.sig"
+    wget "${TARGET_URL}.sig"
+  }
+  fi 
   if it_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}" ; then
   {
-    file_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
+    rm -rf "${DOWNLOADFOLDER}/${CODENAME}"
+    wget "${TARGET_URL}"
   }
-  else
-  {
-    cd "${DOWNLOADFOLDER}"
-    _download "${TARGET_URL}" "${DOWNLOADFOLDER}"  ${CODENAME}
-    file_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
-  }
-  fi
-  if  it_exists_with_spaces "/Applications/${APPDIR}" ; then
-  {
-      echo Remove  unzipped "/Applications/${APPDIR}"
-      sudo rm -rf  "/Applications/${APPDIR}"
-      directory_does_not_exist_with_spaces  "/Applications/${APPDIR}"
-  }
-  fi
-  echo Attaching dmg downloaded
-  sudo hdiutil attach "${DOWNLOADFOLDER}/${CODENAME}"
-  ls "/Volumes"
-  directory_exists_with_spaces "/Volumes/${UNZIPDIR}"
-  directory_exists_with_spaces "/Volumes/${UNZIPDIR}/${APPDIR}"
-  echo "sudo  cp -R /Volumes/${UNZIPDIR}/${APPDIR} /Applications/"
-  sudo  cp -R /Volumes/${UNZIPDIR}/${APPDIR} /Applications/
-  ls -d "/Applications/${APPDIR}"
-  directory_exists_with_spaces "/Applications/${APPDIR}"
-  sudo hdiutil detach "/Volumes/${UNZIPDIR}"
-} # end _darwin__64
+  fi 
+  # _do_not_downloadtwice "${TARGET_URL}"     "${DOWNLOADFOLDER}"  "${CODENAME}"
+  # Checking  _do_not_downloadtwice "${TARGET_URL}.sig" "${DOWNLOADFOLDER}"  "${CODENAME}.sig"
+  # _do_not_downloadtwice "${TARGET_URL}.sig" "${DOWNLOADFOLDER}"  "${CODENAME}.sig"
+       Comment \?\?\ gpg --verify "${DOWNLOADFOLDER}/${CODENAME}.sig" "${DOWNLOADFOLDER}/${CODENAME}"
+      if ! ( command -v gpg >/dev/null 2>&1; )  ; then
+      {
+        Comment Verify the tar.xz file
+        # gpg --verify emacs-26.3.tar.xz.sig emacs-26.3.tar.xz
+        gpg --verify "${DOWNLOADFOLDER}/${CODENAME}.sig" "${DOWNLOADFOLDER}/${CODENAME}"
+        _err=$?
+        if [ ${_err} -gt 0 ] ; then
+        {
+          failed to verify "${DOWNLOADFOLDER}/${CODENAME}" with "${DOWNLOADFOLDER}/${CODENAME}.sig"
+          ls -lctrlh "${DOWNLOADFOLDER}/${CODENAME}"
+          ls -lctrlh "${DOWNLOADFOLDER}/${CODENAME}.sig"
+          exit 1
+        }
+        fi
+      }
+      else
+      {
+        failed to find gpg program to check signature of download
+      }
+      fi
 
-_ubuntu__64() {
-  _linux_prepare
-  local CODENAME=$(_version "linux" "WebStorm-*.*.*.*amd64.deb")
-  # THOUGHT          local CODENAME="WebStorm-4.3.3.24545_amd64.deb"
-  local URL="https://download-cf.jetbrains.com/webstorm/${CODENAME}"
-  cd $USER_HOME/Downloads/
-  _download "${URL}"
-  sudo dpkg -i ${CODENAME}
-} # end _ubuntu__64
+  Comment Once that has been taken care of, extract the tar.xz archive.
+  # itar -xvf emacs-26.3.tar.xz
+  Checking "tar -xvf \"${CODENAME}\""
+  tar -xvf "${CODENAME}"
+  [ $? -gt 0 ] && failed "to untar: tar -xvf ${CODENAME}"
+ 
+  local FOLDER="$(echo "${CODENAME}" | sed 's/.tar.xz//g')"
+  local VERSION="$(echo "${FOLDER}" | sed 's/nano-//g')"
+  directory_exists_with_spaces "${FOLDER}"
+  Comment Go into the newly made folder:"${FOLDER}"
+  cd "${FOLDER}"
+  # cd emacs-26.3
 
-_ubuntu__32() {
-  local CODENAME=$(_version "linux" "WebStorm-*.*.*.*i386.deb")
-  # THOUGHT local CODENAME="WebStorm-4.3.3.24545_i386.deb"
-  local URL="https://download-cf.jetbrains.com/webstorm/${CODENAME}"
-  cd $USER_HOME/Downloads/
-  _download "${URL}"
-  sudo dpkg -i ${CODENAME}
-} # end _ubuntu__32
+  Comment configure the source  
+  ./configure
 
-_fedora__32() {
-  _linux_prepare
-  local CODENAME=$(_version "linux" "WebStorm*.*.*.*.i386.rpm")
-  # THOUGHT                          WebStorm-4.3.3.24545.i386.rpm
-  local TARGET_URL="https://download-cf.jetbrains.com/webstorm/${CODENAME}"
-  file_exists_with_spaces $USER_HOME/Downloads
-  enforce_variable_with_value CODENAME "${CODENAME}"
-  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
-  cd $USER_HOME/Downloads
-  _download "${TARGET_URL}" $USER_HOME/Downloads  ${CODENAME}
-  file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}"
-  ensure tar or "Canceling Install. Could not find tar command to execute unzip"
+  Comment Compile the source
+  make
+  
+  Checking the binary to see that it runs smoothly
+  src/emacs -Q
+  yes | cp src/emacs /usr/local/bin/emacs
+ 
+  # Comment make install
+  # Installing the binary emacs
+  # make install
+  cd ..
+  # rm -rf emacs-26.3
+  rm -rf "${FOLDER}"
+ 
+  ensure emacs or "Failed to install emacs"
+  rm -f "${DOWNLOADFOLDER}/${CODENAME}"
+  file_does_not_exist_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
+  return 0
+ 
+  # echo "_redhat_flavor_install Procedure not yet implemented. I don't know what to do."
+} # end _redhat_flavor_install
 
-  # provide error handling , once learned goes here. LEarn under if, once learned here.
-  # Start loop while ERROR flag in case needs to try again, based on error
-  _try "rpm --import https://download-cf.jetbrains.com/webstorm/RPM-GPG-KEY-scootersoftware"
-  local msg=$(_try "rpm -ivh \"$USER_HOME/Downloads/${CODENAME}\"" )
-  local ret=$?
-  if [ $ret -gt 0 ] ; then
-  {
-    failed "${ret}:${msg}"
-    # add error handling knowledge while learning.
-  }
-  else
-  {
-    passed Install with RPM success!
-  }
-  fi
-  ensure WebStorm or "Failed to install WebStorm"
-  rm -f "$USER_HOME/Downloads/${CODENAME}"
-  file_does_not_exist_with_spaces "$USER_HOME/Downloads/${CODENAME}"
-} # end _fedora__32
+_arch_flavor_install() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_arch_flavor_install Procedure not yet implemented. I don't know what to do."
+} # end _readhat_flavor_install
+
+_arch__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _arch_flavor_install
+} # end _arch__32
+
+_arch__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _arch_flavor_install
+} # end _arch__64
+
+_centos__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _centos__32
 
 _centos__64() {
-  _fedora__64
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
 } # end _centos__64
 
+_debian__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _debian__32
+
+_debian__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _debian__64
+
+_fedora__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _fedora__32
+
 _fedora__64() {
- local CODENAME=$(_version "linux" "*.*")
-  echo "${CODENAME}";
-  local TARGET_URL="$(echo "${CODENAME}" | tail -1)"
-  CODENAME="$(basename "${TARGET_URL}" )"
-  local UNZIPDIR="$(echo "${CODENAME}" | sed 's/.tar.gz//g' )"
-  enforce_variable_with_value CODENAME "${CODENAME}"
-  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
-  enforce_variable_with_value HOME "${HOME}"
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
-  enforce_variable_with_value UNZIPDIR "${UNZIPDIR}"
-
-  if  it_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}" ; then
-  {
-    file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}"
-  }
-  else
-  {
-    file_exists_with_spaces $USER_HOME/Downloads
-    cd $USER_HOME/Downloads
-    _download "${TARGET_URL}" $USER_HOME/Downloads  ${CODENAME}
-    file_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}"
-  }
-  fi
-  if  it_exists_with_spaces "$USER_HOME/Downloads/${UNZIPDIR}" ; then
-  {
-    rm -rf "$USER_HOME/Downloads/${UNZIPDIR}"
-    directory_does_not_exist_with_spaces "$USER_HOME/Downloads/${UNZIPDIR}"
-  }
-  fi
-
-  ensure tar or "Canceling Install. Could not find tar command to execute unzip"
-  ensure awk or "Canceling Install. Could not find awk command to execute unzip"
-  ensure pv or "Canceling Install. Could not find pv command to execute unzip"
-  ensure du or "Canceling Install. Could not find du command to execute unzip"
-  ensure gzip or "Canceling Install. Could not find gzip command to execute unzip"
-  ensure gio or "Canceling Install. Could not find gio command to execute unzip"
-  ensure update-mime-database or "Canceling Install. Could not find update-mime-database command to execute unzip"
-  ensure update-desktop-database or "Canceling Install. Could not find update-desktop-database command to execute unzip"
-  ensure touch or "Canceling Install. Could not find touch command to execute unzip"
-
-  # provide error handling , once learned goes here. LEarn under if, once learned here.
-  # Start loop while ERROR flag in case needs to try again, based on error
-  cd $USER_HOME/Downloads
-  #_try "tar xvzf  \"$USER_HOME/Downloads/${CODENAME}.tar.gz\"--directory=$USER_HOME/Downloads"
-  # GROw bar with tar Progress bar tar REF: https://superuser.com/questions/168749/is-there-a-way-to-see-any-tar-progress-per-file
-  # Compress tar cvfj big-files.tar.bz2 folder-with-big-files
-  # Compress tar cf - $USER_HOME/Downloads/${CODENAME}.tar.gz --directory=$USER_HOME/Downloads -P | pv -s $(du -sb $USER_HOME/Downloads/${CODENAME}.tar.gz | awk '{print $1}') | gzip > big-files.tar.gz
-  # Extract tar Progress bar REF: https://coderwall.com/p/l_m2yg/tar-untar-on-osx-linux-with-progress-bars
-  # Extract tar sample pv file.tgz | tar xzf - -C target_directory
-  # Working simplme tar:  tar xvzf $USER_HOME/Downloads/${CODENAME}.tar.gz --directory=$USER_HOME/Downloads
-  pv $USER_HOME/Downloads/${CODENAME}  | tar xzf - -C $USER_HOME/Downloads
-  #local msg=$(_try "tar xvzf  \"$USER_HOME/Downloads/${CODENAME}.tar.gz\" --directory=$USER_HOME/Downloads " )
-  #  tar xvzf file.tar.gz
-  # Where,
-  # x: This option tells tar to extract the files.
-  # v: The “v” stands for “verbose.” This option will list all of the files one by one in the archive.
-  # z: The z option is very important and tells the tar command to uncompress the file (gzip).
-  # f: This options tells tar that you are going to give it a file name to work with.
-  local msg
-  local folder_date
-  local ret=$?
-  if [ $ret -gt 0 ] ; then
-  {
-    failed "${ret}:${msg}"
-    # add error handling knowledge while learning.
-  }
-  else
-  {
-    passed Install with Untar Unzip success!
-  }
-  fi
-
-  local NEWDIRCODENAME=$(ls -1tr "$USER_HOME/Downloads/"  | tail  -1)
-  local FROMUZIPPED="$USER_HOME/Downloads/${NEWDIRCODENAME}"
-  directory_exists_with_spaces  "${FROMUZIPPED}"
-  # directory_exists_with_spaces "$USER_HOME/Downloads/${CODENAME}"
-
-
-  if  it_exists_with_spaces "$USER_HOME/_/software/webstorm" ; then
-  {
-     folder_date=$(date +"%Y%m%d")
-     if  it_exists_with_spaces "$USER_HOME/_/software/webstorm_${folder_date}" ; then
-     {
-       warning A backup already exists for today "${ret}:${msg} \n ... adding time"
-       folder_date=$(date +"%Y%m%d%H%M")
-     }
-     fi
-     msg=$(mv "$USER_HOME/_/software/webstorm" "$USER_HOME/_/software/webstorm_${folder_date}")
-     ret=$?
-     if [ $ret -gt 0 ] ; then
-     {
-       warning failed to move backup "${ret}:${msg} \n"
-     }
-     fi
-     directory_exists_with_spaces "$USER_HOME/_/software/webstorm_${folder_date}"
-     file_does_not_exist_with_spaces "$USER_HOME/_/software/webstorm"
-  }
-  fi
-  mkdir -p "$USER_HOME/_/software"
-  directory_exists_with_spaces "$USER_HOME/_/software"
-  mv "${FROMUZIPPED}" "$USER_HOME/_/software/webstorm"
-  directory_does_not_exist_with_spaces "${FROMUZIPPED}"
-  directory_exists_with_spaces "$USER_HOME/_/software/webstorm"
-  directory_exists_with_spaces "$USER_HOME/_/software/webstorm/bin"
-  mkdir -p "$USER_HOME/.local/share/applications"
-  directory_exists_with_spaces "$USER_HOME/.local/share/applications"
-  mkdir -p "$USER_HOME/.local/share/mime/packages"
-  directory_exists_with_spaces "$USER_HOME/.local/share/mime/packages"
-  file_exists_with_spaces "$USER_HOME/_/software/webstorm/bin/webstorm.sh"
-  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/_/software/webstorm"
-  # Now Proceed to register REF:  https://gist.github.com/c80609a/752e566093b1489bd3aef0e56ee0426c
-  ensure cat or "Failed to use cat command does not exists"
-  ensure xdg-mime or "Failed to install run xdg-mime"
-
-   cat << EOF > $USER_HOME/_/software/webstorm/bin/webstorm-open.rb
-#!/usr/bin/env ruby
-
-# $USER_HOME/_/software/webstorm/bin/webstorm-open.rb
-# script opens URL in format webstorm://open?file=%{file}:%{line} in webstorm
-
-require 'uri'
-
-begin
-    url = ARGV.first
-    u = URI.parse(url)
-    # puts u
-    q = URI.decode_www_form(u.query)
-    # puts q
-    h = q.to_h
-    # puts h
-    file = h['file']
-    line = h['line']
-    # puts file
-    # puts line
-    if line
-        arg = "#{file}:#{line}"
-    else
-        arg = "#{file}"
-    end
-rescue
-    arg = ""
-end
-puts arg
-EOF
-  file_exists_with_spaces "$USER_HOME/_/software/webstorm/bin/webstorm-open.rb"
-  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/_/software/webstorm/bin/webstorm-open.rb"
-  chmod +x $USER_HOME/_/software/webstorm/bin/webstorm-open.rb
-
-
-    cat << EOF > $USER_HOME/_/software/webstorm/bin/webstorm-open.sh
-#!/usr/bin/env bash
-#encoding: UTF-8
-# $USER_HOME/_/software/webstorm/bin/webstorm-open.sh
-# script opens URL in format webstorm://open?file=%{file}:%{line} in webstorm
-
-echo "\${@}"
-echo "\${@}" >>  $USER_HOME/_/work/requested.log
-$USER_HOME/_/software/webstorm/bin/webstorm-open.rb \${@}
-filetoopen=\$($USER_HOME/_/software/webstorm/bin/webstorm-open.rb "\${@}")
-echo filetoopen "\${filetoopen}"
-echo "\${filetoopen}" >>  $USER_HOME/_/work/requestedfiletoopen.log
-mine "\${filetoopen}"
-
-EOF
-  mkdir -p $USER_HOME/_/work/
-  directory_exists_with_spaces $USER_HOME/_/work/
-  chown $SUDO_USER:$SUDO_USER $USER_HOME/_/work/
-  touch $USER_HOME/_/work/requestedfiletoopen.log
-  file_exists_with_spaces $USER_HOME/_/work/requestedfiletoopen.log
-  chown $SUDO_USER:$SUDO_USER -R $USER_HOME/_/work/requestedfiletoopen.log
-  file_exists_with_spaces "$USER_HOME/_/software/webstorm/bin/webstorm-open.sh"
-  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/_/software/webstorm/bin/webstorm-open.sh"
-  chmod +x $USER_HOME/_/software/webstorm/bin/webstorm-open.sh
-
- cat << EOF > $USER_HOME/.local/share/mime/packages/application-x-wstorm.xml
-<?xml version="1.0" encoding="UTF-8"?>
-<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
-  <mime-type type="application/x-mine">
-    <comment>new mime type</comment>
-    <glob pattern="*.x-mine;*.rb;*.html;*.html.erb;*.js.erb;*.html.haml;*.js.haml;*.erb;*.haml;*.js"/>
-  </mime-type>
-</mime-info>
-EOF
-  file_exists_with_spaces "$USER_HOME/.local/share/mime/packages/application-x-wstorm.xml"
-  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/.local/share/mime/packages/application-x-wstorm.xml"
-
-
-
-
-  cat << EOF > $USER_HOME/.local/share/applications/jetbrains-webstorm.desktop
-# $USER_HOME/.local/share/applications/jetbrains-webstorm.desktop
-[Desktop Entry]
-Encoding=UTF-8
-Version=2019.3.2
-Type=Application
-Name=webstorm
-Icon=$USER_HOME/_/software/webstorm/bin/webstorm.svg
-Exec="$USER_HOME/_/software/webstorm/bin/webstorm.sh" %f
-MimeType=application/x-mine;text/x-mine;text/plain;text/x-chdr;text/x-csrc;text/x-c++hdr;text/x-c++src;text/x-java;text/x-dsrc;text/x-pascal;text/x-perl;text/x-python;application/x-php;application/x-httpd-php3;application/x-httpd-php4;application/x-httpd-php5;application/xml;text/html;text/css;text/x-sql;text/x-diff;x-directory/normal;inode/directory;
-Comment=The Most Intelligent Js IDE
-Categories=Development;IDE;
-Terminal=true
-StartupWMClass=jetbrains-webstorm
-EOF
-  file_exists_with_spaces "$USER_HOME/.local/share/applications/jetbrains-webstorm.desktop"
-   chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/.local/share/applications/jetbrains-webstorm.desktop"
-
-
-  cat << EOF > $USER_HOME/.local/share/applications/webstorm.mimeinfo.cache
-# $USER_HOME/.local/share/applications/mimeinfo.cache
-
-[MIME Cache]
-x-scheme-handler/webstorm=webstorm-open.desktop;
-EOF
-  file_exists_with_spaces "$USER_HOME/.local/share/applications/webstorm.mimeinfo.cache"
-  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/.local/share/applications/webstorm.mimeinfo.cache"
-
-  cat << EOF > $USER_HOME/.local/share/applications/webstorm-open.desktop
-# $USER_HOME/.local/share/applications/webstorm-open.desktop
-[Desktop Entry]
-Encoding=UTF-8
-Version=1.0
-Type=Application
-Terminal=true
-Exec="$USER_HOME/_/software/webstorm/bin/webstorm-open.sh" %f
-MimeType=application/webstorm;x-scheme-handler/webstorm;
-Name=MineOpen
-Comment=BetterErrors
-EOF
-  file_exists_with_spaces "$USER_HOME/.local/share/applications/webstorm-open.desktop"
-  chown $SUDO_USER:$SUDO_USER -R "$USER_HOME/.local/share/applications/webstorm-open.desktop"
-
-  # xdg-mime default jetbrains-webstorm.desktop text/plain;text/x-chdr;text/x-csrc;text/x-c++hdr;text/x-c++src;text/x-java;text/x-dsrc;text/x-pascal;text/x-perl;text/x-python;application/x-php;application/x-httpd-php3;application/x-httpd-php4;application/x-httpd-php5;application/xml;text/html;text/css;text/x-sql;text/x-diff;x-directory/normal;inode/directory;
-  # xdg-mime default webstorm-open.desktop x-scheme-handler/webstorm
-  # msg=$(_try "xdg-mime default webstorm-open.desktop x-scheme-handler/webstorm" )
-  su - "${SUDO_USER}" -c "xdg-mime default webstorm-open.desktop x-scheme-handler/webstorm"
-  su - "${SUDO_USER}" -c "xdg-mime default webstorm-open.desktop text/webstorm"
-  su - "${SUDO_USER}" -c "xdg-mime default webstorm-open.desktop application/webstorm"
-  su - "${SUDO_USER}" -c "xdg-mime default jetbrains-webstorm.desktop x-scheme-handler/x-mine"
-  su - "${SUDO_USER}" -c "xdg-mime default jetbrains-webstorm.desktop text/x-mine"
-  su - "${SUDO_USER}" -c "xdg-mime default jetbrains-webstorm.desktop application/x-mine"
-
-#   cat << EOF > $USER_HOME/.config/mimeapps.list
-#   cat << EOF > $USER_HOME/.local/share/applications/mimeapps.list
-# [Default Applications]
-# x-scheme-handler/webstorm=webstorm-open.desktop
-# text/webstorm=webstorm-open.desktop
-# application/webstorm=webstorm-open.desktop
-# x-scheme-handler/x-mine=jetbrains-webstorm.desktop
-# text/x-mine=jetbrains-webstorm.desktop
-# application/x-mine=jetbrains-webstorm.desktop
-
-# [Added Associations]
-# x-scheme-handler/webstorm=webstorm-open.desktop;
-# text/webstorm=webstorm-open.desktop;
-# application/webstorm=webstorm-open.desktop;
-# x-scheme-handler/x-mine=jetbrains-webstorm.desktop;
-# text/x-mine=jetbrains-webstorm.desktop;
-# application/x-mine=jetbrains-webstorm.desktop;
-# EOF
-#   file_exists_with_spaces "$USER_HOME/.local/share/applications/mimeapps.list"
-#   file_exists_with_spaces "$USER_HOME/.config/mimeapps.list"
-ln -fs "$USER_HOME/.config/mimeapps.list" "$USER_HOME/.local/share/applications/mimeapps.list"
-softlink_exists_with_spaces "$USER_HOME/.local/share/applications/mimeapps.list>$USER_HOME/.config/mimeapps.list"
-chown $SUDO_USER:$SUDO_USER -R  "$USER_HOME/.local/share/applications/mimeapps.list"
-file_exists_with_spaces "$USER_HOME/_/software/webstorm/bin/webstorm-open.sh"
-
-
-  su - "${SUDO_USER}" -c "xdg-mime query default x-scheme-handler/webstorm"
-  su - "${SUDO_USER}" -c "xdg-mime query default x-scheme-handler/x-mine"
-  su - "${SUDO_USER}" -c "xdg-mime query default text/x-mine"
-  su - "${SUDO_USER}" -c "xdg-mime query default application/x-mine"
-  su - "${SUDO_USER}" -c "xdg-mime query default text/webstorm"
-  su - "${SUDO_USER}" -c "xdg-mime query default application/webstorm"
-  msg=$(_try "su - \"${SUDO_USER}\" -c \"xdg-mime query default x-scheme-handler/webstorm\"")
-  ret=$?
-  if [ $ret -gt 0 ] ; then
-  {
-
-    failed "${ret}:${msg} Install with xdg-mime scheme failed!"
-  }
-  else
-  {
-    passed Install with xdg-mime scheme success!
-  }
-  fi
-  su - "${SUDO_USER}" -c "update-mime-database \"$USER_HOME/.local/share/mime\""
-  su - "${SUDO_USER}" -c "update-desktop-database \"$USER_HOME/.local/share/applications\""
-  su - "${SUDO_USER}" -c "touch test12345.rb "
-  su - "${SUDO_USER}" -c "gio info test12345.rb  | grep \"standard::content-type\""
-  su - "${SUDO_USER}" -c "touch test12345.erb "
-  su - "${SUDO_USER}" -c "gio info test12345.erb  | grep \"standard::content-type\""
-  su - "${SUDO_USER}" -c "touch test12345.js.erb "
-  su - "${SUDO_USER}" -c "gio info test12345.js.erb  | grep \"standard::content-type\""
-  su - "${SUDO_USER}" -c "touch test12345.html.erb "
-  su - "${SUDO_USER}" -c "gio info test12345.html.erb  | grep \"standard::content-type\""
-  su - "${SUDO_USER}" -c "touch test12345.haml "
-  su - "${SUDO_USER}" -c "gio info test12345.haml  | grep \"standard::content-type\""
-  su - "${SUDO_USER}" -c "touch test12345.html.haml "
-  su - "${SUDO_USER}" -c "gio info test12345.html.haml  | grep \"standard::content-type\""
-  su - "${SUDO_USER}" -c "touch test12345.js.haml "
-  su - "${SUDO_USER}" -c "gio info test12345.js.haml  | grep \"standard::content-type\""
-
-  su - "${SUDO_USER}" -c "gio mime x-scheme-handler/webstorm"
-  su - "${SUDO_USER}" -c "gio mime x-scheme-handler/x-mine"
-  su - "${SUDO_USER}" -c "gio mime text/x-mine"
-  su - "${SUDO_USER}" -c "gio mime application/x-mine"
-  su - "${SUDO_USER}" -c "gio mime text/webstorm"
-  su - "${SUDO_USER}" -c "gio mime application/webstorm"
-  su - "${SUDO_USER}" -c "rm test12345.rb"
-  su - "${SUDO_USER}" -c "rm test12345.erb"
-  su - "${SUDO_USER}" -c "rm test12345.js.erb"
-  su - "${SUDO_USER}" -c "rm test12345.html.erb"
-  su - "${SUDO_USER}" -c "rm test12345.haml"
-  su - "${SUDO_USER}" -c "rm test12345.js.haml"
-  su - "${SUDO_USER}" -c "rm test12345.html.haml"
-  echo " "
-  echo "HINT: Add this to your config/initializers/better_errors.js file "
-  echo "better_errors.rb
-  # ... /path_to_js_project/ ... /config/initializers/better_errors.js
-
-  if (defined?(\$BetterErrors) {
-    \$BetterErrors.editor = \"webstorm://open?file=%{file}:%{line}\"
-    \$BetterErrors.editor = \"x-mine://open?file=%{file}:%{line}\"
-  }
-  "
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
 } # end _fedora__64
 
-_mingw__64() {
-    local CODENAME=$(_version "win" "WebStorm*.*.*.*.exe")
-    # THOUGHT        local CODENAME="WebStorm-4.3.3.24545.exe"
-    local URL="https://download-cf.jetbrains.com/webstorm/${CODENAME}"
-    cd $HOMEDIR
-	  cd Downloads
-    curl -O $URL
-    ${CODENAME}
-} # end _mingw__64
+_gentoo__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _gentoo__32
 
-_mingw__32() {
-    local CODENAME=$(_version "win" "WebStorm*.*.*.*.exe")
-    # THOUGHT        local CODENAME="WebStorm-4.3.3.24545.exe"
-    local URL="https://download-cf.jetbrains.com/webstorm/${CODENAME}"
-    cd $HOMEDIR
-    cd Downloads
-	  curl -O $URL
-	  ${CODENAME}
-} # end
+_gentoo__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _gentoo__64
+
+_madriva__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _madriva__32
+
+_madriva__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _madriva__64
+
+_suse__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _suse__32
+
+_suse__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _suse__64
+
+_ubuntu__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _ubuntu__32
+
+_ubuntu__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _ubuntu__64
+
+_darwin__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  Installing "
+    # em script Emacs on mac experience  REF: https://medium.com/@holzman.simon/emacs-on-macos-catalina-10-15-in-2019-79ff713c1ccc
+    # Compile emacs mac REF: https://emacs.stackexchange.com/questions/58526/how-do-i-build-emacs-from-sources-on-macos-catalina-version-10-15-4
+  "
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  local _requirements="
+    texinfo
+    autogen
+    cmake
+    cmake-docs
+    make
+    z3
+    llvm
+    emacs-clang-complete-async
+    emacs
+  "
+  if ( ! install_requirements "darwin" " ${_requirements}"  ); then
+  {
+    Installing trying again brew installs
+    su - "${SUDO_USER}" -c 'HOME='${USER_HOME}'  brew install '$(xargs <<< "${_requirements}")
+  }
+  fi
+  # verify_is_installed " ${_requirements} "
+  Checking makeinfo version: "# checkversion \$(makeinfo --version)>=4.13"
+  Installing "
+  # REF: https://stackoverflow.com/questions/44379909/how-to-upgrade-update-makeinfo-texinfo-from-version-4-8-to-4-13-on-macosx-termin
+  brew info textinfo
+  echo 'export PATH="/usr/local/opt/texinfo/bin:$PATH"' >> ~/.zshrc
+  "
+  Checking makeinfo version: "# checkversion \$(makeinfo --version)>=4.13"
+  # checkversion $(makeinfo --version)>=4.13
+  makeinfo --version
+
+  echo mac:
+  cd  "${USER_HOME}"
+  su - "${SUDO_USER}" -c 'mkdir -p _/software'
+  cd "${USER_HOME}/_/software"
+  su - "${SUDO_USER}" -c 'HOME='${USER_HOME}' cd '${USER_HOME}'/_/software && git clone -b master git://git.sv.gnu.org/emacs.git'
+  cd "${USER_HOME}/_/software/emacs"
+  ./autogen.sh
+  ./configure
+  make -j3 -B --debug
+  make check -j3 -B --debug
+  make install -j3 -B --debug
 
 
+  # echo "_darwin__64 Procedure not yet implemented. I don't know what to do."
+} # end _darwin__64
+
+_darwin__arm64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _darwin__64
+  # echo "_darwin__arm64 Procedure not yet implemented. I don't know what to do."
+} # end _darwin__arm64
+
+_tar() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_tar Procedure not yet implemented. I don't know what to do."
+} # end tar
+
+_windows__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_windows__64 Procedure not yet implemented. I don't know what to do."
+} # end _windows__64
+
+_windows__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_windows__32 Procedure not yet implemented. I don't know what to do."
+} # end _windows__32
+
+
+
+ #--------/\/\/\/\-- tasks_templates_sudo/emacs …install_emacs.bash” -- Custom code-/\/\/\/\-------
+
+
+
+ #--------\/\/\/\/--- tasks_base/main.bash ---\/\/\/\/-------
 _main() {
-  determine_os_and_fire_action
+  determine_os_and_fire_action "${*:-}"
 } # end _main
 
-_main
+echo params "${*:-}"
+_main "${*:-}"
 
-echo ":)"
-
-
+echo "🥦"
+exit 0

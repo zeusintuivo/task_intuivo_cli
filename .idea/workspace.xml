@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="NONE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="f9e03254-1812-4fdc-b4d9-99b9be1e8bc1" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/task_intuivo_cli.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.temp_keys" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/all_glorified_installers_redo.sh" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/build-i3.sh" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/charm" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/install_aws.bash" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/install_chadwm.bash" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/install_chaskiq.bash" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/install_fedora37_preferences.bash" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/install_fedora38_preferences.bash" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/install_franz.bash" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/install_go.bash" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/install_i3.bash" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/install_kerl.bash" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/install_opera.bash" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/install_powerlevel10k.bash" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/install_powerlevel10k_sub.zsh" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/install_slack.bash" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/install_taskwarrior.bash" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/install_vlc.bash" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mine" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/redo_all_installers" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/studio" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tasks_templates_sudo/aws" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tasks_templates_sudo/chadwm" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tasks_templates_sudo/chaskiq" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tasks_templates_sudo/fedora37_preferences" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tasks_templates_sudo/fedora38_preferences" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tasks_templates_sudo/franz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tasks_templates_sudo/go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tasks_templates_sudo/i3" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tasks_templates_sudo/i3_custom_breaks_light" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tasks_templates_sudo/kerl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tasks_templates_sudo/loanlink_api" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tasks_templates_sudo/loanlink_web" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tasks_templates_sudo/opera" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tasks_templates_sudo/powerlevel10k" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tasks_templates_sudo/slack" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tasks_templates_sudo/taskwarrior" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tasks_templates_sudo/vlc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/add_error_trap.sh" beforeDir="false" afterPath="$PROJECT_DIR$/add_error_trap.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/execute_as_sudo.sh" beforeDir="false" afterPath="$PROJECT_DIR$/execute_as_sudo.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/install.clis.bash" beforeDir="false" afterPath="$PROJECT_DIR$/install.clis.bash" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/install_1password.bash" beforeDir="false" afterPath="$PROJECT_DIR$/install_1password.bash" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/install_beyondcompare.bash" beforeDir="false" afterPath="$PROJECT_DIR$/install_beyondcompare.bash" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/install_brew.bash" beforeDir="false" afterPath="$PROJECT_DIR$/install_brew.bash" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/install_brew.sh" beforeDir="false" afterPath="$PROJECT_DIR$/install_brew.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/install_clis.bash" beforeDir="false" afterPath="$PROJECT_DIR$/install_clis.bash" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/install_discord.bash" beforeDir="false" afterPath="$PROJECT_DIR$/install_discord.bash" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/install_docker.bash" beforeDir="false" afterPath="$PROJECT_DIR$/install_docker.bash" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/install_drogon.bash" beforeDir="false" afterPath="$PROJECT_DIR$/install_drogon.bash" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/install_emacs.bash" beforeDir="false" afterPath="$PROJECT_DIR$/install_emacs.bash" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/install_evm.bash" beforeDir="false" afterPath="$PROJECT_DIR$/install_evm.bash" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/install_keybase.bash" beforeDir="false" afterPath="$PROJECT_DIR$/install_keybase.bash" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/install_kiex.bash" beforeDir="false" afterPath="$PROJECT_DIR$/install_kiex.bash" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/install_masterpdf.bash" beforeDir="false" afterPath="$PROJECT_DIR$/install_masterpdf.bash" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/install_nvm.bash" beforeDir="false" afterPath="$PROJECT_DIR$/install_nvm.bash" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/install_pocketbase.bash" beforeDir="false" afterPath="$PROJECT_DIR$/install_pocketbase.bash" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/install_pyenv.bash" beforeDir="false" afterPath="$PROJECT_DIR$/install_pyenv.bash" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/install_rbenv.bash" beforeDir="false" afterPath="$PROJECT_DIR$/install_rbenv.bash" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/install_rubymine.bash" beforeDir="false" afterPath="$PROJECT_DIR$/install_rubymine.bash" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/install_skype.bash" beforeDir="false" afterPath="$PROJECT_DIR$/install_skype.bash" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/install_sublime_dev.sh.bash" beforeDir="false" afterPath="$PROJECT_DIR$/install_sublime_dev.sh.bash" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/install_telegram.bash" beforeDir="false" afterPath="$PROJECT_DIR$/install_telegram.bash" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/install_valet.bash" beforeDir="false" afterPath="$PROJECT_DIR$/install_valet.bash" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/install_virtualbox.bash" beforeDir="false" afterPath="$PROJECT_DIR$/install_virtualbox.bash" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/install_webstorm.bash" beforeDir="false" afterPath="$PROJECT_DIR$/install_webstorm.bash" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/install_whatsapp.bash" beforeDir="false" afterPath="$PROJECT_DIR$/install_whatsapp.bash" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/install_zoom.bash" beforeDir="false" afterPath="$PROJECT_DIR$/install_zoom.bash" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tasks_base/linuxes.bash" beforeDir="false" afterPath="$PROJECT_DIR$/tasks_base/linuxes.bash" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tasks_base/sudoer.bash" beforeDir="false" afterPath="$PROJECT_DIR$/tasks_base/sudoer.bash" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tasks_templates_sudo/beyondcompare" beforeDir="false" afterPath="$PROJECT_DIR$/tasks_templates_sudo/beyondcompare" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tasks_templates_sudo/brew" beforeDir="false" afterPath="$PROJECT_DIR$/tasks_templates_sudo/brew" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tasks_templates_sudo/clis" beforeDir="false" afterPath="$PROJECT_DIR$/tasks_templates_sudo/clis" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tasks_templates_sudo/code" beforeDir="false" afterPath="$PROJECT_DIR$/tasks_templates_sudo/code" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tasks_templates_sudo/code-insiders" beforeDir="false" afterPath="$PROJECT_DIR$/tasks_templates_sudo/code-insiders" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tasks_templates_sudo/discord" beforeDir="false" afterPath="$PROJECT_DIR$/tasks_templates_sudo/discord" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tasks_templates_sudo/docker" beforeDir="false" afterPath="$PROJECT_DIR$/tasks_templates_sudo/docker" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tasks_templates_sudo/drogon" beforeDir="false" afterPath="$PROJECT_DIR$/tasks_templates_sudo/drogon" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tasks_templates_sudo/dropbox" beforeDir="false" afterPath="$PROJECT_DIR$/tasks_templates_sudo/dropbox" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tasks_templates_sudo/emacs" beforeDir="false" afterPath="$PROJECT_DIR$/tasks_templates_sudo/emacs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tasks_templates_sudo/evm" beforeDir="false" afterPath="$PROJECT_DIR$/tasks_templates_sudo/evm" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tasks_templates_sudo/keybase" beforeDir="false" afterPath="$PROJECT_DIR$/tasks_templates_sudo/keybase" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tasks_templates_sudo/kiex" beforeDir="false" afterPath="$PROJECT_DIR$/tasks_templates_sudo/kiex" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tasks_templates_sudo/masterpdf" beforeDir="false" afterPath="$PROJECT_DIR$/tasks_templates_sudo/masterpdf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tasks_templates_sudo/mongo" beforeDir="false" afterPath="$PROJECT_DIR$/tasks_templates_sudo/mongo" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tasks_templates_sudo/ngrok" beforeDir="false" afterPath="$PROJECT_DIR$/tasks_templates_sudo/ngrok" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tasks_templates_sudo/nvm" beforeDir="false" afterPath="$PROJECT_DIR$/tasks_templates_sudo/nvm" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tasks_templates_sudo/php" beforeDir="false" afterPath="$PROJECT_DIR$/tasks_templates_sudo/php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tasks_templates_sudo/phpstorm" beforeDir="false" afterPath="$PROJECT_DIR$/tasks_templates_sudo/phpstorm" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tasks_templates_sudo/pyenv" beforeDir="false" afterPath="$PROJECT_DIR$/tasks_templates_sudo/pyenv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tasks_templates_sudo/rbenv" beforeDir="false" afterPath="$PROJECT_DIR$/tasks_templates_sudo/rbenv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tasks_templates_sudo/ruby" beforeDir="false" afterPath="$PROJECT_DIR$/tasks_templates_sudo/ruby" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tasks_templates_sudo/rubymine" beforeDir="false" afterPath="$PROJECT_DIR$/tasks_templates_sudo/rubymine" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tasks_templates_sudo/sentry" beforeDir="false" afterPath="$PROJECT_DIR$/tasks_templates_sudo/sentry" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tasks_templates_sudo/skype" beforeDir="false" afterPath="$PROJECT_DIR$/tasks_templates_sudo/skype" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tasks_templates_sudo/sublime" beforeDir="false" afterPath="$PROJECT_DIR$/tasks_templates_sudo/sublime" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tasks_templates_sudo/sublime_dev.sh" beforeDir="false" afterPath="$PROJECT_DIR$/tasks_templates_sudo/sublime_dev.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tasks_templates_sudo/sublimemerge_dev" beforeDir="false" afterPath="$PROJECT_DIR$/tasks_templates_sudo/sublimemerge_dev" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tasks_templates_sudo/teamviewer" beforeDir="false" afterPath="$PROJECT_DIR$/tasks_templates_sudo/teamviewer" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tasks_templates_sudo/valet" beforeDir="false" afterPath="$PROJECT_DIR$/tasks_templates_sudo/valet" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tasks_templates_sudo/virtualbox" beforeDir="false" afterPath="$PROJECT_DIR$/tasks_templates_sudo/virtualbox" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tasks_templates_sudo/webstorm" beforeDir="false" afterPath="$PROJECT_DIR$/tasks_templates_sudo/webstorm" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tasks_templates_sudo/whatsapp" beforeDir="false" afterPath="$PROJECT_DIR$/tasks_templates_sudo/whatsapp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tasks_templates_sudo/zoom" beforeDir="false" afterPath="$PROJECT_DIR$/tasks_templates_sudo/zoom" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 6
+}</component>
+  <component name="ProjectId" id="2XOAaKJJ0V12ofg0CxmEAYcptAU" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "cidr.known.project.marker": "true",
+    "dart.analysis.tool.window.visible": "false",
+    "git-widget-placeholder": "master",
+    "last_opened_file_path": "/Users/zeus/_/clis/task_intuivo_cli",
+    "ruby.rails.projectView.checked": "true",
+    "show.migrate.to.gradle.popup": "false",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="f9e03254-1812-4fdc-b4d9-99b9be1e8bc1" name="Changes" comment="" />
+      <created>1698489814626</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1698489814626</updated>
+      <workItem from="1698489815673" duration="21000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>

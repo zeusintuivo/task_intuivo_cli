@@ -4,10 +4,9 @@
 #
 # 20200415 Compatible with Fedora, Mac, Ubuntu "sudo_up" "load_struct" "#
 
-
 set -E -o functrace
 export THISSCRIPTCOMPLETEPATH
-typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")" # updated realpath macos 20210902
+typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")"   # updated realpath macos 20210902
 export BASH_VERSION_NUMBER
 typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
 
@@ -16,13 +15,28 @@ typeset -r THISSCRIPTNAME="$(basename "$0")"
 
 export _err
 typeset -i _err=0
+
   function _trap_on_error(){
-    echo -e "\\n \033[01;7m*** ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR ...\033[0m"
+    #echo -e "\\n \033[01;7m*** ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR ...\033[0m"
+    local cero="$0"
+    local file1="$(paeth ${BASH_SOURCE})"
+    local file2="$(paeth ${cero})"
+    echo -e "ERROR TRAP $THISSCRIPTNAME
+${file1}:${BASH_LINENO[-0]}     \t ${FUNCNAME[-0]}()
+$file2:${BASH_LINENO[1]}    \t ${FUNCNAME[1]}()
+ERR ..."
     exit 1
   }
   trap _trap_on_error ERR
   function _trap_on_int(){
-    echo -e "\\n \033[01;7m*** INTERRUPT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n  INT ...\033[0m"
+    # echo -e "\\n \033[01;7m*** INTERRUPT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n  INT ...\033[0m"
+    local cero="$0"
+    local file1="$(paeth ${BASH_SOURCE})"
+    local file2="$(paeth ${cero})"
+    echo -e "INTERRUPT TRAP $THISSCRIPTNAME
+${file1}:${BASH_LINENO[-0]}     \t ${FUNCNAME[-0]}()
+$file2:${BASH_LINENO[1]}    \t ${FUNCNAME[1]}()
+INT ..."
     exit 0
   }
 
@@ -47,38 +61,76 @@ load_struct_testing(){
   }
   function load_library(){
     local _library="${1:struct_testing}"
-    [[ -z "${1}" ]] && echo "Must call with name of library example: struct_testing execute_command" && exit 1
+    if [[ -z "${1}" ]] ; then
+    {
+       echo "Must call with name of library example: struct_testing execute_command"
+       exit 1
+    }
+    fi
     trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
       local provider="$HOME/_/clis/execute_command_intuivo_cli/${_library}"
       local _err=0 structsource
       if [   -e "${provider}"  ] ; then
-        echo "Loading locally"
+        if (( DEBUG )) ; then
+          echo "$0: tasks_base/sudoer.bash Loading locally"
+        fi
         structsource="""$(<"${provider}")"""
         _err=$?
-        [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading ${_library}. running 'source locally' returned error did not download or is empty err:$_err  \n \n  " && exit 1
+        if [ $_err -gt 0 ] ; then
+        {
+           echo -e "\n \n  ERROR! Loading ${_library}. running 'source locally' returned error did not download or is empty err:$_err  \n \n  " 
+           exit 1
+        }
+        fi
       else
         if ( command -v curl >/dev/null 2>&1; )  ; then
-          echo "Loading ${_library} from the net using curl "
+          if (( DEBUG )) ; then
+            echo "$0: tasks_base/sudoer.bash Loading ${_library} from the net using curl "
+          fi
           structsource="""$(curl https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/${_library}  -so -   2>/dev/null )"""  #  2>/dev/null suppress only curl download messages, but keep curl output for variable
           _err=$?
-          [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading ${_library}. running 'curl' returned error did not download or is empty err:$_err  \n \n  " && exit 1
+          if [ $_err -gt 0 ] ; then
+          {
+            echo -e "\n \n  ERROR! Loading ${_library}. running 'curl' returned error did not download or is empty err:$_err  \n \n  "
+            exit 1
+          }
+          fi
         elif ( command -v wget >/dev/null 2>&1; ) ; then
-          echo "Loading ${_library} from the net using wget "
+          if (( DEBUG )) ; then
+            echo "$0: tasks_base/sudoer.bash Loading ${_library} from the net using wget "
+          fi
           structsource="""$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/${_library} -O -   2>/dev/null )"""  #  2>/dev/null suppress only wget download messages, but keep wget output for variable
           _err=$?
-          [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading ${_library}. running 'wget' returned error did not download or is empty err:$_err  \n \n  " && exit 1
+          if [ $_err -gt 0 ] ; then
+          {
+            echo -e "\n \n  ERROR! Loading ${_library}. running 'wget' returned error did not download or is empty err:$_err  \n \n  "
+            exit 1
+          }
+          fi
         else
           echo -e "\n \n  ERROR! Loading ${_library} could not find wget or curl to download  \n \n "
           exit 69
         fi
       fi
-      [[ -z "${structsource}" ]] && echo -e "\n \n  ERROR! Loading ${_library} into ${_library}_source did not download or is empty " && exit 1
+      if [[ -z "${structsource}" ]] ; then
+      {
+        echo -e "\n \n  ERROR! Loading ${_library} into ${_library}_source did not download or is empty " 
+        exit 1
+      }
+      fi
       local _temp_dir="$(mktemp -d 2>/dev/null || mktemp -d -t "${_library}_source")"
       echo "${structsource}">"${_temp_dir}/${_library}"
-      echo "Temp location ${_temp_dir}/${_library}"
+      if (( DEBUG )) ; then
+        echo "$0: tasks_base/sudoer.bash Temp location ${_temp_dir}/${_library}"
+      fi
       source "${_temp_dir}/${_library}"
       _err=$?
-      [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Loading ${_library}. Occured while running 'source' err:$_err  \n \n  " && exit 1
+      if [ $_err -gt 0 ] ; then
+      {
+        echo -e "\n \n  ERROR! Loading ${_library}. Occured while running 'source' err:$_err  \n \n  "
+        exit 1
+      }
+      fi
       if  ! typeset -f passed >/dev/null 2>&1; then
         echo -e "\n \n  ERROR! Loading ${_library}. Passed was not loaded !!!  \n \n "
         exit 69;
@@ -91,25 +143,67 @@ load_struct_testing(){
 load_struct_testing
 
  _err=$?
-[ $_err -ne 0 ]  && echo -e "\n \n  ERROR FATAL! load_struct_testing_wget !!! returned:<$_err> \n \n  " && exit 69;
+if [ $_err -ne 0 ] ; then
+{
+  echo -e "\n \n  ERROR FATAL! load_struct_testing_wget !!! returned:<$_err> \n \n  "
+  exit 69;
+}
+fi
 
 export sudo_it
 function sudo_it() {
   raise_to_sudo_and_user_home
-  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
+  local _err=$?
+  if (( DEBUG )) ; then
+    Comment _err:${_err}
+  fi
+  if [ $_err -gt 0 ] ; then
+  {
+    failed to sudo_it raise_to_sudo_and_user_home
+    exit 1
+  }
+  fi
+  # [ $_err -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
+  _err=$?
+  if (( DEBUG )) ; then
+    Comment _err:${_err}
+  fi
   enforce_variable_with_value SUDO_USER "${SUDO_USER}"
   enforce_variable_with_value SUDO_UID "${SUDO_UID}"
   enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
   # Override bigger error trap  with local
-  function _trap_on_error(){
-    echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR INT ...\033[0m"
+  function _trap_on_err_int(){
+    # echo -e "\033[01;7m*** ERROR OR INTERRUPT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR INT ...\033[0m"
+    local cero="$0"
+    local file1="$(paeth ${BASH_SOURCE})"
+    local file2="$(paeth ${cero})"
+    echo -e " ERROR OR INTERRUPT  TRAP $THISSCRIPTNAME
+${file1}:${BASH_LINENO[-0]}     \t ${FUNCNAME[-0]}()
+$file2:${BASH_LINENO[1]}    \t ${FUNCNAME[1]}()
+ERR INT ..."
+    exit 1
   }
-  trap _trap_on_error ERR INT
+  trap _trap_on_err_int ERR INT
 } # end sudo_it
 
 # _linux_prepare(){
   sudo_it
-  [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
+  _err=$?
+  if (( DEBUG )) ; then
+    Comment _err:${_err}
+  fi
+  if [ $_err -gt 0 ] ; then
+  {
+    failed to sudo_it raise_to_sudo_and_user_home
+    exit 1
+  }
+  fi
+  # [ $_err -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
+  _err=$?
+  if (( DEBUG )) ; then
+    Comment _err:${_err}
+  fi
+  # [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
   export USER_HOME
   # shellcheck disable=SC2046
   # shellcheck disable=SC2031
@@ -123,16 +217,32 @@ function sudo_it() {
 export SUDO_GRP='staff'
 enforce_variable_with_value USER_HOME "${USER_HOME}"
 enforce_variable_with_value SUDO_USER "${SUDO_USER}"
-passed "Caller user identified:${SUDO_USER}"
-passed "Home identified:${USER_HOME}"
+if (( DEBUG )) ; then
+  passed "Caller user identified:${SUDO_USER}"
+fi
+  if (( DEBUG )) ; then
+    Comment DEBUG_err?:${?}
+  fi
+if (( DEBUG )) ; then
+  passed "Home identified:${USER_HOME}"
+fi
+  if (( DEBUG )) ; then
+    Comment DEBUG_err?:${?}
+  fi
 directory_exists_with_spaces "${USER_HOME}"
 
 
 
- #--------\/\/\/\/-- install_sublime4.bash -- Custom code -\/\/\/\/-------
+ #---------/\/\/\-- tasks_base/sudoer.bash -------------/\/\/\--------
 
 
 
+
+
+ #--------\/\/\/\/-- tasks_templates_sudo/sublime4 …install_sublime4.bash” -- Custom code -\/\/\/\/-------
+
+
+#!/usr/bin/bash
 
 function _version() {
     local -i _err
@@ -303,7 +413,7 @@ function new_version_is_higher(){
 
 function _do_install() {
   local SUBLIMENAME="sublime-text-${__online_version_from_page}-1.x86_64.rpm"
-  enforce_variable_with_value SUBLIMENAME "${SUBLIMENAME}"
+  enforce_variable_with_value SUBLIMENAME "${SUBLIMENAME}"  
   passed ${SUBLIMENAME}
   local CODENAME=${SUBLIMENAME}
   enforce_variable_with_value CODENAME "${CODENAME}"
@@ -319,26 +429,27 @@ function _do_install() {
 } # end _do_install
 
 _redhat_flavor_install() {
-  local -i __online_version_from_page=$(_version)
+  local -i __online_version_from_page
+  __online_version_from_page=$(_version)
   enforce_variable_with_value __online_version_from_page "${__online_version_from_page}"
   passed "${__online_version_from_page}"
   if new_version_is_higher "${__online_version_from_page}" ; then
   {
-    Installing sublimetext  "${__online_version_from_page}"
+    Installing sublimetext  "${__online_version_from_page}" 
     exit 0
-    _do_install "${__online_version_from_page}"
+    _do_install "${__online_version_from_page}" 
   }
-  else
+  else 
   {
-    if [[ "${*}" == "--force" ]] && [[ "${*}" == "--reinstall" ]] ; then
+    if [[ "${*}" == "--force" ]] && [[ "${*}" == "--reinstall" ]] ; then 
     {
-      Installing --force --reinstall sublimetext  "${__online_version_from_page}"
+      Installing --force --reinstall sublimetext  "${__online_version_from_page}" 
       dnf remove sublime-text
-      _do_install "${__online_version_from_page}"
+      _do_install "${__online_version_from_page}" 
     }
     else
     {
-      Skipping sublimetext version is higher or same as installed . Use force use --force or --reinstall  to force reinstall
+      Skipping sublimetext version is higher or same as installed . Use force use --force or --reinstall  to force reinstall     
     }
     fi
   }
@@ -529,7 +640,7 @@ _windows__32() {
 
 
 
- #--------/\/\/\/\-- install_sublime4.bash -- Custom code-/\/\/\/\-------
+ #--------/\/\/\/\-- tasks_templates_sudo/sublime4 …install_sublime4.bash” -- Custom code-/\/\/\/\-------
 
 
 _main() {

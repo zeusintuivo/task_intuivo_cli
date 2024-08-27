@@ -1,6 +1,76 @@
 #!/bin/bash
+alias egrep='grep -E --color=auto --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox}'
+_add_variables_to_bashrc_zshrc(){
+  local FINDBREW="/opt/homebrew/bin/brew"
 
-_make_linuxbrewfolder(){
+  if [[ -e "/opt/homebrew/bin/brew" ]] ; then
+  {
+    FINDBREW="/opt/homebrew/bin/brew"
+  }
+  elif [[ -e "${USER_HOME}/.linuxbrew/bin/brew" ]] ; then
+  {
+    FINDBREW="${USER_HOME}/.linuxbrew/bin/brew"
+  }
+  elif [[ -e "/usr/local/opt/bin/brew" ]] ; then
+  {
+    FINDBREW="/usr/local/opt/bin/brew"
+  }
+  elif [[ -e "/usr/local/bin/brew" ]] ; then
+  {
+    FINDBREW="/usr/local/bin/brew"
+  }
+  elif [[ -e "$(brew --prefix)/bin/brew" ]] ; then
+  {
+    FINDBREW="$(brew --prefix)/bin/brew"
+  }
+  fi
+
+  local _target_bin_brew=""
+  _target_bin_brew="$(_find_executable_for "brew" "--prefix"  "bin/brew")"
+	
+  su - "${SUDO_USER}" -c "${_target_bin_brew} list --formula"
+  # $(brew --prefix)/bin/brew
+  local BREW_SH_CONTENT='
+
+# BREW - HOMEBREW
+eval $("'${FINDBREW}'" shellenv)
+
+'
+  # trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _add_variables_to_bashrc_zshrc nvm" && echo -e "${RESET}" && return 0' ERR
+  echo "${BREW_SH_CONTENT}"
+  local INITFILE INITFILES="
+   .bashrc
+   .zshrc
+   .bash_profile
+   .profile
+   .zshenv
+   .zprofile
+  "
+  while read INITFILE; do
+  {
+    [ -z ${INITFILE} ] && continue
+    [[ ! -e "${INITFILE}" ]] && continue
+    Checking "${USER_HOME}/${INITFILE}"
+    chown "${SUDO_USER}" "${INITFILE}"
+    (_if_not_contains  "${USER_HOME}/${INITFILE}" "shellenv" ) || Configuring ${INITFILE}
+    (_if_not_contains  "${USER_HOME}/${INITFILE}" "shellenv" ) && Skipping configuration for ${INITFILE}
+    #                   filename            value      || do this .............
+    (_if_not_contains  "${USER_HOME}/${INITFILE}" "# BREW - HOMEBREW" ) || echo -e "${BREW_SH_CONTENT}" >>"${USER_HOME}/${INITFILE}"
+    (_if_not_contains  "${USER_HOME}/${INITFILE}" "shellenv" ) || echo -e "${BREW_SH_CONTENT}" >>"${USER_HOME}/${INITFILE}"
+  }
+  done <<< "${INITFILES}"
+  # if it_exists /home/linuxbrew ; then
+  # {
+  #   rm -rf /home/linuxbrew
+  # }
+  # fi
+  file_exists_with_spaces "${FINDBREW}"
+  eval $("${FINDBREW}" shellenv)
+} # _add_variables_to_bashrc_zshrc
+
+_make_linuxbrewfolder() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+
   if it_exists /home/linuxbrew ; then
   {
     rm -rf /home/linuxbrew
@@ -14,11 +84,15 @@ _make_linuxbrewfolder(){
   chown -R "${SUDO_USER}" /home/linuxbrew
   chgrp -R "${SUDO_USER}" /home/linuxbrew
 }
-_eval_linuxbrew(){
+_eval_linuxbrew() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+
   # test -d "${USER_HOME}/.linuxbrew" && eval $("${USER_HOME}/.linuxbrew/bin/brew" shellenv)
   test -d "/home/linuxbrew/.linuxbrew" && eval $("/home/linuxbrew/.linuxbrew/bin/brew" shellenv)
 }
-_add_to_file(){
+_add_to_file() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+
   if test -r "${USER_HOME}/${1}" ; then
   {
     #                   filename            value      || do this .............
@@ -27,12 +101,16 @@ _add_to_file(){
   }
   fi
 }
-_clone_linuxbrew(){
-  git clone https://github.com/Homebrew/brew "/home/linuxbrew/.linuxbrew/Homebrew"
+_clone_linuxbrew() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+
+  git clone https://github.com/Homebrew/brew "/home/linuxbrew/.linuxbrew/Homebrew" --depth 1 
   chown -R "${SUDO_USER}" /home/linuxbrew
   chgrp -R "${SUDO_USER}" /home/linuxbrew
 }
-_softlink_it(){
+_softlink_it() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+
   file_does_not_exist_with_spaces "/home/linuxbrew/.linuxbrew/.linuxbrew"
   mkdir "/home/linuxbrew/.linuxbrew/bin"
   ln -s "/home/linuxbrew/.linuxbrew/Homebrew/bin/brew" "/home/linuxbrew/.linuxbrew/bin"
@@ -40,7 +118,9 @@ _softlink_it(){
   chown -R "${SUDO_USER}" "/home/linuxbrew/.linuxbrew"
   chgrp -R "${SUDO_USER}" "/home/linuxbrew/.linuxbrew"
 }
-_softlink_user_it(){
+_softlink_user_it() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+
   cd "${USER_HOME}"
   if it_exists "${USER_HOME}/.linuxbrew" ; then
     if softlink_exists "${USER_HOME}/.linuxbrew>/home/linuxbrew/.linuxbrew" ; then
@@ -83,9 +163,9 @@ _softlink_user_it(){
   # [ $? -gt 0 ] && failed install $BASHLINENO brew  && exit 1
 
 
-_debian_flavor_install(){
-  sudo_it
-  export USER_HOME="/home/${SUDO_USER}"
+_debian_flavor_install() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   install_requirements "linux" "
     # Debian Ubuntu only
@@ -106,36 +186,90 @@ _debian_flavor_install(){
   _eval_linuxbrew
   _add_to_file .profile
   _add_to_file .zshrc
+	_add_variables_to_bashrc_zshrc
   return 0
 } # end _debian_flavor_install
 _debian__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+
   echo "CURRENTLY NOT SUPPORTED BY LINUX BREW REF: https://docs.brew.sh/Homebrew-on-Linux#install"
 }
 _debian__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _debian_flavor_install
 }
 _ubuntu__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   echo "CURRENTLY NOT SUPPORTED BY LINUX BREW REF: https://docs.brew.sh/Homebrew-on-Linux#install"
 }
 _ubuntu__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _debian_flavor_install
 }
+
+_ubuntu__aarch64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _ubuntu__aarch64
+
+_ubuntu_22__aarch64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _ubuntu_22__aarch64
+
 _darwin__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   echo "CURRENTLY NOT SUPPORTED BY LINUX BREW REF: https://docs.brew.sh/Homebrew-on-Linux#install"
 }
 _darwin__64() {
-  sudo_it
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-}
-_redhat_flavor_install(){
-  sudo_it
-  export USER_HOME="/home/${SUDO_USER}"
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  Checking homebrew is installed
+  if ( ! su - "${SUDO_USER}" -c "command -v brew" >/dev/null 2>&1; )  ; then
+  {
+    Installing homebrew
+    local TARGET_URL="https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"
+    Skipping "${CYAN}Based on \n${RED}\n/bin/bash -c \"\$(curl -fsSL  "${TARGET_URL}")\"\n${RESET}${CYAN}\n and doing structed tested."
+    local DOWNLOADFOLDER="$(_find_downloads_folder)"
+    local CODENAME=install.sh
+    _do_not_downloadtwice   "${TARGET_URL}"  "${DOWNLOADFOLDER}"  "${CODENAME}"
+    chmod a+x "${CODENAME}"
+    local NEWNAME=install_brew.sh
+    mv "${DOWNLOADFOLDER}/${CODENAME}" "${USER_HOME}/${NEWNAME}"
+    chmod a+x "${USER_HOME}/${NEWNAME}"
+    cd  "${USER_HOME}"
+    Installing "${USER_HOME}/${NEWNAME}"
+    su - "${SUDO_USER}" -c "${USER_HOME}/${NEWNAME}"
+    wait
+  }
+  fi
+  ensure brew or "Homebrew is required to continue "
+  _add_variables_to_bashrc_zshrc
+} # end _darwin__64
+
+_darwin__arm64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  softwareupdate --install-rosetta
+  _darwin__64
+} # end _darwin__arm64
+
+_darwin__arm64_13_3() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  softwareupdate --install-rosetta
+  _darwin__64
+} # end _darwin__arm64
+
+
+_redhat_flavor_install() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   install_requirements "linux" "
-    # ReadHat Flavor only
+    # RedHat Flavor only
     curl
     file
     git
+    vim
+    vim-enhanced
     # needed by Fedora 30 and up
     libxcrypt-compat
   "
@@ -176,17 +310,39 @@ _redhat_flavor_install(){
   _eval_linuxbrew
   _add_to_file .bash_profile
   _add_to_file .zshrc
+	_add_variables_to_bashrc_zshrc
   return 0
 } # end _redhat_flavor_install
+
 _centos__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+
   echo "CURRENTLY NOT SUPPORTED BY LINUX BREW REF: https://docs.brew.sh/Homebrew-on-Linux#install"
 }
 _centos__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+
   _redhat_flavor_install
 }
 _fedora__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+
   echo "CURRENTLY NOT SUPPORTED BY LINUX BREW REF: https://docs.brew.sh/Homebrew-on-Linux#install"
 }
+
+_fedora_37__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _fedora_37__64
+
+_fedora_39__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _fedora_39__64
+
 _fedora__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _fedora__64
+
+

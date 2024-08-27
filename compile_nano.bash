@@ -5,6 +5,29 @@
 # 20200415 Compatible with Fedora, Mac, Ubuntu "sudo_up" "load_struct" "#
 set -E -o functrace
 export THISSCRIPTCOMPLETEPATH
+echo "0. sudologic $0:$LINENO           SUDO_COMMAND:${SUDO_COMMAND:-}"
+echo "0. sudologic $0:$LINENO               SUDO_GRP:${SUDO_GRP:-}"
+echo "0. sudologic $0:$LINENO               SUDO_UID:${SUDO_UID:-}"
+echo "0. sudologic $0:$LINENO               SUDO_GID:${SUDO_GID:-}"
+echo "0. sudologic $0:$LINENO              SUDO_USER:${SUDO_USER:-}"
+echo "0. sudologic $0:$LINENO                   USER:${USER:-}"
+echo "0. sudologic $0:$LINENO              USER_HOME:${USER_HOME:-}"
+echo "0. sudologic $0:$LINENO THISSCRIPTCOMPLETEPATH:${THISSCRIPTCOMPLETEPATH:-}"
+echo "0. sudologic $0:$LINENO         THISSCRIPTNAME:${THISSCRIPTNAME:-}"
+echo "0. sudologic $0:$LINENO       THISSCRIPTPARAMS:${THISSCRIPTPARAMS:-}"
+echo "0. sudologic $0 Start Checking realpath  "
+if ! ( command -v realpath >/dev/null 2>&1; )  ; then
+  echo "... realpath not found. Downloading REF:https://github.com/swarmbox/realpath.git "
+  cd $HOME
+  git clone https://github.com/swarmbox/realpath.git
+  cd realpath
+  make
+  sudo make install
+  _err=$?
+  [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Builing realpath. returned error did not download or is installed err:$_err  \n \n  " && exit 1
+else
+  echo "... realpath exists .. check!"
+fi
 typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")"  # updated realpath macos 20210902
 
 export BASH_VERSION_NUMBER
@@ -13,6 +36,9 @@ typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
 export  THISSCRIPTNAME
 typeset -r THISSCRIPTNAME="$(basename "$0")"
 
+export THISSCRIPTPARAMS
+typeset -r THISSCRIPTPARAMS="${*:-}"
+echo "0. sudologic $0:$LINENO       THISSCRIPTPARAMS:${THISSCRIPTPARAMS:-}"
 export _err
 typeset -i _err=0
   # function _trap_on_error(){
@@ -89,7 +115,10 @@ load_struct_testing
 export sudo_it
 function sudo_it() {
   raise_to_sudo_and_user_home
-  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
+  if [ $? -gt 0 ] ; then
+    failed to sudo_it raise_to_sudo_and_user_home
+    exit 1
+  fi
   enforce_variable_with_value SUDO_USER "${SUDO_USER}"
   enforce_variable_with_value SUDO_UID "${SUDO_UID}"
   enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
@@ -121,6 +150,9 @@ passed Caller user identified:$SUDO_USER
 passed Home identified:$USER_HOME
 directory_exists_with_spaces "$USER_HOME"
 
+_darwin__arm64() {
+  _darwin__64
+}
 
 _darwin__64() {
   # Using homebrew seemed like the best choice so far
@@ -128,6 +160,7 @@ _darwin__64() {
   # tar xof /Users/benutzer/Library/Caches/Homebrew/downloads/91845ed41d14ccff1a66f16db7c7ec93f7d7958bb08be637dae24d2aa70a214d--nano-5.4.catalina.bottle.tar.gz -C /var/folders/8x/9phrghz97g38v9m8m6r59_0w0000gn/T/d20201221-96141-1fi6gd9
   # cp -pR /var/folders/8x/9phrghz97g38v9m8m6r59_0w0000gn/T/d20201221-96141-1fi6gd9/nano/. /usr/local/Cellar/nano
   # chmod -Rf +w /var/folders/8x/9phrghz97g38v9m8m6r59_0w0000gn/T/d20201221-96141-1fi6gd9
+  export HOMEBREW_NO_AUTO_UPDATE=1
   if ! (su - "${SUDO_USER}" -c "brew install nano") ; then
   {
     local _orr=$?
@@ -312,6 +345,27 @@ _darwin__64_manual() {
 
 } # end _darwin__64
 
+_arch__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _arch_flavor_install
+} # end _arch__64
+
+_arch_flavor_install() {
+  install_requirements "linux" "
+    curl
+    wget
+    libncurses-dev
+    libncursesw5-dev
+    groff
+  "
+  verify_is_installed "
+   curl
+   wget
+  "
+  _download_compile_install
+  return 0
+} # end _arch_flavor_install
+
 _ubuntu__64() {
   directory_exists_with_spaces "$USER_HOME"
 
@@ -479,10 +533,14 @@ _download_compile_install() {
   enforce_contains "https://www.nano-editor.org/dist/v" "${TARGET_URL}"
   enforce_contains "nano-" "${TARGET_URL}"
   enforce_contains ".tar.xz" "${TARGET_URL}"
-  (( VERBOSE )) && echo "DEBUG EXIT 0"
-  (( VERBOSE )) && exit 0
+  if (( VERBOSE )) ; then
+    echo "DEBUG EXIT 0"
+    exit 0
+  fi
   enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-  (( VERBOSE )) && echo  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+  if (( VERBOSE )) ; then
+    echo  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+  fi
   if it_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}" ; then
   {
     rm -rf "${DOWNLOADFOLDER}/${CODENAME}"
@@ -505,7 +563,7 @@ _build_add_nanorc(){
   #  _build_add_nanorc "${DOWNLOADFOLDER}" "${CODENAME}" "${USER_HOME}"
   local DOWNLOADFOLDER="${1}"
   local CODENAME="${2}"
-  local USER_HOME="${3}"
+  local USERR_HOME="${3}"
   local FOLDER="$(echo "${CODENAME}" | sed 's/.tar.xz//g')"
   local VERSION="$(echo "${FOLDER}" | sed 's/nano-//g')"
   directory_exists_with_spaces "${FOLDER}"
@@ -530,7 +588,7 @@ _build_add_nanorc(){
   # should match 5.2
   which nano
   # REF: https://github.com/scopatz/nanorc
-  cd "${USER_HOME}"
+  cd "${USERR_HOME}"
   _do_not_downloadtwice https://raw.githubusercontent.com/scopatz/nanorc/master/install.sh "${DOWNLOADFOLDER}"  install.sh
   # curl -O https://raw.githubusercontent.com/scopatz/nanorc/master/install.sh
   file_exists_with_spaces "${DOWNLOADFOLDER}/install.sh"
@@ -542,28 +600,28 @@ _build_add_nanorc(){
   su - "${SUDO_USER}" -c "${DOWNLOADFOLDER}/install.sh"
   echo Install for user root
   "${DOWNLOADFOLDER}/install.sh"
-  directory_exists_with_spaces "${USER_HOME}/.nano"
-  chown -R "${SUDO_USER}" "${USER_HOME}/.nano"
+  directory_exists_with_spaces "${USERR_HOME}/.nano"
+  chown -R "${SUDO_USER}" "${USERR_HOME}/.nano"
   directory_exists_with_spaces "/root/.nano"
   file_exists_with_spaces "/root/.nanorc"
-  cp "/root/.nanorc" "${USER_HOME}/.nanorc"
-  file_exists_with_spaces "${USER_HOME}/.nanorc"
-  chown  "${SUDO_USER}" "${USER_HOME}/.nanorc"
+  cp "/root/.nanorc" "${USERR_HOME}/.nanorc"
+  file_exists_with_spaces "${USERR_HOME}/.nanorc"
+  chown  "${SUDO_USER}" "${USERR_HOME}/.nanorc"
   [[ ! -e "/root/.nano/syntax"  ]] && git clone https://github.com/YSakhno/nanorc.git "/root/.nano/syntax"
-  [[ ! -e "${USER_HOME}/.nano/syntax"  ]] && git clone https://github.com/YSakhno/nanorc.git "${USER_HOME}/.nano/syntax"
-  chown -R "${SUDO_USER}" "${USER_HOME}/.nano"
+  [[ ! -e "${USERR_HOME}/.nano/syntax"  ]] && git clone https://github.com/YSakhno/nanorc.git "${USERR_HOME}/.nano/syntax"
+  chown -R "${SUDO_USER}" "${USERR_HOME}/.nano"
   directory_exists_with_spaces "/root/.nano/syntax"
-  directory_exists_with_spaces "${USER_HOME}/.nano/syntax"
-  cd "${USER_HOME}/.nano/syntax"
+  directory_exists_with_spaces "${USERR_HOME}/.nano/syntax"
+  cd "${USERR_HOME}/.nano/syntax"
   make install
-  chown -R "${SUDO_USER}" "${USER_HOME}/.nano/syntax"
+  chown -R "${SUDO_USER}" "${USERR_HOME}/.nano/syntax"
   cd "/root/.nano/syntax"
   make install
   echo Append missing definitions
   echo " " >> "/root/.nanorc"
-  echo " " >> "${USER_HOME}/.nanorc"
+  echo " " >> "${USERR_HOME}/.nanorc"
   echo "set linenumbers" >> "/root/.nanorc"
-  echo "set linenumbers" >> "${USER_HOME}/.nanorc"
+  echo "set linenumbers" >> "${USERR_HOME}/.nanorc"
     # .nanorc
   # ~/.nano/
   # cp ~/.nano/javascript.nanorc ~/.nano/typescript.nanorc
@@ -580,8 +638,8 @@ _build_add_nanorc(){
     # include "~/.nano/typescript.nanorc"
     # in .nanorc
   directory_exists_with_spaces "/root/.nano/syntax/build"
-  directory_exists_with_spaces "${USER_HOME}/.nano/syntax/build"
-  diff -q "${USER_HOME}/.nano/syntax/build" "${USER_HOME}/.nano" |grep "Only in" | grep "syntax" | grep ".nanorc" | cut -d":" -f2 | xargs -I {} echo "include \"~/.nano/syntax/build/{}\"" >> "${USER_HOME}/.nanorc"
+  directory_exists_with_spaces "${USERR_HOME}/.nano/syntax/build"
+  diff -q "${USERR_HOME}/.nano/syntax/build" "${USERR_HOME}/.nano" |grep "Only in" | grep "syntax" | grep ".nanorc" | cut -d":" -f2 | xargs -I {} echo "include \"~/.nano/syntax/build/{}\"" >> "${USERR_HOME}/.nanorc"
   diff -q "/root/.nano/syntax/build" "/root/.nano" |grep "Only in" | grep "syntax" | grep ".nanorc" | cut -d":" -f2 | xargs -I {} echo "include \"~/.nano/syntax/build/{}\"" >> "/root/.nanorc"
   which nano
   nano --version

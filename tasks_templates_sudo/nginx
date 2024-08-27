@@ -245,15 +245,34 @@ _download_compile_install() {
 } # end _download_and_install
 
 _debian_flavor_install() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  install_requirements "linux" "
+    curl
+    wget
+    ufw
+    nginx
+  "
+  verify_is_installed "
+    curl
+    wget
+    tar
+    ufw
+    nginx
+  "
+  ufw enable
+  ufw allow 'Nginx HTTP'
+  ufw status numbered
+  nginx -t
+  systemctl restart nginx
+
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  echo "_redhat_flavor_install Procedure not yet implemented. I don't know what to do."
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  echo "_arch_flavor_install Procedure not yet implemented. I don't know what to do."
 } # end _readhat_flavor_install
 
 _arch__32() {
@@ -320,11 +339,15 @@ _ubuntu__64() {
   _debian_flavor_install
 } # end _ubuntu__64
 
+
 _darwin__64() {
+  failed "error this was made in sed for linux to it will not work on mac sed "
+  return 1
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   install_requirements "darwin" "
     curl
     wget
+    nginx
     # ncurses-devel
     # tar
   "
@@ -335,19 +358,43 @@ _darwin__64() {
   "
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   # local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  Checking "Doing : openssl1:--- start ---"
+
   local DOWNLOADFOLDER="${USER_HOME}/_/software/openssl"
   (( VERBOSE )) && echo "DOWNLOADFOLDER:${DOWNLOADFOLDER}"
+  Checking "1 DOWNLOADFOLDER:${DOWNLOADFOLDER}"
   enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
   mkdir -p "${DOWNLOADFOLDER}"
   directory_exists_with_spaces "${DOWNLOADFOLDER}"
-VERBOSE=1
-  (( ! VERBOSE )) &&local openssl1=$(_download_compile_install "openssl-" "m.tar.gz"  "https://www.openssl.org/source/" "${DOWNLOADFOLDER}" | tail -1)
-  (( VERBOSE )) && local openssl1=$(_download_compile_install "openssl-" "m.tar.gz"  "https://www.openssl.org/source/" "${DOWNLOADFOLDER}" )
-  echo "openssl1:${openssl1}"
+  VERBOSE=0
+  local openssl1=''
+  if (( ! VERBOSE )) ; then
+  {
+    openssl1=$(_download_compile_install "openssl-" "m.tar.gz"  "https://www.openssl.org/source/" "${DOWNLOADFOLDER}" | tail -1)
+    _err=$?
+  } 
+  else 
+  {
+    (( VERBOSE )) && 
+    openssl1=$(_download_compile_install "openssl-" "m.tar.gz"  "https://www.openssl.org/source/" "${DOWNLOADFOLDER}" )
+    _err=$?
+  }
+  fi
+  Checking "openssl1:--- start ---"
+  Checking "openssl1:${openssl1}"
+  Checking "openssl1:--- end -----"
+  Checking "Doing : openssl1:--- end ---"
+  if [ $_err -gt 0 ] || [[ "${openssl1}" == *"KILL EXECUTION"* ]]; then
+  {
+    return 1
+  }
+  fi 
+
   local DOWNLOADFOLDER="${USER_HOME}/_/software/pcre2"
   (( VERBOSE )) && echo "DOWNLOADFOLDER:${DOWNLOADFOLDER}"
   (( VERBOSE )) && echo "VERBOSE"
-  (( VERBOSE )) && exit 0
+  (( VERBOSE )) && return 0
+  Checking "2 DOWNLOADFOLDER:${DOWNLOADFOLDER}"
   enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
   mkdir -p "${DOWNLOADFOLDER}"
   directory_exists_with_spaces "${DOWNLOADFOLDER}"
@@ -359,14 +406,18 @@ VERBOSE=1
   # (( VERBOSE )) && exit 0
   local DOWNLOADFOLDER="${USER_HOME}/_/software/pcre2"
   (( VERBOSE )) && echo "DOWNLOADFOLDER:${DOWNLOADFOLDER}"
+  Checking "3 DOWNLOADFOLDER:${DOWNLOADFOLDER}"
   enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
   mkdir -p "${DOWNLOADFOLDER}"
   directory_exists_with_spaces "${DOWNLOADFOLDER}"
 
   local pcre2=$(_download_compile_install "pcre2-" "tar.gz"  "https://github.com/PhilipHazel/pcre2/releases/" "${DOWNLOADFOLDER}" "https://github.com/PhilipHazel/pcre2/releases/download/" | tail -1)
   echo "pcre2:${pcre2}"
+
+  Installing  "1 nginx:${USER_HOME}/_/software/nginx"
   local DOWNLOADFOLDER="${USER_HOME}/_/software/nginx"
   (( VERBOSE )) && echo "DOWNLOADFOLDER:${DOWNLOADFOLDER}"
+  Checking "4 DOWNLOADFOLDER:${DOWNLOADFOLDER}"
   enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
   mkdir -p "${DOWNLOADFOLDER}"
   directory_exists_with_spaces "${DOWNLOADFOLDER}"
@@ -381,13 +432,13 @@ VERBOSE=1
 } # end _darwin__64
 
 _tar() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  echo "_tar Procedure not yet implemented. I don't know what to do."
 } # end tar
 
 _windows__64() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  echo "_windows__64 Procedure not yet implemented. I don't know what to do."
 } # end _windows__64
 
 _windows__32() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  echo "_windows__32 Procedure not yet implemented. I don't know what to do."
 } # end _windows__32

@@ -1,0 +1,26 @@
+based in this code git@github.com:justjavac/dvm.git made in rust , design a new cli app that
+is called rsyncdb
+can connect to Microsoft Sql Express Server
+can connect to Microsoft Sql Developer Server
+can connect to MySQL server local or online
+can connect to Mongo DB
+can connect to Postgress DB
+
+can read and write to rsyncdb.toml as config file where it can save options
+can read .env with encryption_key and other variables
+
+can receive --create-login and will ask for credentials for one of the DBs user password host databasename port and save it with a nickname in an encrypted users_00?.toml using encryption_key
+
+can read and decrypt users_00?.toml file to acquire s user password host databasename port using encryption_key
+
+can receive --test-login --file check a users_00?.toml connection using encryption_key
+
+can receive --text-login --user --pass --port --host --dbname to check connection and it prints :ok or exits with sterr  1 printing the catched errors
+
+can receive --build-action  only when at least one users_00?.toml  file exists or exit with message "missing at least one connection use --create login" and build-action with available nickname connections users_00?.toml , it will follows process of asking to select "from" connection "to" connection. If will follow to test connection "From" or fail, when connecting "From" it will read all "tables/collections" then ask user to select one or more, then open each selected collection/table read each columns and useer has to select "from columns" then process to "to" conection and the number of "from columns" has to macth the number of "to" columns , then ask the user to match "From columns" to "to columns" . finally it wil save each step into an encrypted file using   encryption_key  called  actions_00?.toml and last config file, called "action" will have "from" and "to" sections with "from user" and "from users_00?.toml" and "to user" and "to users_00?.toml"  and  the "from columns" links "to columns" and the "from columns" and "to columns" must be linked , and all have a "action nickname"
+
+can receive --perform-action and read encrypted file using encryption_key if it exists   actions_00?.toml and perheform db connections and read all "from columns" and send them to "to column" and register errors or success, and print to screen errors or success , and it and action same is already running, will not start the same action twice until the first is done and it will log the blocking non start failure action also
+
+can  receive --create-cron and only if actions_00?.toml and users_00?.toml exists it will accepted a linux cron like (* * * * *) programming and program this task action and saved it  non encrypted file crons.toml
+
+can receive --background-start and it will stay running int he background, non blocking, and check the crons.toml file to perform one action

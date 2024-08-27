@@ -1,0 +1,75 @@
+#1|2 var|3 action                    |4 cond1|5 cond2|6.fbk action|7flag 
+1||sudo updatedb &                   |       |       |            |.fed37_step_1_updatedb
+2||sudo dnf update -y                |       |       |            |.fed37_step_2_update
+3||sudo dnf build-dep zsh -y         |       |       |            |.fed37_step_3_build_zsh
+4||sudo dnf install zsh -y           |       |       |            |.fed37_step_4_zsh
+5||sudo dnf build-dep vim-enhanced -y|       |       |            |.fed37_step_5_build_vim
+6||sudo dnf install vim-enhanced -y  |       |       |            |.fed37_step_6_vim
+7||install_basic_clis.bash           |       |       |            |.fed37_step_7_basic_clis
+8||install_beyondcompare.bash        |       |       |            |.fed37_step_8_install_beyondcompare
+9||install_powerlevel10k.bash        |       |       |            |.fed37_step_9_install_powerlevel10k
+10||install_brew.bash                |       |       |            |.fed37_step_10_install_brew
+11||install_rbenv.bash               |       |       |            |.fed37_step_11_install_rbenv
+12||install_nvm.bash                 |       |       |            |.fed37_step_12_install_nvm
+13||install.clis.bash                |       |       |            |.fed37_step_13_install.clis
+14||install_clis.bash                |       |       |            |.fed37_step_14_install_clis
+15||install_1password.bash           |       |       |            |.fed37_step_15_install_1password
+16||install_zoom.bash                |       |       |            |.fed37_step_16_install_zoom
+17||install_keybase.bash             |       |       |            |.fed37_step_17_install_keybase
+18||install_drogon.bash              |       |       |            |.fed37_step_18_install_drogon
+19||install_sublime_dev.sh.bash      |       |       |            |.fed37_step_19_install_sublime_dev
+20||install_sublimemerge_dev.bash    |       |       |            |.fed37_step_20_install_sublimemerge_dev
+21||install_sublime4.bash            |       |       |            |.fed37_step_21_install_sublime4
+22||install_taskwarrior.bash         |       |       |            |.fed37_step_22_install_taskwarrior
+23||compile_nano.bash                |       |       |            |.fed37_step_23_compile_nano
+24||install_evm.bash                 |       |       |            |.fed37_step_24_install_evm
+24-1||install_evm.bash                 |       |       |            |.fed37_step_24_install_evm
+25||install_pyenv.bash               |       |       |            |.fed37_step_25_install_pyenv
+26||install_kiex.bash                |       |       |            |.fed37_step_26_install_kiex
+27||install_emacs.bash               |       |       |            |.fed37_step_27_install_emacs
+28||install_masterpdf.bash           |       |       |            |.fed37_step_28_install_masterpdf
+29||install_i3.bash                  |       |       |            |.fed37_step_29_install_i3
+30||install_vlc.bash                 |       |       |            |.fed37_step_30_install_vlc
+31||install_go.bash                  |       |       |            |.fed37_step_31_install_go
+32||install_discord.bash             |       |       |            |.fed37_step_32_install_discord
+33||install_signal.bash              |       |       |            |.fed37_step_33_install_signal
+#34||install_skype.bash               |       |       |            |.fed37_step_34_install_skype
+35||install_kerl.bash                |       |       |            |.fed37_step_35_install_kerl
+36||install_planner.bash             |       |       |            |.fed37_step_36_install_planner
+37||install_telegram.bash            |       |       |            |.fed37_step_37_install_telegram
+38||install_valet.bash               |       |       |            |.fed37_step_38_install_valet
+39||install_code.bash                |       |       |            |.fed37_step_39_install_code
+40||wget --max-redirect=10 --mirror -O code-1.84.2-20231122.el7.x86_64.rpm --no-check-certificate https://update.code.visualstudio.com/1.84.2/linux-rpm-x64/stable   ||||.fed37_step_40_wget_code
+3-1||sudo dnf build-dep pipewire -y    |       |       |            |.fed37_step_3-1_build_pipewire
+3-2||sudo dnf install pipewire wireplumber pipewire-pulseaudio -y  --allowerasing  |       |       |            |.fed37_step_3-2_pipewire
+3-3||sudo dnf swap --allowerasing pulseaudio pipewire-pulseaudio -y    |       |       |            |.fed37_step_3-3_swap_pipewire
+41||sudo dnf install -vy code-1.84.2-20231122.el7.x86_64.rpm |       |       |            |.fed37_step_41_code
+42||rm -rf code-1.84.2-20231122.el7.x86_64.rpm  ||||.fed37_step_42_rm_code
+43||install_rust.bash ||||.fed37_step_43_rust
+44||sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm||||.fed37_step_44_rpmfusion
+45||sudo dnf groupupdate core -y ||||.fed37_step_45_core
+46||sudo dnf group update core -y ||||.fed37_step_46_core
+47||sudo dnf install https://rpms.remirepo.net/fedora/remi-release-$(rpm -E %fedora).rpm -yv  ||||.fed37_step_47_remi
+48-0||sudo dnf install qqc2-desktop-style -y ||||.fed37_step_48-0_yakuak_styles
+48-1||sudo yum groupinstall  "KDE (K Desktop Environment)" -y ||||.fed37_step_48-1_yakuak_kde
+48-2||sudo yum install libX11-devel freetype-devel zlib-devel libxcb-devel -y ||||.fed37_step_48-2_yakuak_libs
+48||sudo dnf build-dep yakuake -y    |       |       |            |.fed37_step_48_build_yakuake
+49||sudo dnf build-dep guake -y    |       |       |            |.fed37_step_49_build_guake
+50||sudo dnf install -y arandr                ||||.fed37_step_50_arandr
+51||sudo dnf install -y task                  ||||.fed37_step_51_task
+52||sudo dnf install -y gparted               ||||.fed37_step_52_gparted
+53||sudo dnf install -y gpart                 ||||.fed37_step_53_gpart
+54||sudo dnf install -y thunderbird           ||||.fed37_step_54_thunderbird
+55||sudo dnf install -y boxes                 ||||.fed37_step_55_boxes
+56||sudo dnf install -y firefox               ||||.fed37_step_56_firefox
+57||sudo dnf install -y guake                 ||||.fed37_step_57_guake
+58||sudo dnf install -y yakuake               ||||.fed37_step_58_yakuake
+59||sudo dnf install -y nginx                 ||||.fed37_step_59_nginx
+60||sudo dnf install -y gnome-tweaks          ||||.fed37_step_60_gnome
+61||sudo dnf install -y breeze-cursor-theme   ||||.fed37_step_61_breeze
+62||sudo dnf install -y oxygen-cursor-themes  ||||.fed37_step_62_oxygen
+63||sudo dnf install -y knock                 ||||.fed37_step_63_knock
+64||sudo dnf install -y htop                  ||||.fed37_step_64_htop
+65||sudo dnf install -y btop                  ||||.fed37_step_65_btop
+66||brew install libxscrnsaver libnotify bzip2 freetype2 ||||.fed37_step_66_brew_installs
+

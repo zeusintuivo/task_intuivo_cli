@@ -1,0 +1,81 @@
+1. Project Structure
+
+    src/
+        main.rs: Entry point of the application.
+        config/
+            mod.rs: Handles reading and writing to rsyncdb.toml.
+        encryption/
+            mod.rs: Manages encryption and decryption functionalities.
+        db/
+            mod.rs: Database connection and operations.
+        cli/
+            mod.rs: Command-line interface processing.
+        action/
+            mod.rs: Logic for building and performing actions.
+        cron/
+            mod.rs: Cron job scheduling and execution.
+
+    Cargo.toml: Rust package manifest.
+
+2. Dependencies
+
+    toml: For parsing TOML files.
+    dotenv: For loading .env files.
+    sqlx: For database connections.
+    mongodb: For MongoDB connections.
+    crypto: For encryption and decryption.
+    clap: For CLI argument parsing.
+    cron: For cron job parsing and scheduling.
+    daemonize: For running in the background.
+
+3. Key Functionalities
+3.1 Configuration Management
+
+    Read and write to rsyncdb.toml.
+    Load environment variables from .env, including encryption_key.
+
+3.2 Database Connections
+
+    Support connections to Microsoft SQL Express, SQL Developer Server, MySQL, MongoDB, and PostgreSQL.
+    Use sqlx for SQL databases and mongodb crate for MongoDB.
+
+3.3 User Credentials Management
+
+    --create-login: Prompt for DB credentials, save them in users_00?.toml encrypted with encryption_key.
+    Read and decrypt users_00?.toml to get credentials.
+
+3.4 Testing Database Connections
+
+    --test-login --file: Test connection using credentials from users_00?.toml.
+    --test-login with direct credentials: Test connection and print result.
+
+3.5 Action Building
+
+    --build-action: Interactive CLI to build an action (data transfer task) between databases.
+    Save action details in actions_00?.toml, encrypted with encryption_key.
+
+3.6 Performing Actions
+
+    --perform-action: Read actions_00?.toml, perform the data transfer, log results.
+
+3.7 Cron Job Scheduling
+
+    --create-cron: Schedule actions based on cron syntax, save in crons.toml.
+    --background-start: Run the application in the background, check crons.toml for scheduled tasks.
+
+4. Implementation Notes
+
+    Error Handling: Robust error handling and logging for each operation.
+    Security: Ensure secure handling of credentials and encryption keys.
+    Concurrency: Handle concurrent actions and cron jobs efficiently.
+    Logging: Detailed logging for actions, especially for cron jobs and background operations.
+    Testing: Write unit and integration tests for each module.
+
+5. Future Enhancements
+
+    Web interface for easier management.
+    Support for additional database types.
+    Advanced scheduling options for cron jobs.
+    Real-time monitoring and alerts.
+
+This design provides a blueprint for the rsyncdb application. Implementing this in Rust will require a deep understanding of Rust's async programming, database interaction, encryption, and CLI design principles.

@@ -108,7 +108,12 @@ function sudo_it() {
 
 # _linux_prepare(){
   sudo_it
-  [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
+  if [ $? -gt 0 ] ; then
+  {
+    failed to sudo_it raise_to_sudo_and_user_home
+    exit 1
+  }
+  fi
   export USER_HOME
   # shellcheck disable=SC2046
   # shellcheck disable=SC2031

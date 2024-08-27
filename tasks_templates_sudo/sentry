@@ -1,0 +1,102 @@
+#!/usr/bin/bash
+
+_debian_flavor_install() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _debian_flavor_install
+
+_redhat_flavor_install() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _redhat_flavor_install
+
+_arch_flavor_install() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _readhat_flavor_install
+
+_arch__32() {
+  _arch_flavor_install
+} # end _arch__32
+
+_arch__64() {
+  _arch_flavor_install
+} # end _arch__64
+
+_centos__32() {
+  _redhat_flavor_install
+} # end _centos__32
+
+_centos__64() {
+  _redhat_flavor_install
+} # end _centos__64
+
+_debian__32() {
+  _debian_flavor_install
+} # end _debian__32
+
+_debian__64() {
+  _debian_flavor_install
+} # end _debian__64
+
+_fedora__32() {
+  _redhat_flavor_install
+} # end _fedora__32
+
+_fedora__64() {
+  _redhat_flavor_install
+} # end _fedora__64
+
+_gentoo__32() {
+  _redhat_flavor_install
+} # end _gentoo__32
+
+_gentoo__64() {
+  _redhat_flavor_install
+} # end _gentoo__64
+
+_madriva__32() {
+  _redhat_flavor_install
+} # end _madriva__32
+
+_madriva__64() {
+  _redhat_flavor_install
+} # end _madriva__64
+
+_suse__32() {
+  _redhat_flavor_install
+} # end _suse__32
+
+_suse__64() {
+  _redhat_flavor_install
+} # end _suse__64
+
+_ubuntu__32() {
+  _debian_flavor_install
+} # end _ubuntu__32
+
+_ubuntu__64() {
+  echo NOTICE This sentry needs at least 2 CPUs 
+  echo WARN: Recommended minimum CPU cores available to Docker is 4, found 2
+  echo FAIL: Required minimum RAM available to Docker is 3800 MB, found 1928 MB
+  echo WARN: Recommended minimum RAM available to Docker is 7800 MB, found 3828 MB
+  curl -OkKvsSL https://codeload.github.com/getsentry/self-hosted/zip/refs/tags/22.12.0
+  mv 22.12.0  22.12.0.zip
+  unzip 22.12.0.zip
+  cd self-hosted-22.12.0/
+  ./install.sh
+} # end _ubuntu__64
+
+_darwin__64() {
+  echo "Procedure not yet implemented. I don't know what to do."
+  sysctl -n hw.physicalcpu
+} # end _darwin__64
+
+_tar() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end tar
+
+_windows__64() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _windows__64
+
+_windows__32() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _windows__32

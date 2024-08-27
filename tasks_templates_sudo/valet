@@ -3,43 +3,11 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 #
-# Compatible start with low version bash
-export THISSCRIPTCOMPLETEPATH
-typeset -r THISSCRIPTCOMPLETEPATH="$(realpath $(which $(basename "$0")))"   # updated realpath macos 20210902 # § This goes in the FATHER-MOTHER script
-
-export BASH_VERSION_NUMBER
-typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
-
-export  THISSCRIPTNAME
-typeset -r THISSCRIPTNAME="$(realpath $(which $(basename "$0")))"  # updated realpath macos 20210902
-
-export _err
-typeset -i _err=0
-
-load_struct_testing_wget(){
-    local provider="$HOME/_/clis/execute_command_intuivo_cli/struct_testing"
-    [   -e "${provider}"  ] && source "${provider}" && echo "Loaded locally"
-    [ ! -e "${provider}"  ] && eval """$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/struct_testing -O -  2>/dev/null )"""   # suppress only wget download messages, but keep wget output for variable
-    ( ( ! command -v passed >/dev/null 2>&1; ) && echo -e "\n \n  ERROR! Loading struct_testing \n \n " && exit 69; )
-} # end load_struct_testing_wget
-load_struct_testing_wget
-
-export sudo_it
-function sudo_it() {
-  raise_to_sudo_and_user_home
-  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
-  function _trap_on_error(){
-    echo -e "\033[01;7m*** TRAP $THISSCRIPTNAME $BASHLINENO ERR INT ...\033[0m"
-
-  }
-  trap _trap_on_error ERR INT
-} # end sudo_it
-
-
-
+set -E -o functrace
 _debian_flavor_install(){
-  sudo_it
+  # trap  '_trap_on_exit $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  EXIT
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local -i _err=0
   install_requirements "linux" "
     # Debian Ubuntu only
     network-manager
@@ -55,42 +23,301 @@ _debian_flavor_install(){
     composer
     php
   "
-    PHPS=$(which php)
-  COMPOSERS=$(which composer)
+ _valet_steps_php_composer_pecl_valet_install
 
-  su - "$SUDO_USER" -c ''"$PHPS"''"$COMPOSERS"' global update'
-  su - "$SUDO_USER" -c ''"$PHPS"''"$COMPOSERS"' global require cpriego/valet-linux'
   return 0
-}
-_debian__32() {
-  echo "CURRENTLY NOT SUPPORTED BY LINUX BREW REF: https://docs.brew.sh/Homebrew-on-Linux#install"
-}
-_debian__64() {
-  _debian_flavor_install
-}
-_ubuntu__32() {
-  echo "CURRENTLY NOT SUPPORTED BY LINUX BREW REF: https://docs.brew.sh/Homebrew-on-Linux#install"
-}
-_ubuntu__64() {
-  _debian_flavor_install
-}
-_darwin__32() {
-  echo "CURRENTLY NOT SUPPORTED BY LINUX BREW REF: https://docs.brew.sh/Homebrew-on-Linux#install"
-}
-_darwin__64() {
-  sudo_it
-  echo "MORE TODO - Install not implemented"
-}
-_readhat_flavor_install(){
-  sudo_it
+} # end _debian_flavor_install
+
+_valet_steps_php_composer_pecl_valet_install(){
+
+  Checking "$0:$LINENO find php for user"
+  PHPS=$(su - "$SUDO_USER" -c 'which php')
+  _err=$?
+  if [ $_err -gt 0 ] ; then
+  {
+    warning "I did not find php for user $SUDO_USER - trying as root _err:$_err"
+    PHPS=$(which php)
+    _err=$?
+    if [ $_err -gt 0 ] ; then # failed
+    {
+      failed "to find php for root either - trying as root _err:$_err"
+      exit 1
+    }
+    fi
+  }
+  fi
+
+  Checking "$0:$LINENO find composer for user"
+  COMPOSERS=$(su - "$SUDO_USER" -c 'which composer')
+  _err=$?
+  if [ $_err -gt 0 ] ; then
+  {
+    warning "I did not find composer for user $SUDO_USER - trying as root _err:$_err"
+    COMPOSERS=$(which composer)
+    _err=$?
+    if [ $_err -gt 0 ] ; then # failed
+    {
+      failed "to find composer for root either - trying as root _err:$_err"
+      exit 1
+    }
+    fi
+  }
+  fi
+
+
+  Checking "$0:$LINENO find pecl for user "
+  PECLS=$(su - "$SUDO_USER" -c 'which pecl')
+  _err=$?
+  if [ $_err -gt 0 ] ; then
+  {
+    warning "I did not find pecl for user $SUDO_USER - trying as root _err:$_err"
+    PECLS=$(which pecl)
+    _err=$?
+    if [ $_err -gt 0 ] ; then # failed
+    {
+      failed "to find pecl for root either - trying as root _err:$_err"
+      exit 1
+    }
+    fi
+  }
+  fi
+
+
+  Installing "$0:$LINENO pecl has to be run as root -  pecl channel-update pecl.php.net"
+    if ( "$PECLS" channel-update pecl.php.net ) ; then
+    {
+      _err=1
+    }
+    fi
+    if [ $_err -gt 0 ] ; then
+    {
+      warning "to sun  as root also - pecl channel-update pecl.php.net - trying as root _err:$_err"
+    }
+    fi
+
+
+  Installing "$0:$LINENO pecl has to be run as root -  pecl  install phalcon"
+    if ( "$PECLS" install phalcon ) ; then
+    {
+      _err=1
+    }
+    fi
+    if [ $_err -gt 0 ] ; then
+    {
+      warning "to sun  as root also - pecl  install phalcon - trying as root _err:$_err"
+    }
+    fi
+
+  Installing "$0:$LINENO pecl has to be run as root -  pecl  install psr"
+    if ( "$PECLS" install psr ) ; then
+    {
+      _err=1
+    }
+    fi
+    if [ $_err -gt 0 ] ; then
+    {
+      warning "to sun  as root also - pecl  install psr - trying as root _err:$_err"
+    }
+    fi
+
+  Installing "$0:$LINENO pecl has to be run as root -  pecl  install xdebug"
+    if ( "$PECLS" install xdebug ) ; then
+    {
+      _err=1
+    }
+    fi
+    if [ $_err -gt 0 ] ; then
+    {
+      warning "to sun  as root also - pecl  install xdebug - trying as root _err:$_err"
+    }
+    fi
+
+
+
+  Installing "$0:$LINENO  composer global update "
+  ( su - "$SUDO_USER" -c ''"$PHPS"' '"$COMPOSERS"' global update' )
+  _err=$?
+  if [ $_err -gt 0 ] ; then
+  {
+    warning "could not run composer as user $SUDO_USER -  composer global update  - or it failed trying as root _err:$_err"
+	  ( "$PHPS" "$COMPOSERS" global update )
+    _err=$?
+    if [ $_err -gt 0 ] ; then
+    {
+      failed "to sun  as root also - composer  global update  - trying as root _err:$_err"
+      exit 1
+    }
+    fi
+  }
+  fi
+
+  Installing "$0:$LINENO  composer global require cpriego/valet-linux "
+  ( su - "$SUDO_USER" -c ''"$PHPS"' '"$COMPOSERS"' global require cpriego/valet-linux' )
+  _err=$?
+  if [ $_err -gt 0 ] ; then
+  {
+    warning "could not run composer as user $SUDO_USER -  composer global require cpriego/valet-linux  - or it failed trying as root _err:$_err"
+	  ( "$PHPS" "$COMPOSERS" global require cpriego/valet-linux )
+    _err=$?
+    if [ $_err -gt 0 ] ; then
+    {
+      failed "to sun  as root also - composer  global require cpriego/valet-linux  - trying as root _err:$_err"
+      exit 1
+    }
+    fi
+  }
+  fi
+
+
+  Checking "$0:$LINENO find which valet"
+  if [[ -f "${USER_HOME}/.config/composer/vendor/bin/valet" ]] ; then
+  {
+    VALETS="${USER_HOME}/.config/composer/vendor/bin/valet"
+  }
+  else
+  {
+    VALETS=$(su - "$SUDO_USER" -c 'which valet')
+    _err=$?
+    if [ $_err -gt 0 ] ; then
+    {
+      warning "I did not find valet for user $SUDO_USER - trying as root _err:$_err"
+      VALETS=$(which valet)
+      _err=$?
+      if [ $_err -gt 0 ] ; then # failed
+      {
+        failed "to find valet for root either - trying as root _err:$_err"
+        exit 1
+      }
+      fi
+    }
+    fi
+  }
+  fi
+
+
+
+  Installing "$0:$LINENO  valet install "
+  ( su - "$SUDO_USER" -c ''"$VALETS"' install' )
+  _err=$?
+  if [ $_err -gt 0 ] ; then
+  {
+    warning "could not run valet as user $SUDO_USER -  valet install  - or it failed trying as root _err:$_err"
+	  ( "$VALETS"  install )
+    _err=$?
+    if [ $_err -gt 0 ] ; then
+    {
+      failed "to sun  as root also - valet  install  - trying as root _err:$_err"
+      exit 1
+    }
+    fi
+  }
+  fi
+
+
+  Checking "$0:$LINENO valet status "
+  ( su - "$SUDO_USER" -c ''"$PHPS"' '"$VALETS"' status' )
+  _err=$?
+  if [ $_err -gt 0 ] ; then
+  {
+    warning "could not run valet as user $SUDO_USER -  valet status  - or it failed trying as root _err:$_err"
+	  ( "$PHPS" "$VALETS"  status )
+    _err=$?
+    if [ $_err -gt 0 ] ; then
+    {
+      failed "to sun  as root also - valet  status  - trying as root _err:$_err"
+      exit 1
+    }
+    fi
+  }
+  fi
+
+
+  Installing "$0:$LINENO  valet restart "
+  ( su - "$SUDO_USER" -c ''"$PHPS"' '"$VALETS"' restart' )
+  _err=$?
+  if [ $_err -gt 0 ] ; then
+  {
+    warning "could not run valet as user $SUDO_USER -  valet restart  - or it failed trying as root _err:$_err"
+	  ( "$PHPS" "$VALETS"  restart )
+    _err=$?
+    if [ $_err -gt 0 ] ; then
+    {
+      failed "to sun  as root also - valet  restart  - trying as root _err:$_err"
+      exit 1
+    }
+    fi
+  }
+  fi
+
+  Checking "$0:$LINENO  valet status "
+  ( su - "$SUDO_USER" -c ''"$PHPS"' '"$VALETS"' status' )
+  _err=$?
+  if [ $_err -gt 0 ] ; then
+  {
+    warning "could not run valet as user $SUDO_USER -  valet status  - or it failed trying as root _err:$_err"
+	  ( "$PHPS" "$VALETS"  status )
+    _err=$?
+    if [ $_err -gt 0 ] ; then
+    {
+      failed "to sun  as root also - valet  status  - trying as root _err:$_err"
+      exit 1
+    }
+    fi
+  }
+  fi
+
+
+  Checking "$0:$LINENO  valet links "
+  ( su - "$SUDO_USER" -c ''"$PHPS"' '"$VALETS"' links' )
+  _err=$?
+  if [ $_err -gt 0 ] ; then
+  {
+    warning "could not run valet as user $SUDO_USER -  valet links  - or it failed trying as root _err:$_err"
+	  ( "$PHPS" "$VALETS"  links )
+    _err=$?
+    if [ $_err -gt 0 ] ; then
+    {
+      failed "to sun  as root also - valet  links  - trying as root _err:$_err"
+      exit 1
+    }
+    fi
+  }
+  fi
+  passed "$0:$LINENO tasks "
+} # end _valet_steps_php_composer_pecl_valet_install
+_redhat_flavor_install(){
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   install_requirements "linux" "
-    # ReadHat Flavor only
+    # RedHat Flavor only
     nss-tools
     jq
     xsel
+		# fedora 37
+		php-intl
+		php-mbstring
+    php-devel
+    php-json
+    php-cli
+    php-xml
+    php-common
+    php-mysqlnd
+    php-gd
+    php-curl
+    php-psr
+    php-zip
+    php-fpm
+    php-bcmath
+    php-ctype
+    php-fileinfo
+    php-mbstring
+    php-pdo
+    php-tokenizer
+    php-xml
+    php-gmp
+    php-mysqli
   "
   verify_is_installed "
-    nss-tools
+    # nss-tools
     jq
     xsel
     composer
@@ -102,25 +329,141 @@ _readhat_flavor_install(){
     Open /etc/selinux/config
     Change SELINUX=enforcing to SELINUX=permissive"
 
-  PHPS=$(which php)
-  COMPOSERS=$(which composer)
+  _valet_steps_php_composer_pecl_valet_install
 
-  su - "$SUDO_USER" -c ''"$PHPS"''"$COMPOSERS"' global update'
-  su - "$SUDO_USER" -c ''"$PHPS"''"$COMPOSERS"' global require cpriego/valet-linux'
   return 0
-}
+} # end _redhat_flavor_install
+
+
+_arch_flavor_install() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_arch_flavor_install Procedure not yet implemented. I don't know what to do."
+} # end _readhat_flavor_install
+
+_arch__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _arch_flavor_install
+} # end _arch__32
+
+_arch__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _arch_flavor_install
+} # end _arch__64
+
 _centos__32() {
-  echo "CURRENTLY NOT SUPPORTED BY LINUX BREW REF: https://docs.brew.sh/Homebrew-on-Linux#install"
-}
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _centos__32
+
 _centos__64() {
-  _readhat_flavor_install
-}
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _centos__64
+
+_debian__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _debian__32
+
+_debian__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _debian__64
+
 _fedora__32() {
-  echo "CURRENTLY NOT SUPPORTED BY LINUX BREW REF: https://docs.brew.sh/Homebrew-on-Linux#install"
-}
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _fedora__32
+
 _fedora__64() {
-  _readhat_flavor_install
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
 } # end _fedora__64
+
+_gentoo__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _gentoo__32
+
+_gentoo__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _gentoo__64
+
+_madriva__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _madriva__32
+
+_madriva__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _madriva__64
+
+_suse__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _suse__32
+
+_suse__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _suse__64
+
+_ubuntu__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _ubuntu__32
+
+_ubuntu__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _ubuntu__64
+
+_darwin__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  install_requirements "linux" "
+    # RedHat Flavor only
+    shtools
+    knock
+    jq
+    xsel
+    nginx
+    dnsmasq
+    php
+    composer
+  "
+  verify_is_installed "
+    composer
+    php
+  "
+  su - "${SUDO_USER}" -c 'composer require laravel/valet'
+  valet install
+  # echo "_darwin__64 Procedure not yet implemented. I don't know what to do."
+} # end _darwin__64
+
+_darwin__arm64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _darwin__64
+  # echo "_darwin__arm64 Procedure not yet implemented. I don't know what to do."
+} # end _darwin__arm64
+
+_tar() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_tar Procedure not yet implemented. I don't know what to do."
+} # end tar
+
+_windows__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_windows__64 Procedure not yet implemented. I don't know what to do."
+} # end _windows__64
+
+_windows__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_windows__32 Procedure not yet implemented. I don't know what to do."
+} # end _windows__32
+
+
 _main() {
   determine_os_and_fire_action
 } # end _main

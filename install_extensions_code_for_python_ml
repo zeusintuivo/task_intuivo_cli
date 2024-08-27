@@ -1,0 +1,74 @@
+
+echo https://marketplace.visualstudio.com/items?itemName=njpwerner.autodocstring
+echo autoDocstring - Python Docstring Generator
+code --install-extension njpwerner.autodocstring
+
+echo Black Formatter
+echo https://marketplace.visualstudio.com/items?itemName=ms-python.black-formatter
+code --install-extension ms-python.black-formatter
+
+echo Django
+echo https://marketplace.visualstudio.com/items?itemName=batisteo.vscode-django
+code --install-extension batisteo.vscode-django
+
+echo Git Graph
+echo https://marketplace.visualstudio.com/items?itemName=mhutchie.git-graph
+code --install-extension mhutchie.git-graph
+
+echo IntelliCode
+echo https://marketplace.visualstudio.com/items?itemName=VisualStudioExptTeam.vscodeintellicode
+code --install-extension VisualStudioExptTeam.vscodeintellicode
+
+echo IntelliCode API Usage Examples
+echo https://marketplace.visualstudio.com/items?itemName=VisualStudioExptTeam.intellicode-api-usage-examples
+code --install-extension VisualStudioExptTeam.intellicode-api-usage-examples
+
+echo Jinja
+echo https://marketplace.visualstudio.com/items?itemName=wholroyd.jinja
+code --install-extension wholroyd.jinja
+
+echo Jupyter
+echo https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter
+code --install-extension ms-toolsai.jupyter
+
+echo Jupyter Cell Tags
+echo https://marketplace.visualstudio.com/items?itemName=ms-toolsai.vscode-jupyter-cell-tags
+code --install-extension ms-toolsai.vscode-jupyter-cell-tags
+
+echo Jupyter Keymap
+echo https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter-keymap
+code --install-extension ms-toolsai.jupyter-keymap
+
+echo Jupyter Notebook Renderer
+echo https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter-renderers
+code --install-extension ms-toolsai.jupyter-renderers
+
+echo Jupyter Slide Show
+echo https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter-renderers
+code --install-extension ms-toolsai.jupyter-renderers
+
+echo Pylance
+echo https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance
+code --install-extension ms-python.vscode-pylance
+
+echo Python
+echo https://marketplace.visualstudio.com/items?itemName=ms-python.python
+code --install-extension ms-python.python
+
+echo Python Debugger
+echo https://marketplace.visualstudio.com/items?itemName=ms-python.debugpy
+code --install-extension ms-python.debugpy
+
+echo Python Environment Manager
+echo https://marketplace.visualstudio.com/items?itemName=donjayamanne.python-environment-manager
+code --install-extension donjayamanne.python-environment-manager
+
+echo Python Extension Pack
+echo https://marketplace.visualstudio.com/items?itemName=donjayamanne.python-extension-pack
+code --install-extension donjayamanne.python-extension-pack
+
+echo Python Indent
+echo https://marketplace.visualstudio.com/items?itemName=KevinRose.vsc-python-indent
+code --install-extension KevinRose.vsc-python-indent
+
+

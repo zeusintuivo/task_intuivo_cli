@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DEBUG_VERB_READING_LOGIC=$DEBUG || 0
+DEBUG_VERB_READING_LOGIC=${DEBUG:-0} || 0
 LIGHTPINK="\\033[1;204m"
 TO_LIGHTPINK="\\o033[1;204m\\o033[48;5;0m"    # Notice the only the \\o changes NOT \\[]
 LIGHTPINK_OVER_DARKBLUE="\\033[38;5;204m\\033[48;5;21m"
@@ -58,6 +58,7 @@ function change_hightlight(){
 # echo  -e  ${RED_NOT_VISIBLE} printf  ${BLUE_NOT_VISIBLE} 'something_functi' | change_hightlight
 # exit 0
 
+export colorize
 function colorize(){
   local _one=''
   while read -r _one ; do
@@ -67,6 +68,7 @@ function colorize(){
   done <<< "$(pygmentize -l bash | change_hightlight)"
 }
 
+export _trap_on_error
 function _trap_on_error() {
   local DEBUG=0
   local __trapped_script_name="${1:-0}"
@@ -78,7 +80,7 @@ function _trap_on_error() {
   local __trapped_function="${7:-0}"
   local -i __trapped_bash_line_before="${8:-0}"
   if (local -i __trapped_line="${9:-0}") ; then
-    if (local -r __trapped_bash_command="${*:10}") ; then
+    if (local -r __trapped_bash_command="${*:10}") ; then # grab all parameters after 10 
       (( DEBUG )) && echo 'add error trap loading'
     fi
   fi
@@ -163,3 +165,4 @@ function _trap_on_error() {
 set -E -o functrace
 #                      1   2       3      4          5       6            7          8            9         10
 trap '_trap_on_error  $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND' ERR
+

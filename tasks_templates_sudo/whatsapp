@@ -1,0 +1,292 @@
+#!/usr/bin/env bash
+#
+# @author Zeus Intuivo <zeus@intuivo.com>
+#
+_build_compile() {
+  local _target="${1}"
+  cd "${_target}"
+  # Create a debug build directory and go into it
+  #
+  mkdir -p "${_target}/build/debug"
+  #
+  cd "${_target}/build/debug"
+  #
+  # Build the project
+  cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/usr ../..
+  make -j4
+
+  # Optionally, to update the default translation file
+  make update-translation
+
+  # Run
+  ./whatsapp-for-linux
+} # end _build_compile
+
+_git_clone() {
+  local _source="${1}"
+  local _target="${2}"
+  if  it_exists_with_spaces "${_target}" ; then
+  {
+    cd "${_target}"
+    git fetch
+    git pull
+  }
+  else
+  {
+   git clone "${_source}" "${_target}"
+  }
+  fi
+} # _git_clone
+
+_package_list_installer() {
+  local package packages="${@}"
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer whatsapp" && echo -e "${RESET}" && return 0' ERR
+
+  if ! install_requirements "linux" "${packages}" ; then
+  {
+    warning "installing requirements. ${CYAN} attempting to install one by one"
+    while read package; do
+    {
+      [ -z ${package} ] && continue
+      install_requirements "linux" "${package}"
+      _err=$?
+      if [ ${_err} -gt 0 ] ; then
+      {
+        failed to install requirements "${package}"
+      }
+      fi
+    }
+    done <<< "${packages}"
+  }
+  fi
+} # end _package_list_installer
+
+_debian_flavor_install() {
+  anounce_command snap install whatsdesk
+  # anounce_command flatpak install flathub io.github.mimbrero.WhatsAppDesktop
+
+  # echo "Procedure not yet implemented. I don't know what to do."
+} # end _debian_flavor_install
+
+_redhat_flavor_install() {
+  anounce_command snap install whatsdesk
+  # anounce_command flatpak install flathub io.github.mimbrero.WhatsAppDesktop
+  exit 0 
+  sudo_it
+  local -i _err
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  trap 'echo -e "${RED}" && echo "ERROR err:$_err failed $0:$LINENO _build_compile whatsapp" && echo -e "${RESET}" && return 0' ERR
+  local package packages="
+    make
+    automake
+    cmake
+    gcc
+    git
+    intltool
+    gtkmm30
+    gtkmm30-devel
+    webkit2gtk4.0
+    rust-webkit2gtk+default-devel
+    rust-webkit2gtk+v2_4-devel
+    webkit2gtk3-devel
+    webkit2gtk3-jsc-devel
+    webkit2gtk3
+    webkit2gtk3-jsc
+    rust-webkit2gtk-sys+v2_8-devel
+    rust-webkit2gtk+v2_8-devel
+    rust-webkit2gtk+v2_18-devel
+    rust-webkit2gtk-sys+v2_32-devel
+    rust-webkit2gtk+v2_30-devel
+    rust-webkit2gtk-sys+default-devel
+    rust-webkit2gtk-devel
+    webkit2gtk3
+    rubygem-webkit2-gtk
+    webkit2gtk4.0-devel
+    gnome-shell-extension-appindicator
+    libappindicator
+    libappindicator-devel
+    libappindicator-gtk3
+    libappindicator-gtk3-devel
+    libindicator-devel
+    libindicator      
+    libindicator-devel
+    libindicator-gtk3-tools
+    libindicator-gtk3
+    libindicator-gtk3-devel
+    libindicator-tools
+  "
+  echo "
+  sudo dnf install -vy  https://ftp.lysator.liu.se/pub/opensuse/tumbleweed/repo/oss/x86_64/libayatana-ido3-0_4-0-0.9.2-1.2.x86_64.rpm
+  sudo dnf install -vy  https://ftp.lysator.liu.se/pub/opensuse/tumbleweed/repo/oss/x86_64/libayatana-indicator3-7-0.9.0-1.9.x86_64.rpm 
+  sudo dnf install -vy  https://ftp.lysator.liu.se/pub/opensuse/tumbleweed/repo/oss/x86_64/libayatana-appindicator-devel-0.5.91-1.2.x86_64.rpm
+  sudo dnf install -vy  https://ftp.lysator.liu.se/pub/opensuse/tumbleweed/repo/oss/x86_64/libayatana-appindicator1-0.5.91-1.2.x86_64.rpm
+  sudo dnf install -vy  https://ftp.lysator.liu.se/pub/opensuse/tumbleweed/repo/oss/x86_64/libayatana-appindicator3-1-0.5.91-1.2.x86_64.rpm
+  sudo dnf install -vy  https://ftp.lysator.liu.se/pub/opensuse/tumbleweed/repo/oss/x86_64/libayatana-appindicator3-devel-0.5.91-1.2.x86_64.rpm
+  "
+  _package_list_installer "${packages}"
+
+  # is_not_installed pygmentize &&   dnf  -y install pygmentize
+  # if ( ! command -v pygmentize >/dev/null 2>&1; ) ;  then
+  #   pip3 install pygments
+  # fi
+  local groupsinstalled=$(dnf group list --installed)
+  if [[ "${groupsinstalled}" = *"Development Tools"* ]] ; then
+  {
+    passed installed 'Development Tools'
+  }
+  else
+  {
+    dnf groupinstall 'Development Tools' -y
+  }
+  fi
+  _git_clone "https://github.com/eneshecan/whatsapp-for-linux.git" "${USER_HOME}/whatsapp-for-linux"
+  _build_compile "${USER_HOME}/whatsapp-for-linux"
+} # end _redhat_flavor_install
+
+_arch_flavor_install() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _readhat_flavor_install
+
+_arch__32() {
+  _arch_flavor_install
+} # end _arch__32
+
+_arch__64() {
+  _arch_flavor_install
+} # end _arch__64
+
+_centos__32() {
+  _redhat_flavor_install
+} # end _centos__32
+
+_centos__64() {
+  _redhat_flavor_install
+} # end _centos__64
+
+_debian__32() {
+  _debian_flavor_install
+} # end _debian__32
+
+_debian__64() {
+  _debian_flavor_install
+} # end _debian__64
+
+_fedora__32() {
+  _redhat_flavor_install
+} # end _fedora__32
+
+_fedora__64() {
+  _redhat_flavor_install
+    local _target_snapd=""
+    if it_exists_with_spaces "/repo" ; then
+    {
+      if it_exists_with_spaces "/repo/snapd" ; then
+      {
+        chown -R "${SUDO_USER}" "/repo/snapd"
+        _target_snapd="/repo/snapd"
+      }
+      else
+      {
+        mkdir -p "/repo/snapd"
+        chown -R "${SUDO_USER}" "/repo/snapd"
+        _target_snapd="/repo/snapd"
+      }
+      fi
+    }
+    elif it_exists_with_spaces "${USER_HOME}" ; then
+    {
+      _target_snapd="${USER_HOME}/_/software/snapd"
+      mkdir -p "${_target_snapd}"
+      chown -R "${SUDO_USER}" "${_target_snapd}"
+    }
+    fi
+
+    # if it_exists_with_spaces "${_target_snapd}" ; then
+    if [[ -d  "${_target_snapd}" ]] ; then
+    {
+      # if [[ -e /var/lib/snapd ]] && it_softlink_exists_with_spaces "/var/lib/snapd>${_target_snapd}" ; then
+      #if [[ -e /var/lib/snapd ]] ; then
+      # {
+      #  passed "${_target_snapd}" Dir is there and softlink "/var/lib/snapd>${_target_snapd}" points
+      #}
+      #else
+      # {
+        Comment "forcing /var/lib/snapd to point  ${_target_snapd}""
+        echo  "ln -sf "${_target_snapd}" /var/lib/snapd"
+        ln -sf "${_target_snapd}" /var/lib/snapd
+      #}
+      #fi
+      # if [[ -e /snapd ]] && it_softlink_exists_with_spaces "/snapd>${_target_snapd}" ; then
+      # if [[ -L /snapd ]] ; then
+      # {
+      #  passed "${_target_snapd}" Dir is there and softlink "/snapd>${_target_snapd}" points
+      # }
+      # else
+      # {
+        Comment "forcing /snap to point  ${_target_snapd}""
+        echo "ln -sf "${_target_snapd}"  /snap"
+        ln -sf "${_target_snapd}"  /snap
+      #}
+      #fi
+    }
+    fi
+    dnf builddep snapd -y
+    dnf install snapd -y
+    Comment ls -la /repo/snapd
+    ls -la /repo/snapd
+    ensure_directory_exists_with_spaces "${_target_snapd}"
+    Comment ls -la /var/lib/snapd
+    ls -la /var/lib/snapd
+    ensure_softlink_exists_with_spaces "/var/lib/snapd>${_target_snapd}"
+    Comment ls -la /snapd
+    ls -la /snapd
+    ensure_softlink_exists_with_spaces "/snapd>${_target_snapd}"
+} # end _fedora__64
+
+_gentoo__32() {
+  _redhat_flavor_install
+} # end _gentoo__32
+
+_gentoo__64() {
+  _redhat_flavor_install
+} # end _gentoo__64
+
+_madriva__32() {
+  _redhat_flavor_install
+} # end _madriva__32
+
+_madriva__64() {
+  _redhat_flavor_install
+} # end _madriva__64
+
+_suse__32() {
+  _redhat_flavor_install
+} # end _suse__32
+
+_suse__64() {
+  _redhat_flavor_install
+} # end _suse__64
+
+_ubuntu__32() {
+  _debian_flavor_install
+} # end _ubuntu__32
+
+_ubuntu__64() {
+  _debian_flavor_install
+} # end _ubuntu__64
+
+_darwin__64() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _darwin__64
+
+_tar() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end tar
+
+_windows__64() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _windows__64
+
+_windows__32() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _windows__32

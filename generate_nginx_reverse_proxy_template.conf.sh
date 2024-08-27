@@ -64,7 +64,7 @@ sudo echo ":"
     NGINXPID="/usr/local/var/run/nginx.pid"
   }
   elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]] || \
-       [[ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]] ; then
+       [[ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]] || [[ "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT" ]]  ; then
   {
 
     # Do something under GNU/Linux platform
@@ -123,25 +123,26 @@ sudo echo ":"
   yes_or_no
   _err=$?
   [ $_err -gt 0 ] && exit 0
-
-  [[ ! -d "${NGINXGENERATED}" ]] && mkdir -p "${NGINXGENERATED}"
-  [[ ! -d "${NGINXGENERATED}/sites-enabled" ]] && mkdir -p "${NGINXGENERATED}/sites-enabled"
-  [[ ! -d "${NGINXGENERATED}/sites-disabled" ]] && mkdir -p "${NGINXGENERATED}/sites-disabled"
-  [[ ! -d "${PROJECTFOLDER}/sockets" ]] && mkdir -p "${PROJECTFOLDER}/sockets"
-  [[ ! -d "${PROJECTFOLDER}/shared/sockets" ]] && mkdir -p "${PROJECTFOLDER}/shared/sockets"
-  [[ ! -d "$(dirname "${SERVERSCRIPT}")" ]] && mkdir -p "$(dirname "${SERVERSCRIPT}")"
+  sudo echo "Sudo password?"
+  [[ ! -d "${NGINXGENERATED}" ]] && sudo mkdir -p "${NGINXGENERATED}"
+  [[ ! -d "${NGINXGENERATED}/sites-enabled" ]] && sudo mkdir -p "${NGINXGENERATED}/sites-enabled"
+  [[ ! -d "${NGINXGENERATED}/sites-disabled" ]] && sudo mkdir -p "${NGINXGENERATED}/sites-disabled"
+  [[ ! -d "${PROJECTFOLDER}/sockets" ]] && sudo mkdir -p "${PROJECTFOLDER}/sockets"
+  [[ ! -d "${PROJECTFOLDER}/shared/sockets" ]] && sudo mkdir -p "${PROJECTFOLDER}/shared/sockets"
+  [[ ! -d "$(dirname "${SERVERSCRIPT}")" ]] && sudo mkdir -p "$(dirname "${SERVERSCRIPT}")"
+  [[   -e "${NGINXGENERATED}" ]] && sudo chown -R "${USER}" "${NGINXGENERATED}"
 
 
   if [[ ! -f "${CERTIFICATECRTPATH}" ]] ; then
   {
     echo "Copy Certificates from valet"
-    [[ ! -d "$(dirname "${CERTIFICATECRTPATH}")" ]] && mkdir -p "$(dirname "${CERTIFICATECRTPATH}")"
-    cp  "${FROMSERVERSCRIPT}" "${NGINXGENERATED}/sites-disabled/${SERVERNAME}_backed"
-    cp  "${FROMSERVERSCRIPT}" "${SERVERNAME}_backed"
-    cp  "${VALETHOME}/Certificates/${SERVERNAME}.key"  "${VALETHOME}/LocalCertificates/"
-    cp  "${VALETHOME}/Certificates/${SERVERNAME}.crt"  "${VALETHOME}/LocalCertificates/"
-    cp  "${VALETHOME}/Certificates/${SERVERNAME}.conf"  "${VALETHOME}/LocalCertificates/"
-    cp  "${VALETHOME}/Certificates/${SERVERNAME}.csr"  "${VALETHOME}/LocalCertificates/"
+    [[ ! -d "$(dirname "${CERTIFICATECRTPATH}")" ]] && sudo mkdir -p "$(dirname "${CERTIFICATECRTPATH}")"
+    sudo cp  "${FROMSERVERSCRIPT}" "${NGINXGENERATED}/sites-disabled/${SERVERNAME}_backed"
+    sudo cp  "${FROMSERVERSCRIPT}" "${SERVERNAME}_backed"
+    sudo cp  "${VALETHOME}/Certificates/${SERVERNAME}.key"  "${VALETHOME}/LocalCertificates/"
+    sudo cp  "${VALETHOME}/Certificates/${SERVERNAME}.crt"  "${VALETHOME}/LocalCertificates/"
+    sudo cp  "${VALETHOME}/Certificates/${SERVERNAME}.conf"  "${VALETHOME}/LocalCertificates/"
+    sudo cp  "${VALETHOME}/Certificates/${SERVERNAME}.csr"  "${VALETHOME}/LocalCertificates/"
 
   }
   fi
@@ -152,15 +153,15 @@ sudo echo ":"
     if ( command -v tee >/dev/null 2>&1; ) ; then
     {
   echo "
-127.0.0.1   ${SERVERNAME} www.${SERVERNAME} api.${SERVERNAME}
-::1         ${SERVERNAME} www.${SERVERNAME} api.${SERVERNAME}
+127.0.0.1   ${SERVERNAME} www.${SERVERNAME} api.${SERVERNAME} app.${SERVERNAME}
+::1         ${SERVERNAME} www.${SERVERNAME} api.${SERVERNAME} app.${SERVERNAME}
 " | sudo tee  -a "/etc/hosts"
     }
     else
     {
   echo "Make sure to add this lines to your \"/etc/hosts\" file
-127.0.0.1   ${SERVERNAME} www.${SERVERNAME} api.${SERVERNAME}
-::1         ${SERVERNAME} www.${SERVERNAME} api.${SERVERNAME}
+127.0.0.1   ${SERVERNAME} www.${SERVERNAME} api.${SERVERNAME} app.${SERVERNAME}
+::1         ${SERVERNAME} www.${SERVERNAME} api.${SERVERNAME} app.${SERVERNAME}
 "
     }
     fi
@@ -203,7 +204,7 @@ sudo echo ":"
 
 ._dirs() {
     find * -maxdepth 0 -type d   # mac and linux tested
-}
+} # end ._dirs
 ._replace_all_hashes(){
   local found
   local one_item="${1}"
@@ -215,7 +216,7 @@ sudo echo ":"
     [ $? -eq 1 ] &&  break
   done
   echo "${one_action}"
-}
+} # end ._replace_all_hashes
 .loopsubdirs() {
   # Perform all actions in
   #        LIST1
@@ -243,7 +244,7 @@ ls -p1 | grep -v / | xargs -I {} echo "    location = /{} {
   }
   done <<< "${local_items}"
   return 0
-}
+} # end .loopsubdirs
 local -i IS_WORDPRESS=0
 CWD="${PWD}"
 if [[ -d "${PWD}/public" ]] ; then
@@ -304,7 +305,7 @@ cd "${CWD}"
 
 if [ ${IS_WORDPRESS} -eq 0 ] ; then
 {
-echo "# ${SERVERNAME}_upstream.conf
+sudo echo "# ${SERVERNAME}_upstream.conf
 upstream ${PROJECTNAME} {
     # Path to Puma SOCK file, as defined previously
     # NodeJS Express Etc ANything with custom port localhost:8080 localhost:3000 etc
@@ -579,7 +580,7 @@ server {
     }
 }
 " > "${SERVERNAME}_nginx.conf"
-cp "${SERVERNAME}_nginx.conf"  "${NGINXGENERATED}/sites-disabled/${SERVERNAME}"
+sudo cp "${SERVERNAME}_nginx.conf"  "${NGINXGENERATED}/sites-disabled/${SERVERNAME}"
 }
 fi
 
@@ -1622,7 +1623,7 @@ fi
 
 if [[ ! -e "${NGINXGENERATED}/gzip.conf"  ]] ; then
 {
-echo "# ${NGINXGENERATED}/gzip.conf
+sudo echo "# ${NGINXGENERATED}/gzip.conf
     gzip              on;
     gzip_disable      \"msie6\";
     gzip_comp_level   5;
@@ -1690,7 +1691,7 @@ if [ ${IS_WORDPRESS} -eq 1 ] ; then
 {
 if [[ ! -e "${NGINXGENERATED}/php-fpm.conf"  ]] ; then
 {
-echo "# ${NGINXGENERATED}/php-fpm.conf
+sudo echo "# ${NGINXGENERATED}/php-fpm.conf
 
 # PHP-FPM FastCGI server
 # network or unix domain socket configuration
@@ -2038,31 +2039,28 @@ if (\$w3tc_rewrite = 1) {
 fi
 }
 fi
+echo -e "\nAdded these files here ./:"
 
-
-
-echo "
-./:"
-ls -la \
-"${SERVERNAME}_nginx.conf" \
-
-if [ ${IS_WORDPRESS} -eq 0 ] ; then
+if [ ${IS_WORDPRESS} -eq 1 ] ; then
 {
-ls -la \
-"${SERVERNAME}_upstream.conf"
+
+  ls -la "${SERVERNAME}_nginx.conf"
 }
 fi
 
-echo "
-${NGINXGENERATED}:"
-ls -la \
-"${NGINXGENERATED}"
+if [ ${IS_WORDPRESS} -eq 0 ] ; then
+{
+  ls -la "${SERVERNAME}_upstream.conf"
+}
+fi
 
-cp  "${NGINXGENERATED}/sites-disabled/${SERVERNAME}" "${SERVERSCRIPT}"
-echo "
-$(dirname "${SERVERSCRIPT}"):"
-ls -la \
-"${SERVERSCRIPT}"
+echo -e "\n${NGINXGENERATED}:"
+ls -la "${NGINXGENERATED}"
+
+echo cp  "${NGINXGENERATED}/sites-disabled/${SERVERNAME}_backed" "${SERVERSCRIPT}"
+cp  "${NGINXGENERATED}/sites-disabled/${SERVERNAME}_backed" "${SERVERSCRIPT}"
+echo -e "\n$(dirname "${SERVERSCRIPT}"):"
+ls -la "${SERVERSCRIPT}"
 
 
 

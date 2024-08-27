@@ -1,0 +1,802 @@
+#!/usr/bin/env bash
+#
+# @author Zeus Intuivo <zeus@intuivo.com>
+#
+# 20200415 Compatible with Fedora, Mac, Ubuntu "sudo_up" "load_struct" "#
+#set -u
+set -E -o functrace
+export THISSCRIPTCOMPLETEPATH
+
+echo "0. sudologic $0:$LINENO           SUDO_COMMAND:${SUDO_COMMAND:-}"
+echo "0. sudologic $0:$LINENO               SUDO_GRP:${SUDO_GRP:-}"
+echo "0. sudologic $0:$LINENO               SUDO_UID:${SUDO_UID:-}"
+echo "0. sudologic $0:$LINENO               SUDO_GID:${SUDO_GID:-}"
+echo "0. sudologic $0:$LINENO              SUDO_USER:${SUDO_USER:-}"
+echo "0. sudologic $0:$LINENO                   USER:${USER:-}"
+echo "0. sudologic $0:$LINENO              USER_HOME:${USER_HOME:-}"
+echo "0. sudologic $0:$LINENO THISSCRIPTCOMPLETEPATH:${THISSCRIPTCOMPLETEPATH:-}"
+echo "0. sudologic $0:$LINENO         THISSCRIPTNAME:${THISSCRIPTNAME:-}"
+echo "0. sudologic $0:$LINENO       THISSCRIPTPARAMS:${THISSCRIPTPARAMS:-}"
+
+echo "0. sudologic $0 Start Checking realpath  "
+if ! ( command -v realpath >/dev/null 2>&1; )  ; then
+  echo "... realpath not found. Downloading REF:https://github.com/swarmbox/realpath.git "
+  cd $HOME
+  git clone https://github.com/swarmbox/realpath.git
+  cd realpath
+  make
+  sudo make install
+  _err=$?
+  [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Builing realpath. returned error did not download or is installed err:$_err  \n \n  " && exit 1
+else
+  echo "... realpath exists .. check!"
+fi
+
+typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")"   # updated realpath macos 20210902
+# typeset -r THISSCRIPTCOMPLETEPATH="$(realpath "$(basename "$0")")"  # updated realpath macos 20210902  # § This goe$
+export BASH_VERSION_NUMBER
+typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
+
+export  THISSCRIPTNAME
+typeset -r THISSCRIPTNAME="$(basename "$0")"
+
+export THISSCRIPTPARAMS
+typeset -r THISSCRIPTPARAMS="${*:-}"
+echo "0. sudologic $0:$LINENO       THISSCRIPTPARAMS:${THISSCRIPTPARAMS:-}"
+
+export _err
+typeset -i _err=0
+
+  function _trap_on_error(){
+    #echo -e "\\n \033[01;7m*** 1 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR ...\033[0m"
+    local cero="$0"
+    local file1="$(paeth ${BASH_SOURCE})"
+    local file2="$(paeth ${cero})"
+    echo -e "ERROR TRAP $THISSCRIPTNAME $THISSCRIPTPARAMS
+${file1}:${BASH_LINENO[-0]}     \t ${FUNCNAME[-0]}()
+$file2:${BASH_LINENO[1]}    \t ${FUNCNAME[1]}()
+ERR ..."
+    exit 1
+  }
+  trap _trap_on_error ERR
+  function _trap_on_int(){
+    # echo -e "\\n \033[01;7m*** 1 INTERRUPT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n  INT ...\033[0m"
+    local cero="$0"
+    local file1="$(paeth ${BASH_SOURCE})"
+    local file2="$(paeth ${cero})"
+    echo -e "INTERRUPT TRAP $THISSCRIPTNAME $THISSCRIPTPARAMS
+${file1}:${BASH_LINENO[-0]}     \t ${FUNCNAME[-0]}()
+$file2:${BASH_LINENO[1]}    \t ${FUNCNAME[1]}()
+INT ..."
+    exit 0
+  }
+
+  trap _trap_on_int INT
+
+load_struct_testing(){
+  function _trap_on_error(){
+    local -ir __trapped_error_exit_num="${2:-0}"
+    echo -e "\\n \033[01;7m*** 2 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+    echo ". ${1}"
+    echo ". exit  ${__trapped_error_exit_num}  "
+    echo ". caller $(caller) "
+    echo ". ${BASH_COMMAND}"
+    local -r __caller=$(caller)
+    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+
+    # $(eval ${BASH_COMMAND}  2>&1; )
+    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+    exit 1
+  }
+  function load_library(){
+    local _library="${1:-struct_testing}"
+    local -i _DEBUG=${DEBUG:-0}
+    if [[ -z "${1}" ]] ; then
+    {
+       echo "Must call with name of library example: struct_testing execute_command"
+       exit 1
+    }
+    fi
+    trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+      local provider="$HOME/_/clis/execute_command_intuivo_cli/${_library}"
+      if [[ -n "${SUDO_USER:-}" ]] && [[ -n "${HOME:-}" ]] && [[ "${HOME:-}" == "/root" ]] && [[ !  -e "${provider}"  ]] ; then
+      {
+        provider="/home/${SUDO_USER}/_/clis/execute_command_intuivo_cli/${_library}"
+      }
+      elif [[ -z "${SUDO_USER:-}" ]] && [[ -n "${HOME:-}" ]] && [[ "${HOME:-}" == "/root" ]] && [[ !  -e "${provider}"  ]] ; then
+      {
+        provider="/home/${USER}/_/clis/execute_command_intuivo_cli/${_library}"
+      }
+      fi
+      echo "$0: ${provider}"
+      echo "$0: SUDO_USER:${SUDO_USER:-nada SUDOUSER}: USER:${USER:-nada USER}: ${SUDO_HOME:-nada SUDO_HOME}: {${HOME:-nada HOME}}"
+      local _err=0 structsource
+      if [[  -e "${provider}" ]] ; then
+        if (( _DEBUG )) ; then
+          echo "$0: tasks_base/sudoer.bash Loading locally"
+        fi
+        structsource="""$(<"${provider}")"""
+        _err=$?
+        if [ $_err -gt 0 ] ; then
+        {
+           echo -e "\n \n  ERROR! Loading ${_library}. running 'source locally' returned error did not download or is empty err:$_err  \n \n  "
+           exit 1
+        }
+        fi
+      else
+        if ( command -v curl >/dev/null 2>&1; )  ; then
+          if (( _DEBUG )) ; then
+            echo "$0: tasks_base/sudoer.bash Loading ${_library} from the net using curl "
+          fi
+          structsource="""$(curl https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/${_library}  -so -   2>/dev/null )"""  #  2>/dev/null suppress only curl download messages, but keep curl output for variable
+          _err=$?
+          if [ $_err -gt 0 ] ; then
+          {
+            echo -e "\n \n  ERROR! Loading ${_library}. running 'curl' returned error did not download or is empty err:$_err  \n \n  "
+            exit 1
+          }
+          fi
+        elif ( command -v wget >/dev/null 2>&1; ) ; then
+          if (( _DEBUG )) ; then
+            echo "$0: tasks_base/sudoer.bash Loading ${_library} from the net using wget "
+          fi
+          structsource="""$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/${_library} -O -   2>/dev/null )"""  #  2>/dev/null suppress only wget download messages, but keep wget output for variable
+          _err=$?
+          if [ $_err -gt 0 ] ; then
+          {
+            echo -e "\n \n  ERROR! Loading ${_library}. running 'wget' returned error did not download or is empty err:$_err  \n \n  "
+            exit 1
+          }
+          fi
+        else
+          echo -e "\n \n 2  ERROR! Loading ${_library} could not find wget or curl to download  \n \n "
+          exit 69
+        fi
+      fi
+      if [[ -z "${structsource}" ]] ; then
+      {
+        echo -e "\n \n 3 ERROR! Loading ${_library} into ${_library}_source did not download or is empty "
+        exit 1
+      }
+      fi
+      local _temp_dir="$(mktemp -d 2>/dev/null || mktemp -d -t "${_library}_source")"
+      echo "${structsource}">"${_temp_dir}/${_library}"
+      if (( _DEBUG )) ; then
+        echo "1. sudologic $0: tasks_base/sudoer.bash Temp location ${_temp_dir}/${_library}"
+      fi
+      source "${_temp_dir}/${_library}"
+      _err=$?
+      if [ $_err -gt 0 ] ; then
+      {
+        echo -e "\n \n 4 ERROR! Loading ${_library}. Occured while running 'source' err:$_err  \n \n  "
+        exit 1
+      }
+      fi
+      if  ! typeset -f passed >/dev/null 2>&1; then
+        echo -e "\n \n 5 ERROR! Loading ${_library}. Passed was not loaded !!!  \n \n "
+        exit 69;
+      fi
+      return $_err
+  } # end load_library
+  if  ! typeset -f passed >/dev/null 2>&1; then
+    load_library "struct_testing"
+  fi
+  if  ! typeset -f load_colors >/dev/null 2>&1; then
+    load_library "execute_command"
+  fi
+} # end load_struct_testing
+load_struct_testing
+
+ _err=$?
+if [ $_err -ne 0 ] ; then
+{
+  echo -e "\n \n 6 ERROR FATAL! load_struct_testing_wget !!! returned:<$_err> \n \n  "
+  exit 69;
+}
+fi
+
+if [[ -z "${SUDO_COMMAND:-}" ]] && \
+   [[ -z "${SUDO_GRP:-}" ]] && \
+   [[ -z "${SUDO_UID:-}" ]] && \
+   [[ -z "${SUDO_GID:-}" ]] && \
+   [[ -z "${SUDO_USER:-}" ]] && \
+   [[ -n "${USER:-}" ]] && \
+   [[ -z "${USER_HOME:-}" ]] && \
+   [[ -n "${THISSCRIPTCOMPLETEPATH:-}" ]] && \
+   [[ -n "${THISSCRIPTNAME:-}" ]] \
+  ; then
+{
+  passed Called from user
+}
+fi
+
+
+if [[ -n "${SUDO_COMMAND:-}"  ]] && \
+   [[ -z "${SUDO_GRP:-}"  ]] && \
+   [[ -n "${SUDO_UID:-}"  ]] && \
+   [[ -n "${SUDO_GID:-}"  ]] && \
+   [[ -n "${SUDO_USER:-}"  ]] && \
+   [[ -n "${USER:-}"  ]] && \
+   [[ -z "${USER_HOME:-}"  ]] && \
+   [[ -n "${THISSCRIPTCOMPLETEPATH:-}"  ]] && \
+   [[ -n "${THISSCRIPTNAME:-}"  ]] \
+  ; then
+{
+  passed Called from user as sudo
+}
+else
+{
+
+if [[ "${SUDO_USER:-}" == 'root'  ]] && \
+   [[ "${USER:-}" == 'root' ]] \
+  ; then
+{
+  failed This script is has to be called from normal user. Not Root. Abort
+  exit 69
+}
+fi
+
+export sudo_it
+function sudo_it() {
+  local -i _DEBUG=${DEBUG:-}
+  local _err=$?
+  # check operation systems
+  if [[ "$(uname)" == "Darwin" ]] ; then
+  {
+    passed "sudo_it() # Do something under Mac OS X platform "
+      # nothing here
+      raise_to_sudo_and_user_home "${*-}"
+      [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
+    SUDO_USER="${USER}"
+    SUDO_COMMAND="$0"
+    SUDO_UID=502
+    SUDO_GID=20
+  }
+  elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]] ; then
+  {
+      # Do something under GNU/Linux platform
+      raise_to_sudo_and_user_home "${*-}"
+      [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
+      enforce_variable_with_value SUDO_USER "${SUDO_USER}"
+      enforce_variable_with_value SUDO_UID "${SUDO_UID}"
+      enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
+      # Override bigger error trap  with local
+      function _trap_on_error(){
+        echo -e "\033[01;7m*** 3 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR INT ...\033[0m"
+
+      }
+      trap _trap_on_error ERR INT
+  }
+  elif [[ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]] || [[ "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT" ]] ; then
+  {
+      # Do something under Windows NT platform
+      # nothing here
+    SUDO_USER="${USER}"
+    SUDO_COMMAND="$0"
+    SUDO_UID=502
+    SUDO_GID=20
+  }
+  fi
+
+  if (( _DEBUG )) ; then
+    Comment _err:${_err}
+  fi
+  if [ $_err -gt 0 ] ; then
+  {
+    failed to sudo_it raise_to_sudo_and_user_home
+    exit 1
+  }
+  fi
+  # [ $_err -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
+  _err=$?
+  if (( _DEBUG )) ; then
+    Comment _err:${_err}
+  fi
+  enforce_variable_with_value SUDO_USER "${SUDO_USER}"
+  enforce_variable_with_value SUDO_UID "${SUDO_UID}"
+  enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
+  # Override bigger error trap  with local
+  function _trap_on_err_int(){
+    # echo -e "\033[01;7m*** 7 ERROR OR INTERRUPT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR INT ...\033[0m"
+    local cero="$0"
+    local file1="$(paeth ${BASH_SOURCE})"
+    local file2="$(paeth ${cero})"
+    echo -e " ERROR OR INTERRUPT  TRAP $THISSCRIPTNAME $THISSCRIPTPARAMS
+${file1}:${BASH_LINENO[-0]}     \t ${FUNCNAME[-0]}()
+$file2:${BASH_LINENO[1]}    \t ${FUNCNAME[1]}()
+ERR INT ..."
+    exit 1
+  }
+  trap _trap_on_err_int ERR INT
+} # end sudo_it
+
+# _linux_prepare(){
+  sudo_it "${*}"
+  _err=$?
+  typeset -i tomporalDEBUG=${DEBUG:-}
+  if (( tomporalDEBUG )) ; then
+    Comment _err:${_err}
+  fi
+  if [ $_err -gt 0 ] ; then
+  {
+    failed to sudo_it raise_to_sudo_and_user_home
+    exit 1
+  }
+  fi
+
+
+
+  exit
+}
+fi
+
+
+
+
+typeset -i tomporalDEBUG=${DEBUG:-}
+  # [ $_err -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
+  _err=$?
+  if (( tomporalDEBUG )) ; then
+    Comment _err:${_err}
+  fi
+  # [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
+  export USER_HOME
+  # shellcheck disable=SC2046
+  # shellcheck disable=SC2031
+  typeset -r USER_HOME="$(echo -n $(bash -c "cd ~${SUDO_USER} && pwd"))"  # Get the caller's of sudo home dir LINUX and MAC
+  # USER_HOME=$(getent passwd "${SUDO_USER}" | cut -d: -f6)   # Get the caller's of sudo home dir LINUX
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+# }  # end _linux_prepare
+
+
+# _linux_prepare
+export SUDO_GRP='staff'
+enforce_variable_with_value USER_HOME "${USER_HOME}"
+enforce_variable_with_value SUDO_USER "${SUDO_USER}"
+if (( tomporalDEBUG )) ; then
+  passed "Caller user identified:${SUDO_USER}"
+fi
+  if (( tomporalDEBUG )) ; then
+    Comment DEBUG_err?:${?}
+  fi
+if (( tomporalDEBUG )) ; then
+  passed "Home identified:${USER_HOME}"
+fi
+  if (( tomporalDEBUG )) ; then
+    Comment DEBUG_err?:${?}
+  fi
+directory_exists_with_spaces "${USER_HOME}"
+
+
+  function _trap_on_error(){
+    local -ir __trapped_error_exit_num="${2:-0}"
+    echo -e "\\n \033[01;7m*** 2 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+    echo ". ${1}"
+    echo ". exit  ${__trapped_error_exit_num}  "
+    echo ". caller $(caller) "
+    echo ". ${BASH_COMMAND}"
+    local -r __caller=$(caller)
+    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+
+    # $(eval ${BASH_COMMAND}  2>&1; )
+    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+    exit ${__trapped_error_exit_num}
+  }
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+
+  function _trap_on_exit(){
+    local -ir __trapped_exit_num="${2:-0}"
+    echo -e "\\n \033[01;7m*** 5 EXIT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n EXIT ...\033[0m  \n \n "
+    echo ". ${1}"
+    echo ". exit  ${__trapped_exit_num}  "
+    echo ". caller $(caller) "
+    echo ". ${BASH_COMMAND}"
+    local -r __caller=$(caller)
+    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+
+    # $(eval ${BASH_COMMAND}  2>&1; )
+    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+    exit ${__trapped_INT_num}
+  }
+  # trap  '_trap_on_exit $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  EXIT
+
+  function _trap_on_INT(){
+    local -ir __trapped_INT_num="${2:-0}"
+    echo -e "\\n \033[01;7m*** 7 INT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n INT ...\033[0m  \n \n "
+    echo ". ${1}"
+    echo ". INT  ${__trapped_INT_num}  "
+    echo ". caller $(caller) "
+    echo ". ${BASH_COMMAND}"
+    local -r __caller=$(caller)
+    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+
+    # $(eval ${BASH_COMMAND}  2>&1; )
+    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+    exit ${__trapped_INT_num}
+  }
+  trap  '_trap_on_INT $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  INT
+
+
+
+ #---------/\/\/\-- tasks_base/sudoer.bash -------------/\/\/\--------
+
+
+
+
+
+ #--------\/\/\/\/-- tasks_templates_sudo/pocketbase …install_pocketbase.bash” -- Custom code -\/\/\/\/-------
+
+
+#!/usr/bin/bash
+echo "REF: https://github.com/sonyarianto/pocketbase-docker"
+echo "REF: php install https://www.digitalocean.com/community/tutorials/how-to-install-linux-nginx-mysql-php-lemp-stack-on-ubuntu-22-04"
+echo "REF: php install https://ubuntu.com/server/docs/programming-php"
+echo "REF: nginx failed https://stackoverflow.com/questions/55698042/certbot-misconfigurationerror-nginx-restart-failed"
+
+_debian_flavor_install() {
+  if ( ! install_requirements "linux" "
+    base64
+    unzip
+    curl
+    wget
+    ufw
+    nginx
+  "
+  ); then
+    {
+      apt update
+      apt install base64 -y
+      apt install unzip -y
+      apt install nginx -y
+    }
+  fi
+  verify_is_installed "
+    myip
+    unzip
+    curl
+    wget
+    tar
+    ufw
+    nginx
+  "
+  local PB_VERSION=0.16.7
+  local CODENAME="pocketbase_${PB_VERSION}_linux_amd64.zip"
+  local TARGET_URL="https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/${CODENAME}"
+  local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  directory_exists_with_spaces "${DOWNLOADFOLDER}"
+  cd "${DOWNLOADFOLDER}"
+  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+  local UNZIPDIR="${USER_HOME}/_/pocketbase"
+  mkdir -p "${UNZIPDIR}"
+  # _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
+  yes | unzip "${DOWNLOADFOLDER}/${CODENAME}" -d "${UNZIPDIR}"
+  echo "Target: ${UNZIPDIR}"
+  ls "${UNZIPDIR}"
+  # exit 0
+  local PATHTOPOCKETBASE="${UNZIPDIR}/pocketbase"
+  local THISIP=$(myip | tail -1)
+  enforce_variable_with_value THISIP "${THISIP}"
+  echo -e "${YELLOW}
+  export PB_DIR=\"${PATHTOPOCKETBASE}\"
+  # REF: https://pocketbase.io/docs/going-to-production
+
+  # Upload the binary and anything else related to your remote server, for example using rsync:
+
+  rsync -avz -e ssh  \"${PATHTOPOCKETBASE}\"  \"root@${THISIP}:${PATHTOPOCKETBASE}\"
+
+  # Start a SSH session with your server:
+
+  ssh \"root@${THISIP}\"
+
+  # Start the executable (the --https flag issues a Let's Encrypt certificate):
+
+  \"${PATHTOPOCKETBASE}\" serve --http="${THISIP}:80" --https="${THISIP}:443"
+
+  #    Notice that in the above example we are logged in as root which allow us to bind to the privileged 80 and 443 ports.
+  #  For non-root users usually you'll need special privileges to be able to do that. You have several options depending on your OS - authbind, setcap, iptables, sysctl, etc. Here is an example using setcap:
+
+  setcap 'cap_net_bind_service=+ep' \"${PATHTOPOCKETBASE}\"
+
+  "
+  # exit 0
+  export PB_DIR="${PATHTOPOCKETBASE}"
+
+  touch /usr/lib/systemd/system/pocketbase.service
+
+echo "disabled
+ExecStart      = \"${PATHTOPOCKETBASE}\" serve --http=${THISIP}:8090 --https=${THISIP}:8443
+ExecStart      = \"${PATHTOPOCKETBASE}\" serve --http="${THISIP}:8090" --https="${THISIP}:8443" PB_ENCRYPTION_KEY=$(base64<<< $(echo \"$(myip)-$(whoami)-$(pwd)\"))
+"
+  local systempocket="[Unit]
+Description = pocketbase
+
+[Service]
+Type           = simple
+User           = root
+Group          = root
+LimitNOFILE    = 4096
+Restart        = always
+RestartSec     = 5s
+StandardOutput = append:${UNZIPDIR}/errors.log
+StandardError  = append:${UNZIPDIR}/errors.log
+ExecStart      = \"${PATHTOPOCKETBASE}\" serve --http=127.0.0.1:8090 --https=127.0.0.1:8443
+
+[Install]
+WantedBy = multi-user.target
+"
+  echo -e "${CYAN}${systempocket}"
+  echo -e "${RESET}"
+  (  echo -e "${systempocket}"  > /usr/lib/systemd/system/pocketbase.service )
+  echo  -e "${RESET}"
+  yes | systemctl enable pocketbase.service
+  yes | systemctl start pocketbase
+
+  yes | ufw enable
+  ufw allow 'Nginx HTTP'
+  ufw status numbered
+  nginx -t
+  systemctl restart nginx
+  [ -e /etc/nginx/sites-enabled/pocketbase.conf ] &&  unlink  /etc/nginx/sites-enabled/pocketbase.conf
+  touch /etc/nginx/sites-available/pocketbase.conf
+  echo -e "${RED}server {
+    listen 80;
+    server_name ${THISIP};
+    client_max_body_size 10M;
+
+    location / {
+        # check http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive
+        proxy_set_header Connection '';
+        proxy_http_version 1.1;
+        proxy_read_timeout 360s;
+
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+
+        # enable if you are serving under a subpath location
+        # rewrite /yourSubpath/(.*) /\$1  break;
+
+        proxy_pass http://127.0.0.1:8090;
+    }
+}
+"
+  local PROJECTNAME="pocketbase"
+  local TARGETSERVER="127.0.0.1"
+  local TARGETPORT=8090
+  local SERVERNAME="${THISIP}"
+  local PROJECTROOTFOLDER="${UNZIPDIR}"
+  mkdir -p /etc/letsencrypt/pockerbase
+  local CERTIFICATECRTPATH="/etc/letsencrypt/${PROJECTNAME}/cert.pem"
+  local CERTIFICATEKEYPATH="/etc/letsencrypt/${PROJECTNAME}/ip.key"
+  local CERTIFICATEKEYPATH="/etc/letsencrypt/${PROJECTNAME}/key.pem"
+  local STATICFILES=""
+  local server="
+upstream ${PROJECTNAME} {
+    # Path to Puma SOCK file, as defined previously
+    # NodeJS Express Etc ANything with custom port localhost:8080 localhost:3000 etc
+    server ${TARGETSERVER}:${TARGETPORT} fail_timeout=0;
+    # Ruby Puma Sample:
+    # server unix://${PROJECTFOLDER}/sockets/puma.sock fail_timeout=0;
+    # server unix://${PROJECTFOLDER}/shared/sockets/puma.sock fail_timeout=0;
+}
+
+server {
+    listen 80;
+    server_name ${SERVERNAME} www.${SERVERNAME} *.${SERVERNAME};
+    charset utf-8;
+
+    root ${PROJECTROOTFOLDER};
+
+    # Uncomment error pages one you place make them accesible
+    # error_page 500 502 503 504 /500.html;
+# Use this to generate individual accesses
+# ls -p1 | grep -v / | xargs -I {} echo \"    location = /{} {
+#         access_log off; log_not_found off;
+#         alias \$(pwd)/{};
+#     }\"
+    # Place generated invidual cases here
+    # -- between here
+    # here starts
+${STATICFILES}
+    # here ends
+    # --- and here
+    try_files \$uri/index.html \$uri @${PROJECTNAME};
+
+    location @${PROJECTNAME} {
+        proxy_pass http://${PROJECTNAME};
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header Host \$http_host;
+        proxy_set_header X-Forwarded-Proto http;
+        proxy_redirect off;
+    }
+
+    client_max_body_size 4G;
+    keepalive_timeout 10;
+}
+# REF: https://gist.github.com/tadast/9932075  see this script about how to build the script from ground up and read the comments
+# REF: https://gist.github.com/rkjha/d898e225266f6bbe75d8  See that script as reference for these confs and read the comments
+server {
+    listen  443 ssl;
+    server_name ${SERVERNAME} www.${SERVERNAME} *.${SERVERNAME};
+    charset utf-8;
+
+    root ${PROJECTROOTFOLDER};
+
+    # Additional rules go here.
+    # ssl on;   [warn] the \"ssl\" directive is deprecated, use the \"listen ... ssl\"
+    ssl_certificate ${CERTIFICATECRTPATH};
+    ssl_certificate_key ${CERTIFICATEKEYPATH};
+
+    ssl_session_timeout  5m;
+
+    # Uncomment error pages one you place make them accesible
+    # error_page 500 502 503 504 /500.html;
+    # Place generated invidual cases here too
+    # -- between here
+    # here starts
+${STATICFILES}
+    # here ends
+    # --- and here
+    try_files \$uri/index.html \$uri @${PROJECTNAME};
+
+    location @${PROJECTNAME} {
+        proxy_pass http://${PROJECTNAME};
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header Host \$http_host;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_redirect off;
+    }
+    client_max_body_size 4G;
+    keepalive_timeout 10;
+}
+
+"
+  echo -e  "${RED}${server}"
+  echo  -e "${RESET}"
+  ( yes | echo "${server}" >  /etc/nginx/sites-available/pocketbase.conf )
+
+    ln -s /etc/nginx/sites-available/pocketbase.conf /etc/nginx/sites-enabled/
+  yes | nginx -t
+  yes | systemctl restart nginx
+  systemctl status nginx | head
+  echo curl \"${THISIP}\"
+  curl "${THISIP}"
+  echo  -e "${RESET}"
+  echo  -e "${YELLOW}"
+  systemctl daemon-reload
+  systemctl restart pocketbase
+  systemctl stop nginx
+  systemctl disable nginx
+  echo "
+  systemctl start pocketbase
+  systemctl status pocketbase
+  systemctl status nginx
+
+  ufw status numbered
+
+  curl ${THISIP}:8090
+
+  curl ${THISIP}:80
+
+  "
+  echo  -e "${RESET}"
+} # end _debian_flavor_install
+
+_redhat_flavor_install() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _redhat_flavor_install
+
+_arch_flavor_install() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _readhat_flavor_install
+
+_arch__32() {
+  _arch_flavor_install
+} # end _arch__32
+
+_arch__64() {
+  _arch_flavor_install
+} # end _arch__64
+
+_centos__32() {
+  _redhat_flavor_install
+} # end _centos__32
+
+_centos__64() {
+  _redhat_flavor_install
+} # end _centos__64
+
+_debian__32() {
+  _debian_flavor_install
+} # end _debian__32
+
+_debian__64() {
+  _debian_flavor_install
+} # end _debian__64
+
+_fedora__32() {
+  _redhat_flavor_install
+} # end _fedora__32
+
+_fedora__64() {
+  _redhat_flavor_install
+} # end _fedora__64
+
+_gentoo__32() {
+  _redhat_flavor_install
+} # end _gentoo__32
+
+_gentoo__64() {
+  _redhat_flavor_install
+} # end _gentoo__64
+
+_madriva__32() {
+  _redhat_flavor_install
+} # end _madriva__32
+
+_madriva__64() {
+  _redhat_flavor_install
+} # end _madriva__64
+
+_suse__32() {
+  _redhat_flavor_install
+} # end _suse__32
+
+_suse__64() {
+  _redhat_flavor_install
+} # end _suse__64
+
+_ubuntu__32() {
+  _debian_flavor_install
+} # end _ubuntu__32
+
+_ubuntu__64() {
+  _debian_flavor_install
+} # end _ubuntu__64
+
+_darwin__64() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _darwin__64
+
+_darwin__arm64() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _darwin__arm64
+
+_tar() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end tar
+
+_windows__64() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _windows__64
+
+_windows__32() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _windows__32
+
+
+
+ #--------/\/\/\/\-- tasks_templates_sudo/pocketbase …install_pocketbase.bash” -- Custom code-/\/\/\/\-------
+
+
+
+ #--------\/\/\/\/--- tasks_base/main.bash ---\/\/\/\/-------
+_main() {
+  determine_os_and_fire_action "${*:-}"
+} # end _main
+
+echo params "${*:-}"
+_main "${*:-}"
+
+echo "🥦"
+exit 0
