@@ -1,0 +1,8 @@
+sudo dnf install gdm -y
+sudo systemctl disable sddm
+sudo systemctl disable kdm
+sudo systemctl disable lxdm
+sudo systemctl disable lightdm
+sudo systemctl disable xdm
+sudo systemctl enable gdm
+sudo reboot
