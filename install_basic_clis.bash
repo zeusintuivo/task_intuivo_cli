@@ -555,8 +555,9 @@ _do_cloning_basic_clis(){
     ssh_intuivo_cli
     task_intuivo_cli
   "
+  local -i _err=0
   local _one=""
-	mkdir -p "${USER_HOME}/_/clis"
+  mkdir -p "${USER_HOME}/_/clis"
   while read -r _one ; do
   {
     [[ -z "${_one}" ]] && continue   # skip if is empty
@@ -600,9 +601,11 @@ _do_cloning_basic_clis(){
     Configuring extra work git_intuivo_cli/en
     directory_exists_with_spaces "${USER_HOME}/_/clis/git_intuivo_cli/en"
     cd "${USER_HOME}/_/clis/git_intuivo_cli/en"
-		if ( "${USER_HOME}/_/clis/bash_intuivo_cli/link_folder_scripts" ) ; then
+    "${USER_HOME}/_/clis/bash_intuivo_cli/link_folder_scripts"
+    _err=$?
+    if [ ${_err} -gt 0 ] ; then
     {
-      warning could not run link_folder_scripts  in git_intuivo_cli/en
+      warning could not run link_folder_scripts in git_intuivo_cli/en
     }
     fi
   }
@@ -649,6 +652,15 @@ _fedora__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   local _parameters="${*-}"
   _do_cloning_basic_clis "${_parameters-}"
+    
+    cd "${USER_HOME}/_/clis/bash_intuivo_cli/fedora"
+    "${USER_HOME}/_/clis/bash_intuivo_cli/link_folder_scripts"
+    _err=$?
+    if [ ${_err} -gt 0 ] ; then
+    {
+      warning could not run link_folder_scripts in bash_intuivo_cli/fedora 
+    }
+    fi
 } # end _fedora__64
 
 _fedora_37__64(){
@@ -656,16 +668,36 @@ _fedora_37__64(){
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   local _parameters="${*-}"
   local -i _err=0
-  _do_cloning_basic_clis "${_parameters-}"
+  _fedora__64 "${_parameters-}"
 } # end _fedora_37__64
 
-_fedora_39__64(){
-  # trap "echo Error:$?" ERR INT
+_fedora_38__64(){
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   local _parameters="${*-}"
   local -i _err=0
-  _do_cloning_basic_clis "${_parameters-}"
+  _fedora__64  "${_parameters-}"
+} # end _fedora_38__64
+
+_fedora_39__64(){
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local _parameters="${*-}"
+  local -i _err=0
+  _fedora__64  "${_parameters-}"
 } # end _fedora_39__64
+
+_fedora_40__64(){
+  trap  '_trap_on_error $0 "${?}" lineno bash_lineno funcname bash_command $funcname $bash_lineno $lineno   $bash_command'  err
+  local _parameters="${*-}"
+  local -i _err=0
+  _fedora__64  "${_parameters-}"
+} # end _fedora_40__64
+
+_fedora_41__64(){
+  trap  '_trap_on_error $0 "${?}" lineno bash_lineno funcname bash_command $funcname $bash_lineno $lineno   $bash_command'  err
+  local _parameters="${*-}"
+  local -i _err=0
+  _fedora__64  "${_parameters-}"
+} # end _fedora_41__64
 
 _gentoo__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
