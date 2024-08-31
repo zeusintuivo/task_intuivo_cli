@@ -76,7 +76,8 @@ INT ..."
 load_struct_testing(){
   function _trap_on_error(){
     local -ir __trapped_error_exit_num="${2:-0}"
-    echo -e "\\n \033[01;7m*** 2 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+		echo -e "\\n \033[01;7m*** tasks_base/sudoer.bash:$LINENO load_struct_testing() ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+
     echo ". ${1}"
     echo ". exit  ${__trapped_error_exit_num}  "
     echo ". caller $(caller) "
@@ -451,8 +452,11 @@ _debian_flavor_install() {
 	./install_brew.bash
 	eval "$("${USER_HOME}/.linuxbrew/bin/brew" shellenv)"
   su - "${SUDO_USER}" -c 'brew install pt'
-
-  if (
+  su - "${SUDO_USER}" -c 'brew install zsh'
+	ensure zsh or "Canceling until installed zsh "
+	# install_powerlevel10k.bash # this one writes this one install_powerlevel10k_sub.zsh
+  ./install_powerlevel10k_sub.zsh
+	if (
   install_requirements "linux" "
     base64
     unzip
@@ -631,6 +635,12 @@ _main() {
 
 echo params "${*:-}"
 _main "${*:-}"
-
+_err=$?
+if [[ ${_err} -gt 0 ]] ; then
+{
+  echo "ERROR IN ▲ E ▲ R ▲ R ▲ O ▲ R ▲ $0 script"
+  exit ${_err}
+}
+fi
 echo "🥦"
 exit 0

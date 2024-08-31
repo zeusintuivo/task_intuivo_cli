@@ -1,5 +1,49 @@
 #/usr/bin/env bash
+set -E -o functrace
 set -u
+export  THISSCRIPTNAME
+typeset -r THISSCRIPTNAME="$(basename "$0")"
+function _trap_on_int(){
+  local -i _err=${?:-1}
+  echo -e "\\n \033[01;7m*** INTERRUPT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n  INT ...\033[0m"
+  exit ${_err}
+}
+
+# function on_int(){
+#   local -i _err=${?:-1}
+#   echo -e "\\\\n \\033[01;7m*** KEYBOARD INTERRUPT TRAP $THISSCRIPTNAME \\\\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\\\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\\\n  INT ...\\033[0m \\n${BASH_SOURCE[0]}:${BASH_LINENO[0]}\\n${FUNCNAME[1]}() $(caller)\\nnano +${BASH_LINENO[0]} ${BASH_SOURCE[0]}:\\nvim  +${BASH_LINENO[0]} ${BASH_SOURCE[0]} "
+#   exit ${_err}
+# } # end on_int
+# 
+# function on_err(){
+#   local -i _err=${?:-1}
+#   echo -e "\\\\n \\033[01;7m*** ERROR INTERCEPT TRAP $THISSCRIPTNAME \\\\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\\\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\\\n  INT ...\\033[0m \\n${BASH_SOURCE[0]}:${BASH_LINENO[0]}\\n${FUNCNAME[1]}() $(caller)\\nnano +${BASH_LINENO[0]} ${BASH_SOURCE[0]}:\\nvim  +${BASH_LINENO[0]} ${BASH_SOURCE[0]} "
+#   exit ${_err}
+# } # end on_err
+# trap '{ on_int }' INT 
+# trap '{ on_err }' ERR
+function _trap_on_error(){
+  local -ir __trapped_error_exit_num="${2:-1}"
+  warning "${@}"
+  echo -e "\\n \033[01;7m*** ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR ...\033[0m  \n \n "
+  echo ". ${1}"
+  echo ". exit  ${__trapped_error_exit_num}  "
+  echo ". caller $(caller) "
+  echo ". ${BASH_COMMAND}"
+  local -r __caller=$(caller)
+  local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+  local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+  awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+  echo -e "\\n${BASH_SOURCE[0]}:${BASH_LINENO[0]}\\n${FUNCNAME[1]}() $(caller)\\nnano +${BASH_LINENO[0]} ${BASH_SOURCE[0]}:\\nvim  +${BASH_LINENO[0]} ${BASH_SOURCE[0]} "  
+  # $(eval ${BASH_COMMAND}  2>&1; )
+  # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+  # warning "${@}"
+  exit "${_trapped_error_exit_num}"
+
+}
+trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+trap _trap_on_int INT
+
 
 if ! declare -A test_array > /dev/null 2>&1; then
   echo -e "TIP: Associative arrays are supported (Bash 4.0 and above) only"
@@ -126,9 +170,11 @@ function _perform_rebase_push(){
   # [[ -e .actions/rebasepull ]] && _steps="$(sed 's/TARGET_BRANCH/'${TARGET_BRANCH}'/g' <<< "${_steps}" | sed 's/_pull_current_branch/'${_pull_current_branch}'/g')"
   # (( DEBUG:- )) && echo -e "${_steps}"
   # (( DEBUG:- )) && exit 0
+  local -i sucess_fallback_flag=0
   local _one _description _local_variable _msg _msg2 _action _failed _cond1 _cond1 _fallback _step_file
   while read -r _one ; do
   {
+    sucess_fallback_flag=0
     [[ -z "${_one}" ]] && continue # skip ignored or empty lines
     _description="$(cut -d'|' -f1 <<<"${_one}")"
     _local_variable="$(cut -d'|' -f2 <<<"${_one}" | xargs)"
@@ -150,6 +196,12 @@ function _perform_rebase_push(){
     # _msg="$(eval "${_action}" 2>&1)"
     eval "${_action}" 2>&1 |  tee .tmp_msg.log
     _err=$?
+    set -E -o functrace
+    set -u
+    trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+    trap _trap_on_int INT
+    # trap '{ on_int }' INT
+    # trap '{ on_err }' ERR
     _msg="$(<.tmp_msg.log)"
     if [ ${_err} -gt 0 ]; then
     {
@@ -166,9 +218,12 @@ function _perform_rebase_push(){
         if [ ${_err} -gt 0 ]; then
         {
           echo -e "$0 ${RED-} Error doing fallback 1 & 2 ${CYAN-}${_description}${PURPLE-}. Better check that: ${CYAN-}${_msg}${RESET-}"
+          [[ -n "${_step_file}" ]] && rm -rf "${_step_file}"
+          [[ -n "${_step_file}" ]] && touch "${_step_file}_failed"
           exit ${_err}
         }
         fi
+        sucess_fallback_flag=1
       }
       elif [[ -n "${_cond1}" ]] && [[ "${_msg}" == *"${_cond1}"* ]] ; then
       {
@@ -179,10 +234,12 @@ function _perform_rebase_push(){
         if [ ${_err} -gt 0 ]; then
         {
           echo -e "$0 ${RED-} Error doing fallback 1 ${CYAN-}${_description}${PURPLE-}. Better check that: ${CYAN-}${_msg}${RESET-}"
+          [[ -n "${_step_file}" ]] && rm -rf "${_step_file}"
+          [[ -n "${_step_file}" ]] && touch "${_step_file}_failed"
           exit ${_err}
         }
         fi
-
+        sucess_fallback_flag=1
       }
       elif ( [[ -n "${_cond2}" ]] && [[ "${_msg}" == *"${_cond2}"* ]] ); then
       {
@@ -195,25 +252,34 @@ function _perform_rebase_push(){
         if [ ${_err} -gt 0 ]; then
         {
           echo -e "$0 ${RED-} Error doing fallback 2 ${CYAN-}${_description}${PURPLE-}. Better check that: ${CYAN-}${_msg}${RESET-}"
+          [[ -n "${_step_file}" ]] && rm -rf "${_step_file}"
+          [[ -n "${_step_file}" ]] && touch "${_step_file}_failed"
           exit ${_err}
         }
         fi
+        sucess_fallback_flag=1
       }
       else
       {
         echo -e "$0 ${RED-} Error doing ${CYAN-}${_description}${PURPLE-}. Better check that: ${CYAN-}${_msg}${RESET-}"
+        [[ -n "${_step_file}" ]] && rm -rf "${_step_file}"
+        [[ -n "${_step_file}" ]] && touch "${_step_file}_failed"
         exit ${_err}
       }
       fi
+      sucess_fallback_flag=0
     }
     fi
-    touch "${_step_file}"
+    
+    [[ -n "${_step_file}" ]] && touch "${_step_file}"
     [[ -z "${_local_variable}" ]] && continue  # skip if no variable target provided or empty lines
     _msg2="$(eval "local ${_local_variable}=\"${_msg}\"" 2>&1)"
     _err=$?
     if [ ${_err} -gt 0 ]; then
     {
       echo -e "$0 ${RED-} Assigning value to _local_variable:${CYAN-}${_local_variable}${RED-}  = ${YELLOW226-}value :${CYAN-}${_msg}: ${PURPLE-}. Better check that: ${CYAN-}${_msg2}${RESET-}"
+      [[ -n "${_step_file}" ]] && rm -rf "${_step_file}"
+      [[ -n "${_step_file}" ]] && touch "${_step_file}_failed"
       exit ${_err}
     }
     fi

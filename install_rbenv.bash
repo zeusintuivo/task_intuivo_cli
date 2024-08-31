@@ -482,30 +482,30 @@ _git_clone() {
     {
       cd "${_target}"
       if git config pull.rebase false ; then
-			{
-				warning Could not git config pull.rebase false
-			}
-			fi
+      {
+        warning Could not git config pull.rebase false
+      }
+      fi
       if git fetch  ; then
-			{
-				warning Could not git fetch
-			}
-			fi
+      {
+        warning Could not git fetch
+      }
+      fi
       if git pull  ; then
-			{
-				warning Could not git pull
-			}
-			fi
+      {
+        warning Could not git pull
+      }
+      fi
     }
     fi
   }
   else
   {
     if git clone "${_source}" "${_target}"  ; then
-		{
-			warning Could not git clone "${_source}" "${_target}"
-		}
-		fi
+    {
+      warning Could not git clone "${_source}" "${_target}"
+    }
+    fi
   }
   fi
   chown -R "${SUDO_USER}" "${_target}"
@@ -620,44 +620,44 @@ _redhat_flavor_install() {
     libyaml-devel
     autoconf
     bison
-		bison-devel
+    bison-devel
     ruby-build-rbenv
     openssl1.1
     openssl1.1-devel-1
-		ncurses
+    ncurses
     ncurses-devel
-		ncurses-c++-libs
-		ncurses-compat-libs
-		ncurses-libs
-		ncurses-static
-		ncurses-base
-		# ncurses-term conflicts with foot-terminfo
+    ncurses-c++-libs
+    ncurses-compat-libs
+    ncurses-libs
+    ncurses-static
+    ncurses-base
+    # ncurses-term conflicts with foot-terminfo
     readline
-		readline-static
-		readline-devel
-		compat-readline5
-		compat-readline5-devel
-		compat-readline6
-		compat-readline6-devel
+    readline-static
+    readline-devel
+    compat-readline5
+    compat-readline5-devel
+    compat-readline6
+    compat-readline6-devel
     zlib
-		zlib-devel
+    zlib-devel
     zlibrary-devel
     zlibrary
-		libffi
+    libffi
     libffi-devel
-		libffi3.1
+    libffi3.1
     # compat-gdbm
-		# compat-gdbm-devel
+    # compat-gdbm-devel
     # compat-gdbm-libs
-		gdbm
-		gdbm-devel
-		gdbm-libs
+    gdbm
+    gdbm-devel
+    gdbm-libs
   "
   _package_list_installer "${packages}"
 
-	ensure brew or "Canceling until brew is installed. try install_brew.bash install_brew.sh"
-	su - "${SUDO_USER}" -c 'brew install readline'
-	su - "${SUDO_USER}" -c 'brew install openssl@1.1'
+  ensure brew or "Canceling until brew is installed. try install_brew.bash install_brew.sh"
+  su - "${SUDO_USER}" -c 'brew install readline'
+  su - "${SUDO_USER}" -c 'brew install openssl@1.1'
   _git_clone "https://github.com/rbenv/rbenv.git" "${USER_HOME}/.rbenv"
   _git_clone "https://github.com/rbenv/ruby-build.git" "${USER_HOME}/.rbenv/plugins/ruby-build"
   _add_variables_to_bashrc_zshrc
@@ -715,7 +715,7 @@ _fedora__32() {
 _fedora__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   local _parameters="${*-}"
-	_redhat_flavor_install "${_parameters-}"
+  _redhat_flavor_install "${_parameters-}"
 } # end _fedora__64
 
 _fedora_37__64(){
@@ -723,7 +723,7 @@ _fedora_37__64(){
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   local _parameters="${*-}"
   local -i _err=0
-	_redhat_flavor_install "${_parameters-}"
+  _redhat_flavor_install "${_parameters-}"
 } # end _fedora_37__64
 
 _fedora_39__64(){
@@ -731,7 +731,7 @@ _fedora_39__64(){
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   local _parameters="${*-}"
   local -i _err=0
-	_redhat_flavor_install "${_parameters-}"
+  _redhat_flavor_install "${_parameters-}"
 } # end _fedora_39__64
 
 _gentoo__32() {
@@ -878,6 +878,12 @@ _main() {
 
 echo params "${*:-}"
 _main "${*:-}"
-
+_err=$?
+if [[ ${_err} -gt 0 ]] ; then
+{
+  echo "ERROR IN ▲ E ▲ R ▲ R ▲ O ▲ R ▲ $0 script"
+  exit ${_err}
+}
+fi
 echo "🥦"
 exit 0

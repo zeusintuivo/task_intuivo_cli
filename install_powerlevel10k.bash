@@ -76,7 +76,8 @@ INT ..."
 load_struct_testing(){
   function _trap_on_error(){
     local -ir __trapped_error_exit_num="${2:-0}"
-    echo -e "\\n \033[01;7m*** 2 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+		echo -e "\\n \033[01;7m*** tasks_base/sudoer.bash:$LINENO load_struct_testing() ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+
     echo ". ${1}"
     echo ". exit  ${__trapped_error_exit_num}  "
     echo ". caller $(caller) "
@@ -468,7 +469,7 @@ typeset -r THISSCRIPTNAME="\$(basename "\$0")"
 
   function _trap_on_error(){
     local -ir __trapped_error_exit_num="\${2:-0}"
-    echo -e "\\n \033[01;7m*** 2 ERROR TRAP \$THISSCRIPTNAME \\n\${BASH_SOURCE}:\${BASH_LINENO[-0]} \${FUNCNAME[1]}() \\n\$0:\${BASH_LINENO[1]} \${FUNCNAME[2]}()  \\n\$0:\${BASH_LINENO[2]} \${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+		echo -e "\\n \033[01;7m*** install_powerlevel10k_sub.zsh:$LINENO  _trap_on_error() ERROR TRAP \$THISSCRIPTNAME \\n\${BASH_SOURCE}:\${BASH_LINENO[-0]} \${FUNCNAME[1]}() \\n\$0:\${BASH_LINENO[1]} \${FUNCNAME[2]}()  \\n\$0:\${BASH_LINENO[2]} \${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
     echo ". \${1}"
     echo ". exit  \${__trapped_error_exit_num}  "
     echo ". caller \$(caller) "
@@ -629,7 +630,7 @@ typeset -r THISSCRIPTNAME="\$(basename "\$0")"
 
   function _trap_on_error(){
     local -ir __trapped_error_exit_num="\${2:-0}"
-    echo -e "\\n \033[01;7m*** 2 ERROR TRAP \$THISSCRIPTNAME \\n\${BASH_SOURCE}:\${BASH_LINENO[-0]} \${FUNCNAME[1]}() \\n\$0:\${BASH_LINENO[1]} \${FUNCNAME[2]}()  \\n\$0:\${BASH_LINENO[2]} \${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+    echo -e "\\n \033[01;7m*** install_powerlevel10k_sub.zsh:$LINENO  _trap_on_error() ERROR TRAP \$THISSCRIPTNAME \\n\${BASH_SOURCE}:\${BASH_LINENO[-0]} \${FUNCNAME[1]}() \\n\$0:\${BASH_LINENO[1]} \${FUNCNAME[2]}()  \\n\$0:\${BASH_LINENO[2]} \${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
     echo ". \${1}"
     echo ". exit  \${__trapped_error_exit_num}  "
     echo ". caller \$(caller) "
@@ -710,6 +711,12 @@ _main() {
 
 echo params "${*:-}"
 _main "${*:-}"
-
+_err=$?
+if [[ ${_err} -gt 0 ]] ; then
+{
+  echo "ERROR IN ▲ E ▲ R ▲ R ▲ O ▲ R ▲ $0 script"
+  exit ${_err}
+}
+fi
 echo "🥦"
 exit 0

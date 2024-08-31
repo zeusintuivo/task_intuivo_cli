@@ -1,13 +1,22 @@
 #1|2 var|3 action                    |4 cond1|5 cond2|6.fbk action|7flag 
+0||sudo ls -ctrl                     |       |       |            |
 1||sudo updatedb &                   |       |       |            |.fed37_step_1_updatedb
+1.5||sudo rm -rf /etc/yum.repos.d/rpmfusion-nonfree-nvidia-driver.repo &                   |       |       |            |.fed37_step_1_remove_rpmfusion-nonfree-nvidia-drive_repo
+1.6||sudo rm -rf /etc/yum.repos.d/rpmfusion-nonfree-updates.repo &                   |       |       |            |.fed37_step_1_remove_rpmfusion-nonfree-updates_repo
+1.6||sudo rm -rf /etc/yum.repos.d/rpmfusion-nonfree.repo &                   |       |       |            |.fed37_step_1_rpmfusion-nonfree_repo
+1.6||sudo rm -rf /etc/yum.repos.d/rpmfusion-nonfree-updates-testing.repo &                   |       |       |            |.fed37_step_1_rpmfusion-nonfree-updates-testing_repo
+1.6||sudo rm -rf /etc/yum.repos.d/rpmfusion-nonfree-steam.repo &                   |       |       |            |.fed37_step_1_rpmfusion-nonfree-updates-testing_repo
+44||sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm||||.fed37_step_44_rpmfusion
 2||sudo dnf update -y                |       |       |            |.fed37_step_2_update
+45||sudo dnf groupupdate core -y ||||.fed37_step_45_core
+46||sudo dnf group update core -y ||||.fed37_step_46_core
 3||sudo dnf build-dep zsh -y         |       |       |            |.fed37_step_3_build_zsh
 4||sudo dnf install zsh -y           |       |       |            |.fed37_step_4_zsh
 5||sudo dnf build-dep vim-enhanced -y|       |       |            |.fed37_step_5_build_vim
 6||sudo dnf install vim-enhanced -y  |       |       |            |.fed37_step_6_vim
 7||install_basic_clis.bash           |       |       |            |.fed37_step_7_basic_clis
 8||install_beyondcompare.bash        |       |       |            |.fed37_step_8_install_beyondcompare
-9||install_powerlevel10k.bash        |       |       |            |.fed37_step_9_install_powerlevel10k
+# 9||install_powerlevel10k.bash        |       |       |            |.fed37_step_9_install_powerlevel10k
 10||install_brew.bash                |       |       |            |.fed37_step_10_install_brew
 11||install_rbenv.bash               |       |       |            |.fed37_step_11_install_rbenv
 12||install_nvm.bash                 |       |       |            |.fed37_step_12_install_nvm
@@ -46,9 +55,6 @@
 41||sudo dnf install -vy code-1.84.2-20231122.el7.x86_64.rpm |       |       |            |.fed37_step_41_code
 42||rm -rf code-1.84.2-20231122.el7.x86_64.rpm  ||||.fed37_step_42_rm_code
 43||install_rust.bash ||||.fed37_step_43_rust
-44||sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm||||.fed37_step_44_rpmfusion
-45||sudo dnf groupupdate core -y ||||.fed37_step_45_core
-46||sudo dnf group update core -y ||||.fed37_step_46_core
 47||sudo dnf install https://rpms.remirepo.net/fedora/remi-release-$(rpm -E %fedora).rpm -yv  ||||.fed37_step_47_remi
 48-0||sudo dnf install qqc2-desktop-style -y ||||.fed37_step_48-0_yakuak_styles
 48-1||sudo yum groupinstall  "KDE (K Desktop Environment)" -y ||||.fed37_step_48-1_yakuak_kde

@@ -16,6 +16,7 @@ echo "0. sudologic $0:$LINENO                   USER:${USER:-}"
 echo "0. sudologic $0:$LINENO              USER_HOME:${USER_HOME:-}"
 echo "0. sudologic $0:$LINENO THISSCRIPTCOMPLETEPATH:${THISSCRIPTCOMPLETEPATH:-}"
 echo "0. sudologic $0:$LINENO         THISSCRIPTNAME:${THISSCRIPTNAME:-}"
+echo "0. sudologic $0:$LINENO       THISSCRIPTPARAMS:${THISSCRIPTPARAMS:-}"
 
 echo "0. sudologic $0 Start Checking realpath  "
 if ! ( command -v realpath >/dev/null 2>&1; )  ; then
@@ -39,6 +40,10 @@ typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
 export  THISSCRIPTNAME
 typeset -r THISSCRIPTNAME="$(basename "$0")"
 
+export THISSCRIPTPARAMS
+typeset -r THISSCRIPTPARAMS="${*:-}"
+echo "0. sudologic $0:$LINENO       THISSCRIPTPARAMS:${THISSCRIPTPARAMS:-}"
+
 export _err
 typeset -i _err=0
 
@@ -47,7 +52,7 @@ typeset -i _err=0
     local cero="$0"
     local file1="$(paeth ${BASH_SOURCE})"
     local file2="$(paeth ${cero})"
-    echo -e "ERROR TRAP $THISSCRIPTNAME
+    echo -e "ERROR TRAP $THISSCRIPTNAME $THISSCRIPTPARAMS
 ${file1}:${BASH_LINENO[-0]}     \t ${FUNCNAME[-0]}()
 $file2:${BASH_LINENO[1]}    \t ${FUNCNAME[1]}()
 ERR ..."
@@ -59,7 +64,7 @@ ERR ..."
     local cero="$0"
     local file1="$(paeth ${BASH_SOURCE})"
     local file2="$(paeth ${cero})"
-    echo -e "INTERRUPT TRAP $THISSCRIPTNAME
+    echo -e "INTERRUPT TRAP $THISSCRIPTNAME $THISSCRIPTPARAMS
 ${file1}:${BASH_LINENO[-0]}     \t ${FUNCNAME[-0]}()
 $file2:${BASH_LINENO[1]}    \t ${FUNCNAME[1]}()
 INT ..."
@@ -71,7 +76,8 @@ INT ..."
 load_struct_testing(){
   function _trap_on_error(){
     local -ir __trapped_error_exit_num="${2:-0}"
-    echo -e "\\n \033[01;7m*** 2 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+		echo -e "\\n \033[01;7m*** tasks_base/sudoer.bash:$LINENO load_struct_testing() ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+
     echo ". ${1}"
     echo ". exit  ${__trapped_error_exit_num}  "
     echo ". caller $(caller) "
@@ -105,8 +111,8 @@ load_struct_testing(){
         provider="/home/${USER}/_/clis/execute_command_intuivo_cli/${_library}"
       }
       fi
-      echo "$0: ${provider}" 
-      echo "$0: SUDO_USER:${SUDO_USER:-nada SUDOUSER}: USER:${USER:-nada USER}: ${SUDO_HOME:-nada SUDO_HOME}: {${HOME:-nada HOME}}" 
+      echo "$0: ${provider}"
+      echo "$0: SUDO_USER:${SUDO_USER:-nada SUDOUSER}: USER:${USER:-nada USER}: ${SUDO_HOME:-nada SUDO_HOME}: {${HOME:-nada HOME}}"
       local _err=0 structsource
       if [[  -e "${provider}" ]] ; then
         if (( _DEBUG )) ; then
@@ -116,7 +122,7 @@ load_struct_testing(){
         _err=$?
         if [ $_err -gt 0 ] ; then
         {
-           echo -e "\n \n  ERROR! Loading ${_library}. running 'source locally' returned error did not download or is empty err:$_err  \n \n  " 
+           echo -e "\n \n  ERROR! Loading ${_library}. running 'source locally' returned error did not download or is empty err:$_err  \n \n  "
            exit 1
         }
         fi
@@ -152,7 +158,7 @@ load_struct_testing(){
       fi
       if [[ -z "${structsource}" ]] ; then
       {
-        echo -e "\n \n 3 ERROR! Loading ${_library} into ${_library}_source did not download or is empty " 
+        echo -e "\n \n 3 ERROR! Loading ${_library} into ${_library}_source did not download or is empty "
         exit 1
       }
       fi
@@ -203,7 +209,7 @@ if [[ -z "${SUDO_COMMAND:-}" ]] && \
    [[ -n "${THISSCRIPTNAME:-}" ]] \
   ; then
 {
-  passed Called from user 
+  passed Called from user
 }
 fi
 
@@ -219,7 +225,7 @@ if [[ -n "${SUDO_COMMAND:-}"  ]] && \
    [[ -n "${THISSCRIPTNAME:-}"  ]] \
   ; then
 {
-  passed Called from user as sudo 
+  passed Called from user as sudo
 }
 else
 {
@@ -228,7 +234,7 @@ if [[ "${SUDO_USER:-}" == 'root'  ]] && \
    [[ "${USER:-}" == 'root' ]] \
   ; then
 {
-  failed This script is has to be called from normal user. Not Root. Abort 
+  failed This script is has to be called from normal user. Not Root. Abort
   exit 69
 }
 fi
@@ -242,7 +248,7 @@ function sudo_it() {
   {
     passed "sudo_it() # Do something under Mac OS X platform "
       # nothing here
-      raise_to_sudo_and_user_home
+      raise_to_sudo_and_user_home "${*-}"
       [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
     SUDO_USER="${USER}"
     SUDO_COMMAND="$0"
@@ -252,7 +258,7 @@ function sudo_it() {
   elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]] ; then
   {
       # Do something under GNU/Linux platform
-      raise_to_sudo_and_user_home
+      raise_to_sudo_and_user_home "${*-}"
       [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
       enforce_variable_with_value SUDO_USER "${SUDO_USER}"
       enforce_variable_with_value SUDO_UID "${SUDO_UID}"
@@ -274,7 +280,7 @@ function sudo_it() {
     SUDO_GID=20
   }
   fi
-  
+
   if (( _DEBUG )) ; then
     Comment _err:${_err}
   fi
@@ -298,7 +304,7 @@ function sudo_it() {
     local cero="$0"
     local file1="$(paeth ${BASH_SOURCE})"
     local file2="$(paeth ${cero})"
-    echo -e " ERROR OR INTERRUPT  TRAP $THISSCRIPTNAME
+    echo -e " ERROR OR INTERRUPT  TRAP $THISSCRIPTNAME $THISSCRIPTPARAMS
 ${file1}:${BASH_LINENO[-0]}     \t ${FUNCNAME[-0]}()
 $file2:${BASH_LINENO[1]}    \t ${FUNCNAME[1]}()
 ERR INT ..."
@@ -308,7 +314,7 @@ ERR INT ..."
 } # end sudo_it
 
 # _linux_prepare(){
-  sudo_it
+  sudo_it "${*}"
   _err=$?
   typeset -i tomporalDEBUG=${DEBUG:-}
   if (( tomporalDEBUG )) ; then
@@ -365,19 +371,6 @@ fi
 directory_exists_with_spaces "${USER_HOME}"
 
 
-
- #---------/\/\/\-- tasks_base/sudoer.bash -------------/\/\/\--------
-
-
-
-
-
- #--------\/\/\/\/-- tasks_templates_sudo/php …install_php.bash” -- Custom code -\/\/\/\/-------
-
-
-#!/usr/bin/bash
-
-
   function _trap_on_error(){
     local -ir __trapped_error_exit_num="${2:-0}"
     echo -e "\\n \033[01;7m*** 2 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
@@ -396,6 +389,24 @@ directory_exists_with_spaces "${USER_HOME}"
   }
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
 
+  function _trap_on_exit(){
+    local -ir __trapped_exit_num="${2:-0}"
+    echo -e "\\n \033[01;7m*** 5 EXIT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n EXIT ...\033[0m  \n \n "
+    echo ". ${1}"
+    echo ". exit  ${__trapped_exit_num}  "
+    echo ". caller $(caller) "
+    echo ". ${BASH_COMMAND}"
+    local -r __caller=$(caller)
+    local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
+    local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
+    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+
+    # $(eval ${BASH_COMMAND}  2>&1; )
+    # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
+    exit ${__trapped_INT_num}
+  }
+  # trap  '_trap_on_exit $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  EXIT
+
   function _trap_on_INT(){
     local -ir __trapped_INT_num="${2:-0}"
     echo -e "\\n \033[01;7m*** 7 INT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n INT ...\033[0m  \n \n "
@@ -413,6 +424,19 @@ directory_exists_with_spaces "${USER_HOME}"
     exit ${__trapped_INT_num}
   }
   trap  '_trap_on_INT $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  INT
+
+
+
+ #---------/\/\/\-- tasks_base/sudoer.bash -------------/\/\/\--------
+
+
+
+
+
+ #--------\/\/\/\/-- tasks_templates_sudo/php …install_php.bash” -- Custom code -\/\/\/\/-------
+
+
+#!/usr/bin/bash
 
 _debian_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
@@ -468,7 +492,8 @@ _redhat_flavor_install() {
   dnf module enable php:remi-8.2 -y
   # dnf builddep php -y --allowerasing
   dnf install -y php php-common php-cli -y
-  dnf install php -yv
+  dnf install -y php-mysqlnd php-gd php-curl php-json php-psr php-zip  -y
+
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
@@ -586,11 +611,20 @@ _windows__32() {
  #--------/\/\/\/\-- tasks_templates_sudo/php …install_php.bash” -- Custom code-/\/\/\/\-------
 
 
+
+ #--------\/\/\/\/--- tasks_base/main.bash ---\/\/\/\/-------
 _main() {
-  determine_os_and_fire_action
+  determine_os_and_fire_action "${*:-}"
 } # end _main
 
-_main
-
+echo params "${*:-}"
+_main "${*:-}"
+_err=$?
+if [[ ${_err} -gt 0 ]] ; then
+{
+  echo "ERROR IN ▲ E ▲ R ▲ R ▲ O ▲ R ▲ $0 script"
+  exit ${_err}
+}
+fi
 echo "🥦"
 exit 0
