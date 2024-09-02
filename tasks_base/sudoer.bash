@@ -20,16 +20,106 @@ echo "0. sudologic $0:$LINENO       THISSCRIPTPARAMS:${THISSCRIPTPARAMS:-}"
 
 echo "0. sudologic $0 Start Checking realpath  "
 if ! ( command -v realpath >/dev/null 2>&1; )  ; then
+{  
   echo "... realpath not found. Downloading REF:https://github.com/swarmbox/realpath.git "
-  cd $HOME
+  if [[ -n "${USER_HOME}" ]] ;  then
+  {
+    cd "${USER_HOME}" || echo "ERROR! failed realpath compile cd " && exit 1
+  }
+  else
+  {
+    cd "${HOME}" || echo "ERROR! failed realpath compile cd " && exit 1
+  }
+  fi
   git clone https://github.com/swarmbox/realpath.git
-  cd realpath
+  _err=$?
+  [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Builing realpath. returned error did not download or is installed err:$_err  \n \n  " && exit 1
+  cd realpath || echo "ERROR! failed realpath compile cd " && exit 1
   make
+  _err=$?
+  [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Builing realpath. returned error did not download or is installed err:$_err  \n \n  " && exit 1
   sudo make install
   _err=$?
   [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Builing realpath. returned error did not download or is installed err:$_err  \n \n  " && exit 1
+  _err=$?
+  [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Builing realpath. returned error did not download or is installed err:$_err  \n \n  " && exit 1
+}
 else
+{
   echo "... realpath exists .. check!"
+}
+fi
+if ! ( command -v paeth >/dev/null 2>&1; )  ; then
+{
+  function paeth(){
+  local path_to_file=""
+  local -i _err=0
+  path_to_file="${*}"
+  if [[ ! -e "${path_to_file}" ]] ; then   # not found in current folder
+  {
+    path_to_file="$(pwd)/${*}"
+    if [[ ! -e "${path_to_file}" ]] ; then  # add full pwd and see if finds it
+    {
+      path_to_file="$(which "${*}")"   # search in system $PATH and env system
+      _err=$?
+      if [ ${_err} -gt 0 ] ; then
+      {
+        if ! type  -f "${*}" >/dev/null 2>&1  ; then 
+        {
+          echo "is a function"
+          type  -f "${*}"
+        }
+        fi
+        >&2 echo "error 1. ${*} not found in ≤$(pwd)≥ or ≤\${PATH}≥ or ≤\$(env)≥ "
+        exit 1  # not found, silent fail
+      }
+      fi
+      path_to_file="$(realpath "$(which "${*}")")"   # updated realpath macos 20210902
+      _err=$?
+      if [ ${_err} -gt 0 ] ; then
+      {
+         if ! type  -f "${*}" >/dev/null 2>&1  ; then 
+        {
+          echo "is a function"
+          type  -f "${*}"
+        }
+        fi
+         >&2 echo "error 2. ${*} not found in ≤$(pwd)≥ or ≤\${PATH}≥ or ≤\$(env)≥ "
+        exit 1  # not found, silent fail
+      }
+      fi
+      if [[ ! -e "${path_to_file}" ]] ; then
+      {
+         if ! type  -f "${*}" >/dev/null 2>&1  ; then 
+        {
+          echo "is a function"
+          type  -f "${*}"
+        }
+        fi
+         >&2 echo "error 3. ${path_to_file} does not exist or is not accesible "
+        exit 1  # not found, silent fail
+      }
+      fi
+    }
+    fi
+  }
+  fi
+  path_to_file="$(realpath "${path_to_file}")"
+  if ! type  -f "${*}" >/dev/null 2>&1  ; then 
+  {
+    echo "is also a function"
+    type  -f "${*}"
+  }
+  fi
+  
+  echo "${path_to_file}"
+  } # end paeth 
+}
+fi
+if ! ( command -v realpath >/dev/null 2>&1; )  ; then
+{
+  echo "... realpath not found. and did not install . ABORTING"
+}
 fi
 
 typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")"   # updated realpath macos 20210902
@@ -76,7 +166,7 @@ INT ..."
 load_struct_testing(){
   function _trap_on_error(){
     local -ir __trapped_error_exit_num="${2:-0}"
-		echo -e "\\n \033[01;7m*** tasks_base/sudoer.bash:$LINENO load_struct_testing() ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+    echo -e "\\n \033[01;7m*** tasks_base/sudoer.bash:$LINENO load_struct_testing() ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
 
     echo ". ${1}"
     echo ". exit  ${__trapped_error_exit_num}  "
@@ -91,9 +181,38 @@ load_struct_testing(){
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
     exit 1
   }
+  function source_library(){
+    # Sample usage 
+    #    if ( source_library "${provider}" ) ; then 
+    #      failed
+    #    fi
+    local -i _DEBUG=${DEBUG:-0}
+    local provider="${*-}"
+    local structsource=""
+      if [[  -e "${provider}" ]] ; then
+      {
+        structsource="""$(<"${provider}")"""
+        _err=$?
+        if [ $_err -gt 0 ] ; then
+        {
+          >&2 echo -e "#\n #\n# 4.1 WARNING Loading ${provider}. Occured while running 'source' err:$_err  \n \n  "
+          return 1
+        }
+        fi
+	if (( _DEBUG )) ; then
+          >&2 echo "# $0: tasks_base/sudoer.bash Loading locally"
+        fi
+        echo """${structsource}"""
+        return 0
+      }
+      fi
+      >&2 echo -e "\n 4.2 nor found  ${provider}. 'source' err:$_err  \n  "
+      return 1
+  } # end source_library
   function load_library(){
     local _library="${1:-struct_testing}"
     local -i _DEBUG=${DEBUG:-0}
+    local -i _err=0
     if [[ -z "${1}" ]] ; then
     {
        echo "Must call with name of library example: struct_testing execute_command"
@@ -101,41 +220,63 @@ load_struct_testing(){
     }
     fi
     trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-      local provider="$HOME/_/clis/execute_command_intuivo_cli/${_library}"
-      if [[ -n "${SUDO_USER:-}" ]] && [[ -n "${HOME:-}" ]] && [[ "${HOME:-}" == "/root" ]] && [[ !  -e "${provider}"  ]] ; then
+      local providers="
+/home/${SUDO_USER-}/_/clis/execute_command_intuivo_cli/${_library-}
+/Users/${SUDO_USER-}/_/clis/execute_command_intuivo_cli/${_library-}
+/home/${USER-}/_/clis/execute_command_intuivo_cli/${_library-}
+/Users/${USER-}/_/clis/execute_command_intuivo_cli/${_library-}
+${HOME-}/_/clis/execute_command_intuivo_cli/${_library-}
+"
+      local provider=""
+      local -i _loaded=0
+      local -i _found=0 
+      local structsource
+      while read -r provider ; do
       {
-        provider="/home/${SUDO_USER}/_/clis/execute_command_intuivo_cli/${_library}"
-      }
-      elif [[ -z "${SUDO_USER:-}" ]] && [[ -n "${HOME:-}" ]] && [[ "${HOME:-}" == "/root" ]] && [[ !  -e "${provider}"  ]] ; then
-      {
-        provider="/home/${USER}/_/clis/execute_command_intuivo_cli/${_library}"
-      }
-      fi
-      echo "$0: ${provider}"
-      echo "$0: SUDO_USER:${SUDO_USER:-nada SUDOUSER}: USER:${USER:-nada USER}: ${SUDO_HOME:-nada SUDO_HOME}: {${HOME:-nada HOME}}"
-      local _err=0 structsource
-      if [[  -e "${provider}" ]] ; then
-        if (( _DEBUG )) ; then
-          echo "$0: tasks_base/sudoer.bash Loading locally"
-        fi
-        structsource="""$(<"${provider}")"""
+        [[ -z "${provider}" ]] && continue
+        [[ ! -e "${provider}" ]] && continue
+	_loaded=0
+	_found=0
+	structsource="""$(source_library "${provider}")"""
         _err=$?
+        _loaded=1
+	_found=1
         if [ $_err -gt 0 ] ; then
         {
-           echo -e "\n \n  ERROR! Loading ${_library}. running 'source locally' returned error did not download or is empty err:$_err  \n \n  "
-           exit 1
+          echo -e "\n \n 4.1 WARNING Loading ${_library}. Occured while running 'source' err:$_err  \n \n  "
+          _loaded=0
+	  _found=0
         }
         fi
-      else
+      }
+      done <<< "${providers}"
+
+#       provider="$HOME/_/clis/execute_command_intuivo_cli/${_library}"
+#       if [[ -n "${SUDO_USER:-}" ]] && [[ -n "${HOME:-}" ]] && [[ "${HOME:-}" == "/root" ]] && [[ !  -e "${provider}"  ]] ; then
+#       {
+#         provider="/home/${SUDO_USER}/_/clis/execute_command_intuivo_cli/${_library}"
+#       }
+#       elif [[ -z "${USER:-}" ]] && [[ -n "${HOME:-}" ]] && [[ "${HOME:-}" == "/root" ]] && [[ !  -e "${provider}"  ]] ; then
+#       {
+#         provider="/home/${USER}/_/clis/execute_command_intuivo_cli/${_library}"
+#       }
+#       fi
+#       echo "$0: ${provider}"
+#       echo "$0: SUDO_USER:${SUDO_USER:-nada SUDOUSER}: USER:${USER:-nada USER}: ${SUDO_HOME:-nada SUDO_HOME}: {${HOME:-nada HOME}}"
+      
+      if (( ! _loaded )) ; then 
         if ( command -v curl >/dev/null 2>&1; )  ; then
           if (( _DEBUG )) ; then
             echo "$0: tasks_base/sudoer.bash Loading ${_library} from the net using curl "
           fi
+	  _loaded=0
           structsource="""$(curl https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/${_library}  -so -   2>/dev/null )"""  #  2>/dev/null suppress only curl download messages, but keep curl output for variable
           _err=$?
+	  _loaded=1
           if [ $_err -gt 0 ] ; then
           {
             echo -e "\n \n  ERROR! Loading ${_library}. running 'curl' returned error did not download or is empty err:$_err  \n \n  "
+	    _loaded=0
             exit 1
           }
           fi
@@ -143,16 +284,19 @@ load_struct_testing(){
           if (( _DEBUG )) ; then
             echo "$0: tasks_base/sudoer.bash Loading ${_library} from the net using wget "
           fi
+	  _loaded=0
           structsource="""$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/${_library} -O -   2>/dev/null )"""  #  2>/dev/null suppress only wget download messages, but keep wget output for variable
           _err=$?
+	  _loaded=1
           if [ $_err -gt 0 ] ; then
           {
             echo -e "\n \n  ERROR! Loading ${_library}. running 'wget' returned error did not download or is empty err:$_err  \n \n  "
+	    _loaded=0
             exit 1
           }
           fi
         else
-          echo -e "\n \n 2  ERROR! Loading ${_library} could not find wget or curl to download  \n \n "
+          echo -e "\n \n 2  ERROR! Loading ${_library} could not find local, wget, curl to load or download  \n \n "
           exit 69
         fi
       fi

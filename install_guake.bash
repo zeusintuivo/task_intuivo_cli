@@ -20,16 +20,34 @@ echo "0. sudologic $0:$LINENO       THISSCRIPTPARAMS:${THISSCRIPTPARAMS:-}"
 
 echo "0. sudologic $0 Start Checking realpath  "
 if ! ( command -v realpath >/dev/null 2>&1; )  ; then
+{  
   echo "... realpath not found. Downloading REF:https://github.com/swarmbox/realpath.git "
-  cd $HOME
+  if [[ -n "${USER_HOME}" ]] ;  then
+  {
+    cd "${USER_HOME}" || echo "ERROR! failed realpath compile cd " && exit 1
+  }
+  else
+  {
+    cd "${HOME}" || echo "ERROR! failed realpath compile cd " && exit 1
+  }
+  fi
   git clone https://github.com/swarmbox/realpath.git
-  cd realpath
+  _err=$?
+  [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Builing realpath. returned error did not download or is installed err:$_err  \n \n  " && exit 1
+  cd realpath || echo "ERROR! failed realpath compile cd " && exit 1
   make
+  _err=$?
+  [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Builing realpath. returned error did not download or is installed err:$_err  \n \n  " && exit 1
   sudo make install
   _err=$?
   [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Builing realpath. returned error did not download or is installed err:$_err  \n \n  " && exit 1
+  _err=$?
+  [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Builing realpath. returned error did not download or is installed err:$_err  \n \n  " && exit 1
+}
 else
+{
   echo "... realpath exists .. check!"
+}
 fi
 
 typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")"   # updated realpath macos 20210902
@@ -486,7 +504,7 @@ _debian_flavor_install() {
 
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  cd $HOME/_/clis
+  cd "${USER_HOME}/_/clis" || echo "failed" && return 1
   git clone https://github.com/zeusintuivo/guake.git
   cd guake
   git checkout working_version

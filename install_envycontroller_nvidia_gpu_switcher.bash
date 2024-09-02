@@ -166,7 +166,7 @@ INT ..."
 load_struct_testing(){
   function _trap_on_error(){
     local -ir __trapped_error_exit_num="${2:-0}"
-		echo -e "\\n \033[01;7m*** tasks_base/sudoer.bash:$LINENO load_struct_testing() ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+    echo -e "\\n \033[01;7m*** tasks_base/sudoer.bash:$LINENO load_struct_testing() ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
 
     echo ". ${1}"
     echo ". exit  ${__trapped_error_exit_num}  "
@@ -181,9 +181,38 @@ load_struct_testing(){
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
     exit 1
   }
+  function source_library(){
+    # Sample usage 
+    #    if ( source_library "${provider}" ) ; then 
+    #      failed
+    #    fi
+    local -i _DEBUG=${DEBUG:-0}
+    local provider="${*-}"
+    local structsource=""
+      if [[  -e "${provider}" ]] ; then
+      {
+        structsource="""$(<"${provider}")"""
+        _err=$?
+        if [ $_err -gt 0 ] ; then
+        {
+          >&2 echo -e "#\n #\n# 4.1 WARNING Loading ${provider}. Occured while running 'source' err:$_err  \n \n  "
+          return 1
+        }
+        fi
+	if (( _DEBUG )) ; then
+          >&2 echo "# $0: tasks_base/sudoer.bash Loading locally"
+        fi
+        echo """${structsource}"""
+        return 0
+      }
+      fi
+      >&2 echo -e "\n 4.2 nor found  ${provider}. 'source' err:$_err  \n  "
+      return 1
+  } # end source_library
   function load_library(){
     local _library="${1:-struct_testing}"
     local -i _DEBUG=${DEBUG:-0}
+    local -i _err=0
     if [[ -z "${1}" ]] ; then
     {
        echo "Must call with name of library example: struct_testing execute_command"
@@ -191,62 +220,63 @@ load_struct_testing(){
     }
     fi
     trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+      local providers="
+/home/${SUDO_USER-}/_/clis/execute_command_intuivo_cli/${_library-}
+/Users/${SUDO_USER-}/_/clis/execute_command_intuivo_cli/${_library-}
+/home/${USER-}/_/clis/execute_command_intuivo_cli/${_library-}
+/Users/${USER-}/_/clis/execute_command_intuivo_cli/${_library-}
+${HOME-}/_/clis/execute_command_intuivo_cli/${_library-}
+"
       local provider=""
-      provider="$HOME/_/clis/execute_command_intuivo_cli/${_library}"
-      if [[ -n "${SUDO_USER:-}" ]] && [[ -n "${HOME:-}" ]] && [[ "${HOME:-}" == "/root" ]] && [[ !  -e "${provider}"  ]] ; then
-      {
-        provider="/home/${SUDO_USER}/_/clis/execute_command_intuivo_cli/${_library}"
-      }
-      elif [[ -z "${USER:-}" ]] && [[ -n "${HOME:-}" ]] && [[ "${HOME:-}" == "/root" ]] && [[ !  -e "${provider}"  ]] ; then
-      {
-        provider="/home/${USER}/_/clis/execute_command_intuivo_cli/${_library}"
-      }
-      fi
-      echo "$0: ${provider}"
-      echo "$0: SUDO_USER:${SUDO_USER:-nada SUDOUSER}: USER:${USER:-nada USER}: ${SUDO_HOME:-nada SUDO_HOME}: {${HOME:-nada HOME}}"
-      local -i _err=0
-      local -i _found=0 
       local -i _loaded=0
+      local -i _found=0 
       local structsource
-      provider="${HOME-}/_/clis/execute_command_intuivo_cli/${_library}"
-      if [[  -e "${provider}" ]] ; then
+      while read -r provider ; do
       {
-	structsource="""$(<"${provider}")"""
-	_err=$?
-	if [ $_err -gt 0 ] ; then
-        {
-          echo -e "\n \n 4.1 WARNING Loading ${_library}. Occured while running 'source' err:$_err  \n \n  "
-	  _loaded=1
-        }
-        fi
-      }
-      fi
-
-      provider="/home/${SUDO_USER-}/_/clis/execute_command_intuivo_cli/${_library}"
-      if [[  -e "${provider}" ]] ; then
-        structsource="""$(<"${provider}")"""
-
-	if (( _DEBUG )) ; then
-          echo "$0: tasks_base/sudoer.bash Loading locally"
-        fi
-        structsource="""$(<"${provider}")"""
+        [[ -z "${provider}" ]] && continue
+        [[ ! -e "${provider}" ]] && continue
+	_loaded=0
+	_found=0
+	structsource="""$(source_library "${provider}")"""
         _err=$?
+        _loaded=1
+	_found=1
         if [ $_err -gt 0 ] ; then
         {
-           echo -e "\n \n  ERROR! Loading ${_library}. running 'source locally' returned error did not download or is empty err:$_err  \n \n  "
-           exit 1
+          echo -e "\n \n 4.1 WARNING Loading ${_library}. Occured while running 'source' err:$_err  \n \n  "
+          _loaded=0
+	  _found=0
         }
         fi
-      else
+      }
+      done <<< "${providers}"
+
+#       provider="$HOME/_/clis/execute_command_intuivo_cli/${_library}"
+#       if [[ -n "${SUDO_USER:-}" ]] && [[ -n "${HOME:-}" ]] && [[ "${HOME:-}" == "/root" ]] && [[ !  -e "${provider}"  ]] ; then
+#       {
+#         provider="/home/${SUDO_USER}/_/clis/execute_command_intuivo_cli/${_library}"
+#       }
+#       elif [[ -z "${USER:-}" ]] && [[ -n "${HOME:-}" ]] && [[ "${HOME:-}" == "/root" ]] && [[ !  -e "${provider}"  ]] ; then
+#       {
+#         provider="/home/${USER}/_/clis/execute_command_intuivo_cli/${_library}"
+#       }
+#       fi
+#       echo "$0: ${provider}"
+#       echo "$0: SUDO_USER:${SUDO_USER:-nada SUDOUSER}: USER:${USER:-nada USER}: ${SUDO_HOME:-nada SUDO_HOME}: {${HOME:-nada HOME}}"
+      
+      if (( ! _loaded )) ; then 
         if ( command -v curl >/dev/null 2>&1; )  ; then
           if (( _DEBUG )) ; then
             echo "$0: tasks_base/sudoer.bash Loading ${_library} from the net using curl "
           fi
+	  _loaded=0
           structsource="""$(curl https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/${_library}  -so -   2>/dev/null )"""  #  2>/dev/null suppress only curl download messages, but keep curl output for variable
           _err=$?
+	  _loaded=1
           if [ $_err -gt 0 ] ; then
           {
             echo -e "\n \n  ERROR! Loading ${_library}. running 'curl' returned error did not download or is empty err:$_err  \n \n  "
+	    _loaded=0
             exit 1
           }
           fi
@@ -254,16 +284,19 @@ load_struct_testing(){
           if (( _DEBUG )) ; then
             echo "$0: tasks_base/sudoer.bash Loading ${_library} from the net using wget "
           fi
+	  _loaded=0
           structsource="""$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/${_library} -O -   2>/dev/null )"""  #  2>/dev/null suppress only wget download messages, but keep wget output for variable
           _err=$?
+	  _loaded=1
           if [ $_err -gt 0 ] ; then
           {
             echo -e "\n \n  ERROR! Loading ${_library}. running 'wget' returned error did not download or is empty err:$_err  \n \n  "
+	    _loaded=0
             exit 1
           }
           fi
         else
-          echo -e "\n \n 2  ERROR! Loading ${_library} could not find wget or curl to download  \n \n "
+          echo -e "\n \n 2  ERROR! Loading ${_library} could not find local, wget, curl to load or download  \n \n "
           exit 69
         fi
       fi
@@ -544,7 +577,7 @@ directory_exists_with_spaces "${USER_HOME}"
 
 
 
- #--------\/\/\/\/-- tasks_templates_sudo/nvim …install_nvim.bash” -- Custom code -\/\/\/\/-------
+ #--------\/\/\/\/-- tasks_templates_sudo/envycontroller_nvidia_gpu_switcher …install_envycontroller_nvidia_gpu_switcher.bash” -- Custom code -\/\/\/\/-------
 
 
 #!/usr/bin/bash
@@ -553,16 +586,17 @@ _debian_flavor_install() {
   # trap  '_trap_on_exit $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  EXIT
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  if (
-  install_requirements "linux" "
-    base64
-    unzip
-    curl
-    wget
-    ufw
-    nginx
-  "
-  ); then
+  if
+    (
+    install_requirements "linux" "
+      base64
+      unzip
+      curl
+      wget
+      ufw
+      nginx
+    "
+    ); then
     {
       apt install base64 -y
       apt install unzip -y
@@ -591,293 +625,21 @@ _debian_flavor_install() {
   _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
   local PATHTOPOCKETBASE="${UNZIPDIR}/pocketbase"
   local THISIP=$(myip)
-
+echo "
+https://github.com/bayasdev/envycontrol
+    Go to the latest release page
+    Download the attached python3-envycontrol_version.deb package
+    Install it with sudo apt -y install ./python3-envycontrol_version.deb
+    Run sudo envycontrol -s <MODE> to switch graphics modes
+"
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   echo "_redhat_flavor_install Procedure not yet implemented. I don't know what to do."
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
-  dnf install nvim -y
-  curl -fLo "${USER_HOME}/.vim/autoload/plug.vim" --create-dirs \
-    https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-  curl -fLo "/root/.vim/autoload/plug.vim" --create-dirs \
-    https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-	mkdir -p "${USER_HOME}/.config/nvim"
-	mkdir -p "/root/.config/nvim"
-	touch "${USER_HOME}/.config/nvim/init.vim"
-	touch "/root/.config/nvim/init.vim"
-	echo "
-if v:lang =~ \"utf8$\" || v:lang =~ \"UTF-8$\"
-set fileencodings=ucs-bom,utf-8,latin1
-endif
-
-set nocompatible        \" Use Vim defaults (much better!)
-set bs=indent,eol,start         \" allow backspacing over everything in insert mode
-\"set ai                 \" always set autoindenting on
-\"set backup             \" keep a backup file
-set viminfo='20,\\"50    \" read/write a .viminfo file, don't store more
-\" than 50 lines of registers
-set history=50          \" keep 50 lines of command line history
-set ruler               \" show the cursor position all the time
-set ruler
-
-\" Enable backspace buton
-set backspace=indent,eol,start
-
-\" Enable Control S
-nnoremap <c-s> :w<CR> \" normal mode: save
-inoremap <c-s> <Esc>:w<CR> \" insert mode: escape to normal and save
-vnoremap <c-s> <Esc>:w<CR> \" visual mode: escape to normal and save
-
-\" Enable Control X
-nnoremap <c-x> :wq<CR> \" normal mode: save and exit
-inoremap <c-x> <Esc>:wq<CR> \" insert mode: escape to normal and save and exit
-vnoremap <c-x> <Esc>:wq<CR> \" visual mode: escape to normal and save and exit
-
-\" Enable Control q
-nnoremap <c-q> :q<CR> \" normal mode: quit
-inoremap <c-q> <Esc>:q<CR> \" insert mode: escape to normal and quit
-vnoremap <c-q> <Esc>:q<CR> \" visual mode: escape to normal and quit
-
-
-\" Enable syntax highlighting
-syntax on
-
-\" tabs
-set tabstop=2
-set softtabstop=2 noexpandtab
-set shiftwidth=2
-
-\"
-\"If you want tab characters in your file to appear 4 character cells wide:
-\" set tabstop=4
-\"
-\" If your code requires use of actual tab characters these settings prevent unintentional insertion of spaces (these are the defaults, but you may want to set them defensively):
-\"
-\" set softtabstop=0 noexpandtab
-\"
- \"If you also want to use tabs for indentation, you should also set shiftwidth to be the same as tabstop:
-\"
-\" set shiftwidth=4
-\"
-\" To make any of these settings permanent add them to your vimrc.
-\" If you want pressing the tab key to indent with 4 space characters:
-\"
-\" First, tell vim to use 4-space indents, and to intelligently use the tab key for indentation instead of for inserting tab characters (when at the beginning of a line):
-\"
-\" set shiftwidth=4 smarttab
-\"
-\" If you would also like vim to only use space caharacters, never tab characters:
-\"
-\" set expandtab
-\"
-\" Finally, I also recommend setting tab stops to be different from the indentation width, in order to reduce the chance of tab characters masquerading as proper indents:
-\"
-\" set tabstop=8 softtabstop=0
-\"
-\" To make any of these settings permanent add them to your vimrc.
-\" More Details
-\"
-\"In case you need to make adjustments, or would simply like to understand what these options all mean, here is a breakdown of what each option means:
-\"
-\"    tabstop
-\"
-\"    The width of a hard tabstop measured in \"spaces\" -- effectively the (maximum) width of an actual tab character.
-\"    shiftwidth
-\"
-\"   The size of an \"indent\". It is also measured in spaces, so if your code base indents with tab characters then you want shiftwidth to equal the number of tab characters times tabstop. This is also used by things like the =, > and < commands.
-\"    softtabstop
-\"
-\"    Setting this to a non-zero value other than tabstop will make the tab key (in insert mode) insert a combination of spaces (and possibly tabs) to simulate tab stops at this width.
-\"    expandtab
-\"
-\"    Enabling this will make the tab key (in insert mode) insert spaces instead of tab characters. This also affects the behavior of the retab command.
-\"    smarttab
-\"
-\"    Enabling this will make the tab key (in insert mode) insert spaces or tabs to go to the next indent of the next tabstop when the cursor is at the beginning of a line (i.e. the only preceding characters are whitespace).
-\"
-\" For further details on any of these see :help 'optionname' in vim (e.g. :help 'tabstop')
-
-
-\" Only do this part when compiled with support for autocommands
-if has(\"autocmd\")
-augroup redhat
-autocmd!
-\" In text files, always limit the width of text to 78 characters
-\" autocmd BufRead *.txt set tw=78
-\" When editing a file, always jump to the last cursor position
-autocmd BufReadPost *
-\ if line(\"'\\"\") > 0 && line (\"'\\"\") <= line(\"$\") |
-\   exe \"normal! g'\\"\" |
-\ endif
-\"' do not write swapfile on most commonly used directories for NFS mounts or USB sticks
-autocmd BufNewFile,BufReadPre /media/*,/run/media/*,/mnt/* set directory=~/tmp,/var/tmp,/tmp
-\" start with spec file template
-autocmd BufNewFile *.spec 0r /usr/share/vim/vimfiles/template.spec
-augroup END
-endif
-
-if has(\"cscope\") && filereadable(\"/usr/bin/cscope\")
-set csprg=/usr/bin/cscope
-set csto=0
-set cst
-set nocsverb
-\" add any database in current directory
-if filereadable(\"cscope.out\")
-cs add $PWD/cscope.out
-\" else add database pointed to by environment
-elseif $CSCOPE_DB != \"\"
-cs add $CSCOPE_DB
-endif
-set csverb
-endif
-
-
-if has(\"cscope\") && filereadable(\"/usr/bin/cscope\")
-set csprg=/usr/bin/cscope
-set csto=0
-set cst
-set nocsverb
-\" add any database in current directory
-if filereadable(\"cscope.out\")
-cs add $PWD/cscope.out
-\" else add database pointed to by environment
-elseif $CSCOPE_DB != \"\"
-cs add $CSCOPE_DB
-endif
-set csverb
-endif
-
-\" Switch syntax highlighting on, when the terminal has colors
-\" Also switch on highlighting the last used search pattern.
-if &t_Co > 2 || has(\"gui_running\")
-syntax on
-set hlsearch
-endif
-
-\" Enables filetype detection, loads ftplugin, and loads indent
-\" (Not necessary on nvim and may not be necessary on vim 8.2+)
-filetype plugin indent on
-
-call plug#begin()
-Plug 'dense-analysis/ale'
-
-Plug 'gleam-lang/gleam.vim'
-\" The default plugin directory will be as follows:
-\"   - Vim (Linux/macOS): '~/.vim/plugged'
-\"   - Vim (Windows): '~/vimfiles/plugged'
-\"   - Neovim (Linux/macOS/Windows): stdpath('data') . '/plugged'
-\" You can specify a custom plugin directory by passing it as the argument
-\"   - e.g. 'call plug#begin('~/.vim/plugged')'
-\"'   - Avoid using standard Vim directory names like 'plugin'
-
-\" Make sure you use single quotes
-
-Plug 'preservim/nerdtree' |
-            \ Plug 'Xuyuanp/nerdtree-git-plugin' |
-            \ Plug 'PhilRunninger/nerdtree-buffer-ops' |
-            \ Plug 'ryanoasis/vim-devicons' |
-            \ Plug 'tiagofumo/vim-nerdtree-syntax-highlight' |
-            \ Plug 'PhilRunninger/nerdtree-visual-selection'
-\" tree files
-
-
-Plug 'mattn/emmet-vim'
-\"Plug 'wincent/terminus'
-
-\"            \ Plug 'scrooloose/nerdtree-project-plugin' |
-
-let g:NERDTreeGitStatusIndicatorMapCustom = {
-                \ 'Modified'  :'✹',
-                \ 'Staged'    :'✚',
-                \ 'Untracked' :'✭',
-                \ 'Renamed'   :'➜',
-                \ 'Unmerged'  :'═',
-                \ 'Deleted'   :'✖',
-                \ 'Dirty'     :'✗',
-                \ 'Ignored'   :'☒',
-                \ 'Clean'     :'✔︎',
-                \ 'Unknown'   :'?',
-                \ }
-
-
-\" Shorthand notation; fetches https://github.com/junegunn/vim-easy-align
-Plug 'junegunn/vim-easy-align'
-
-\" Any valid git URL is allowed
-\" Plug 'https://github.com/junegunn/vim-github-dashboard.git'
-
-\" Multiple Plug commands can be written in a single line using | separators
-\" Plug 'SirVer/ultisnips' | Plug 'honza/vim-snippets'
-
-\" On-demand loading
-\" Plug 'scrooloose/nerdtree', { 'on':  'NERDTreeToggle' }
-\" Plug 'tpope/vim-fireplace', { 'for': 'clojure' }
-
-\" Using a non-default branch
-\" Plug 'rdnetto/YCM-Generator', { 'branch': 'stable' }
-
-\" Using a tagged release; wildcard allowed (requires git 1.9.2 or above)
-\" Plug 'fatih/vim-go', { 'tag': '*' }
-
-\" Plugin options
-\" Plug 'nsf/gocode', { 'tag': 'v.20150303', 'rtp': 'vim' }
-
-\" Plugin outside ~/.vim/plugged with post-update hook
-\" Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
-
-\" Unmanaged plugin (manually installed and updated)
-\" Plug '~/my-prototype-plugin'
-
-\" Initialize plugin system
-\" - Automatically executes 'filetype plugin indent on' and 'syntax enable'.
-
-\" Svelte Section https://github.com/evanleck/vim-svelte?ref=madewithsvelte.com
-Plug 'othree/html5.vim'
-Plug 'pangloss/vim-javascript'
-Plug 'evanleck/vim-svelte', {'branch': 'main'}
-
-\" Using vim-plug
-Plug 'elixir-editors/vim-elixir'
-
-call plug#end()
-\" You can revert the settings after the call like so:
-\"   filetype indent off   \" Disable file-type-specific indentation
-\"   syntax off            \" Disable syntax highlighting
-\"
-
-\" Ale Plug Plugin choices:
-\"  https://github.com/dense-analysis/ale
-\"
-\" Enable completion where available.
-\" This setting must be set before ALE is loaded.
-\"
-\" You should not turn this setting on if you wish to use ALE as a completion
-\" source for other completion plugins, like Deoplete.
-let g:ale_completion_enabled = 1
-
-
-\" Set this variable to 1 to fix files when you save them.
-let g:ale_fix_on_save = 1
-
-
-\" In ~/.vim/vimrc, or somewhere similar.
-let g:ale_fixers = {
-\   '*': ['remove_trailing_lines', 'trim_whitespace'],
-\   'javascript': ['biome'],
-\}
-\" end'	
-" >> "${USER_HOME}/.config/nvim/init.vim" >> "/root/.config/nvim/init.vim"
-  chown -R "${SUDO_USER}" "${USER_HOME}/.vim/autoload/plug.vim"
-  chown -R "${SUDO_USER}" "${USER_HOME}/.config/nvim/init.vim"
-  # vim
-  # vim -es -u vimrc -i NONE -c "PlugInstall" -c "qa"
-
-  # neovim
-  nvim -es -u init.vim -i NONE -c "PlugInstall" -c "qa"
-  su - "${SUDO_USER}" -c 'nvim -es -u init.vim -i NONE -c "PlugInstall" -c "qa"'
+	dnf copr enable sunwire/envycontrol -y
+	dnf install python3-envycontrol -y
+	envycontrol -s integrated # nvidia #
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
@@ -925,6 +687,68 @@ _fedora__64() {
   _redhat_flavor_install
 } # end _fedora__64
 
+_fedora__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _fedora__64
+
+_fedora__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _fedora__64
+
+_fedora_36__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running callsomething above _err:${_err}"
+  }
+  fi
+  _redhat_flavor_install "${_parameters-}"
+} # end _fedora_36__64
+
+_fedora_37__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running callsomething above _err:${_err}"
+  }
+  fi
+  _redhat_flavor_install "${_parameters-}"
+} # end _fedora_37__64
+
+_fedora_38__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running callsomething above _err:${_err}"
+  }
+  fi
+  _redhat_flavor_install "${_parameters-}"
+} # end _fedora_38__64
+
+_fedora_39__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running callsomething above _err:${_err}"
+  }
+  fi
+  _redhat_flavor_install "${_parameters-}"
+} # end _fedora_39__64
+
 _gentoo__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
@@ -950,6 +774,11 @@ _suse__32() {
   _redhat_flavor_install
 } # end _suse__32
 
+_netbsd__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "This is installer is missing"
+} # end _netbsd__64
+
 _suse__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
@@ -964,6 +793,16 @@ _ubuntu__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _debian_flavor_install
 } # end _ubuntu__64
+
+_ubuntu__aarch64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _ubuntu__aarch64
+
+_ubuntu_22__aarch64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _ubuntu_22__aarch64
 
 _darwin__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
@@ -992,7 +831,7 @@ _windows__32() {
 
 
 
- #--------/\/\/\/\-- tasks_templates_sudo/nvim …install_nvim.bash” -- Custom code-/\/\/\/\-------
+ #--------/\/\/\/\-- tasks_templates_sudo/envycontroller_nvidia_gpu_switcher …install_envycontroller_nvidia_gpu_switcher.bash” -- Custom code-/\/\/\/\-------
 
 
 

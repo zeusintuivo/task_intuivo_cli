@@ -14,7 +14,7 @@ _git_clone() {
     if it_exists_with_spaces "${_target}/.git" ; then
     {
       cd "${_target}"
-      gco "v0.30.2"
+      git checkout  "v0.30.2"
       if git config pull.rebase false ; then
       {
         warning Could not git config pull.rebase false

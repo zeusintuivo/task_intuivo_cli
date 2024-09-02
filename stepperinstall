@@ -1,5 +1,5 @@
 #/usr/bin/env bash
-set -E -o functrace
+# set -E -o functrace
 set -u
 export  THISSCRIPTNAME
 typeset -r THISSCRIPTNAME="$(basename "$0")"
@@ -7,6 +7,8 @@ function _trap_on_int(){
   local -i _err=${?:-1}
   echo -e "\\n \033[01;7m*** INTERRUPT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n  INT ...\033[0m"
   exit ${_err}
+  return 1
+  pkill stepperinstall
 }
 
 # function on_int(){
@@ -38,8 +40,9 @@ function _trap_on_error(){
   # $(eval ${BASH_COMMAND}  2>&1; )
   # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
   # warning "${@}"
-  exit "${_trapped_error_exit_num}"
-
+  exit "${__trapped_error_exit_num}"
+  return 1
+  pkill stepperinstall
 }
 trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
 trap _trap_on_int INT
@@ -196,7 +199,7 @@ function _perform_rebase_push(){
     # _msg="$(eval "${_action}" 2>&1)"
     eval "${_action}" 2>&1 |  tee .tmp_msg.log
     _err=$?
-    set -E -o functrace
+    # set -E -o functrace
     set -u
     trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
     trap _trap_on_int INT
@@ -267,7 +270,7 @@ function _perform_rebase_push(){
         exit ${_err}
       }
       fi
-      sucess_fallback_flag=0
+      (( ! sucess_fallback_flag )) && echo "failed" && exit 1
     }
     fi
     
@@ -275,7 +278,7 @@ function _perform_rebase_push(){
     [[ -z "${_local_variable}" ]] && continue  # skip if no variable target provided or empty lines
     _msg2="$(eval "local ${_local_variable}=\"${_msg}\"" 2>&1)"
     _err=$?
-    if [ ${_err} -gt 0 ]; then
+    if [ ${_err} -gt 0 ] || [ ${sucess_fallback_flag} -eq 0 ] ; then
     {
       echo -e "$0 ${RED-} Assigning value to _local_variable:${CYAN-}${_local_variable}${RED-}  = ${YELLOW226-}value :${CYAN-}${_msg}: ${PURPLE-}. Better check that: ${CYAN-}${_msg2}${RESET-}"
       [[ -n "${_step_file}" ]] && rm -rf "${_step_file}"

@@ -229,6 +229,19 @@ _fedora__64() {
   file_does_not_exist_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
 } # end _fedora__64
 
+_fedora_37__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  _fedora__64 "${_parameters-}"
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "struct_testing:$LINENO $0:$LINENO while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _fedora_37__64
+
 _mingw__64() {
   # sudo_it
   export USER_HOME="/Users/${SUDO_USER}"

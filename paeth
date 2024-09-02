@@ -14,12 +14,12 @@ function main(){
       _err=$?
       if [ ${_err} -gt 0 ] ; then
       {
-				if ! type  -f "${1}" >/dev/null 2>&1  ; then 
-				{
-					echo "is a function"
-					type  -f "${1}"
-				}
-				fi
+        if ! type  -f "${1}" >/dev/null 2>&1  ; then 
+        {
+          echo "is a function"
+          type  -f "${1}"
+        }
+        fi
         >&2 echo "error 1. ${1} not found in ≤$(pwd)≥ or ≤\${PATH}≥ or ≤\$(env)≥ "
         exit 1  # not found, silent fail
       }
@@ -28,24 +28,24 @@ function main(){
       _err=$?
       if [ ${_err} -gt 0 ] ; then
       {
- 				if ! type  -f "${1}" >/dev/null 2>&1  ; then 
-				{
-					echo "is a function"
-					type  -f "${1}"
-				}
-				fi
+         if ! type  -f "${1}" >/dev/null 2>&1  ; then 
+        {
+          echo "is a function"
+          type  -f "${1}"
+        }
+        fi
          >&2 echo "error 2. ${1} not found in ≤$(pwd)≥ or ≤\${PATH}≥ or ≤\$(env)≥ "
         exit 1  # not found, silent fail
       }
       fi
       if [[ ! -e "${path_to_file}" ]] ; then
       {
- 				if ! type  -f "${1}" >/dev/null 2>&1  ; then 
-				{
-					echo "is a function"
-					type  -f "${1}"
-				}
-				fi
+         if ! type  -f "${1}" >/dev/null 2>&1  ; then 
+        {
+          echo "is a function"
+          type  -f "${1}"
+        }
+        fi
          >&2 echo "error 3. ${path_to_file} does not exist or is not accesible "
         exit 1  # not found, silent fail
       }
@@ -54,15 +54,15 @@ function main(){
     fi
   }
   fi
-	path_to_file="$(realpath "${path_to_file}")"
- 	if ! type  -f "${1}" >/dev/null 2>&1  ; then 
-	{
-		echo "is also a function"
-		type  -f "${1}"
-	}
-	fi
+  path_to_file="$(realpath "${path_to_file}")"
+  if ! type  -f "${1}" >/dev/null 2>&1  ; then 
+  {
+    echo "is also a function"
+    type  -f "${1}"
+  }
+  fi
   
-	echo "${path_to_file}"
+  echo "${path_to_file}"
 }
 main "${1}"
 
