@@ -1,0 +1,348 @@
+#!/usr/bin/bash
+
+_debian_flavor_install() {
+  # trap  '_trap_on_exit $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  EXIT
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  if
+    (
+    install_requirements "linux" "
+      base64
+      unzip
+      curl
+      wget
+      ufw
+      nginx
+    "
+    ); then
+    {
+      apt install base64 -y
+      apt install unzip -y
+      apt install nginx -y
+    }
+  fi
+  verify_is_installed "
+    unzip
+    curl
+    wget
+    tar
+    ufw
+    nginx
+  "
+  local PB_VERSION=0.16.7
+  local CODENAME="pocketbase_${PB_VERSION}_linux_amd64.zip"
+  local TARGET_URL="https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/${CODENAME}"
+  local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  directory_exists_with_spaces "${DOWNLOADFOLDER}"
+  cd "${DOWNLOADFOLDER}"
+  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+  # unzip "${DOWNLOADFOLDER}/${CODENAME}" -d $HOME/pb/
+  local UNZIPDIR="${USER_HOME}/_/software"
+  mkdir -p "${UNZIPDIR}"
+  _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
+  local PATHTOPOCKETBASE="${UNZIPDIR}/pocketbase"
+  local THISIP=$(myip)
+
+	apt build-dep sway -y
+	apt install glslang-tools libcairo2-dev libcap-dev libdbus-1-dev libdisplay-info-dev libevdev-dev libgdk-pixbuf2.0-dev libinput-dev libjson-c-dev libliftoff-dev libpam0g-dev libpango1.0-dev libpcre2-dev libpixman-1-dev libseat-dev libsystemd-dev libvulkan-dev libwayland-dev libwayland-egl1 libwlroots-dev libxcb-ewmh-dev libxkbcommon-dev meson pkgconf scdoc tree wayland-protocols -y
+	apt install sway -y
+	 cd "${USER_HOME}/_/software/" || return 1
+I   [ -e "./sway" ] && (cd sway && git pull origin master && cd ..) || git clone https://g  ithub.com/swaywm/sway.git # I: Note that A && B || C is not if-then-else. C may run whe…
+    cd sway || return 1
+    git clone https://gitlab.freedesktop.org/wlroots/wlroots.git subprojects/wlroots
+
+		echo "These other repo are needed by Atch Alpine FreeBSD maybe"
+it clone https://gitlab.freedesktop.org/wayland/wayland.git subprojects/wayland
+git clone https://gitlab.freedesktop.org/wayland/wayland-protocols.git subprojects/wayland-protocols
+git clone https://gitlab.freedesktop.org/emersion/libdisplay-info.git subprojects/libdisplay-info
+git clone https://gitlab.freedesktop.org/emersion/libliftoff.git subprojects/libliftoff
+git clone https://gitlab.freedesktop.org/mesa/drm.git subprojects/libdrm
+git clone https://git.sr.ht/~kennylevinsen/seatd subprojects/seatd
+
+    # Build sway and wlroots
+    meson build/
+    ninja -C build/
+
+		echo "Tmp export to test"
+		export PATH=build/swaybar:build/swaymsg:build/swaynag:$PATH
+
+    # Start sway
+    build/sway/sway
+} # end _debian_flavor_install
+
+_redhat_flavor_install() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  dnf build-dep sway -y
+	dnf install -y git gcc meson ninja-build wayland-devel mesa-libEGL-devel mesa-libGLES-devel mesa-dri-drivers
+	dnf install -y libdrm-devel libgbm-devel libxkbcommon-devel libudev-devel systemd-devel cairo-devel libpcap-devel json-c-devel pam-devel pango-devel pcre-devel gdk-pixbuf2-devel
+	dnf install libevdev-devel libevdev libevdev-utils libevdevPlus libevdevPlus-devel  -y
+	dnf install pixman pixman-devel -y
+	dnf install libseat-devel libseat -y
+	dnf install hwdata-devel hwdata -y
+  dnf install libliftoff-devel libliftoff -y
+	dnf install xorg-x11-drv-libinput-devel xorg-x11-drv-libinput libinput-test libinput-utils libinput-devel libinput -y
+	dnf install xorg-x11-server-Xwayland-devel xorg-x11-server-Xwayland xisxwayland xwaylandvideobridge xorg-x11-server-source -y
+	dnf install bash-completion -y
+	dnf install fish -y
+	dnf install bluefish -y
+	dnf install scdoc -y
+	dnf install sway -y
+
+	cd "${USER_HOME}/_/software/" || return 1
+  [ -e "./sway" ] && (cd sway && git pull origin master && cd ..) || git clone https://github.com/swaywm/sway.git
+	cd sway || return 1
+
+	chown -R "${SUDO_USER}" "$(pwd)"
+	[ -e "subprojects/wlroots" ] || git clone https://gitlab.freedesktop.org/wlroots/wlroots.git subprojects/wlroots
+  [ -e "subprojects/wayland" ] || git clone https://gitlab.freedesktop.org/wayland/wayland.git subprojects/wayland
+  [ -e "subprojects/wayland-protocols" ] || git clone https://gitlab.freedesktop.org/wayland/wayland-protocols.git subprojects/wayland-protocols
+  [ -e "subprojects/libdisplay-info" ] || git clone https://gitlab.freedesktop.org/emersion/libdisplay-info.git subprojects/libdisplay-info
+  [ -e "subprojects/libliftoff" ] || git clone https://gitlab.freedesktop.org/emersion/libliftoff.git subprojects/libliftoff
+  [ -e "subprojects/libdrm" ] || git clone https://gitlab.freedesktop.org/mesa/drm.git subprojects/libdrm
+  [ -e "subprojects/seatd" ] || git clone https://git.sr.ht/~kennylevinsen/seatd subprojects/seatd
+	[ -e "subprojects/pixman" ] || git clone https://gitlab.freedesktop.org/pixman/pixman subprojects/pixman
+	[ -e "subprojects/elogind" ] || git clone https://github.com/elogind/elogind.git subprojects/elogind
+
+	chown -R "${SUDO_USER}" "$(pwd)/subprojects"
+
+	# Build sway and wlroots
+  /home/linuxbrew/.linuxbrew/bin/meson build/
+  /home/linuxbrew/.linuxbrew/bin/ninja -C build/
+
+  echo "Tmp export to test"
+
+	export PATH=build/swaybar:build/swaymsg:build/swaynag:$PATH
+  # Start sway
+  build/sway/sway
+
+	echo "System-wide installation
+
+This section is relevant if you want to install both wlroots and sway system-wide (not using a subproject).
+Variables
+
+If you don't want to add the paths below to your ~/.profile, you can paste these lines into your terminal to set the variables for the current terminal session only.
+
+Ensure that /usr/local/bin is in your PATH by executing echo $PATH. If it isn't, open ~/.profile and add:
+
+export PATH=/usr/local/bin:$PATH
+
+Ensure that your PKG_CONFIG_PATH contains /usr/local/lib/pkgconfig, /usr/local/lib64/pkgconfig, and /usr/local/share/pkgconfig by executing echo $PKG_CONFIG_PATH. If it doesn't, open ~/.profile and add:
+
+export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH
+export PKG_CONFIG_PATH=/usr/local/lib64/pkgconfig:$PKG_CONFIG_PATH
+export PKG_CONFIG_PATH=/usr/local/share/pkgconfig:$PKG_CONFIG_PATH
+
+Ensure that your LD_LIBRARY_PATH contains /usr/local/lib/ and /usr/local/lib64/ by executing echo $LD_LIBRARY_PATH. If it doesn't, open the ~/.profile file located in your home directory and add:
+
+export LD_LIBRARY_PATH=/usr/local/lib/:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/usr/local/lib64/:$LD_LIBRARY_PATH
+
+Execute source ~/.profile to update the variables for your current terminal session. You should ensure that your chosen shell sources ~/.profile on login (you may need to delete ~/.bash_profile for it to take precedent).
+Compiling
+
+You're now ready to compile wlroots, which is the Wayland compositor library used by sway.
+
+    Clone the wlroots repository with git
+    Execute meson build, which will create the build directory
+    Execute ninja -C build to build
+    Execute sudo ninja -C build install to install
+    Verify that either /usr/local/lib or /usr/local/lib64 contain libwlroots.so
+
+Now that wlroots is built and installed, you can build sway.
+
+    Clone the sway repository with git
+    Execute meson build, which will create the build directory
+    Execute ninja -C build to build
+    Execute sudo ninja -C build install to install
+    Verify that /usr/local/bin contains the sway, swaybar, swaylock, etc. binaries
+"
+
+} # end _redhat_flavor_install
+
+_arch_flavor_install() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_arch_flavor_install Procedure not yet implemented. I don't know what to do."
+} # end _readhat_flavor_install
+
+_arch__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _arch_flavor_install
+} # end _arch__32
+
+_arch__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _arch_flavor_install
+} # end _arch__64
+
+_centos__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _centos__32
+
+_centos__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _centos__64
+
+_debian__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _debian__32
+
+_debian__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _debian__64
+
+_fedora__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _fedora__32
+
+_fedora__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _fedora__64
+
+_fedora__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _fedora__64
+
+_fedora__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _fedora__64
+
+_fedora_36__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running callsomething above _err:${_err}"
+  }
+  fi
+  _redhat_flavor_install "${_parameters-}"
+} # end _fedora_36__64
+
+_fedora_37__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running callsomething above _err:${_err}"
+  }
+  fi
+  _redhat_flavor_install "${_parameters-}"
+} # end _fedora_37__64
+
+_fedora_38__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running callsomething above _err:${_err}"
+  }
+  fi
+  _redhat_flavor_install "${_parameters-}"
+} # end _fedora_38__64
+
+_fedora_39__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running callsomething above _err:${_err}"
+  }
+  fi
+  _redhat_flavor_install "${_parameters-}"
+} # end _fedora_39__64
+
+_gentoo__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _gentoo__32
+
+_gentoo__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _gentoo__64
+
+_madriva__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _madriva__32
+
+_madriva__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _madriva__64
+
+_suse__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _suse__32
+
+_netbsd__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "This is installer is missing"
+} # end _netbsd__64
+
+_suse__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _suse__64
+
+_ubuntu__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _ubuntu__32
+
+_ubuntu__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _ubuntu__64
+
+_ubuntu__aarch64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _ubuntu__aarch64
+
+_ubuntu_22__aarch64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _ubuntu_22__aarch64
+
+_darwin__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_darwin__64 Procedure not yet implemented. I don't know what to do."
+} # end _darwin__64
+
+_darwin__arm64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_darwin__arm64 Procedure not yet implemented. I don't know what to do."
+} # end _darwin__arm64
+
+_tar() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_tar Procedure not yet implemented. I don't know what to do."
+} # end tar
+
+_windows__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_windows__64 Procedure not yet implemented. I don't know what to do."
+} # end _windows__64
+
+_windows__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_windows__32 Procedure not yet implemented. I don't know what to do."
+} # end _windows__32
