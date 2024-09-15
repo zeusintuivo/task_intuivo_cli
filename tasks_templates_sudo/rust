@@ -136,21 +136,32 @@ _redhat_flavor_install() {
     wget
     tar
   "
+  Installing "_add_variables_to_bashrc_zshrc for ROOT and USER"
+  _add_variables_to_bashrc_zshrc
+ 
   export ARCHFLAGS="-arch $(uname -m)" 
-  ARCHFLAGS="-arch $(uname -m)"  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+  
+  ARCHFLAGS="-arch $(uname -m)" 
+  Installing "ROOT install:ARCHFLAGS='-arch ${ARCHFLAGS-}' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
   [[ ! -e "${USER_HOME}/.cargo" ]] && cp -R /root/.cargo "${USER_HOME}/.cargo" 
   chmod -R 755 "${USER_HOME}/.cargo"
   chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo"
   chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/bin"
   chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/env"
+  Installing "USER install(${USER_HOME}):su - \"${SUDO_USER}\" -c \"ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh\""
   if su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh" ; then
-	  {
-		  echo "oops"
-	  }
+  {
+    failed "Failed to install for user"
+  } 
+  else 
+  {
+    passed "install for user"
+  }
   fi
-
-  _add_variables_to_bashrc_zshrc
+  echo "ROOT: rustup default stable"
   rustup default stable
+  echo "USER: su - \"${SUDO_USER}\" -c \"rustup default stable\"" 
   su - "${SUDO_USER}" -c "rustup default stable" 
 } # end _redhat_flavor_install
 
