@@ -701,15 +701,32 @@ _debian_flavor_install() {
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  if ( ! su - "${SUDO_USER}" -c "command -v brew" >/dev/null 2>&1; ); then
+  Checking if rust is installed by brew and attempting remove it
+  if ( ! su - "${SUDO_USER}" -c "command -v /home/linuxbrew/.linuxbrew/bin/brew" >/dev/null 2>&1; ); then
   {
-    su - "${SUDO_USER}" -c "brew remove rust"
+    if su - "${SUDO_USER}" -c "/home/linuxbrew/.linuxbrew/bin/brew remove rust" ; then
+    {
+      warning "could not remove rust from user root brew"
+    }
+    else
+    {
+      passed "removed rust from brew user root"
+    }
+    fi 
   }
   fi
 
-  if ( ! command -v brew >/dev/null 2>&1; ); then
+  if ( ! command -v /home/linuxbrew/.linuxbrew/bin/brew >/dev/null 2>&1; ); then
   {
-    brew remove rust
+    if /home/linuxbrew/.linuxbrew/bin/brew remove rust ; then
+    {
+      warning "could not remove rust from user root brew"
+    }
+    else
+    {
+      passed "removed rust from brew user root"
+    }
+    fi 
   }
   fi
 
@@ -777,9 +794,9 @@ _redhat_flavor_install() {
   Installing "_add_variables_to_bashrc_zshrc for ROOT and USER"
   _add_variables_to_bashrc_zshrc
  
-  echo "ROOT: rustup default stable"
+  Installing "ROOT: rustup default stable"
   rustup default stable
-  echo "USER: su - \"${SUDO_USER}\" -c \"rustup default stable\"" 
+  Installing "USER: su - \"${SUDO_USER}\" -c \"rustup default stable\"" 
   su - "${SUDO_USER}" -c "rustup default stable" 
 } # end _redhat_flavor_install
 
