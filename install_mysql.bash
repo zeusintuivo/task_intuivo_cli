@@ -20,16 +20,106 @@ echo "0. sudologic $0:$LINENO       THISSCRIPTPARAMS:${THISSCRIPTPARAMS:-}"
 
 echo "0. sudologic $0 Start Checking realpath  "
 if ! ( command -v realpath >/dev/null 2>&1; )  ; then
+{  
   echo "... realpath not found. Downloading REF:https://github.com/swarmbox/realpath.git "
-  cd $HOME
+  if [[ -n "${USER_HOME}" ]] ;  then
+  {
+    cd "${USER_HOME}" || echo "ERROR! failed realpath compile cd " && exit 1
+  }
+  else
+  {
+    cd "${HOME}" || echo "ERROR! failed realpath compile cd " && exit 1
+  }
+  fi
   git clone https://github.com/swarmbox/realpath.git
-  cd realpath
+  _err=$?
+  [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Builing realpath. returned error did not download or is installed err:$_err  \n \n  " && exit 1
+  cd realpath || echo "ERROR! failed realpath compile cd " && exit 1
   make
+  _err=$?
+  [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Builing realpath. returned error did not download or is installed err:$_err  \n \n  " && exit 1
   sudo make install
   _err=$?
   [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Builing realpath. returned error did not download or is installed err:$_err  \n \n  " && exit 1
+  _err=$?
+  [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Builing realpath. returned error did not download or is installed err:$_err  \n \n  " && exit 1
+}
 else
+{
   echo "... realpath exists .. check!"
+}
+fi
+if ! ( command -v paeth >/dev/null 2>&1; )  ; then
+{
+  function paeth(){
+  local path_to_file=""
+  local -i _err=0
+  path_to_file="${*}"
+  if [[ ! -e "${path_to_file}" ]] ; then   # not found in current folder
+  {
+    path_to_file="$(pwd)/${*}"
+    if [[ ! -e "${path_to_file}" ]] ; then  # add full pwd and see if finds it
+    {
+      path_to_file="$(which "${*}")"   # search in system $PATH and env system
+      _err=$?
+      if [ ${_err} -gt 0 ] ; then
+      {
+        if ! type  -f "${*}" >/dev/null 2>&1  ; then 
+        {
+          echo "is a function"
+          type  -f "${*}"
+        }
+        fi
+        >&2 echo "error 1. ${*} not found in ≤$(pwd)≥ or ≤\${PATH}≥ or ≤\$(env)≥ "
+        exit 1  # not found, silent fail
+      }
+      fi
+      path_to_file="$(realpath "$(which "${*}")")"   # updated realpath macos 20210902
+      _err=$?
+      if [ ${_err} -gt 0 ] ; then
+      {
+         if ! type  -f "${*}" >/dev/null 2>&1  ; then 
+        {
+          echo "is a function"
+          type  -f "${*}"
+        }
+        fi
+         >&2 echo "error 2. ${*} not found in ≤$(pwd)≥ or ≤\${PATH}≥ or ≤\$(env)≥ "
+        exit 1  # not found, silent fail
+      }
+      fi
+      if [[ ! -e "${path_to_file}" ]] ; then
+      {
+         if ! type  -f "${*}" >/dev/null 2>&1  ; then 
+        {
+          echo "is a function"
+          type  -f "${*}"
+        }
+        fi
+         >&2 echo "error 3. ${path_to_file} does not exist or is not accesible "
+        exit 1  # not found, silent fail
+      }
+      fi
+    }
+    fi
+  }
+  fi
+  path_to_file="$(realpath "${path_to_file}")"
+  if ! type  -f "${*}" >/dev/null 2>&1  ; then 
+  {
+    echo "is also a function"
+    type  -f "${*}"
+  }
+  fi
+  
+  echo "${path_to_file}"
+  } # end paeth 
+}
+fi
+if ! ( command -v realpath >/dev/null 2>&1; )  ; then
+{
+  echo "... realpath not found. and did not install . ABORTING"
+}
 fi
 
 typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")"   # updated realpath macos 20210902
@@ -76,7 +166,7 @@ INT ..."
 load_struct_testing(){
   function _trap_on_error(){
     local -ir __trapped_error_exit_num="${2:-0}"
-		echo -e "\\n \033[01;7m*** tasks_base/sudoer.bash:$LINENO load_struct_testing() ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+    echo -e "\\n \033[01;7m*** tasks_base/sudoer.bash:$LINENO load_struct_testing() ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
 
     echo ". ${1}"
     echo ". exit  ${__trapped_error_exit_num}  "
@@ -91,9 +181,38 @@ load_struct_testing(){
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
     exit 1
   }
+  function source_library(){
+    # Sample usage 
+    #    if ( source_library "${provider}" ) ; then 
+    #      failed
+    #    fi
+    local -i _DEBUG=${DEBUG:-0}
+    local provider="${*-}"
+    local structsource=""
+      if [[  -e "${provider}" ]] ; then
+      {
+        structsource="""$(<"${provider}")"""
+        _err=$?
+        if [ $_err -gt 0 ] ; then
+        {
+          >&2 echo -e "#\n #\n# 4.1 WARNING Loading ${provider}. Occured while running 'source' err:$_err  \n \n  "
+          return 1
+        }
+        fi
+	if (( _DEBUG )) ; then
+          >&2 echo "# $0: tasks_base/sudoer.bash Loading locally"
+        fi
+        echo """${structsource}"""
+        return 0
+      }
+      fi
+      >&2 echo -e "\n 4.2 nor found  ${provider}. 'source' err:$_err  \n  "
+      return 1
+  } # end source_library
   function load_library(){
     local _library="${1:-struct_testing}"
     local -i _DEBUG=${DEBUG:-0}
+    local -i _err=0
     if [[ -z "${1}" ]] ; then
     {
        echo "Must call with name of library example: struct_testing execute_command"
@@ -101,41 +220,63 @@ load_struct_testing(){
     }
     fi
     trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-      local provider="$HOME/_/clis/execute_command_intuivo_cli/${_library}"
-      if [[ -n "${SUDO_USER:-}" ]] && [[ -n "${HOME:-}" ]] && [[ "${HOME:-}" == "/root" ]] && [[ !  -e "${provider}"  ]] ; then
+      local providers="
+/home/${SUDO_USER-}/_/clis/execute_command_intuivo_cli/${_library-}
+/Users/${SUDO_USER-}/_/clis/execute_command_intuivo_cli/${_library-}
+/home/${USER-}/_/clis/execute_command_intuivo_cli/${_library-}
+/Users/${USER-}/_/clis/execute_command_intuivo_cli/${_library-}
+${HOME-}/_/clis/execute_command_intuivo_cli/${_library-}
+"
+      local provider=""
+      local -i _loaded=0
+      local -i _found=0 
+      local structsource
+      while read -r provider ; do
       {
-        provider="/home/${SUDO_USER}/_/clis/execute_command_intuivo_cli/${_library}"
-      }
-      elif [[ -z "${SUDO_USER:-}" ]] && [[ -n "${HOME:-}" ]] && [[ "${HOME:-}" == "/root" ]] && [[ !  -e "${provider}"  ]] ; then
-      {
-        provider="/home/${USER}/_/clis/execute_command_intuivo_cli/${_library}"
-      }
-      fi
-      echo "$0: ${provider}"
-      echo "$0: SUDO_USER:${SUDO_USER:-nada SUDOUSER}: USER:${USER:-nada USER}: ${SUDO_HOME:-nada SUDO_HOME}: {${HOME:-nada HOME}}"
-      local _err=0 structsource
-      if [[  -e "${provider}" ]] ; then
-        if (( _DEBUG )) ; then
-          echo "$0: tasks_base/sudoer.bash Loading locally"
-        fi
-        structsource="""$(<"${provider}")"""
+        [[ -z "${provider}" ]] && continue
+        [[ ! -e "${provider}" ]] && continue
+	_loaded=0
+	_found=0
+	structsource="""$(source_library "${provider}")"""
         _err=$?
+        _loaded=1
+	_found=1
         if [ $_err -gt 0 ] ; then
         {
-           echo -e "\n \n  ERROR! Loading ${_library}. running 'source locally' returned error did not download or is empty err:$_err  \n \n  "
-           exit 1
+          echo -e "\n \n 4.1 WARNING Loading ${_library}. Occured while running 'source' err:$_err  \n \n  "
+          _loaded=0
+	  _found=0
         }
         fi
-      else
+      }
+      done <<< "${providers}"
+
+#       provider="$HOME/_/clis/execute_command_intuivo_cli/${_library}"
+#       if [[ -n "${SUDO_USER:-}" ]] && [[ -n "${HOME:-}" ]] && [[ "${HOME:-}" == "/root" ]] && [[ !  -e "${provider}"  ]] ; then
+#       {
+#         provider="/home/${SUDO_USER}/_/clis/execute_command_intuivo_cli/${_library}"
+#       }
+#       elif [[ -z "${USER:-}" ]] && [[ -n "${HOME:-}" ]] && [[ "${HOME:-}" == "/root" ]] && [[ !  -e "${provider}"  ]] ; then
+#       {
+#         provider="/home/${USER}/_/clis/execute_command_intuivo_cli/${_library}"
+#       }
+#       fi
+#       echo "$0: ${provider}"
+#       echo "$0: SUDO_USER:${SUDO_USER:-nada SUDOUSER}: USER:${USER:-nada USER}: ${SUDO_HOME:-nada SUDO_HOME}: {${HOME:-nada HOME}}"
+      
+      if (( ! _loaded )) ; then 
         if ( command -v curl >/dev/null 2>&1; )  ; then
           if (( _DEBUG )) ; then
             echo "$0: tasks_base/sudoer.bash Loading ${_library} from the net using curl "
           fi
+	  _loaded=0
           structsource="""$(curl https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/${_library}  -so -   2>/dev/null )"""  #  2>/dev/null suppress only curl download messages, but keep curl output for variable
           _err=$?
+	  _loaded=1
           if [ $_err -gt 0 ] ; then
           {
             echo -e "\n \n  ERROR! Loading ${_library}. running 'curl' returned error did not download or is empty err:$_err  \n \n  "
+	    _loaded=0
             exit 1
           }
           fi
@@ -143,16 +284,19 @@ load_struct_testing(){
           if (( _DEBUG )) ; then
             echo "$0: tasks_base/sudoer.bash Loading ${_library} from the net using wget "
           fi
+	  _loaded=0
           structsource="""$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/${_library} -O -   2>/dev/null )"""  #  2>/dev/null suppress only wget download messages, but keep wget output for variable
           _err=$?
+	  _loaded=1
           if [ $_err -gt 0 ] ; then
           {
             echo -e "\n \n  ERROR! Loading ${_library}. running 'wget' returned error did not download or is empty err:$_err  \n \n  "
+	    _loaded=0
             exit 1
           }
           fi
         else
-          echo -e "\n \n 2  ERROR! Loading ${_library} could not find wget or curl to download  \n \n "
+          echo -e "\n \n 2  ERROR! Loading ${_library} could not find local, wget, curl to load or download  \n \n "
           exit 69
         fi
       fi
@@ -462,11 +606,14 @@ _get_mac_version(){
 } # end _get_mac_version
 
 _install_dmgs_list() {
-  Comment start $0$1 _install_dmgs_list
+  Comment start "$0$1" _install_dmgs_list
   local installlist one  target_name target_url target_app app_name extension
-  local _major_version1=$(_get_mac_version )
-  local _major_version=$(_get_mac_version | tail -1 )
-  enforce_parameter_with_value 1 _major_version   "${_major_version}"  "10.14"
+  local _major_version1=""
+  _major_version1=$(_get_mac_version )
+  local _major_version=""
+  _major_version=$(_get_mac_version | tail -1 )
+  local extension
+	enforce_parameter_with_value 1 _major_version   "${_major_version}"  "10.14"
   echo "${_major_version1}"
   echo "_major_version:${_major_version}"
     case "${_major_version}" in
@@ -532,9 +679,9 @@ _install_dmgs_list() {
     {
 
       target_name="$(echo "${one}" | cut -d'|' -f1)"
-      extension="$(echo "${target_name}" | rev | cut -d'.' -f 1 | rev)"
+      # extension="$(echo "${target_name}" | rev | cut -d'.' -f 1 | rev)"
       target_app="$(echo "${one}" | cut -d'|' -f2)"
-      app_name="$(echo "$(basename "${target_app}")")"
+      app_name="$(basename "${target_app}")"
       target_url="$(echo "${one}" | cut -d'|' -f3-)"
       if [[ -n "${target_name}" ]] ; then
       {
@@ -559,7 +706,7 @@ _install_dmgs_list() {
   }
   done <<< "$(echo "${installlist}" | grep -vE '^#' | grep -vE '^\s+#')"
 
-  Comment end $0$1 _install_dmgs_list
+  Comment end "$0$1 _install_dmgs_list"
   return 0
 } # end _install_dmgs_list
 
@@ -568,7 +715,77 @@ _debian_flavor_install() {
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
-  echo "Procedure not yet implemented. I don't know what to do."
+	dnf build-dep mysql -y
+  dnf install mysql-community-server -y
+  rpm -qi mysql-community-server
+	systemctl start mysqld.service
+	systemctl enable mysqld.service
+	local tempass="$(grep 'A temporary password' /var/log/mysqld.log |tail -1)"
+	local newpass=toor
+	Checking "A temporary password is generated for" "root@localhost" ":" "${tempass}" "${newpass}
+${newpass}
+Yes
+Yes
+Yes
+Yes
+Yes
+Yes
+"
+  Installing "Here after you change password run the following
+	make password toor for dev for mysql 8
+
+SELECT user,authentication_string,plugin,host FROM mysql.user;
+SHOW VARIABLES LIKE 'validate_password%';
+SET GLOBAL validate_password.LENGTH = 4;
+SET GLOBAL validate_password.policy = 0;
+SET GLOBAL validate_password.mixed_case_count = 0;
+SET GLOBAL validate_password.number_count = 0;
+SET GLOBAL validate_password.special_char_count = 0;
+SET GLOBAL validate_password.check_user_name = 0;
+ALTER USER 'root'@'localhost' IDENTIFIED BY 'toor';
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'toor';
+FLUSH PRIVILEGES;
+SELECT user,authentication_string,plugin,host FROM mysql.user;
+SHOW VARIABLES LIKE 'validate_password%';
+	"
+  mysql_secure_installation <<< "Y
+"
+
+  mysql -u root -p "${newpass}"
+	Installing "firewall-cmd" for remote connections
+	firewall-cmd --add-service=mysql --permanent
+	firewall-cmd --reload
+	firewall-cmd --permanent --add-rich-rule "rule family=\"ipv4\" service name=\"mysql\" source address=\"10.1.1.0/24\" accept"
+
+	Installing "If you have issues with Laravel and Mysql 8 try this
+	// database.php
+
+    'connections' => [
+
+        'mysql' => [
+            'driver'      => 'mysql',
+            'host'        => env( 'DB_HOST', '127.0.0.1' ),
+            'port'        => env( 'DB_PORT', '3306' ),
+            'database'    => env( 'DB_DATABASE', 'forge' ),
+            'username'    => env( 'DB_USERNAME', 'forge' ),
+            'password'    => env( 'DB_PASSWORD', '' ),
+            'unix_socket' => env( 'DB_SOCKET', '' ),
+            'charset'     => 'utf8mb4',
+            'collation'   => 'utf8mb4_unicode_ci',
+            'prefix'      => '',
+            'strict'      => true,
+            'engine'      => null,
+            'modes'       => [
+                'ONLY_FULL_GROUP_BY',
+                'STRICT_TRANS_TABLES',
+                'NO_ZERO_IN_DATE',
+                'NO_ZERO_DATE',
+                'ERROR_FOR_DIVISION_BY_ZERO',
+                'NO_ENGINE_SUBSTITUTION',
+            ],
+        ],
+    ],
+	"
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
@@ -604,8 +821,120 @@ _fedora__32() {
 } # end _fedora__32
 
 _fedora__64() {
-  _redhat_flavor_install
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  dnf -y install https://dev.mysql.com/get/mysql80-community-release-fc39-1.noarch.rpm
+  _redhat_flavor_install "${_parameters-}"
+	_err=$?
+	if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO while running callsomething above _err:${_err}"
+  }
+  fi
 } # end _fedora__64
+
+_fedora_34__64() {
+	trap "echo Error:$?" ERR INT
+	local _parameters="${*-}"
+	local -i _err=0
+	dnf -y install https://dev.mysql.com/get/mysql80-community-release-fc34-3.noarch.rpm
+	_redhat_flavor_install "${_parameters-}"
+	_err=$?
+	if [ ${_err} -gt 0 ] ; then
+	{
+		failed "$0:$LINENO while running callsomething above _err:${_err}"
+	}
+	fi
+} # end _fedora_34__64
+
+_fedora_35__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  dnf -y install https://dev.mysql.com/get/mysql80-community-release-fc35-3.noarch.rpm
+  _redhat_flavor_install "${_parameters-}"
+	_err=$?
+	if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _fedora_35__64
+
+_fedora_36__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  dnf -y install https://dev.mysql.com/get/mysql80-community-release-fc36-1.noarch.rpm
+  _redhat_flavor_install "${_parameters-}"
+	_err=$?
+	if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _fedora_36__64
+
+
+_fedora_37__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  dnf -y install https://dev.mysql.com/get/mysql80-community-release-fc37-1.noarch.rpm
+  _redhat_flavor_install "${_parameters-}"
+	_err=$?
+	if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _fedora_37__64
+
+
+_fedora_38__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  dnf -y install https://dev.mysql.com/get/mysql80-community-release-fc38-1.noarch.rpm
+  _redhat_flavor_install "${_parameters-}"
+	_err=$?
+	if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _fedora_38__64
+
+
+_fedora_39__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  dnf -y install https://dev.mysql.com/get/mysql80-community-release-fc39-1.noarch.rpm
+  _redhat_flavor_install "${_parameters-}"
+	_err=$?
+	if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _fedora_39__64
+
+
+_fedora_40__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  dnf -y install https://dev.mysql.com/get/mysql80-community-release-fc40-1.noarch.rpm
+  _redhat_flavor_install "${_parameters-}"
+	_err=$?
+	if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _fedora_40__64
 
 _gentoo__32() {
   _redhat_flavor_install
@@ -642,7 +971,7 @@ _ubuntu__64() {
 _darwin__64() {
   Installing ## macOS MySQL From dmg
 
-  _install_dmgs_list
+  _install_dmgs_list "${*-}"
 } # end _darwin__64
 
 _tar() {

@@ -24,11 +24,14 @@ _get_mac_version(){
 } # end _get_mac_version
 
 _install_dmgs_list() {
-  Comment start $0$1 _install_dmgs_list
+  Comment start "$0$1" _install_dmgs_list
   local installlist one  target_name target_url target_app app_name extension
-  local _major_version1=$(_get_mac_version )
-  local _major_version=$(_get_mac_version | tail -1 )
-  enforce_parameter_with_value 1 _major_version   "${_major_version}"  "10.14"
+  local _major_version1=""
+  _major_version1=$(_get_mac_version )
+  local _major_version=""
+  _major_version=$(_get_mac_version | tail -1 )
+  local extension
+	enforce_parameter_with_value 1 _major_version   "${_major_version}"  "10.14"
   echo "${_major_version1}"
   echo "_major_version:${_major_version}"
     case "${_major_version}" in
@@ -94,9 +97,9 @@ _install_dmgs_list() {
     {
 
       target_name="$(echo "${one}" | cut -d'|' -f1)"
-      extension="$(echo "${target_name}" | rev | cut -d'.' -f 1 | rev)"
+      # extension="$(echo "${target_name}" | rev | cut -d'.' -f 1 | rev)"
       target_app="$(echo "${one}" | cut -d'|' -f2)"
-      app_name="$(echo "$(basename "${target_app}")")"
+      app_name="$(basename "${target_app}")"
       target_url="$(echo "${one}" | cut -d'|' -f3-)"
       if [[ -n "${target_name}" ]] ; then
       {
@@ -121,7 +124,7 @@ _install_dmgs_list() {
   }
   done <<< "$(echo "${installlist}" | grep -vE '^#' | grep -vE '^\s+#')"
 
-  Comment end $0$1 _install_dmgs_list
+  Comment end "$0$1 _install_dmgs_list"
   return 0
 } # end _install_dmgs_list
 
@@ -130,7 +133,77 @@ _debian_flavor_install() {
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
-  echo "Procedure not yet implemented. I don't know what to do."
+	dnf build-dep mysql -y
+  dnf install mysql-community-server -y
+  rpm -qi mysql-community-server
+	systemctl start mysqld.service
+	systemctl enable mysqld.service
+	local tempass="$(grep 'A temporary password' /var/log/mysqld.log |tail -1)"
+	local newpass=toor
+	Checking "A temporary password is generated for" "root@localhost" ":" "${tempass}" "${newpass}
+${newpass}
+Yes
+Yes
+Yes
+Yes
+Yes
+Yes
+"
+  Installing "Here after you change password run the following
+	make password toor for dev for mysql 8
+
+SELECT user,authentication_string,plugin,host FROM mysql.user;
+SHOW VARIABLES LIKE 'validate_password%';
+SET GLOBAL validate_password.LENGTH = 4;
+SET GLOBAL validate_password.policy = 0;
+SET GLOBAL validate_password.mixed_case_count = 0;
+SET GLOBAL validate_password.number_count = 0;
+SET GLOBAL validate_password.special_char_count = 0;
+SET GLOBAL validate_password.check_user_name = 0;
+ALTER USER 'root'@'localhost' IDENTIFIED BY 'toor';
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'toor';
+FLUSH PRIVILEGES;
+SELECT user,authentication_string,plugin,host FROM mysql.user;
+SHOW VARIABLES LIKE 'validate_password%';
+	"
+  mysql_secure_installation <<< "Y
+"
+
+  mysql -u root -p "${newpass}"
+	Installing "firewall-cmd" for remote connections
+	firewall-cmd --add-service=mysql --permanent
+	firewall-cmd --reload
+	firewall-cmd --permanent --add-rich-rule "rule family=\"ipv4\" service name=\"mysql\" source address=\"10.1.1.0/24\" accept"
+
+	Installing "If you have issues with Laravel and Mysql 8 try this
+	// database.php
+
+    'connections' => [
+
+        'mysql' => [
+            'driver'      => 'mysql',
+            'host'        => env( 'DB_HOST', '127.0.0.1' ),
+            'port'        => env( 'DB_PORT', '3306' ),
+            'database'    => env( 'DB_DATABASE', 'forge' ),
+            'username'    => env( 'DB_USERNAME', 'forge' ),
+            'password'    => env( 'DB_PASSWORD', '' ),
+            'unix_socket' => env( 'DB_SOCKET', '' ),
+            'charset'     => 'utf8mb4',
+            'collation'   => 'utf8mb4_unicode_ci',
+            'prefix'      => '',
+            'strict'      => true,
+            'engine'      => null,
+            'modes'       => [
+                'ONLY_FULL_GROUP_BY',
+                'STRICT_TRANS_TABLES',
+                'NO_ZERO_IN_DATE',
+                'NO_ZERO_DATE',
+                'ERROR_FOR_DIVISION_BY_ZERO',
+                'NO_ENGINE_SUBSTITUTION',
+            ],
+        ],
+    ],
+	"
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
@@ -166,8 +239,120 @@ _fedora__32() {
 } # end _fedora__32
 
 _fedora__64() {
-  _redhat_flavor_install
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  dnf -y install https://dev.mysql.com/get/mysql80-community-release-fc39-1.noarch.rpm
+  _redhat_flavor_install "${_parameters-}"
+	_err=$?
+	if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO while running callsomething above _err:${_err}"
+  }
+  fi
 } # end _fedora__64
+
+_fedora_34__64() {
+	trap "echo Error:$?" ERR INT
+	local _parameters="${*-}"
+	local -i _err=0
+	dnf -y install https://dev.mysql.com/get/mysql80-community-release-fc34-3.noarch.rpm
+	_redhat_flavor_install "${_parameters-}"
+	_err=$?
+	if [ ${_err} -gt 0 ] ; then
+	{
+		failed "$0:$LINENO while running callsomething above _err:${_err}"
+	}
+	fi
+} # end _fedora_34__64
+
+_fedora_35__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  dnf -y install https://dev.mysql.com/get/mysql80-community-release-fc35-3.noarch.rpm
+  _redhat_flavor_install "${_parameters-}"
+	_err=$?
+	if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _fedora_35__64
+
+_fedora_36__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  dnf -y install https://dev.mysql.com/get/mysql80-community-release-fc36-1.noarch.rpm
+  _redhat_flavor_install "${_parameters-}"
+	_err=$?
+	if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _fedora_36__64
+
+
+_fedora_37__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  dnf -y install https://dev.mysql.com/get/mysql80-community-release-fc37-1.noarch.rpm
+  _redhat_flavor_install "${_parameters-}"
+	_err=$?
+	if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _fedora_37__64
+
+
+_fedora_38__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  dnf -y install https://dev.mysql.com/get/mysql80-community-release-fc38-1.noarch.rpm
+  _redhat_flavor_install "${_parameters-}"
+	_err=$?
+	if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _fedora_38__64
+
+
+_fedora_39__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  dnf -y install https://dev.mysql.com/get/mysql80-community-release-fc39-1.noarch.rpm
+  _redhat_flavor_install "${_parameters-}"
+	_err=$?
+	if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _fedora_39__64
+
+
+_fedora_40__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  dnf -y install https://dev.mysql.com/get/mysql80-community-release-fc40-1.noarch.rpm
+  _redhat_flavor_install "${_parameters-}"
+	_err=$?
+	if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _fedora_40__64
 
 _gentoo__32() {
   _redhat_flavor_install
@@ -204,7 +389,7 @@ _ubuntu__64() {
 _darwin__64() {
   Installing ## macOS MySQL From dmg
 
-  _install_dmgs_list
+  _install_dmgs_list "${*-}"
 } # end _darwin__64
 
 _tar() {

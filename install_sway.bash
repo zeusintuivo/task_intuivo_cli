@@ -689,8 +689,9 @@ _redhat_flavor_install() {
 	chown -R "${SUDO_USER}" "$(pwd)/subprojects"
 
 	# Build sway and wlroots
-  /home/linuxbrew/.linuxbrew/bin/meson build/
-  /home/linuxbrew/.linuxbrew/bin/ninja -C build/
+  # /home/linuxbrew/.linuxbrew/bin/meson build/
+	su - "${SUDO_USER}" -c "/home/linuxbrew/.linuxbrew/bin/meson setup setup --reconfigure build/"
+  su - "${SUDO_USER}" -c "/home/linuxbrew/.linuxbrew/bin/ninja -C build/"
 
   echo "Tmp export to test"
 

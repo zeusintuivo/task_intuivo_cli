@@ -3,7 +3,7 @@ alias egrep='grep -E --color=auto --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.t
 _add_variables_to_bashrc_zshrc(){
   # trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _add_variables_to_bashrc_zshrc cargo" && echo -e "${RESET}" && return 0' ERR
   local FINDCARGO="/opt/homecargo/bin/cargo"
-  
+
   if [[ -e "${USER_HOME}/.cargo/bin/cargo" ]] ; then
   {
     FINDCARGO="${USER_HOME}/.cargo"
@@ -55,7 +55,7 @@ source "'${FINDCARGO}'/env"
     (_if_not_contains  "${HOME}/${INITFILE}" "# CARGO - RUST" ) || echo -e "${CARGO_SH_CONTENT}" >> "${HOME}/${INITFILE}"
     (_if_not_contains  "${HOME}/${INITFILE}" "# CARGO - RUST" ) && changed_files="${changed_files} \"${HOME}/${INITFILE}\" "
 
-    
+
   }
   done <<< "${INITFILES}"
   # if it_exists /home/linuxcargo ; then
@@ -75,7 +75,7 @@ _debian_flavor_install() {
   # trap  '_trap_on_exit $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  EXIT
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  if 
+  if
     (
     install_requirements "linux" "
       base64
@@ -113,7 +113,7 @@ _debian_flavor_install() {
 
   _add_variables_to_bashrc_zshrc
   rustup default stable
-  su - "${SUDO_USER}" -c "rustup default stable" 
+  su - "${SUDO_USER}" -c "rustup default stable"
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
@@ -136,9 +136,9 @@ _redhat_flavor_install() {
     wget
     tar
   "
-  export ARCHFLAGS="-arch $(uname -m)" 
+  export ARCHFLAGS="-arch $(uname -m)"
   ARCHFLAGS="-arch $(uname -m)"  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-  [[ ! -e "${USER_HOME}/.cargo" ]] && cp -R /root/.cargo "${USER_HOME}/.cargo" 
+  [[ ! -e "${USER_HOME}/.cargo" ]] && cp -R /root/.cargo "${USER_HOME}/.cargo"
   chmod -R 755 "${USER_HOME}/.cargo"
   chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo"
   chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/bin"
@@ -151,7 +151,7 @@ _redhat_flavor_install() {
 
   _add_variables_to_bashrc_zshrc
   rustup default stable
-  su - "${SUDO_USER}" -c "rustup default stable" 
+  su - "${SUDO_USER}" -c "rustup default stable"
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
