@@ -584,29 +584,39 @@ directory_exists_with_spaces "${USER_HOME}"
 alias egrep='grep -E --color=auto --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox}'
 _add_variables_to_bashrc_zshrc(){
   # trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _add_variables_to_bashrc_zshrc cargo" && echo -e "${RESET}" && return 0' ERR
-  local FINDCARGO="/opt/homecargo/bin/cargo"
+  local FINDCARGO_USER="${USER_HOME}/.cargo"
+  local FINDCARGO_ROOT="/root/.cargo"
 
-  if [[ -e "${USER_HOME}/.cargo/bin/cargo" ]] ; then
+
+  if [[ -e "/root/.cargo/bin/cargo" ]] ; then
   {
-    FINDCARGO="${USER_HOME}/.cargo"
-  }
-  elif [[ -e "/root/.cargo/bin/cargo" ]] ; then
-  {
-    FINDCARGO="/root/.cargo"
-  }
-  elif [[ -e "/opt/cargo/bin/cargo" ]] ; then
-  {
-    FINDCARGO="/opt/cargo"
+    FINDCARGO_ROOT="/root/.cargo"
   }
   fi
 
-  local CARGO_SH_CONTENT='
+  if [[ -e "${USER_HOME}/.cargo/bin/cargo" ]] ; then
+  {
+    FINDCARGO_USER="${USER_HOME}/.cargo"
+  }
+  elif [[ -e "/opt/cargo/bin/cargo" ]] ; then
+  {
+    FINDCARGO_USER="/opt/cargo"
+  }
+  fi
+
+  local CARGO_SH_CONTENT_ROOT='
 
 # CARGO - RUST
-source "'${FINDCARGO}'/env"
+source "'${FINDCARGO_ROOT}'/env"
 
 '
-  echo "${CARGO_SH_CONTENT}"
+  local CARGO_SH_CONTENT_USER='
+
+# CARGO - RUST
+source "'${FINDCARGO_USER}'/env"
+
+'
+  echo "${CARGO_SH_CONTENT_USER}"
   local INITFILE INITFILES="
    .bashrc
    .zshrc
@@ -619,22 +629,24 @@ source "'${FINDCARGO}'/env"
   while read INITFILE; do
   {
     [ -z ${INITFILE} ] && continue
+		# USER
     [[ ! -e "${USER_HOME}/${INITFILE}" ]] && continue
     Checking "${USER_HOME}/${INITFILE}"
     chown "${SUDO_USER}" "${USER_HOME}/${INITFILE}"
     (_if_not_contains  "${USER_HOME}/${INITFILE}" "# CARGO - RUST" ) || Configuring "${USER_HOME}/${INITFILE}"
     (_if_not_contains  "${USER_HOME}/${INITFILE}" "# CARGO - RUST" ) && Skipping configuration for "${USER_HOME}/${INITFILE}"
     #                             filename            value          || do this .............
-    (_if_not_contains  "${USER_HOME}/${INITFILE}" "# CARGO - RUST" ) || echo -e "${CARGO_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+    (_if_not_contains  "${USER_HOME}/${INITFILE}" "# CARGO - RUST" ) || echo -e "${CARGO_SH_CONTENT_USER}" >> "${USER_HOME}/${INITFILE}"
     (_if_not_contains  "${USER_HOME}/${INITFILE}" "# CARGO - RUST" ) && changed_files="${changed_files} \"${USER_HOME}/${INITFILE}\" "
 
+		# ROOT
     [[ ! -e "${HOME}/${INITFILE}" ]] && continue
     Checking "${HOME}/${INITFILE}"
     # chown "${SUDO_USER}" "${HOME}/${INITFILE}"
     (_if_not_contains  "${HOME}/${INITFILE}" "# CARGO - RUST" ) || Configuring "${HOME}/${INITFILE}"
     (_if_not_contains  "${HOME}/${INITFILE}" "# CARGO - RUST" ) && Skipping configuration for "${HOME}/${INITFILE}"
     #                             filename            value          || do this .............
-    (_if_not_contains  "${HOME}/${INITFILE}" "# CARGO - RUST" ) || echo -e "${CARGO_SH_CONTENT}" >> "${HOME}/${INITFILE}"
+    (_if_not_contains  "${HOME}/${INITFILE}" "# CARGO - RUST" ) || echo -e "${CARGO_SH_CONTENT_ROOT}" >> "${HOME}/${INITFILE}"
     (_if_not_contains  "${HOME}/${INITFILE}" "# CARGO - RUST" ) && changed_files="${changed_files} \"${HOME}/${INITFILE}\" "
 
 
@@ -645,8 +657,8 @@ source "'${FINDCARGO}'/env"
   #   rm -rf /home/linuxcargo
   # }
   # fi
-  file_exists_with_spaces "${FINDCARGO}"
-  source "${FINDCARGO}/env"
+  file_exists_with_spaces "${FINDCARGO_USER}"
+  source "${FINDCARGO_USER}/env"
   Checking "all files changed files command for you" :
   echo "sudo vim ${changed_files}"
   echo "sudo nano ${changed_files}"
