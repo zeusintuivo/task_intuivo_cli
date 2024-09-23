@@ -235,7 +235,7 @@ _debian_flavor_install() {
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   dnf build-dep i3status -vy --allowerasing
-  yes | dnf copr enable atim/i3status-rust
+  yes | dnf copr enable atim/i3status-rust -y
   dnf install i3status-rust -y --allowerasing
   # dnf install  -y openssl-devel
   # Batch Fedora 37
@@ -390,7 +390,7 @@ _fedora_40__64() {
   local _parameters="${*-}"
     trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   dnf build-dep i3status -vy --allowerasing
-  yes | dnf copr enable atim/i3status-rust
+  yes | dnf copr enable atim/i3status-rust -y
   dnf install i3status-rust -y --allowerasing
   # dnf install  -y openssl-devel
   # Batch Fedora 37
