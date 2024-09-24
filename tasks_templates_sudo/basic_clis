@@ -79,7 +79,7 @@ _git_clone() {
       warning Could not git clone "${_source}" "${_target}"
     }
     else
-		{
+    {
       if git branch --set-upstream-to=origin/master master ; then
       {
         warning "Could not do git branch --set-upstream-to=origin/master master"
@@ -95,7 +95,7 @@ _git_clone() {
         warning "Could not git config pull.rebase false"
       }
       fi
-		}
+    }
     fi
   }
   fi
@@ -123,15 +123,15 @@ _do_cloning_basic_clis(){
   while read -r _one ; do
   {
     [[ -z "${_one}" ]] && continue   # skip if is empty
-		Installing "${_one}"
-	  anounce_command cd "${USER_HOME}/_/clis"
-		cd "${USER_HOME}/_/clis"
+    Installing "${_one}"
+    anounce_command cd "${USER_HOME}/_/clis"
+    cd "${USER_HOME}/_/clis"
     _git_clone "https://github.com/zeusintuivo/${_one}.git" "${USER_HOME}/_/clis/${_one}"
     wait
     [[ "${_one}" == "execute_command_intuivo_cli" ]] && continue
-		anounce_command cd "${USER_HOME}/_/clis/${_one}"
-		cd "${USER_HOME}/_/clis/${_one}"
-		if ( "${USER_HOME}/_/clis/bash_intuivo_cli/link_folder_scripts" ) ; then
+    anounce_command cd "${USER_HOME}/_/clis/${_one}"
+    cd "${USER_HOME}/_/clis/${_one}"
+    if ( "${USER_HOME}/_/clis/bash_intuivo_cli/link_folder_scripts" ) ; then
     {
         warning could not run link_folder_scripts
     }
@@ -143,7 +143,7 @@ _do_cloning_basic_clis(){
     unlink /usr/local/bin/sift # Bug path we need to do something about this
   }
   fi
- 
+
   if [ -f /usr/local/bin/pt ] ; then
   {
     unlink /usr/local/bin/pt # Bug path we need to do something about this
@@ -214,13 +214,13 @@ _fedora__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   local _parameters="${*-}"
   _do_cloning_basic_clis "${_parameters-}"
-    
+
     cd "${USER_HOME}/_/clis/bash_intuivo_cli/fedora"
     "${USER_HOME}/_/clis/bash_intuivo_cli/link_folder_scripts"
     _err=$?
     if [ ${_err} -gt 0 ] ; then
     {
-      warning could not run link_folder_scripts in bash_intuivo_cli/fedora 
+      warning could not run link_folder_scripts in bash_intuivo_cli/fedora
     }
     fi
 } # end _fedora__64
@@ -299,9 +299,9 @@ _ubuntu__32() {
 _ubuntu__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   local package packages="
-    git 
-		curl
-		openssl
+    git
+    curl
+    openssl
     tree
   "
   _package_list_installer "${packages}"

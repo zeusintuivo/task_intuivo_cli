@@ -20,16 +20,106 @@ echo "0. sudologic $0:$LINENO       THISSCRIPTPARAMS:${THISSCRIPTPARAMS:-}"
 
 echo "0. sudologic $0 Start Checking realpath  "
 if ! ( command -v realpath >/dev/null 2>&1; )  ; then
+{  
   echo "... realpath not found. Downloading REF:https://github.com/swarmbox/realpath.git "
-  cd $HOME
+  if [[ -n "${USER_HOME}" ]] ;  then
+  {
+    cd "${USER_HOME}" || echo "ERROR! failed realpath compile cd " && exit 1
+  }
+  else
+  {
+    cd "${HOME}" || echo "ERROR! failed realpath compile cd " && exit 1
+  }
+  fi
   git clone https://github.com/swarmbox/realpath.git
-  cd realpath
+  _err=$?
+  [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Builing realpath. returned error did not download or is installed err:$_err  \n \n  " && exit 1
+  cd realpath || echo "ERROR! failed realpath compile cd " && exit 1
   make
+  _err=$?
+  [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Builing realpath. returned error did not download or is installed err:$_err  \n \n  " && exit 1
   sudo make install
   _err=$?
   [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Builing realpath. returned error did not download or is installed err:$_err  \n \n  " && exit 1
+  _err=$?
+  [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Builing realpath. returned error did not download or is installed err:$_err  \n \n  " && exit 1
+}
 else
+{
   echo "... realpath exists .. check!"
+}
+fi
+if ! ( command -v paeth >/dev/null 2>&1; )  ; then
+{
+  function paeth(){
+  local path_to_file=""
+  local -i _err=0
+  path_to_file="${*}"
+  if [[ ! -e "${path_to_file}" ]] ; then   # not found in current folder
+  {
+    path_to_file="$(pwd)/${*}"
+    if [[ ! -e "${path_to_file}" ]] ; then  # add full pwd and see if finds it
+    {
+      path_to_file="$(which "${*}")"   # search in system $PATH and env system
+      _err=$?
+      if [ ${_err} -gt 0 ] ; then
+      {
+        if ! type  -f "${*}" >/dev/null 2>&1  ; then 
+        {
+          echo "is a function"
+          type  -f "${*}"
+        }
+        fi
+        >&2 echo "error 1. ${*} not found in ≤$(pwd)≥ or ≤\${PATH}≥ or ≤\$(env)≥ "
+        exit 1  # not found, silent fail
+      }
+      fi
+      path_to_file="$(realpath "$(which "${*}")")"   # updated realpath macos 20210902
+      _err=$?
+      if [ ${_err} -gt 0 ] ; then
+      {
+         if ! type  -f "${*}" >/dev/null 2>&1  ; then 
+        {
+          echo "is a function"
+          type  -f "${*}"
+        }
+        fi
+         >&2 echo "error 2. ${*} not found in ≤$(pwd)≥ or ≤\${PATH}≥ or ≤\$(env)≥ "
+        exit 1  # not found, silent fail
+      }
+      fi
+      if [[ ! -e "${path_to_file}" ]] ; then
+      {
+         if ! type  -f "${*}" >/dev/null 2>&1  ; then 
+        {
+          echo "is a function"
+          type  -f "${*}"
+        }
+        fi
+         >&2 echo "error 3. ${path_to_file} does not exist or is not accesible "
+        exit 1  # not found, silent fail
+      }
+      fi
+    }
+    fi
+  }
+  fi
+  path_to_file="$(realpath "${path_to_file}")"
+  if ! type  -f "${*}" >/dev/null 2>&1  ; then 
+  {
+    echo "is also a function"
+    type  -f "${*}"
+  }
+  fi
+  
+  echo "${path_to_file}"
+  } # end paeth 
+}
+fi
+if ! ( command -v realpath >/dev/null 2>&1; )  ; then
+{
+  echo "... realpath not found. and did not install . ABORTING"
+}
 fi
 
 typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")"   # updated realpath macos 20210902
@@ -76,7 +166,7 @@ INT ..."
 load_struct_testing(){
   function _trap_on_error(){
     local -ir __trapped_error_exit_num="${2:-0}"
-		echo -e "\\n \033[01;7m*** tasks_base/sudoer.bash:$LINENO load_struct_testing() ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+    echo -e "\\n \033[01;7m*** tasks_base/sudoer.bash:$LINENO load_struct_testing() ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
 
     echo ". ${1}"
     echo ". exit  ${__trapped_error_exit_num}  "
@@ -91,9 +181,38 @@ load_struct_testing(){
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
     exit 1
   }
+  function source_library(){
+    # Sample usage 
+    #    if ( source_library "${provider}" ) ; then 
+    #      failed
+    #    fi
+    local -i _DEBUG=${DEBUG:-0}
+    local provider="${*-}"
+    local structsource=""
+      if [[  -e "${provider}" ]] ; then
+      {
+        structsource="""$(<"${provider}")"""
+        _err=$?
+        if [ $_err -gt 0 ] ; then
+        {
+          >&2 echo -e "#\n #\n# 4.1 WARNING Loading ${provider}. Occured while running 'source' err:$_err  \n \n  "
+          return 1
+        }
+        fi
+	if (( _DEBUG )) ; then
+          >&2 echo "# $0: tasks_base/sudoer.bash Loading locally"
+        fi
+        echo """${structsource}"""
+        return 0
+      }
+      fi
+      >&2 echo -e "\n 4.2 nor found  ${provider}. 'source' err:$_err  \n  "
+      return 1
+  } # end source_library
   function load_library(){
     local _library="${1:-struct_testing}"
     local -i _DEBUG=${DEBUG:-0}
+    local -i _err=0
     if [[ -z "${1}" ]] ; then
     {
        echo "Must call with name of library example: struct_testing execute_command"
@@ -101,41 +220,63 @@ load_struct_testing(){
     }
     fi
     trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-      local provider="$HOME/_/clis/execute_command_intuivo_cli/${_library}"
-      if [[ -n "${SUDO_USER:-}" ]] && [[ -n "${HOME:-}" ]] && [[ "${HOME:-}" == "/root" ]] && [[ !  -e "${provider}"  ]] ; then
+      local providers="
+/home/${SUDO_USER-}/_/clis/execute_command_intuivo_cli/${_library-}
+/Users/${SUDO_USER-}/_/clis/execute_command_intuivo_cli/${_library-}
+/home/${USER-}/_/clis/execute_command_intuivo_cli/${_library-}
+/Users/${USER-}/_/clis/execute_command_intuivo_cli/${_library-}
+${HOME-}/_/clis/execute_command_intuivo_cli/${_library-}
+"
+      local provider=""
+      local -i _loaded=0
+      local -i _found=0 
+      local structsource
+      while read -r provider ; do
       {
-        provider="/home/${SUDO_USER}/_/clis/execute_command_intuivo_cli/${_library}"
-      }
-      elif [[ -z "${SUDO_USER:-}" ]] && [[ -n "${HOME:-}" ]] && [[ "${HOME:-}" == "/root" ]] && [[ !  -e "${provider}"  ]] ; then
-      {
-        provider="/home/${USER}/_/clis/execute_command_intuivo_cli/${_library}"
-      }
-      fi
-      echo "$0: ${provider}"
-      echo "$0: SUDO_USER:${SUDO_USER:-nada SUDOUSER}: USER:${USER:-nada USER}: ${SUDO_HOME:-nada SUDO_HOME}: {${HOME:-nada HOME}}"
-      local _err=0 structsource
-      if [[  -e "${provider}" ]] ; then
-        if (( _DEBUG )) ; then
-          echo "$0: tasks_base/sudoer.bash Loading locally"
-        fi
-        structsource="""$(<"${provider}")"""
+        [[ -z "${provider}" ]] && continue
+        [[ ! -e "${provider}" ]] && continue
+	_loaded=0
+	_found=0
+	structsource="""$(source_library "${provider}")"""
         _err=$?
+        _loaded=1
+	_found=1
         if [ $_err -gt 0 ] ; then
         {
-           echo -e "\n \n  ERROR! Loading ${_library}. running 'source locally' returned error did not download or is empty err:$_err  \n \n  "
-           exit 1
+          echo -e "\n \n 4.1 WARNING Loading ${_library}. Occured while running 'source' err:$_err  \n \n  "
+          _loaded=0
+	  _found=0
         }
         fi
-      else
+      }
+      done <<< "${providers}"
+
+#       provider="$HOME/_/clis/execute_command_intuivo_cli/${_library}"
+#       if [[ -n "${SUDO_USER:-}" ]] && [[ -n "${HOME:-}" ]] && [[ "${HOME:-}" == "/root" ]] && [[ !  -e "${provider}"  ]] ; then
+#       {
+#         provider="/home/${SUDO_USER}/_/clis/execute_command_intuivo_cli/${_library}"
+#       }
+#       elif [[ -z "${USER:-}" ]] && [[ -n "${HOME:-}" ]] && [[ "${HOME:-}" == "/root" ]] && [[ !  -e "${provider}"  ]] ; then
+#       {
+#         provider="/home/${USER}/_/clis/execute_command_intuivo_cli/${_library}"
+#       }
+#       fi
+#       echo "$0: ${provider}"
+#       echo "$0: SUDO_USER:${SUDO_USER:-nada SUDOUSER}: USER:${USER:-nada USER}: ${SUDO_HOME:-nada SUDO_HOME}: {${HOME:-nada HOME}}"
+      
+      if (( ! _loaded )) ; then 
         if ( command -v curl >/dev/null 2>&1; )  ; then
           if (( _DEBUG )) ; then
             echo "$0: tasks_base/sudoer.bash Loading ${_library} from the net using curl "
           fi
+	  _loaded=0
           structsource="""$(curl https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/${_library}  -so -   2>/dev/null )"""  #  2>/dev/null suppress only curl download messages, but keep curl output for variable
           _err=$?
+	  _loaded=1
           if [ $_err -gt 0 ] ; then
           {
             echo -e "\n \n  ERROR! Loading ${_library}. running 'curl' returned error did not download or is empty err:$_err  \n \n  "
+	    _loaded=0
             exit 1
           }
           fi
@@ -143,16 +284,19 @@ load_struct_testing(){
           if (( _DEBUG )) ; then
             echo "$0: tasks_base/sudoer.bash Loading ${_library} from the net using wget "
           fi
+	  _loaded=0
           structsource="""$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/${_library} -O -   2>/dev/null )"""  #  2>/dev/null suppress only wget download messages, but keep wget output for variable
           _err=$?
+	  _loaded=1
           if [ $_err -gt 0 ] ; then
           {
             echo -e "\n \n  ERROR! Loading ${_library}. running 'wget' returned error did not download or is empty err:$_err  \n \n  "
+	    _loaded=0
             exit 1
           }
           fi
         else
-          echo -e "\n \n 2  ERROR! Loading ${_library} could not find wget or curl to download  \n \n "
+          echo -e "\n \n 2  ERROR! Loading ${_library} could not find local, wget, curl to load or download  \n \n "
           exit 69
         fi
       fi
@@ -488,7 +632,7 @@ _debian__64() {
         snap install cf-cli
     }
     fi
-		mkdir -p "${USER_HOME}/.cf"
+    mkdir -p "${USER_HOME}/.cf"
     chown "${SUDO_USER}" -R "${USER_HOME}/.cf"
     verify_is_installed cf
     _checka_tools_commander $COMANDDER
@@ -535,12 +679,12 @@ _fedora__64() {
         $COMANDDER -y install cf7-cli
     }
     fi
-		mkdir -p "${USER_HOME}/.cf"
-		chown "${SUDO_USER}" -R "${USER_HOME}/.cf"
+    mkdir -p "${USER_HOME}/.cf"
+    chown "${SUDO_USER}" -R "${USER_HOME}/.cf"
     verify_is_installed cf
     _checka_tools_commander $COMANDDER
     verify_is_installed brew
-		su - $SUDO_USER -c 'brew install the_platinum_searcher'
+    su - $SUDO_USER -c 'brew install the_platinum_searcher'
 
 }
 _darwin__arm64() {
@@ -663,15 +807,15 @@ _install_npm_utils() {
 }
 
 _if_not_is_installed(){
-	local -i ret
+  local -i ret
         local msg
-	ret=0
- 	msg=$($COMANDDER info $1  >/dev/null 2>&1)
+  ret=0
+   msg=$($COMANDDER info $1  >/dev/null 2>&1)
         ret=$?
-	[ $ret -gt 0 ] && return 1
+  [ $ret -gt 0 ] && return 1
         [[ "$msg" == *"No such"* ]] && return 1
         [[ "$msg" == *"nicht gefunden"* ]] && return 1
-	[[ "$msg" == *"Error"*   ]] && return 1
+  [[ "$msg" == *"Error"*   ]] && return 1
         return 0
 }
 _if_not_contains(){
@@ -681,14 +825,14 @@ _if_not_contains(){
         [ ! -e "$1" ] && return 1
         msg=$(cat -n "$1" >/dev/null 2>&1)
         ret=$?
-	[ $ret -gt 0 ] && return 1
+  [ $ret -gt 0 ] && return 1
         [[ "$msg" == *"No such"* ]] && return 1
         [[ "$msg" == *"nicht gefunden"* ]] && return 1
         [[ "$msg" == *"Permission denied"* ]] && return 1
         ret=0
-	msg=$(echo "$msg" | grep "$2" >/dev/null 2>&1)
+  msg=$(echo "$msg" | grep "$2" >/dev/null 2>&1)
         ret=$?
-	[ $ret -gt 0 ] && return 1
+  [ $ret -gt 0 ] && return 1
         [[ "$msg" == *"No such"* ]] && return 1
         [[ "$msg" == *"nicht gefunden"* ]] && return 1
         [[ "$msg" == *"Permission denied"* ]] && return 1
@@ -779,7 +923,7 @@ _install_nvm_version(){
         else
         {
             Installing node using nvm install  "${TARGETVERSION}"
-	    VERSION12=$(nvm ls | grep "v${TARGETVERSION}" |tail -1 >/dev/null 2>&1 )
+      VERSION12=$(nvm ls | grep "v${TARGETVERSION}" |tail -1 >/dev/null 2>&1 )
             if [[ -n "$VERSION12" ]] ; then
             {
                 if [[ "$VERSION12" == *"not found"* ]] || [[ "$VERSION12" == *"nvm help"* ]]  ; then
@@ -809,7 +953,7 @@ _install_nvm_version(){
     else
     {
         Installing node using nvm install  "${TARGETVERSION}"
-	VERSION12=$(nvm ls | grep "v${TARGETVERSION}" |tail -1 >/dev/null 2>&1 )
+  VERSION12=$(nvm ls | grep "v${TARGETVERSION}" |tail -1 >/dev/null 2>&1 )
             if [[ -n "$VERSION12" ]] ; then
             {
                 if [[ "$VERSION12" == *"not found"* ]] || [[ "$VERSION12" == *"nvm help"* ]]  ; then
@@ -860,14 +1004,14 @@ _install_nerd_fonts(){
     {
 
 
-	cd $USER_HOME
-	git clone --depth=1 https://github.com/ryanoasis/nerd-fonts $USER_HOME/.nerd-fonts
-	directory_exists_with_spaces "$USER_HOME/.nerd-fonts"
-	file_exists_with_spaces "$USER_HOME/.nerd-fonts/install.sh"
-	chown -R $SUDO_USER $USER_HOME/.nerd-fonts
+  cd $USER_HOME
+  git clone --depth=1 https://github.com/ryanoasis/nerd-fonts $USER_HOME/.nerd-fonts
+  directory_exists_with_spaces "$USER_HOME/.nerd-fonts"
+  file_exists_with_spaces "$USER_HOME/.nerd-fonts/install.sh"
+  chown -R $SUDO_USER $USER_HOME/.nerd-fonts
 
-	cd $USER_HOME/.nerd-fonts
-	su - $SUDO_USER -c  ./install.sh
+  cd $USER_HOME/.nerd-fonts
+  su - $SUDO_USER -c  ./install.sh
    }
    fi
 }
@@ -881,24 +1025,24 @@ _setup_ohmy(){
         }
         elif [[ "$COMANDDER" == *"dnf"* ]]  ; then
         {
-	   $COMANDDER install -y git wget curl ruby ruby-devel zsh util-linux-user redhat-rpm-config gcc gcc-c++ make
+     $COMANDDER install -y git wget curl ruby ruby-devel zsh util-linux-user redhat-rpm-config gcc gcc-c++ make
         }
         fi
 
 
-	_install_nerd_fonts
+  _install_nerd_fonts
 
-	_if_not_is_installed fontawesome-fonts && $COMANDDER -y install fontawesome-fonts
-	_if_not_is_installed powerline && $COMANDDER -y install powerline vim-powerline tmux-powerline powerline-fonts
-	echo REF: https://fedoramagazine.org/tuning-your-bash-or-zsh-shell-in-workstation-and-silverblue/
-	if [ -f `which powerline-daemon` ]; then
-	{
-	  powerline-daemon -q
-	  POWERLINE_BASH_CONTINUATION=1
-	  POWERLINE_BASH_SELECT=1
-	  . /usr/share/powerline/bash/powerline.sh
-	}
-	fi
+  _if_not_is_installed fontawesome-fonts && $COMANDDER -y install fontawesome-fonts
+  _if_not_is_installed powerline && $COMANDDER -y install powerline vim-powerline tmux-powerline powerline-fonts
+  echo REF: https://fedoramagazine.org/tuning-your-bash-or-zsh-shell-in-workstation-and-silverblue/
+  if [ -f `which powerline-daemon` ]; then
+  {
+    powerline-daemon -q
+    POWERLINE_BASH_CONTINUATION=1
+    POWERLINE_BASH_SELECT=1
+    . /usr/share/powerline/bash/powerline.sh
+  }
+  fi
         # install ohmyzsh
         su - $SUDO_USER -c 'bash "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"'
 
@@ -945,7 +1089,7 @@ _setup_clis() {
         mkdir -p $USER_HOME/_/clis
         chown $SUDO_USER:$SUDO_USER -R $USER_HOME/_
         cd $USER_HOME/_/clis
-    } 
+    }
     else
     {
         passed clis: clis folder exists
@@ -954,7 +1098,7 @@ _setup_clis() {
     if  it_does_not_exist_with_spaces "$USER_HOME/_/clis/bash_intuivo_cli" ; then
     {
         cd $USER_HOME/_/clis
-				Comment $0:$LINENO $USER_HOME/_/clis
+        Comment $0:$LINENO $USER_HOME/_/clis
         Installing Clis pre work  bash_intuivo_cli  for link_folder_scripts
         if [ ! -d $USER_HOME/_/clis/bash_intuivo_cli ] ; then
         {
@@ -965,35 +1109,35 @@ _setup_clis() {
         fi
         cd $USER_HOME/_/clis/bash_intuivo_cli
         local _url=$(cd "$USER_HOME/_/clis/bash_intuivo_cli" && git remote  get-url origin || '')
-				if [[ "${_url}" != "git@github.com:zeusintuivo/bash_intuivo_cli.git" ]] ; then
-				{
-				  Fixing origin git@github.com:zeusintuivo/bash_intuivo_cli.git	
-				  anounce_command git remote remove origin
+        if [[ "${_url}" != "git@github.com:zeusintuivo/bash_intuivo_cli.git" ]] ; then
+        {
+          Fixing origin git@github.com:zeusintuivo/bash_intuivo_cli.git
+          anounce_command git remote remove origin
           anounce_command git remote add origin git@github.com:zeusintuivo/bash_intuivo_cli.git
-				}
-				fi
-				./link_folder_scripts
-    } 
-    else 
+        }
+        fi
+        ./link_folder_scripts
+    }
+    else
     {
         passed clis: bash_intuivo_cli folder exists
         chown -R $SUDO_USER  $USER_HOME/_/clis/bash_intuivo_cli
         cd $USER_HOME/_/clis/bash_intuivo_cli
-				Comment $0:$LINENO $USER_HOME/_/clis/bash_intuivo_cli
+        Comment $0:$LINENO $USER_HOME/_/clis/bash_intuivo_cli
         local _url=$(cd "$USER_HOME/_/clis/bash_intuivo_cli" && git remote  get-url origin || '')
-				if [[ "${_url}" != "git@github.com:zeusintuivo/bash_intuivo_cli.git" ]] ; then
+        if [[ "${_url}" != "git@github.com:zeusintuivo/bash_intuivo_cli.git" ]] ; then
         {
           anounce_command git remote remove origin
           anounce_command git remote add origin git@github.com:zeusintuivo/bash_intuivo_cli.git
         }
-				fi
-		 		./link_folder_scripts
+        fi
+         ./link_folder_scripts
     }
     fi
     if  is_not_installed link_folder_scripts ; then
     {
         cd $USER_HOME/_/clis
-				Comment $0:$LINENO $USER_HOME/_/clis
+        Comment $0:$LINENO $USER_HOME/_/clis
         Installing No. 2 Clis pre work  bash_intuivo_cli  for link_folder_scripts
         if [ ! -d $USER_HOME/_/clis/bash_intuivo_cli ] ; then
         {
@@ -1003,86 +1147,86 @@ _setup_clis() {
         fi
         chown -R $SUDO_USER  $USER_HOME/_/clis/bash_intuivo_cli
         cd $USER_HOME/_/clis/bash_intuivo_cli
-  			Comment $0:$LINENO $USER_HOME/_/clis/bash_intuivo_cli
+        Comment $0:$LINENO $USER_HOME/_/clis/bash_intuivo_cli
         local _url=$(cd "$USER_HOME/_/clis/bash_intuivo_cli" && git remote  get-url origin || '')
-				if [[ "${_url}" != "git@github.com:zeusintuivo/bash_intuivo_cli.git" ]] ; then
+        if [[ "${_url}" != "git@github.com:zeusintuivo/bash_intuivo_cli.git" ]] ; then
         {
           anounce_command git remote remove origin
           anounce_command git remote add origin git@github.com:zeusintuivo/bash_intuivo_cli.git
         }
-				fi
+        fi
         ./link_folder_scripts
-    } 
-    else 
+    }
+    else
     {
         passed clis: bash_intuivo_cli folder exists
         cd $USER_HOME/_/clis/ssh_intuivo_cli
-				Comment $0:$LINENO $USER_HOME/_/clis/ssh_intuivo_cli
+        Comment $0:$LINENO $USER_HOME/_/clis/ssh_intuivo_cli
         chown -R $SUDO_USER $USER_HOME/_/clis/ssh_intuivo_cli
-        # ( 
+        # (
         #   chown -R $SUDO_USER $USER_HOME/.ssh
         # )
-   			Comment $0:$LINENO $USER_HOME/_/clis/ssh_intuivo_cli
+         Comment $0:$LINENO $USER_HOME/_/clis/ssh_intuivo_cli
         local _url=$(cd "$USER_HOME/_/clis/ssh_intuivo_cli" && git remote  get-url origin || '')
-				if [[ "${_url}" != "git@github.com:zeusintuivo/ssh_intuivo_cli.git" ]] ; then
+        if [[ "${_url}" != "git@github.com:zeusintuivo/ssh_intuivo_cli.git" ]] ; then
         {
           anounce_command git remote remove origin
           anounce_command git remote add origin git@github.com:zeusintuivo/ssh_intuivo_cli.git
         }
-				fi
+        fi
         $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts
         #pwd
-				#if [[ -e "$USER_HOME/.ssh/zeus_rsa" ]] ; then
-				#{
+        #if [[ -e "$USER_HOME/.ssh/zeus_rsa" ]] ; then
+        #{
         #  su - "${SUDO_USER}" -c "$USER_HOME/_/clis/ssh_intuivo_cli/sshswitchkey zeus"
         #}
-				#fi	
-		}
+        #fi
+    }
     fi
     if  it_does_not_exist_with_spaces ${USER_HOME}/_/clis/ssh_intuivo_cli ; then
     {
         cd $USER_HOME/_/clis
-				Comment $0:$LINENO $USER_HOME/_/clis
+        Comment $0:$LINENO $USER_HOME/_/clis
         Installing No. 3 Clis pre work ssh_intuivo_cli  for link_folder_scripts
         if [ ! -d $USER_HOME/_/clis/ssh_intuivo_cli ] ; then
         {
-          # yes | 
+          # yes |
           anounce_command git clone https://github.com/zeusintuivo/ssh_intuivo_cli.git
           # it_does_not_exist_with_spaces ${USER_HOME}/_/clis/ssh_intuivo_cli && yes | git clone https://github.com/zeusintuivo/ssh_intuivo_cli.git
         }
         fi
         cd $USER_HOME/_/clis/ssh_intuivo_cli
         chown -R $SUDO_USER $USER_HOME/_/clis/ssh_intuivo_cli
-        # ( 
+        # (
         #   chown -R $SUDO_USER $USER_HOME/.ssh
         # )
-   			Comment $0:$LINENO $USER_HOME/_/clis/ssh_intuivo_cli
+         Comment $0:$LINENO $USER_HOME/_/clis/ssh_intuivo_cli
         local _url=$(cd "$USER_HOME/_/clis/ssh_intuivo_cli" && git remote  get-url origin || '')
-				if [[ "${_url}" != "git@github.com:zeusintuivo/ssh_intuivo_cli.git" ]] ; then
+        if [[ "${_url}" != "git@github.com:zeusintuivo/ssh_intuivo_cli.git" ]] ; then
         {
           anounce_command git remote remove origin
           anounce_command git remote add origin git@github.com:zeusintuivo/ssh_intuivo_cli.git
         }
-				fi
+        fi
         $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts
         #pwd
-    		#if [[ -e "$USER_HOME/.ssh/zeus_rsa" ]] ; then
-				#{
+        #if [[ -e "$USER_HOME/.ssh/zeus_rsa" ]] ; then
+        #{
         #  su - "${SUDO_USER}" -c "$USER_HOME/_/clis/ssh_intuivo_cli/sshswitchkey zeus"
         #}
-				#fi	
-    } 
-    else 
+        #fi
+    }
+    else
     {
         passed clis: ssh_intuivo_cli folder exists
-   			Comment $0:$LINENO $USER_HOME/_/clis/ssh_intuivo_cli
+         Comment $0:$LINENO $USER_HOME/_/clis/ssh_intuivo_cli
         local _url=$(cd "$USER_HOME/_/clis/ssh_intuivo_cli" && git remote  get-url origin || '')
-				if [[ "${_url}" != "git@github.com:zeusintuivo/ssh_intuivo_cli.git" ]] ; then
+        if [[ "${_url}" != "git@github.com:zeusintuivo/ssh_intuivo_cli.git" ]] ; then
         {
           anounce_command git remote remove origin
           anounce_command git remote add origin git@github.com:zeusintuivo/ssh_intuivo_cli.git
         }
-				fi
+        fi
         $USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts
     }
     fi
@@ -1108,7 +1252,7 @@ while read -r ONE ; do
     Installing "$ONE"
     if  it_does_not_exist_with_spaces "$USER_HOME/_/clis/${ONE}" ; then
     {
-			 Working "$USER_HOME/_/clis" "..." "${ONE}"
+       Working "$USER_HOME/_/clis" "..." "${ONE}"
         cd "$USER_HOME/_/clis"
         if [[ ! -d "$USER_HOME/_/clis/${ONE}" ]] ; then
         {
@@ -1117,41 +1261,41 @@ while read -r ONE ; do
         }
         fi
         cd "$USER_HOME/_/clis/${ONE}"
-				Comment $0:$LINENO "$USER_HOME/_/clis/${ONE}"
+        Comment $0:$LINENO "$USER_HOME/_/clis/${ONE}"
         chown -R "$SUDO_USER" "$USER_HOME/_/clis/${ONE}"
         local _url=$(cd "$USER_HOME/_/clis/${ONE}" && git remote  get-url origin || '')
-				if [[ "${_url}" != "git@github.com:zeusintuivo/${ONE}.git" ]] ; then
+        if [[ "${_url}" != "git@github.com:zeusintuivo/${ONE}.git" ]] ; then
         {
           anounce_command git remote remove origin
           anounce_command git remote add origin git@github.com:zeusintuivo/${ONE}.git
         }
-				fi
+        fi
         directory_exists_with_spaces "$USER_HOME/_/clis/${ONE}"
         echo "$0:$LINENO UserHome:$USER_HOME"
         if [[ -x "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ]] ; then
         {
           (
-            if "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ; then 
+            if "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ; then
             {
                warning could not run link_folder_scripts
             }
             fi
-          ) 
+          )
         }
         fi
         # link_folder_scripts inside git_intuivo_cli/en
-  	    if [[ "$ONE" == "git_intuivo_cli" ]] ; then  # is not empty
-      	{
-  	      cd "$USER_HOME/_/clis/${ONE}/en"
+        if [[ "$ONE" == "git_intuivo_cli" ]] ; then  # is not empty
+        {
+          cd "$USER_HOME/_/clis/${ONE}/en"
           if [[ -x "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ]] ; then
           {
             (
-              if    "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ; then 
+              if    "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ; then
               {
                   warning could not run link_folder_scripts
               }
               fi
-            ) 
+            )
           }
           fi
           # link_folder_scripts
@@ -1159,8 +1303,8 @@ while read -r ONE ; do
         fi
 
         continue
-        
-    } 
+
+    }
     fi
 
     Installing "$0:$LINENO  else $ONE"
@@ -1173,12 +1317,12 @@ while read -r ONE ; do
     if [[ -x "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ]] ; then
     {
       (
-        if    "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ; then 
+        if    "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ; then
         {
            warning could not run link_folder_scripts
         }
         fi
-      ) 
+      )
     }
     fi
     # link_folder_scripts
@@ -1188,11 +1332,11 @@ while read -r ONE ; do
       # link_folder_scripts
       if [[ -x "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ]] ; then
       {
-        if    "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ; then 
+        if    "$USER_HOME/_/clis/bash_intuivo_cli/link_folder_scripts" ; then
         {
            Comment failed to run link_folder_scripts
         }
-        fi 
+        fi
       }
       fi
     }
@@ -1204,10 +1348,10 @@ while read -r ONE ; do
     # [ $ret -gt 0 ] && failed clis: execute link_folder_scripts && echo -E $msg && pwd
 
 
-    
+
 }
 done <<< "${clis}"
-if [ -f /usr/local/bin/ag ] ; then 
+if [ -f /usr/local/bin/ag ] ; then
 {
 unlink /usr/local/bin/ag # Bug path we need to do something abot this
 }
@@ -1216,8 +1360,8 @@ fi
 if  softlink_exists_with_spaces "/usr/local/bin/added>$USER_HOME/_/clis/git_intuivo_cli/en/added" ; then
 {
     passed clis: git_intuivo_cli/en folder exists and is linked
-} 
-else 
+}
+else
 {
     Configuring extra work git_intuivo_cli/en
     directory_exists_with_spaces $USER_HOME/_/clis/git_intuivo_cli/en
@@ -1233,7 +1377,7 @@ chown $SUDO_USER $USER_HOME/_
 _setup_clis
 
 _setup_mycd(){
-    if it_does_not_exist_with_spaces $USER_HOME/.mycd 
+    if it_does_not_exist_with_spaces $USER_HOME/.mycd
     then
     {
         # My CD
@@ -1261,7 +1405,7 @@ _setup_mycd(){
         chown -R $SUDO_USER  $USER_HOME/.config/git
         touch  $USER_HOME/.config/git/ignore
         _if_not_contains $USER_HOME/.config/git/ignore  ".dir_bash_history" &&  echo '.dir_bash_history' >> $USER_HOME/.config/git/ignore
-        Comment $0:$LINENO End _setup_mycd 
+        Comment $0:$LINENO End _setup_mycd
 }
 _setup_mycd
 
