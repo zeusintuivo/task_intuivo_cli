@@ -39,7 +39,7 @@ _debian_flavor_install() {
   # unzip "${DOWNLOADFOLDER}/${CODENAME}" -d $HOME/pb/
   local UNZIPDIR="${USER_HOME}/_/software"
   mkdir -p "${UNZIPDIR}"
-  _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
+  _unzip "${DOWNLOADFOLDER:}" "${UNZIPDIR}" "${CODENAME}"
   local PATHTOPOCKETBASE="${UNZIPDIR}/pocketbase"
   local THISIP=$(myip)
 
@@ -53,12 +53,12 @@ _redhat_flavor_install() {
   dnf install vim -y
   curl -fLo "${USER_HOME}/.vim/autoload/plug.vim" --create-dirs \
     https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-	chown -R "${USER_HOME}/.vim/"
+  chown -R  "${SUDO_USER}" "${USER_HOME}/.vim/"
   curl -fLo "/root/.vim/autoload/plug.vim" --create-dirs \
     https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-	touch "${USER_HOME}/.vimrc"
-	touch "/root/.vimrc"
-	echo "
+  touch "${USER_HOME}/.vimrc"
+  touch "/root/.vimrc"
+  echo "
 if v:lang =~ \"utf8$\" || v:lang =~ \"UTF-8$\"
 set fileencodings=ucs-bom,utf-8,latin1
 endif
@@ -318,13 +318,16 @@ let g:ale_fixers = {
 \\   '*': ['remove_trailing_lines', 'trim_whitespace'],
 \\   'javascript': ['biome'],
 \\}
-\" end	
+\" end  
 " >> "${USER_HOME}/.vimrc" >> "/root/.vimrc"
   chown -R "${SUDO_USER}" "${USER_HOME}/.vim/autoload/plug.vim"
   chown -R "${SUDO_USER}" "${USER_HOME}/.vimrc"
   # vim
-  vim -es -u vimrc -i NONE -c "PlugInstall" -c "qa"
-  su - "${SUDO_USER}" -c 'vim -es -u vimrc -i NONE -c "PlugInstall" -c "qa"'
+  # vim -es -u vimrc -i NONE -c "PlugInstall" -c "qa"
+  vim -c PlugInstall -c qa
+  su - "${SUDO_USER}" -c 'vim -c PlugInstall -c qa'
+  # su - "${SUDO_USER}" -c 'vim -es -u vimrc -i NONE -c "PlugInstall" -c "qa"'
+
 
   # neovim
   # nvim -es -u init.vim -i NONE -c "PlugInstall" -c "qa"
@@ -374,6 +377,34 @@ _fedora__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _fedora__64
+
+_deepin__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  _redhat_flavor_install "${_parameters-}"
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "struct_testing:$LINENO $0:$LINENO  while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _deepin__64
+
+_deepin_39__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  _redhat_flavor_install "${_parameters-}"
+
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "struct_testing:$LINENO $0:$LINENO while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _deepin_39__64
+
 
 _gentoo__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR

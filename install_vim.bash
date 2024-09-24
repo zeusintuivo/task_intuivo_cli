@@ -20,7 +20,7 @@ echo "0. sudologic $0:$LINENO       THISSCRIPTPARAMS:${THISSCRIPTPARAMS:-}"
 
 echo "0. sudologic $0 Start Checking realpath  "
 if ! ( command -v realpath >/dev/null 2>&1; )  ; then
-{  
+{
   echo "... realpath not found. Downloading REF:https://github.com/swarmbox/realpath.git "
   if [[ -n "${USER_HOME}" ]] ;  then
   {
@@ -175,8 +175,17 @@ load_struct_testing(){
     local -r __caller=$(caller)
     local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
     local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
-
+    #                awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    local output="$(awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}")"
+    if ( command -v pygmentize >/dev/null 2>&1; )  ; then
+    {
+      echo "${output}" | pygmentize -g
+    }
+    else
+    {
+      echo "${output}"
+    }
+    fi
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
     exit 1
@@ -525,7 +534,17 @@ directory_exists_with_spaces "${USER_HOME}"
     local -r __caller=$(caller)
     local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
     local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    #                awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    local output="$(awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}")"
+    if ( command -v pygmentize >/dev/null 2>&1; )  ; then
+    {
+      echo "${output}" | pygmentize -g
+    }
+    else
+    {
+      echo "${output}"
+    }
+    fi
 
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
@@ -543,7 +562,17 @@ directory_exists_with_spaces "${USER_HOME}"
     local -r __caller=$(caller)
     local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
     local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    #               awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    local output="$(awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}")"
+    if ( command -v pygmentize >/dev/null 2>&1; )  ; then
+    {
+      echo "${output}" | pygmentize -g
+    }
+    else
+    {
+      echo "${output}"
+    }
+    fi
 
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
@@ -561,7 +590,17 @@ directory_exists_with_spaces "${USER_HOME}"
     local -r __caller=$(caller)
     local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
     local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    #               awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    local output="$(awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}")"
+    if ( command -v pygmentize >/dev/null 2>&1; )  ; then
+    {
+      echo "${output}" | pygmentize -g
+    }
+    else
+    {
+      echo "${output}"
+    }
+    fi
 
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
@@ -621,7 +660,7 @@ _debian_flavor_install() {
   # unzip "${DOWNLOADFOLDER}/${CODENAME}" -d $HOME/pb/
   local UNZIPDIR="${USER_HOME}/_/software"
   mkdir -p "${UNZIPDIR}"
-  _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
+  _unzip "${DOWNLOADFOLDER:}" "${UNZIPDIR}" "${CODENAME}"
   local PATHTOPOCKETBASE="${UNZIPDIR}/pocketbase"
   local THISIP=$(myip)
 
@@ -635,13 +674,12 @@ _redhat_flavor_install() {
   dnf install vim -y
   curl -fLo "${USER_HOME}/.vim/autoload/plug.vim" --create-dirs \
     https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+  chown -R  "${SUDO_USER}" "${USER_HOME}/.vim/"
   curl -fLo "/root/.vim/autoload/plug.vim" --create-dirs \
     https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-	mkdir -p "${USER_HOME}/.config/nvim"
-	mkdir -p "/root/.config/nvim"
-	touch "${USER_HOME}/.vimrc"
-	touch "/root/.vimrc"
-	echo "
+  touch "${USER_HOME}/.vimrc"
+  touch "/root/.vimrc"
+  echo "
 if v:lang =~ \"utf8$\" || v:lang =~ \"UTF-8$\"
 set fileencodings=ucs-bom,utf-8,latin1
 endif
@@ -901,13 +939,16 @@ let g:ale_fixers = {
 \\   '*': ['remove_trailing_lines', 'trim_whitespace'],
 \\   'javascript': ['biome'],
 \\}
-\" end	
+\" end  
 " >> "${USER_HOME}/.vimrc" >> "/root/.vimrc"
   chown -R "${SUDO_USER}" "${USER_HOME}/.vim/autoload/plug.vim"
   chown -R "${SUDO_USER}" "${USER_HOME}/.vimrc"
   # vim
-  vim -es -u vimrc -i NONE -c "PlugInstall" -c "qa"
-  su - "${SUDO_USER}" -c 'vim -es -u vimrc -i NONE -c "PlugInstall" -c "qa"'
+  # vim -es -u vimrc -i NONE -c "PlugInstall" -c "qa"
+  vim -c PlugInstall -c qa
+  su - "${SUDO_USER}" -c 'vim -c PlugInstall -c qa'
+  # su - "${SUDO_USER}" -c 'vim -es -u vimrc -i NONE -c "PlugInstall" -c "qa"'
+
 
   # neovim
   # nvim -es -u init.vim -i NONE -c "PlugInstall" -c "qa"
@@ -957,6 +998,34 @@ _fedora__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _fedora__64
+
+_deepin__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  _redhat_flavor_install "${_parameters-}"
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "struct_testing:$LINENO $0:$LINENO  while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _deepin__64
+
+_deepin_39__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  _redhat_flavor_install "${_parameters-}"
+
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "struct_testing:$LINENO $0:$LINENO while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _deepin_39__64
+
 
 _gentoo__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
