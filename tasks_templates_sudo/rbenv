@@ -174,11 +174,11 @@ _debian_flavor_install() {
 
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  dnf build-dep rbenv         -vy --allowerasing
-  dnf build-dep openssl-devel -vy --allowerasing
-  dnf build-dep openssl       -vy --allowerasing
-  dnf install   openssl-devel -vy --allowerasing
-  dnf install   openssl       -vy --allowerasing
+  anounce_command dnf build-dep rbenv         -vy --allowerasing
+  anounce_command dnf build-dep openssl-devel -vy --allowerasing
+  anounce_command dnf build-dep openssl       -vy --allowerasing
+  anounce_command dnf install   openssl1.1-devel -vy --allowerasing
+  anounce_command dnf install   openssl1.1       -vy --allowerasing
   # Batch Fedora 37
   local package packages="
     libyaml
@@ -218,23 +218,47 @@ _redhat_flavor_install() {
     gdbm-devel
     gdbm-libs
   "
+  anounce _package_list_installer ${packages}
   _package_list_installer "${packages}"
 
   ensure brew or "Canceling until brew is installed. try install_brew.bash install_brew.sh"
+  anounce su - "${SUDO_USER}" -c 'brew install readline'
   su - "${SUDO_USER}" -c 'brew install readline'
-  # su - "${SUDO_USER}" -c 'brew install openssl@1.1'
-  _git_clone "https://github.com/rbenv/rbenv.git" "${USER_HOME}/.rbenv"
-  _git_clone "https://github.com/rbenv/ruby-build.git" "${USER_HOME}/.rbenv/plugins/ruby-build"
+
+	anounce su - "${SUDO_USER}" -c 'brew install openssl@1.1'
+	su - "${SUDO_USER}" -c 'brew install openssl@1.1'
+  anounce_command _git_clone "https://github.com/rbenv/rbenv.git" "${USER_HOME}/.rbenv"
+  anounce_command _git_clone "https://github.com/rbenv/ruby-build.git" "${USER_HOME}/.rbenv/plugins/ruby-build"
+  anounce _add_variables_to_bashrc_zshrc
   _add_variables_to_bashrc_zshrc
-  ensure rbenv or "Canceling until rbenv did not install"
-  su - "${SUDO_USER}" -c 'rbenv install -l'
-  su - "${SUDO_USER}" -c 'rbenv install 2.6.5'
-  su - "${SUDO_USER}" -c 'rbenv install 2.7.3'
-  su - "${SUDO_USER}" -c 'rbenv install 3.3.5'
-  su - "${SUDO_USER}" -c 'rbenv global 2.6.5'
-  su - "${SUDO_USER}" -c 'rbenv rehash'
-  ensure ruby or "Canceling until ruby is not working"
+
+	ensure rbenv or "Canceling until rbenv did not install"
+  anounce git -C "${USER_HOME}/.rbenv"/plugins/ruby-build pull
+  git -C "${USER_HOME}/.rbenv"/plugins/ruby-build pull
+
+	anounce su - "${SUDO_USER}" -c 'yes | rbenv install -l --verbose --skip-existing'
+  su - "${SUDO_USER}" -c 'yes | rbenv install -l --verbose --skip-existing'
+
+	anounce su - "${SUDO_USER}" -c 'yes | rbenv install 2.6.5 --verbose --skip-existing'
+  su - "${SUDO_USER}" -c 'yes | rbenv install 2.6.5 --verbose --skip-existing'
+
+
+	anounce su - "${SUDO_USER}" -c 'yes | rbenv install 3.3.5 --verbose --skip-existing'
+	su - "${SUDO_USER}" -c 'yes | rbenv install 3.3.5 --verbose --skip-existing'
+
+	anounce su - "${SUDO_USER}" -c 'yes | rbenv global 2.6.5 --verbose --skip-existing'
+	su - "${SUDO_USER}" -c 'yes | rbenv global 2.6.5 --verbose --skip-existing'
+  anounce su - "${SUDO_USER}" -c 'yes | rbenv rehash'
+  su - "${SUDO_USER}" -c 'yes | rbenv rehash'
+
+	anounce ensure ruby or "Canceling until ruby is not working"
+	ensure ruby or "Canceling until ruby is not working"
+
+	anounce su - "${SUDO_USER}" -c 'ruby -v'
   su - "${SUDO_USER}" -c 'ruby -v'
+  anounce_command dnf install   openssl-devel -vy --allowerasing
+  anounce_command dnf install   openssl       -vy --allowerasing
+
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {

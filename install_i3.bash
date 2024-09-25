@@ -20,7 +20,7 @@ echo "0. sudologic $0:$LINENO       THISSCRIPTPARAMS:${THISSCRIPTPARAMS:-}"
 
 echo "0. sudologic $0 Start Checking realpath  "
 if ! ( command -v realpath >/dev/null 2>&1; )  ; then
-{  
+{
   echo "... realpath not found. Downloading REF:https://github.com/swarmbox/realpath.git "
   if [[ -n "${USER_HOME}" ]] ;  then
   {
@@ -175,8 +175,17 @@ load_struct_testing(){
     local -r __caller=$(caller)
     local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
     local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
-
+    #                awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    local output="$(awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}")"
+    if ( command -v pygmentize >/dev/null 2>&1; )  ; then
+    {
+      echo "${output}" | pygmentize -g
+    }
+    else
+    {
+      echo "${output}"
+    }
+    fi
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
     exit 1
@@ -525,7 +534,17 @@ directory_exists_with_spaces "${USER_HOME}"
     local -r __caller=$(caller)
     local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
     local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    #                awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    local output="$(awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}")"
+    if ( command -v pygmentize >/dev/null 2>&1; )  ; then
+    {
+      echo "${output}" | pygmentize -g
+    }
+    else
+    {
+      echo "${output}"
+    }
+    fi
 
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
@@ -543,7 +562,17 @@ directory_exists_with_spaces "${USER_HOME}"
     local -r __caller=$(caller)
     local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
     local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    #               awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    local output="$(awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}")"
+    if ( command -v pygmentize >/dev/null 2>&1; )  ; then
+    {
+      echo "${output}" | pygmentize -g
+    }
+    else
+    {
+      echo "${output}"
+    }
+    fi
 
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
@@ -561,7 +590,17 @@ directory_exists_with_spaces "${USER_HOME}"
     local -r __caller=$(caller)
     local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
     local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    #               awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    local output="$(awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}")"
+    if ( command -v pygmentize >/dev/null 2>&1; )  ; then
+    {
+      echo "${output}" | pygmentize -g
+    }
+    else
+    {
+      echo "${output}"
+    }
+    fi
 
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
@@ -620,12 +659,16 @@ _debian_flavor_install() {
 
 } # end _debian_flavor_install
 
-_redhat_flavor_install() {
+_fedora_37__64() {
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   echo "REF: https://fedoraproject.org/wiki/I3_guide#First_Login"
   echo "REF: https://fedoramagazine.org/getting-started-i3-window-manager/"
-  dnf builddep i3 -y --allowerasing
-  dnf builddep kitty -y --allowerasing
+  anounce_command 'dnf group install "KDE (K Desktop Environment)" -y --allowerasing'
+  anounce_command 'dnf group install "i3 desktop" -y --allowerasing'
+  anounce_command dnf builddep i3 -y --allowerasing
+  anounce_command dnf install i3 -y --allowerasing
+  anounce_command dnf builddep kitty -y --allowerasing
+  anounce_command dnf install kitty -y --allowerasing
   if (
   install_requirements "linux" "
     bzip2-devel
@@ -638,11 +681,10 @@ _redhat_flavor_install() {
     rust-bzip2-devel
     bzip2
     yakuake
-    i3 
-    i3status 
-    i3lock 
-    dmenu 
+    i3
+    i3status
     i3lock
+    dmenu
     feh
     conky
     dunst
@@ -658,7 +700,7 @@ _redhat_flavor_install() {
     terminator
     rhythmbox
     totem
-    thunar
+    # thunar
     tmux
     py3status
     # until now no issues with boot or breaking gnome brightness
@@ -666,8 +708,10 @@ _redhat_flavor_install() {
     arandr
     brightnessctl
     htop
+    btop
+    bpytop
     polybar
-    python-mpd2
+    # python-mpd2
   "
   ); then
     {
@@ -678,19 +722,68 @@ _redhat_flavor_install() {
       echo "something failed while installing err:$?"
     }
   fi
-  su - "${SUDO_USER}" -c 'brew install libxscrnsaver libnotify bzip2 freetype2'
 
-  su - $SUDO_USER -c 'brew install the_platinum_searcher'
-  su - $SUDO_USER -c 'pip3 install python-mpd'
-  su - $SUDO_USER -c 'pip install python-mpd'
-  verify_is_installed "
+	anounce brew install libxscrnsaver libnotify bzip2 freetype2
+	if su - "${SUDO_USER}" -c 'brew install libxscrnsaver libnotify bzip2 freetype2' ; then
+    {
+      echo "All installed no error"
+    }
+    else
+    {
+      echo "something failed while installing err:$?"
+    }
+  fi
+  anounce brew install the_platinum_searcher
+  if su - "${SUDO_USER}" -c "brew install the_platinum_searcher" ; then
+    {
+      echo "All installed no error"
+    }
+    else
+    {
+      echo "something failed while installing err:$?"
+    }
+  fi
+  anounce pip3 install python-mpd2
+  if su - "${SUDO_USER}" -c 'pip3 install python-mpd2'; then
+    {
+      echo "All installed no error"
+    }
+    else
+    {
+      echo "something failed while installing err:$?"
+    }
+  fi
+  anounce pip install python-mpd2
+  if su - "${SUDO_USER}" -c 'pip install python-mpd2'; then
+    {
+      echo "All installed no error"
+    }
+    else
+    {
+      echo "something failed while installing err:$?"
+    }
+  fi
+
+  if verify_is_installed "
     unzip
     curl
     wget
     tar
     xset
-  "
+  " ; then
+    {
+      echo "All installed no error"
+    }
+    else
+    {
+      echo "something failed while installing err:$?"
+    }
+  fi
   echo "End of install tasks should be installed. I don't know what to do next... "
+} # _fedora_37__64
+
+_redhat_flavor_install() {
+  _fedora_37__64
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
@@ -726,26 +819,30 @@ _fedora__32() {
 } # end _fedora__32
 
 _fedora__64() {
-  _redhat_flavor_install
-} # end _fedora__64
-
-_fedora_37_64() {
-  _fedora_40__64 
-  
-} # end _fedora_37__64
-
-_fedora_37__64() {
   trap "echo Error:$?" ERR INT
   local _parameters="${*-}"
   local -i _err=0
-  _fedora_40__64 "${_parameters-}"
+  _fedora_37__64 "${_parameters-}"
   _err=$?
   if [ ${_err} -gt 0 ] ; then
   {
     failed "$0:$LINENO while running callsomething above _err:${_err}"
   }
   fi
-} # end _fedora_37__64
+} # end _fedora__64
+
+_deepin_39__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  _fedora_37__64 "${_parameters-}"
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _deepin_39__64
 
 
 _fedora_40__64() {
@@ -766,10 +863,10 @@ _fedora_40__64() {
     rust-bzip2-devel
     bzip2
     yakuake
-    i3 
-    i3status 
-    i3lock 
-    dmenu 
+    i3
+    i3status
+    i3lock
+    dmenu
     i3lock
     feh
     conky
