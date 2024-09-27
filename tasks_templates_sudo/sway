@@ -91,28 +91,32 @@ _redhat_flavor_install() {
 
   if [[ ! -e "${USER_HOME}/_/software/lag_pre_build_ready_sway" ]] ; then
   {
-    dnf build-dep sway -y
-    dnf install -y git gcc meson ninja-build wayland-devel mesa-libEGL-devel mesa-libGLES-devel mesa-dri-drivers
-    dnf install -y libdrm-devel libgbm-devel libxkbcommon-devel libudev-devel systemd-devel cairo-devel libpcap-devel json-c-devel pam-devel pango-devel pcre-devel gdk-pixbuf2-devel
-    dnf install libevdev-devel libevdev libevdev-utils libevdevPlus libevdevPlus-devel  -y
-    dnf install pixman pixman-devel -y
-    dnf install libseat-devel libseat -y
-    dnf install hwdata-devel hwdata -y
-    dnf install libliftoff-devel libliftoff -y
-    dnf install xorg-x11-drv-libinput-devel xorg-x11-drv-libinput libinput-test libinput-utils libinput-devel libinput -y
-    dnf install xorg-x11-server-Xwayland-devel xorg-x11-server-Xwayland xisxwayland xwaylandvideobridge xorg-x11-server-source -y
-    dnf install bash-completion -y
-    dnf install fish -y
-    dnf install bluefish -y
-    dnf install scdoc -y
-    dnf install sway -y
+    anounce_command dnf build-dep sway -y
+    anounce_command dnf install -y git gcc meson ninja-build wayland-devel mesa-libEGL-devel mesa-libGLES-devel mesa-dri-drivers
+		anounce_command dnf install -y libxkbcommon-x11-devel libxkbcommon rust-xkbcommon+default-devel rust-xkbcommon-devel rust-xkbcommon+wayland-devel libxkbcommon-x11
+    anounce_command dnf install -y libdrm-devel libgbm-devel libxkbcommon-devel libudev-devel systemd-devel cairo-devel libpcap-devel json-c-devel pam-devel pango-devel pcre-devel gdk-pixbuf2-devel
+    anounce_command dnf install libevdev-devel libevdev libevdev-utils libevdevPlus libevdevPlus-devel  -y
+    anounce_command dnf install pixman pixman-devel -y
+    anounce_command dnf install libseat-devel libseat -y
+    anounce_command dnf install hwdata-devel hwdata -y
+    anounce_command dnf install libliftoff-devel libliftoff -y
+    anounce_command dnf install xorg-x11-drv-libinput-devel xorg-x11-drv-libinput libinput-test libinput-utils libinput-devel libinput -y
+    anounce_command dnf install xorg-x11-server-Xwayland-devel xorg-x11-server-Xwayland xisxwayland xwaylandvideobridge xorg-x11-server-source -y
+    anounce_command dnf install bash-completion -y
+    anounce_command dnf install fish -y
+    anounce_command dnf install bluefish -y
+    anounce_command dnf install scdoc -y
+    anounce_command dnf install sway -y
 
     if [ ${found} -eq 0 ] ; then
       cdinto=./sway
+      anounce git clone https://github.com/swaywm/sway.git
       git clone https://github.com/swaywm/sway.git
     fi
     cd "${cdinto}" || return 1
-    pwd
+		anounce current folder:$(pwd)
+		pwd
+		anounce git pull origin master
     if ( git pull origin master ) ; then
       warning failed to pull master
     fi
@@ -137,10 +141,13 @@ _redhat_flavor_install() {
     cd "${cdinto}" || return 1
   }
   fi
+  local wheremai=$(pwd)
   # Build sway and wlroots
   # /home/linuxbrew/.linuxbrew/bin/meson build/
-  su - "${SUDO_USER}" -c "/home/linuxbrew/.linuxbrew/bin/meson setup --reconfigure build/"
-  su - "${SUDO_USER}" -c "/home/linuxbrew/.linuxbrew/bin/ninja -C build/"
+  anounce su - "${SUDO_USER}" -c 'cd "'${wheremai}'" &&  /home/linuxbrew/.linuxbrew/bin/meson setup --reconfigure build'
+  su - "${SUDO_USER}" -c 'cd "'${wheremai}'" &&  /home/linuxbrew/.linuxbrew/bin/meson setup --reconfigure build'
+  anounce su - "${SUDO_USER}" -c 'cd "'${wheremai}'" && /home/linuxbrew/.linuxbrew/bin/ninja -C build'
+  su - "${SUDO_USER}" -c 'cd "'${wheremai}'" && /home/linuxbrew/.linuxbrew/bin/ninja -C build'
 
   echo "Tmp export to test"
 
