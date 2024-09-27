@@ -20,7 +20,7 @@ echo "0. sudologic $0:$LINENO       THISSCRIPTPARAMS:${THISSCRIPTPARAMS:-}"
 
 echo "0. sudologic $0 Start Checking realpath  "
 if ! ( command -v realpath >/dev/null 2>&1; )  ; then
-{  
+{
   echo "... realpath not found. Downloading REF:https://github.com/swarmbox/realpath.git "
   if [[ -n "${USER_HOME}" ]] ;  then
   {
@@ -175,8 +175,17 @@ load_struct_testing(){
     local -r __caller=$(caller)
     local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
     local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
-
+    #                awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    local output="$(awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}")"
+    if ( command -v pygmentize >/dev/null 2>&1; )  ; then
+    {
+      echo "${output}" | pygmentize -g
+    }
+    else
+    {
+      echo "${output}"
+    }
+    fi
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
     exit 1
@@ -525,7 +534,17 @@ directory_exists_with_spaces "${USER_HOME}"
     local -r __caller=$(caller)
     local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
     local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    #                awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    local output="$(awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}")"
+    if ( command -v pygmentize >/dev/null 2>&1; )  ; then
+    {
+      echo "${output}" | pygmentize -g
+    }
+    else
+    {
+      echo "${output}"
+    }
+    fi
 
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
@@ -543,7 +562,17 @@ directory_exists_with_spaces "${USER_HOME}"
     local -r __caller=$(caller)
     local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
     local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    #               awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    local output="$(awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}")"
+    if ( command -v pygmentize >/dev/null 2>&1; )  ; then
+    {
+      echo "${output}" | pygmentize -g
+    }
+    else
+    {
+      echo "${output}"
+    }
+    fi
 
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
@@ -561,7 +590,17 @@ directory_exists_with_spaces "${USER_HOME}"
     local -r __caller=$(caller)
     local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
     local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    #               awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    local output="$(awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}")"
+    if ( command -v pygmentize >/dev/null 2>&1; )  ; then
+    {
+      echo "${output}" | pygmentize -g
+    }
+    else
+    {
+      echo "${output}"
+    }
+    fi
 
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
@@ -672,8 +711,29 @@ _redhat_flavor_install() {
 	dnf install sway -y
 
 	cd "${USER_HOME}/_/software/" || return 1
-  [ -e "./sway" ] && (cd sway && git pull origin master && cd ..) || git clone https://github.com/swaywm/sway.git
-	cd sway || return 1
+  local cdinto=""
+	local -i found=0
+ 	if [ -e "./sway" ] ; then
+		if [ -e "./sway/.git" ] ; then
+			cdinto=./sway
+			found=1
+		fi
+	fi
+  if [ -e "./sway/sway" ] ; then
+		if [ -e "./sway/sway/.git" ] ; then
+			cdinto=./sway/sway
+			found=1
+		fi
+	fi
+  if [ ${found} -eq 1 ] ; then
+	  cdinto=./sway
+		git clone https://github.com/swaywm/sway.git
+	fi
+	cd "${cdinto}" || return 1
+	if ( git pull origin master ) ; then
+	  warning failed to pull master
+	fi
+
 
 	chown -R "${SUDO_USER}" "$(pwd)"
 	[ -e "subprojects/wlroots" ] || git clone https://gitlab.freedesktop.org/wlroots/wlroots.git subprojects/wlroots

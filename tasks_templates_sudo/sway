@@ -90,8 +90,29 @@ _redhat_flavor_install() {
 	dnf install sway -y
 
 	cd "${USER_HOME}/_/software/" || return 1
-  [ -e "./sway" ] && (cd sway && git pull origin master && cd ..) || git clone https://github.com/swaywm/sway.git
-	cd sway || return 1
+  local cdinto=""
+	local -i found=0
+ 	if [ -e "./sway" ] ; then
+		if [ -e "./sway/.git" ] ; then
+			cdinto=./sway
+			found=1
+		fi
+	fi
+  if [ -e "./sway/sway" ] ; then
+		if [ -e "./sway/sway/.git" ] ; then
+			cdinto=./sway/sway
+			found=1
+		fi
+	fi
+  if [ ${found} -eq 1 ] ; then
+	  cdinto=./sway
+		git clone https://github.com/swaywm/sway.git
+	fi
+	cd "${cdinto}" || return 1
+	if ( git pull origin master ) ; then
+	  warning failed to pull master
+	fi
+
 
 	chown -R "${SUDO_USER}" "$(pwd)"
 	[ -e "subprojects/wlroots" ] || git clone https://gitlab.freedesktop.org/wlroots/wlroots.git subprojects/wlroots
