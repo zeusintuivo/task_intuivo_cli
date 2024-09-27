@@ -710,7 +710,7 @@ _redhat_flavor_install() {
     fi
   fi
 
-  if [ ! -e flag_pre_build_ready_sway ] ; then
+  if [[ ! -e "${USER_HOME}/_/software/lag_pre_build_ready_sway" ]] ; then
   {
     dnf build-dep sway -y
     dnf install -y git gcc meson ninja-build wayland-devel mesa-libEGL-devel mesa-libGLES-devel mesa-dri-drivers
@@ -733,6 +733,7 @@ _redhat_flavor_install() {
       git clone https://github.com/swaywm/sway.git
     fi
     cd "${cdinto}" || return 1
+    pwd
     if ( git pull origin master ) ; then
       warning failed to pull master
     fi
@@ -749,11 +750,14 @@ _redhat_flavor_install() {
     [ -e "subprojects/pixman" ] || git clone https://gitlab.freedesktop.org/pixman/pixman subprojects/pixman
     [ -e "subprojects/elogind" ] || git clone https://github.com/elogind/elogind.git subprojects/elogind
     chown -R "${SUDO_USER}" "$(pwd)/subprojects"
-    touch flag_pre_build_ready_sway
+    touch "${USER_HOME}/_/software/lag_pre_build_ready_sway"
+  }
+  else
+  {
+    pwd
+    cd "${cdinto}" || return 1
   }
   fi
-  cd "${cdinto}" || return 1
-
   # Build sway and wlroots
   # /home/linuxbrew/.linuxbrew/bin/meson build/
   su - "${SUDO_USER}" -c "/home/linuxbrew/.linuxbrew/bin/meson setup --reconfigure build/"
