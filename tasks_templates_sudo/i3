@@ -42,8 +42,22 @@ _fedora_37__64() {
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   echo "REF: https://fedoraproject.org/wiki/I3_guide#First_Login"
   echo "REF: https://fedoramagazine.org/getting-started-i3-window-manager/"
-  anounce_command 'dnf group install "KDE (K Desktop Environment)" -y --allowerasing'
-  anounce_command 'dnf group install "i3 desktop" -y --allowerasing'
+  local groupslist="$(dnf groups list)"
+  if ( grep -q "^[[:space:]]*KDE (K Desktop Environment)" <<<  "${groupslist}" ) ; then
+  {
+    anounce_command 'dnf group install "KDE (K Desktop Environment)" -y --allowerasing'
+  }
+  fi
+  if ( grep -q "^[[:space:]]*KDE Plasma Workspaces" <<<  "${groupslist}" ) ; then
+  {
+    anounce_command 'dnf group install "KDE Plasma Workspaces" -y --allowerasing'
+  }
+  fi
+  if ( grep -q "^[[:space:]]*i3 desktop" <<<  "${groupslist}" ) ; then
+  {
+    anounce_command 'dnf group install "i3 desktop" -y --allowerasing'
+  }
+  fi
   anounce_command dnf builddep i3 -y --allowerasing
   anounce_command dnf install i3 -y --allowerasing
   anounce_command dnf builddep kitty -y --allowerasing
@@ -102,8 +116,8 @@ _fedora_37__64() {
     }
   fi
 
-	anounce brew install libxscrnsaver libnotify bzip2 freetype2
-	if su - "${SUDO_USER}" -c 'brew install libxscrnsaver libnotify bzip2 freetype2' ; then
+  anounce brew install libxscrnsaver libnotify bzip2 freetype2
+  if su - "${SUDO_USER}" -c 'brew install libxscrnsaver libnotify bzip2 freetype2' ; then
     {
       echo "All installed no error"
     }
