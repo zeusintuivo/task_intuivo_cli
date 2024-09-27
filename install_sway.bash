@@ -665,15 +665,15 @@ _debian_flavor_install() {
   local PATHTOPOCKETBASE="${UNZIPDIR}/pocketbase"
   local THISIP=$(myip)
 
-	apt build-dep sway -y
-	apt install glslang-tools libcairo2-dev libcap-dev libdbus-1-dev libdisplay-info-dev libevdev-dev libgdk-pixbuf2.0-dev libinput-dev libjson-c-dev libliftoff-dev libpam0g-dev libpango1.0-dev libpcre2-dev libpixman-1-dev libseat-dev libsystemd-dev libvulkan-dev libwayland-dev libwayland-egl1 libwlroots-dev libxcb-ewmh-dev libxkbcommon-dev meson pkgconf scdoc tree wayland-protocols -y
-	apt install sway -y
-	 cd "${USER_HOME}/_/software/" || return 1
+  apt build-dep sway -y
+  apt install glslang-tools libcairo2-dev libcap-dev libdbus-1-dev libdisplay-info-dev libevdev-dev libgdk-pixbuf2.0-dev libinput-dev libjson-c-dev libliftoff-dev libpam0g-dev libpango1.0-dev libpcre2-dev libpixman-1-dev libseat-dev libsystemd-dev libvulkan-dev libwayland-dev libwayland-egl1 libwlroots-dev libxcb-ewmh-dev libxkbcommon-dev meson pkgconf scdoc tree wayland-protocols -y
+  apt install sway -y
+   cd "${USER_HOME}/_/software/" || return 1
 I   [ -e "./sway" ] && (cd sway && git pull origin master && cd ..) || git clone https://g  ithub.com/swaywm/sway.git # I: Note that A && B || C is not if-then-else. C may run whe…
     cd sway || return 1
     git clone https://gitlab.freedesktop.org/wlroots/wlroots.git subprojects/wlroots
 
-		echo "These other repo are needed by Atch Alpine FreeBSD maybe"
+    echo "These other repo are needed by Atch Alpine FreeBSD maybe"
 it clone https://gitlab.freedesktop.org/wayland/wayland.git subprojects/wayland
 git clone https://gitlab.freedesktop.org/wayland/wayland-protocols.git subprojects/wayland-protocols
 git clone https://gitlab.freedesktop.org/emersion/libdisplay-info.git subprojects/libdisplay-info
@@ -685,8 +685,8 @@ git clone https://git.sr.ht/~kennylevinsen/seatd subprojects/seatd
     meson build/
     ninja -C build/
 
-		echo "Tmp export to test"
-		export PATH=build/swaybar:build/swaymsg:build/swaynag:$PATH
+    echo "Tmp export to test"
+    export PATH=build/swaybar:build/swaymsg:build/swaynag:$PATH
 
     # Start sway
     build/sway/sway
@@ -695,71 +695,71 @@ git clone https://git.sr.ht/~kennylevinsen/seatd subprojects/seatd
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   dnf build-dep sway -y
-	dnf install -y git gcc meson ninja-build wayland-devel mesa-libEGL-devel mesa-libGLES-devel mesa-dri-drivers
-	dnf install -y libdrm-devel libgbm-devel libxkbcommon-devel libudev-devel systemd-devel cairo-devel libpcap-devel json-c-devel pam-devel pango-devel pcre-devel gdk-pixbuf2-devel
-	dnf install libevdev-devel libevdev libevdev-utils libevdevPlus libevdevPlus-devel  -y
-	dnf install pixman pixman-devel -y
-	dnf install libseat-devel libseat -y
-	dnf install hwdata-devel hwdata -y
+  dnf install -y git gcc meson ninja-build wayland-devel mesa-libEGL-devel mesa-libGLES-devel mesa-dri-drivers
+  dnf install -y libdrm-devel libgbm-devel libxkbcommon-devel libudev-devel systemd-devel cairo-devel libpcap-devel json-c-devel pam-devel pango-devel pcre-devel gdk-pixbuf2-devel
+  dnf install libevdev-devel libevdev libevdev-utils libevdevPlus libevdevPlus-devel  -y
+  dnf install pixman pixman-devel -y
+  dnf install libseat-devel libseat -y
+  dnf install hwdata-devel hwdata -y
   dnf install libliftoff-devel libliftoff -y
-	dnf install xorg-x11-drv-libinput-devel xorg-x11-drv-libinput libinput-test libinput-utils libinput-devel libinput -y
-	dnf install xorg-x11-server-Xwayland-devel xorg-x11-server-Xwayland xisxwayland xwaylandvideobridge xorg-x11-server-source -y
-	dnf install bash-completion -y
-	dnf install fish -y
-	dnf install bluefish -y
-	dnf install scdoc -y
-	dnf install sway -y
+  dnf install xorg-x11-drv-libinput-devel xorg-x11-drv-libinput libinput-test libinput-utils libinput-devel libinput -y
+  dnf install xorg-x11-server-Xwayland-devel xorg-x11-server-Xwayland xisxwayland xwaylandvideobridge xorg-x11-server-source -y
+  dnf install bash-completion -y
+  dnf install fish -y
+  dnf install bluefish -y
+  dnf install scdoc -y
+  dnf install sway -y
 
-	cd "${USER_HOME}/_/software/" || return 1
+  cd "${USER_HOME}/_/software/" || return 1
   local cdinto=""
-	local -i found=0
- 	if [ -e "./sway" ] ; then
-		if [ -e "./sway/.git" ] ; then
-			cdinto=./sway
-			found=1
-		fi
-	fi
+  local -i found=0
+   if [ -e "./sway" ] ; then
+    if [ -e "./sway/.git" ] ; then
+      cdinto=./sway
+      found=1
+    fi
+  fi
   if [ -e "./sway/sway" ] ; then
-		if [ -e "./sway/sway/.git" ] ; then
-			cdinto=./sway/sway
-			found=1
-		fi
-	fi
-  if [ ${found} -eq 1 ] ; then
-	  cdinto=./sway
-		git clone https://github.com/swaywm/sway.git
-	fi
-	cd "${cdinto}" || return 1
-	if ( git pull origin master ) ; then
-	  warning failed to pull master
-	fi
+    if [ -e "./sway/sway/.git" ] ; then
+      cdinto=./sway/sway
+      found=1
+    fi
+  fi
+  if [ ${found} -eq 0 ] ; then
+    cdinto=./sway
+    git clone https://github.com/swaywm/sway.git
+  fi
+  cd "${cdinto}" || return 1
+  if ( git pull origin master ) ; then
+    warning failed to pull master
+  fi
 
 
-	chown -R "${SUDO_USER}" "$(pwd)"
-	[ -e "subprojects/wlroots" ] || git clone https://gitlab.freedesktop.org/wlroots/wlroots.git subprojects/wlroots
+  chown -R "${SUDO_USER}" "$(pwd)"
+  [ -e "subprojects/wlroots" ] || git clone https://gitlab.freedesktop.org/wlroots/wlroots.git subprojects/wlroots
   [ -e "subprojects/wayland" ] || git clone https://gitlab.freedesktop.org/wayland/wayland.git subprojects/wayland
   [ -e "subprojects/wayland-protocols" ] || git clone https://gitlab.freedesktop.org/wayland/wayland-protocols.git subprojects/wayland-protocols
   [ -e "subprojects/libdisplay-info" ] || git clone https://gitlab.freedesktop.org/emersion/libdisplay-info.git subprojects/libdisplay-info
   [ -e "subprojects/libliftoff" ] || git clone https://gitlab.freedesktop.org/emersion/libliftoff.git subprojects/libliftoff
   [ -e "subprojects/libdrm" ] || git clone https://gitlab.freedesktop.org/mesa/drm.git subprojects/libdrm
   [ -e "subprojects/seatd" ] || git clone https://git.sr.ht/~kennylevinsen/seatd subprojects/seatd
-	[ -e "subprojects/pixman" ] || git clone https://gitlab.freedesktop.org/pixman/pixman subprojects/pixman
-	[ -e "subprojects/elogind" ] || git clone https://github.com/elogind/elogind.git subprojects/elogind
+  [ -e "subprojects/pixman" ] || git clone https://gitlab.freedesktop.org/pixman/pixman subprojects/pixman
+  [ -e "subprojects/elogind" ] || git clone https://github.com/elogind/elogind.git subprojects/elogind
 
-	chown -R "${SUDO_USER}" "$(pwd)/subprojects"
+  chown -R "${SUDO_USER}" "$(pwd)/subprojects"
 
-	# Build sway and wlroots
+  # Build sway and wlroots
   # /home/linuxbrew/.linuxbrew/bin/meson build/
-	su - "${SUDO_USER}" -c "/home/linuxbrew/.linuxbrew/bin/meson setup setup --reconfigure build/"
+  su - "${SUDO_USER}" -c "/home/linuxbrew/.linuxbrew/bin/meson setup setup --reconfigure build/"
   su - "${SUDO_USER}" -c "/home/linuxbrew/.linuxbrew/bin/ninja -C build/"
 
   echo "Tmp export to test"
 
-	export PATH=build/swaybar:build/swaymsg:build/swaynag:$PATH
+  export PATH=build/swaybar:build/swaymsg:build/swaynag:$PATH
   # Start sway
   build/sway/sway
 
-	echo "System-wide installation
+  echo "System-wide installation
 
 This section is relevant if you want to install both wlroots and sway system-wide (not using a subproject).
 Variables
