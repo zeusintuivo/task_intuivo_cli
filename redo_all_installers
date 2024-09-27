@@ -5,11 +5,11 @@
 function ._main() {
   local -i _err=0
   local _files=""
-	_files="$(ls -1 ./tasks_templates_sudo)"
+	_files="$(ls -1 ./2tasks_templates_sudo)"
   _err=$?
 	if [ ${_err:-0} -ne 0 ] || [[ -z "${_files:-}" ]] ; then 
 	{
-	  echo "Error When loading templares not found ./tasks_templates_sudo "
+	  echo "Error When loading templares not found ./2tasks_templates_sudo "
     exit 1 
 	}
 	fi

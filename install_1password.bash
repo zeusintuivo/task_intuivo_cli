@@ -166,7 +166,7 @@ INT ..."
 load_struct_testing(){
   function _trap_on_error(){
     local -ir __trapped_error_exit_num="${2:-0}"
-    echo -e "\\n \033[01;7m*** tasks_base/sudoer.bash:$LINENO load_struct_testing() ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+    echo -e "\\n \033[01;7m*** 0tasks_base/sudoer.bash:$LINENO load_struct_testing() ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
 
     echo ". ${1}"
     echo ". exit  ${__trapped_error_exit_num}  "
@@ -209,7 +209,7 @@ load_struct_testing(){
         }
         fi
 	if (( _DEBUG )) ; then
-          >&2 echo "# $0: tasks_base/sudoer.bash Loading locally"
+          >&2 echo "# $0: 0tasks_base/sudoer.bash Loading locally"
         fi
         echo """${structsource}"""
         return 0
@@ -276,7 +276,7 @@ ${HOME-}/_/clis/execute_command_intuivo_cli/${_library-}
       if (( ! _loaded )) ; then 
         if ( command -v curl >/dev/null 2>&1; )  ; then
           if (( _DEBUG )) ; then
-            echo "$0: tasks_base/sudoer.bash Loading ${_library} from the net using curl "
+            echo "$0: 0tasks_base/sudoer.bash Loading ${_library} from the net using curl "
           fi
 	  _loaded=0
           structsource="""$(curl https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/${_library}  -so -   2>/dev/null )"""  #  2>/dev/null suppress only curl download messages, but keep curl output for variable
@@ -291,7 +291,7 @@ ${HOME-}/_/clis/execute_command_intuivo_cli/${_library-}
           fi
         elif ( command -v wget >/dev/null 2>&1; ) ; then
           if (( _DEBUG )) ; then
-            echo "$0: tasks_base/sudoer.bash Loading ${_library} from the net using wget "
+            echo "$0: 0tasks_base/sudoer.bash Loading ${_library} from the net using wget "
           fi
 	  _loaded=0
           structsource="""$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/${_library} -O -   2>/dev/null )"""  #  2>/dev/null suppress only wget download messages, but keep wget output for variable
@@ -318,7 +318,7 @@ ${HOME-}/_/clis/execute_command_intuivo_cli/${_library-}
       local _temp_dir="$(mktemp -d 2>/dev/null || mktemp -d -t "${_library}_source")"
       echo "${structsource}">"${_temp_dir}/${_library}"
       if (( _DEBUG )) ; then
-        echo "1. sudologic $0: tasks_base/sudoer.bash Temp location ${_temp_dir}/${_library}"
+        echo "1. sudologic $0: 0tasks_base/sudoer.bash Temp location ${_temp_dir}/${_library}"
       fi
       source "${_temp_dir}/${_library}"
       _err=$?
@@ -610,13 +610,13 @@ directory_exists_with_spaces "${USER_HOME}"
 
 
 
- #---------/\/\/\-- tasks_base/sudoer.bash -------------/\/\/\--------
+ #---------/\/\/\-- 0tasks_base/sudoer.bash -------------/\/\/\--------
 
 
 
 
 
- #--------\/\/\/\/-- tasks_templates_sudo/1password …install_1password.bash” -- Custom code -\/\/\/\/-------
+ #--------\/\/\/\/-- 2tasks_templates_sudo/1password …install_1password.bash” -- Custom code -\/\/\/\/-------
 
 
 #!/bin/bash
@@ -783,11 +783,11 @@ _tar() {
 
 
 
- #--------/\/\/\/\-- tasks_templates_sudo/1password …install_1password.bash” -- Custom code-/\/\/\/\-------
+ #--------/\/\/\/\-- 2tasks_templates_sudo/1password …install_1password.bash” -- Custom code-/\/\/\/\-------
 
 
 
- #--------\/\/\/\/--- tasks_base/main.bash ---\/\/\/\/-------
+ #--------\/\/\/\/--- 0tasks_base/main.bash ---\/\/\/\/-------
 _main() {
   determine_os_and_fire_action "${*:-}"
 } # end _main

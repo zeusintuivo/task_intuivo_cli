@@ -298,7 +298,8 @@ _fedora__64() {
   enforce_variable_with_value folder_date "${folder_date}"
   local download_folder=$(echo  "${USER_HOME}/Downloads/${folder_date}")
 
-  mkdir -p "${download_folder}"
+  anounce_command mkdir -p "${download_folder}"
+  chown -R "${SUDO_USER}" "${download_folder}"
   file_exists_with_spaces "${download_folder}"
   cd "${download_folder}"
   # TODO: Fragile providing name manually
@@ -328,7 +329,7 @@ _fedora__64() {
   }
   fi
 
-
+  Checking downloaded
 
   _trap_try_start
   local CODENAME=$(ls -1 "${download_folder}" | tail -1)
@@ -337,11 +338,13 @@ _fedora__64() {
 
   Message Downloaded filename: "${CODENAME}"
   Showing ls -1 "${download_folder}"
+	local filenamechecked="${download_folder}/${CODENAME}"
   file_exists_with_spaces "${download_folder}/${CODENAME}"
-  local MAJOR MINOR MICRO BUILD ONE_VERSION_BEFORE NEW_FILENAME
+
+	local MAJOR MINOR MICRO BUILD ONE_VERSION_BEFORE NEW_FILENAME
 
   ensure dnf or "Canceling Install. Could not find dnf command to execute install"
-    IFS=. read MAJOR MINOR MICRO <<EOF
+  IFS=. read MAJOR MINOR MICRO <<EOF
 ${LASTEST_VERSION##*-}
 EOF
   if (( MICRO > 0 )) ; then
@@ -361,28 +364,34 @@ EOF
   local OLD_PACKAGE=$(echo $OLD_FILENAME | cüt '.rpm')
   Message dnf -y remove "${OLD_PACKAGE}"
   _trap_try_start # _trap_catch_check
-  local msg=$(dnf -y remove "${OLD_PACKAGE}")
-  _trap_catch_check
+	set -x
+	local msg=$(dnf -y remove "${OLD_PACKAGE}")
+	_trap_catch_check
   Message "${msg}"
-
-
-  ensure rpm or "Canceling Install. Could not find rpm command to execute install"
-  Message rpm -ivh "${download_folder}/${CODENAME}"
+  set +x
+	export DEBUG=1
+  chown -R "${SUDO_USER}" "${filenamechecked}"
+  Installing "${filenamechecked}"
+  # ensure rpm or "Canceling Install. Could not find rpm command to execute install"
+	anounce rpm -ivh "${filenamechecked}"
   _trap_try_start # _trap_catch_check
-  [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
-  local TARGET_URL=https://az764295.vo.msecnd.net/insider/192c817fd350bcbf3caecae22a45ec39bae78516/code-insiders-1.54.0-1613712429.el7.x86_64.rpm
-  local TARGET_URL="https://vscode.download.prss.microsoft.com/dbazure/download/stable/863d2581ecda6849923a2118d93a088b0745d9d6/code_1.87.2-1709911730.x86_64.rpm"
-
-  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
-  local CODENAME=$(basename "${TARGET_URL}")
-  enforce_variable_with_value CODENAME "${CODENAME}"
-  local DOWNLOADFOLDER="${USER_HOME}/Downloads"
-  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
-  msg=$(_install_rpm "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0)
-  # msg=$(rpm -ivh "${download_folder}/${CODENAME}")
+	msg="$(rpm -ivh "${filenamechecked}")"
   _trap_catch_check
+  #	[ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home
+  #  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  #  local TARGET_URL=https://az764295.vo.msecnd.net/insider/192c817fd350bcbf3caecae22a45ec39bae78516/code-insiders-1.54.0-1613712429.el7.x86_64.rpm
+  #  local TARGET_URL="https://vscode.download.prss.microsoft.com/dbazure/download/stable/863d2581ecda6849923a2118d93a088b0745d9d6/code_1.87.2-1709911730.x86_64.rpm"
+  #
+  #  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
+  #  local CODENAME=$(basename "${TARGET_URL}")
+  #  enforce_variable_with_value CODENAME "${CODENAME}"
+  #  local DOWNLOADFOLDER="${USER_HOME}/Downloads"
+  #  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  #  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+  #  msg=$(_install_rpm "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0)
+  # msg=$(_install_rpm "${TARGET_URL}" "${Ddownload_folder}"  "${CODENAME}" 0)
+  # msg=$(rpm -ivh "${download_folder}/${CODENAME}")
+  # msg=$(rpm -ivh "${download_folder}/${CODENAME}")
   Message "${msg}"
 }
 
@@ -409,5 +418,3 @@ _main() {
 _main
 
 echo ":)"
-
-

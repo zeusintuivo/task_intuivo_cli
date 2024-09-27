@@ -32,7 +32,7 @@
 }
 
 
-BASETEMPLATES="$(ls -1 ./tasks_templates)"
+BASETEMPLATES="$(ls -1 ./1tasks_templates)"
 CYAN="\\\\033[01;36m"
 LIGHTYELLOW="\\\\\033[38;5;227m"
 CURDIR="${PWD}"
@@ -50,7 +50,7 @@ cd "${CURDIR}"
 
 
 function loader_installer(){
-	local _sudoer="$(<tasks_base/sudoer.bash)"
+	local _sudoer="$(<0tasks_base/sudoer.bash)"
 	echo "${_sudoer}" > install_"${1}".bash
 	chmod a+x install_"${1}".bash
 } # end loader_installer
