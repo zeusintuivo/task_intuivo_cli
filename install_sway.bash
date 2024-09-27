@@ -694,22 +694,6 @@ git clone https://git.sr.ht/~kennylevinsen/seatd subprojects/seatd
 
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  dnf build-dep sway -y
-  dnf install -y git gcc meson ninja-build wayland-devel mesa-libEGL-devel mesa-libGLES-devel mesa-dri-drivers
-  dnf install -y libdrm-devel libgbm-devel libxkbcommon-devel libudev-devel systemd-devel cairo-devel libpcap-devel json-c-devel pam-devel pango-devel pcre-devel gdk-pixbuf2-devel
-  dnf install libevdev-devel libevdev libevdev-utils libevdevPlus libevdevPlus-devel  -y
-  dnf install pixman pixman-devel -y
-  dnf install libseat-devel libseat -y
-  dnf install hwdata-devel hwdata -y
-  dnf install libliftoff-devel libliftoff -y
-  dnf install xorg-x11-drv-libinput-devel xorg-x11-drv-libinput libinput-test libinput-utils libinput-devel libinput -y
-  dnf install xorg-x11-server-Xwayland-devel xorg-x11-server-Xwayland xisxwayland xwaylandvideobridge xorg-x11-server-source -y
-  dnf install bash-completion -y
-  dnf install fish -y
-  dnf install bluefish -y
-  dnf install scdoc -y
-  dnf install sway -y
-
   cd "${USER_HOME}/_/software/" || return 1
   local cdinto=""
   local -i found=0
@@ -725,32 +709,54 @@ _redhat_flavor_install() {
       found=1
     fi
   fi
-  if [ ${found} -eq 0 ] ; then
-    cdinto=./sway
-    git clone https://github.com/swaywm/sway.git
+
+  if [ ! -e flag_pre_build_ready_sway ] ; then
+  {
+    dnf build-dep sway -y
+    dnf install -y git gcc meson ninja-build wayland-devel mesa-libEGL-devel mesa-libGLES-devel mesa-dri-drivers
+    dnf install -y libdrm-devel libgbm-devel libxkbcommon-devel libudev-devel systemd-devel cairo-devel libpcap-devel json-c-devel pam-devel pango-devel pcre-devel gdk-pixbuf2-devel
+    dnf install libevdev-devel libevdev libevdev-utils libevdevPlus libevdevPlus-devel  -y
+    dnf install pixman pixman-devel -y
+    dnf install libseat-devel libseat -y
+    dnf install hwdata-devel hwdata -y
+    dnf install libliftoff-devel libliftoff -y
+    dnf install xorg-x11-drv-libinput-devel xorg-x11-drv-libinput libinput-test libinput-utils libinput-devel libinput -y
+    dnf install xorg-x11-server-Xwayland-devel xorg-x11-server-Xwayland xisxwayland xwaylandvideobridge xorg-x11-server-source -y
+    dnf install bash-completion -y
+    dnf install fish -y
+    dnf install bluefish -y
+    dnf install scdoc -y
+    dnf install sway -y
+
+    if [ ${found} -eq 0 ] ; then
+      cdinto=./sway
+      git clone https://github.com/swaywm/sway.git
+    fi
+    cd "${cdinto}" || return 1
+    if ( git pull origin master ) ; then
+      warning failed to pull master
+    fi
+
+
+    chown -R "${SUDO_USER}" "$(pwd)"
+    [ -e "subprojects/wlroots" ] || git clone https://gitlab.freedesktop.org/wlroots/wlroots.git subprojects/wlroots
+    [ -e "subprojects/wayland" ] || git clone https://gitlab.freedesktop.org/wayland/wayland.git subprojects/wayland
+    [ -e "subprojects/wayland-protocols" ] || git clone https://gitlab.freedesktop.org/wayland/wayland-protocols.git subprojects/wayland-protocols
+    [ -e "subprojects/libdisplay-info" ] || git clone https://gitlab.freedesktop.org/emersion/libdisplay-info.git subprojects/libdisplay-info
+    [ -e "subprojects/libliftoff" ] || git clone https://gitlab.freedesktop.org/emersion/libliftoff.git subprojects/libliftoff
+    [ -e "subprojects/libdrm" ] || git clone https://gitlab.freedesktop.org/mesa/drm.git subprojects/libdrm
+    [ -e "subprojects/seatd" ] || git clone https://git.sr.ht/~kennylevinsen/seatd subprojects/seatd
+    [ -e "subprojects/pixman" ] || git clone https://gitlab.freedesktop.org/pixman/pixman subprojects/pixman
+    [ -e "subprojects/elogind" ] || git clone https://github.com/elogind/elogind.git subprojects/elogind
+    chown -R "${SUDO_USER}" "$(pwd)/subprojects"
+    touch flag_pre_build_ready_sway
+  }
   fi
   cd "${cdinto}" || return 1
-  if ( git pull origin master ) ; then
-    warning failed to pull master
-  fi
-
-
-  chown -R "${SUDO_USER}" "$(pwd)"
-  [ -e "subprojects/wlroots" ] || git clone https://gitlab.freedesktop.org/wlroots/wlroots.git subprojects/wlroots
-  [ -e "subprojects/wayland" ] || git clone https://gitlab.freedesktop.org/wayland/wayland.git subprojects/wayland
-  [ -e "subprojects/wayland-protocols" ] || git clone https://gitlab.freedesktop.org/wayland/wayland-protocols.git subprojects/wayland-protocols
-  [ -e "subprojects/libdisplay-info" ] || git clone https://gitlab.freedesktop.org/emersion/libdisplay-info.git subprojects/libdisplay-info
-  [ -e "subprojects/libliftoff" ] || git clone https://gitlab.freedesktop.org/emersion/libliftoff.git subprojects/libliftoff
-  [ -e "subprojects/libdrm" ] || git clone https://gitlab.freedesktop.org/mesa/drm.git subprojects/libdrm
-  [ -e "subprojects/seatd" ] || git clone https://git.sr.ht/~kennylevinsen/seatd subprojects/seatd
-  [ -e "subprojects/pixman" ] || git clone https://gitlab.freedesktop.org/pixman/pixman subprojects/pixman
-  [ -e "subprojects/elogind" ] || git clone https://github.com/elogind/elogind.git subprojects/elogind
-
-  chown -R "${SUDO_USER}" "$(pwd)/subprojects"
 
   # Build sway and wlroots
   # /home/linuxbrew/.linuxbrew/bin/meson build/
-  su - "${SUDO_USER}" -c "/home/linuxbrew/.linuxbrew/bin/meson setup setup --reconfigure build/"
+  su - "${SUDO_USER}" -c "/home/linuxbrew/.linuxbrew/bin/meson setup --reconfigure build/"
   su - "${SUDO_USER}" -c "/home/linuxbrew/.linuxbrew/bin/ninja -C build/"
 
   echo "Tmp export to test"
