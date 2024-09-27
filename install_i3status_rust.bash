@@ -20,7 +20,7 @@ echo "0. sudologic $0:$LINENO       THISSCRIPTPARAMS:${THISSCRIPTPARAMS:-}"
 
 echo "0. sudologic $0 Start Checking realpath  "
 if ! ( command -v realpath >/dev/null 2>&1; )  ; then
-{  
+{
   echo "... realpath not found. Downloading REF:https://github.com/swarmbox/realpath.git "
   if [[ -n "${USER_HOME}" ]] ;  then
   {
@@ -175,8 +175,17 @@ load_struct_testing(){
     local -r __caller=$(caller)
     local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
     local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
-
+    #                awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    local output="$(awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}")"
+    if ( command -v pygmentize >/dev/null 2>&1; )  ; then
+    {
+      echo "${output}" | pygmentize -g
+    }
+    else
+    {
+      echo "${output}"
+    }
+    fi
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
     exit 1
@@ -525,7 +534,17 @@ directory_exists_with_spaces "${USER_HOME}"
     local -r __caller=$(caller)
     local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
     local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    #                awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    local output="$(awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}")"
+    if ( command -v pygmentize >/dev/null 2>&1; )  ; then
+    {
+      echo "${output}" | pygmentize -g
+    }
+    else
+    {
+      echo "${output}"
+    }
+    fi
 
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
@@ -543,7 +562,17 @@ directory_exists_with_spaces "${USER_HOME}"
     local -r __caller=$(caller)
     local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
     local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    #               awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    local output="$(awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}")"
+    if ( command -v pygmentize >/dev/null 2>&1; )  ; then
+    {
+      echo "${output}" | pygmentize -g
+    }
+    else
+    {
+      echo "${output}"
+    }
+    fi
 
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
@@ -561,7 +590,17 @@ directory_exists_with_spaces "${USER_HOME}"
     local -r __caller=$(caller)
     local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
     local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    #               awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    local output="$(awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}")"
+    if ( command -v pygmentize >/dev/null 2>&1; )  ; then
+    {
+      echo "${output}" | pygmentize -g
+    }
+    else
+    {
+      echo "${output}"
+    }
+    fi
 
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
@@ -697,7 +736,7 @@ _add_variables_to_bashrc_zshrc(){
   directory_exists_with_spaces "${XDG_DATA_HOME}/i3status-rust"
   directory_exists_with_spaces "${USER_HOME}/.i3status-rs"
 
-  if [[ ! -e "${XDG_DATA_HOME}/i3status-rust/config.toml" ]] ; then 
+  if [[ ! -e "${XDG_DATA_HOME}/i3status-rust/config.toml" ]] ; then
   {
     cp "${USER_HOME}/.i3status-rs/examples/config.toml" "${XDG_DATA_HOME}/i3status-rust/config.toml"
   }
@@ -742,7 +781,7 @@ fi
   }
   done <<< "${INITFILES}"
   # type i3status
-  Checking "export XDG_DATA_HOME=${XDG_DATA_HOME}" 
+  Checking "export XDG_DATA_HOME=${XDG_DATA_HOME}"
 
   chown -R "${SUDO_USER}" "${XDG_DATA_HOME}/i3status-rust"
   chown -R "${SUDO_USER}" "${USER_HOME}/.i3status-rs"
@@ -817,8 +856,8 @@ _debian_flavor_install() {
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   dnf build-dep i3status -vy --allowerasing
-  yes | dnf copr enable atim/i3status-rust -y
-  dnf install i3status-rust -y --allowerasing
+  # yes | dnf copr enable atim/i3status-rust -y
+  # dnf install i3status-rust -y --allowerasing
   # dnf install  -y openssl-devel
   # Batch Fedora 37
   local package packages="
@@ -828,7 +867,7 @@ _redhat_flavor_install() {
     bison
     bison-devel
     # ruby-build-i3status
-    openssl1.1
+    # openssl1.1
     # openssl1.1-devel-1
     ncurses
     ncurses-devel
@@ -896,7 +935,12 @@ _redhat_flavor_install() {
   # su - "${SUDO_USER}" -c 'brew install readline'
   # su - "${SUDO_USER}" -c 'brew install openssl@1.1'
   _git_clone "https://github.com/greshake/i3status-rust.git" "${USER_HOME}/.i3status-rs"
-  
+  cd "${USER_HOME}/.i3status-rs"
+	cargo build
+	cargo build --release
+
+
+
   _add_variables_to_bashrc_zshrc
   # ensure i3status or "Canceling until i3status did not install"
   # su - "${SUDO_USER}" -c 'i3status install -l'
