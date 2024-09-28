@@ -20,7 +20,7 @@ echo "0. sudologic $0:$LINENO       THISSCRIPTPARAMS:${THISSCRIPTPARAMS:-}"
 
 echo "0. sudologic $0 Start Checking realpath  "
 if ! ( command -v realpath >/dev/null 2>&1; )  ; then
-{  
+{
   echo "... realpath not found. Downloading REF:https://github.com/swarmbox/realpath.git "
   if [[ -n "${USER_HOME}" ]] ;  then
   {
@@ -166,7 +166,7 @@ INT ..."
 load_struct_testing(){
   function _trap_on_error(){
     local -ir __trapped_error_exit_num="${2:-0}"
-		echo -e "\\n \033[01;7m*** 0tasks_base/sudoer.bash:$LINENO load_struct_testing() ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+    echo -e "\\n \033[01;7m*** 0tasks_base/sudoer.bash:$LINENO load_struct_testing() ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
 
     echo ". ${1}"
     echo ". exit  ${__trapped_error_exit_num}  "
@@ -175,15 +175,53 @@ load_struct_testing(){
     local -r __caller=$(caller)
     local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
     local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
-
+    #                awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    local output="$(awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}")"
+    if ( command -v pygmentize >/dev/null 2>&1; )  ; then
+    {
+      echo "${output}" | pygmentize -g
+    }
+    else
+    {
+      echo "${output}"
+    }
+    fi
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
     exit 1
   }
+  function source_library(){
+    # Sample usage 
+    #    if ( source_library "${provider}" ) ; then 
+    #      failed
+    #    fi
+    local -i _DEBUG=${DEBUG:-0}
+    local provider="${*-}"
+    local structsource=""
+      if [[  -e "${provider}" ]] ; then
+      {
+        structsource="""$(<"${provider}")"""
+        _err=$?
+        if [ $_err -gt 0 ] ; then
+        {
+          >&2 echo -e "#\n #\n# 4.1 WARNING Loading ${provider}. Occured while running 'source' err:$_err  \n \n  "
+          return 1
+        }
+        fi
+	if (( _DEBUG )) ; then
+          >&2 echo "# $0: 0tasks_base/sudoer.bash Loading locally"
+        fi
+        echo """${structsource}"""
+        return 0
+      }
+      fi
+      >&2 echo -e "\n 4.2 nor found  ${provider}. 'source' err:$_err  \n  "
+      return 1
+  } # end source_library
   function load_library(){
     local _library="${1:-struct_testing}"
     local -i _DEBUG=${DEBUG:-0}
+    local -i _err=0
     if [[ -z "${1}" ]] ; then
     {
        echo "Must call with name of library example: struct_testing execute_command"
@@ -191,62 +229,63 @@ load_struct_testing(){
     }
     fi
     trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+      local providers="
+/home/${SUDO_USER-}/_/clis/execute_command_intuivo_cli/${_library-}
+/Users/${SUDO_USER-}/_/clis/execute_command_intuivo_cli/${_library-}
+/home/${USER-}/_/clis/execute_command_intuivo_cli/${_library-}
+/Users/${USER-}/_/clis/execute_command_intuivo_cli/${_library-}
+${HOME-}/_/clis/execute_command_intuivo_cli/${_library-}
+"
       local provider=""
-      provider="$HOME/_/clis/execute_command_intuivo_cli/${_library}"
-      if [[ -n "${SUDO_USER:-}" ]] && [[ -n "${HOME:-}" ]] && [[ "${HOME:-}" == "/root" ]] && [[ !  -e "${provider}"  ]] ; then
-      {
-        provider="/home/${SUDO_USER}/_/clis/execute_command_intuivo_cli/${_library}"
-      }
-      elif [[ -z "${USER:-}" ]] && [[ -n "${HOME:-}" ]] && [[ "${HOME:-}" == "/root" ]] && [[ !  -e "${provider}"  ]] ; then
-      {
-        provider="/home/${USER}/_/clis/execute_command_intuivo_cli/${_library}"
-      }
-      fi
-      echo "$0: ${provider}"
-      echo "$0: SUDO_USER:${SUDO_USER:-nada SUDOUSER}: USER:${USER:-nada USER}: ${SUDO_HOME:-nada SUDO_HOME}: {${HOME:-nada HOME}}"
-      local -i _err=0
-      local -i _found=0 
       local -i _loaded=0
+      local -i _found=0 
       local structsource
-      provider="${HOME-}/_/clis/execute_command_intuivo_cli/${_library}"
-      if [[  -e "${provider}" ]] ; then
+      while read -r provider ; do
       {
-	structsource="""$(<"${provider}")"""
-	_err=$?
-	if [ $_err -gt 0 ] ; then
-        {
-          echo -e "\n \n 4.1 WARNING Loading ${_library}. Occured while running 'source' err:$_err  \n \n  "
-	  _loaded=1
-        }
-        fi
-      }
-      fi
-
-      provider="/home/${SUDO_USER-}/_/clis/execute_command_intuivo_cli/${_library}"
-      if [[  -e "${provider}" ]] ; then
-        structsource="""$(<"${provider}")"""
-
-	if (( _DEBUG )) ; then
-          echo "$0: 0tasks_base/sudoer.bash Loading locally"
-        fi
-        structsource="""$(<"${provider}")"""
+        [[ -z "${provider}" ]] && continue
+        [[ ! -e "${provider}" ]] && continue
+	_loaded=0
+	_found=0
+	structsource="""$(source_library "${provider}")"""
         _err=$?
+        _loaded=1
+	_found=1
         if [ $_err -gt 0 ] ; then
         {
-           echo -e "\n \n  ERROR! Loading ${_library}. running 'source locally' returned error did not download or is empty err:$_err  \n \n  "
-           exit 1
+          echo -e "\n \n 4.1 WARNING Loading ${_library}. Occured while running 'source' err:$_err  \n \n  "
+          _loaded=0
+	  _found=0
         }
         fi
-      else
+      }
+      done <<< "${providers}"
+
+#       provider="$HOME/_/clis/execute_command_intuivo_cli/${_library}"
+#       if [[ -n "${SUDO_USER:-}" ]] && [[ -n "${HOME:-}" ]] && [[ "${HOME:-}" == "/root" ]] && [[ !  -e "${provider}"  ]] ; then
+#       {
+#         provider="/home/${SUDO_USER}/_/clis/execute_command_intuivo_cli/${_library}"
+#       }
+#       elif [[ -z "${USER:-}" ]] && [[ -n "${HOME:-}" ]] && [[ "${HOME:-}" == "/root" ]] && [[ !  -e "${provider}"  ]] ; then
+#       {
+#         provider="/home/${USER}/_/clis/execute_command_intuivo_cli/${_library}"
+#       }
+#       fi
+#       echo "$0: ${provider}"
+#       echo "$0: SUDO_USER:${SUDO_USER:-nada SUDOUSER}: USER:${USER:-nada USER}: ${SUDO_HOME:-nada SUDO_HOME}: {${HOME:-nada HOME}}"
+      
+      if (( ! _loaded )) ; then 
         if ( command -v curl >/dev/null 2>&1; )  ; then
           if (( _DEBUG )) ; then
             echo "$0: 0tasks_base/sudoer.bash Loading ${_library} from the net using curl "
           fi
+	  _loaded=0
           structsource="""$(curl https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/${_library}  -so -   2>/dev/null )"""  #  2>/dev/null suppress only curl download messages, but keep curl output for variable
           _err=$?
+	  _loaded=1
           if [ $_err -gt 0 ] ; then
           {
             echo -e "\n \n  ERROR! Loading ${_library}. running 'curl' returned error did not download or is empty err:$_err  \n \n  "
+	    _loaded=0
             exit 1
           }
           fi
@@ -254,16 +293,19 @@ load_struct_testing(){
           if (( _DEBUG )) ; then
             echo "$0: 0tasks_base/sudoer.bash Loading ${_library} from the net using wget "
           fi
+	  _loaded=0
           structsource="""$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/${_library} -O -   2>/dev/null )"""  #  2>/dev/null suppress only wget download messages, but keep wget output for variable
           _err=$?
+	  _loaded=1
           if [ $_err -gt 0 ] ; then
           {
             echo -e "\n \n  ERROR! Loading ${_library}. running 'wget' returned error did not download or is empty err:$_err  \n \n  "
+	    _loaded=0
             exit 1
           }
           fi
         else
-          echo -e "\n \n 2  ERROR! Loading ${_library} could not find wget or curl to download  \n \n "
+          echo -e "\n \n 2  ERROR! Loading ${_library} could not find local, wget, curl to load or download  \n \n "
           exit 69
         fi
       fi
@@ -492,7 +534,17 @@ directory_exists_with_spaces "${USER_HOME}"
     local -r __caller=$(caller)
     local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
     local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    #                awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    local output="$(awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}")"
+    if ( command -v pygmentize >/dev/null 2>&1; )  ; then
+    {
+      echo "${output}" | pygmentize -g
+    }
+    else
+    {
+      echo "${output}"
+    }
+    fi
 
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
@@ -510,7 +562,17 @@ directory_exists_with_spaces "${USER_HOME}"
     local -r __caller=$(caller)
     local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
     local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    #               awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    local output="$(awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}")"
+    if ( command -v pygmentize >/dev/null 2>&1; )  ; then
+    {
+      echo "${output}" | pygmentize -g
+    }
+    else
+    {
+      echo "${output}"
+    }
+    fi
 
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
@@ -528,7 +590,17 @@ directory_exists_with_spaces "${USER_HOME}"
     local -r __caller=$(caller)
     local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
     local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    #               awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    local output="$(awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}")"
+    if ( command -v pygmentize >/dev/null 2>&1; )  ; then
+    {
+      echo "${output}" | pygmentize -g
+    }
+    else
+    {
+      echo "${output}"
+    }
+    fi
 
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
@@ -596,18 +668,17 @@ _debian_flavor_install() {
 
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  echo "_redhat_flavor_install Procedure not yet implemented. I don't know what to do."
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
-  dnf install nvim -y
-  curl -fLo "${USER_HOME}/.vim/autoload/plug.vim" --create-dirs \
+  anounce_command dnf install neovim neovim-ale neovim-qt python-neovim-doc python3-neovim  -yv
+  curl -fLo "${USER_HOME}/.local/share/nvim/site/autoload/plug.vim" --create-dirs \
     https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-  curl -fLo "/root/.vim/autoload/plug.vim" --create-dirs \
+  anounce_command chown -R  "${SUDO_USER}" "${USER_HOME}/.local/share/nvim/"
+  curl -fLo "/root/.local/share/nvim/site/autoload/plug.vim" --create-dirs \
     https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-	mkdir -p "${USER_HOME}/.config/nvim"
-	mkdir -p "/root/.config/nvim"
-	touch "${USER_HOME}/.config/nvim/init.vim"
-	touch "/root/.config/nvim/init.vim"
+	anounce_command mkdir -p "${USER_HOME}/.config/nvim"
+	anounce_command mkdir -p "/root/.config/nvim"
+	anounce_command touch "${USER_HOME}/.config/nvim/init.vim"
+	anounce_command touch "/root/.config/nvim/init.vim"
 	echo "
 if v:lang =~ \"utf8$\" || v:lang =~ \"UTF-8$\"
 set fileencodings=ucs-bom,utf-8,latin1
@@ -617,7 +688,7 @@ set nocompatible        \" Use Vim defaults (much better!)
 set bs=indent,eol,start         \" allow backspacing over everything in insert mode
 \"set ai                 \" always set autoindenting on
 \"set backup             \" keep a backup file
-set viminfo='20,\\"50    \" read/write a .viminfo file, don't store more
+set viminfo='20,\\\"50    \" read/write a .viminfo file, do not store more
 \" than 50 lines of registers
 set history=50          \" keep 50 lines of command line history
 set ruler               \" show the cursor position all the time
@@ -658,7 +729,7 @@ set shiftwidth=2
 \"
 \" set softtabstop=0 noexpandtab
 \"
- \"If you also want to use tabs for indentation, you should also set shiftwidth to be the same as tabstop:
+\"If you also want to use tabs for indentation, you should also set shiftwidth to be the same as tabstop:
 \"
 \" set shiftwidth=4
 \"
@@ -709,10 +780,10 @@ autocmd!
 \" autocmd BufRead *.txt set tw=78
 \" When editing a file, always jump to the last cursor position
 autocmd BufReadPost *
-\ if line(\"'\\"\") > 0 && line (\"'\\"\") <= line(\"$\") |
-\   exe \"normal! g'\\"\" |
-\ endif
-\"' do not write swapfile on most commonly used directories for NFS mounts or USB sticks
+\\ if line(\"'\\\"\") > 0 && line (\"'\\\"\") <= line(\"$\") |
+\\   exe \"normal! g'\\\"\" |
+\\ endif
+\" do not write swapfile on most commonly used directories for NFS mounts or USB sticks
 autocmd BufNewFile,BufReadPre /media/*,/run/media/*,/mnt/* set directory=~/tmp,/var/tmp,/tmp
 \" start with spec file template
 autocmd BufNewFile *.spec 0r /usr/share/vim/vimfiles/template.spec
@@ -726,10 +797,10 @@ set cst
 set nocsverb
 \" add any database in current directory
 if filereadable(\"cscope.out\")
-cs add $PWD/cscope.out
+cs add \$PWD/cscope.out
 \" else add database pointed to by environment
-elseif $CSCOPE_DB != \"\"
-cs add $CSCOPE_DB
+elseif \$CSCOPE_DB != \"\"
+cs add \$CSCOPE_DB
 endif
 set csverb
 endif
@@ -742,10 +813,10 @@ set cst
 set nocsverb
 \" add any database in current directory
 if filereadable(\"cscope.out\")
-cs add $PWD/cscope.out
+cs add \$PWD/cscope.out
 \" else add database pointed to by environment
-elseif $CSCOPE_DB != \"\"
-cs add $CSCOPE_DB
+elseif \$CSCOPE_DB != \"\"
+cs add \$CSCOPE_DB
 endif
 set csverb
 endif
@@ -771,36 +842,36 @@ Plug 'gleam-lang/gleam.vim'
 \"   - Neovim (Linux/macOS/Windows): stdpath('data') . '/plugged'
 \" You can specify a custom plugin directory by passing it as the argument
 \"   - e.g. 'call plug#begin('~/.vim/plugged')'
-\"'   - Avoid using standard Vim directory names like 'plugin'
+\"   - Avoid using standard Vim directory names like 'plugin'
 
 \" Make sure you use single quotes
 
 Plug 'preservim/nerdtree' |
-            \ Plug 'Xuyuanp/nerdtree-git-plugin' |
-            \ Plug 'PhilRunninger/nerdtree-buffer-ops' |
-            \ Plug 'ryanoasis/vim-devicons' |
-            \ Plug 'tiagofumo/vim-nerdtree-syntax-highlight' |
-            \ Plug 'PhilRunninger/nerdtree-visual-selection'
+            \\ Plug 'Xuyuanp/nerdtree-git-plugin' |
+            \\ Plug 'PhilRunninger/nerdtree-buffer-ops' |
+            \\ Plug 'ryanoasis/vim-devicons' |
+            \\ Plug 'tiagofumo/vim-nerdtree-syntax-highlight' |
+            \\ Plug 'PhilRunninger/nerdtree-visual-selection'
 \" tree files
 
 
 Plug 'mattn/emmet-vim'
 \"Plug 'wincent/terminus'
 
-\"            \ Plug 'scrooloose/nerdtree-project-plugin' |
+\"           \\ Plug 'scrooloose/nerdtree-project-plugin' |
 
 let g:NERDTreeGitStatusIndicatorMapCustom = {
-                \ 'Modified'  :'✹',
-                \ 'Staged'    :'✚',
-                \ 'Untracked' :'✭',
-                \ 'Renamed'   :'➜',
-                \ 'Unmerged'  :'═',
-                \ 'Deleted'   :'✖',
-                \ 'Dirty'     :'✗',
-                \ 'Ignored'   :'☒',
-                \ 'Clean'     :'✔︎',
-                \ 'Unknown'   :'?',
-                \ }
+                \\ 'Modified'  :'✹',
+                \\ 'Staged'    :'✚',
+                \\ 'Untracked' :'✭',
+                \\ 'Renamed'   :'➜',
+                \\ 'Unmerged'  :'═',
+                \\ 'Deleted'   :'✖',
+                \\ 'Dirty'     :'✗',
+                \\ 'Ignored'   :'☒',
+                \\ 'Clean'     :'✔︎',
+                \\ 'Unknown'   :'?',
+                \\ }
 
 
 \" Shorthand notation; fetches https://github.com/junegunn/vim-easy-align
@@ -865,19 +936,22 @@ let g:ale_fix_on_save = 1
 
 \" In ~/.vim/vimrc, or somewhere similar.
 let g:ale_fixers = {
-\   '*': ['remove_trailing_lines', 'trim_whitespace'],
-\   'javascript': ['biome'],
-\}
-\" end'	
+\\   '*': ['remove_trailing_lines', 'trim_whitespace'],
+\\   'javascript': ['biome'],
+\\}
+\" end
 " >> "${USER_HOME}/.config/nvim/init.vim" >> "/root/.config/nvim/init.vim"
-  chown -R "${SUDO_USER}" "${USER_HOME}/.vim/autoload/plug.vim"
-  chown -R "${SUDO_USER}" "${USER_HOME}/.config/nvim/init.vim"
+  anounce_command chown -R "${SUDO_USER}" "${USER_HOME}/.local/share/nvim/site/autoload/plug.vim"
+  anounce_command chown -R "${SUDO_USER}" "${USER_HOME}/.config/nvim/init.vim"
   # vim
   # vim -es -u vimrc -i NONE -c "PlugInstall" -c "qa"
 
+
   # neovim
-  nvim -es -u init.vim -i NONE -c "PlugInstall" -c "qa"
-  su - "${SUDO_USER}" -c 'nvim -es -u init.vim -i NONE -c "PlugInstall" -c "qa"'
+  # nvim -es -u init.vim -i NONE -c "PlugInstall" -c "qa"
+  anounce_command nvim -c PlugInstall -c qa
+  # su - "${SUDO_USER}" -c 'nvim -es -u init.vim -i NONE -c "PlugInstall" -c "qa"'
+  su - "${SUDO_USER}" -c 'nvim  -c PlugInstall -c qa'
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
@@ -924,6 +998,19 @@ _fedora__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _fedora__64
+
+_fedora_37__64() {
+  trap 'echo Error:$?' ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  _redhat_flavor_install "${_parameters-}"
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _fedora_37__64
 
 _gentoo__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR

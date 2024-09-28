@@ -660,7 +660,7 @@ _debian_flavor_install() {
   # unzip "${DOWNLOADFOLDER}/${CODENAME}" -d $HOME/pb/
   local UNZIPDIR="${USER_HOME}/_/software"
   mkdir -p "${UNZIPDIR}"
-  _unzip "${DOWNLOADFOLDER:}" "${UNZIPDIR}" "${CODENAME}"
+  _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
   local PATHTOPOCKETBASE="${UNZIPDIR}/pocketbase"
   local THISIP=$(myip)
 
@@ -671,10 +671,10 @@ _redhat_flavor_install() {
   echo "_redhat_flavor_install Procedure not yet implemented. I don't know what to do."
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  dnf install vim -y
+  anounce_command dnf install vim -y
   curl -fLo "${USER_HOME}/.vim/autoload/plug.vim" --create-dirs \
     https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-  chown -R  "${SUDO_USER}" "${USER_HOME}/.vim/"
+  anounce_command chown -R  "${SUDO_USER}" "${USER_HOME}/.vim/"
   curl -fLo "/root/.vim/autoload/plug.vim" --create-dirs \
     https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
   touch "${USER_HOME}/.vimrc"
@@ -688,7 +688,7 @@ set nocompatible        \" Use Vim defaults (much better!)
 set bs=indent,eol,start         \" allow backspacing over everything in insert mode
 \"set ai                 \" always set autoindenting on
 \"set backup             \" keep a backup file
-set viminfo='20,\\\"50    \" read/write a .viminfo file, don't store more
+set viminfo='20,\\\"50    \" read/write a .viminfo file, do not store more
 \" than 50 lines of registers
 set history=50          \" keep 50 lines of command line history
 set ruler               \" show the cursor position all the time
@@ -729,7 +729,7 @@ set shiftwidth=2
 \"
 \" set softtabstop=0 noexpandtab
 \"
- \"If you also want to use tabs for indentation, you should also set shiftwidth to be the same as tabstop:
+\"If you also want to use tabs for indentation, you should also set shiftwidth to be the same as tabstop:
 \"
 \" set shiftwidth=4
 \"
