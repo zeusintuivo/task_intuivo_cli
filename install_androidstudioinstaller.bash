@@ -678,7 +678,6 @@ StartupWMClass=jetbrains-android-studio
 Name[en_GB]=android-studio.desktop
   " > /usr/share/applications/android-studio.desktop
 
-  anounce_command "su - \"${SUDO_USER}\" -c 'pip install xattr'"
   anounce_command "su - \"${SUDO_USER}\" -c 'brew install GCC'"
   anounce_command "su - \"${SUDO_USER}\" -c 'brew install --cask android-studio'"
   anounce_command "su - \"${SUDO_USER}\" -c 'brew install --cask android-SDK'"
