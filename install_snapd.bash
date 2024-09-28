@@ -616,7 +616,7 @@ directory_exists_with_spaces "${USER_HOME}"
 
 
 
- #--------\/\/\/\/-- 2tasks_templates_sudo/signal …install_signal.bash” -- Custom code -\/\/\/\/-------
+ #--------\/\/\/\/-- 2tasks_templates_sudo/snapd …install_snapd.bash” -- Custom code -\/\/\/\/-------
 
 
 #!/usr/bin/env bash
@@ -624,65 +624,87 @@ directory_exists_with_spaces "${USER_HOME}"
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 _debian_flavor_install() {
-  echo "Procedure not yet implemented. I don't know what to do."
+  anounce_command apt-get install snap -y
 } # end _debian_flavor_install
 
-# shellcheck disable=SC2120
 _redhat_flavor_install() {
-  trap  '_mitrapo_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR INT
-  # set -xE
-	DEBUG=1
-  source /etc/os-release
-  Comment Based on OpenSuse Repos REF: https://build.opensuse.org/repositories/network:im:signal
-  Testing "$0 $1 $LINENO ${FUNCNAME[-0]}()"
+    local _target_snapd=""
+    if it_exists_with_spaces "/repo" ; then
+    {
+      if it_exists_with_spaces "/repo/snapd" ; then
+      {
+        anounce_command chown -R "${SUDO_USER}" "/repo/snapd"
+        _target_snapd="/repo/snapd"
+      }
+      else
+      {
+        anounce_command mkdir -p "/repo/snapd"
+        anounce_command chown -R "${SUDO_USER}" "/repo/snapd"
+        _target_snapd="/repo/snapd"
+      }
+      fi
+    }
+    elif it_exists_with_spaces "${USER_HOME}" ; then
+    {
+      _target_snapd="${USER_HOME}/_/software/snapd"
+      anounce_command mkdir -p "${_target_snapd}"
+      anounce_command chown -R "${SUDO_USER}" "${_target_snapd}"
+    }
+    fi
 
-  local _url="https://download.opensuse.org/repositories/network:/im:/signal/Fedora_${VERSION_ID}/x86_64/"
-  enforce_variable_with_value _url "${_url}"
+    # if it_exists_with_spaces "${_target_snapd}" ; then
+    if [[ -d  "${_target_snapd}" ]] ; then
+    {
+      # if [[ -e /var/lib/snapd ]] && it_softlink_exists_with_spaces "/var/lib/snapd>${_target_snapd}" ; then
+      #if [[ -e /var/lib/snapd ]] ; then
+      # {
+      #  passed "${_target_snapd}" Dir is there and softlink "/var/lib/snapd>${_target_snapd}" points
+      #}
+      #else
+      # {
+        Comment "forcing /var/lib/snapd to point  ${_target_snapd}"
+        echo  "ln -sf "${_target_snapd}" /var/lib/snapd"
+        ln -sf "${_target_snapd}" /var/lib/snapd
+      #}
+      #fi
+      # if [[ -e /snapd ]] && it_softlink_exists_with_spaces "/snapd>${_target_snapd}" ; then
+      # if [[ -L /snapd ]] ; then
+      # {
+      #  passed "${_target_snapd}" Dir is there and softlink "/snapd>${_target_snapd}" points
+      # }
+      # else
+      # {
+        Comment "forcing /snap to point  ${_target_snapd}"
+        echo "ln -sf ${_target_snapd}  /snap"
+        ln -sf "${_target_snapd}"  /snap
+      #}
+      #fi
+    }
+    fi
+    anounce_command dnf builddep snapd -y
+    anounce_command dnf install snapd -y
+    Comment ls -la "${_target_snapd}"
+    ls -la "${_target_snapd}"
+    anounce_command unlink "${_target_snapd}/snapd"
+    ls -la "${_target_snapd}"
+    directory_exists_with_spaces "${_target_snapd}"
+    Comment ls -la /var/lib/snapd
+    ls -la /var/lib/snapd
+    softlink_exists_with_spaces "/var/lib/snapd>${_target_snapd}"
+    if [[ -e /snapd ]] ; then
+    {
+      Comment ls -la /snapd
+      ls -la /snapd
+      softlink_exists_with_spaces "/snapd>${_target_snapd}"
+    }
+    fi
 
-  # get list of packages
-  local _list="$(curl -sSL "${_url}"  | grep rpm | grep name | cut -d\" -f4 | cut -c3- | grep -v debug | sed 's/[\^]/%5e/g')"
-  enforce_variable_with_value _list "${_list}"
-
-  # get list of other packages I did not consider in my first equation
-  local _other _others="$(grep -v "nodejs-electron" <<< "${_list}" | grep -v "nodejs-electron-devel" | grep -v "libringrtc" | grep -v "esbuild-" | grep -v "app-builder" | grep -v "signal-desktop" )"
-  while read -r _other ; do
-  {
-    [ -z "${_other}" ] && continue
-    enforce_variable_with_value _other "${_other}"
-    dnf install "${_url}${_other}" -y
-  }
-  done <<< "${_others}"
-
-  local _list_node="$(grep "nodejs-electron" <<< "${_list}" | grep -v "nodejs-electron-devel" )"
-  enforce_variable_with_value _list_node "${_list_node}"
-  dnf install "${_url}${_list_node}" -y
-
-  local _list_node_devel="$(grep "nodejs-electron-devel" <<< "${_list}")"
-  enforce_variable_with_value _list_node_devel "${_list_node_devel}"
-  dnf install "${_url}${_list_node_devel}"  -y
-
-  local _list_rtc="$(grep "libringrtc" <<< "${_list}")"
-  enforce_variable_with_value _list_rtc "${_list_rtc}"
-  dnf install "${_url}${_list_rtc}" -y
-
-  local _list_esbuild="$(grep "esbuild-" <<< "${_list}")"
-  enforce_variable_with_value _list_esbuild "${_list_esbuild}"
-  dnf install "${_url}${_list_esbuild}" -y
-
-  local _list_app="$(grep "app-builder" <<< "${_list}")"
-  enforce_variable_with_value _list_app "${_list_app}"
-  curl -sSLO "${_url}${_list_app}"
-  dnf install ./"${_list_app}" -y
-  rm ./"${_list_app}"
-
-  local _list_signal="$(grep "signal-desktop" <<< "${_list}")"
-  enforce_variable_with_value _list_signal "${_list_signal}"
-  dnf install "${_url}${_list_signal}" -y
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
+  anounce_command pacman install snap -y
   echo "Procedure not yet implemented. I don't know what to do."
-} # end _readhat_flavor_install
+} # end _arch_flavor_install
 
 _arch__32() {
   _arch_flavor_install
@@ -713,87 +735,8 @@ _fedora__32() {
 } # end _fedora__32
 
 _fedora__64() {
-  # _redhat_flavor_install
-  source /etc/os-release
-  case ${VERSION_ID} in
-    36|37) _fedora__64_${VERSION_ID};;
-    *)	   _redhat_flavor_install;;
-  esac
+  _redhat_flavor_install
 } # end _fedora__64
-
-_fedora_36__64() {
-  trap  '_mitrapo_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR INT
-  Comment Based on OpenSuse Repos REF: https://build.opensuse.org/repositories/network:im:signal
-  local _url="https://download.opensuse.org/repositories/network:/im:/signal/Fedora_36/x86_64/"
-  dnf install ${_url}nodejs-electron-devel-21.3.0-2.4.x86_64.rpm  ${_url}nodejs-electron-21.3.0-2.4.x86_64.rpm -y
-  dnf install ${_url}signal-libringrtc-2.21.2-2.1.x86_64.rpm ${_url}libheif1-1.13.0-35.1.x86_64.rpm ${_url}libheif-devel-1.13.0-35.1.x86_64.rpm -vy
-  dnf install ${_url}gdk-pixbuf-loader-libheif-1.13.0-35.1.x86_64.rpm -vy
-  dnf install ${_url}esbuild-0.15.11-4.1.x86_64.rpm -vy
-  curl -sSLO ${_url}app-builder-3.4.2%5e20220309g4e2aa6a1-5.116.x86_64.rpm
-  dnf install ./app-builder-3.4.2%5e20220309g4e2aa6a1-5.116.x86_64.rpm -vy
-  rm ./app-builder-3.4.2%5e20220309g4e2aa6a1-5.116.x86_64.rpm
-  dnf install ${_url}signal-desktop-5.63.1-3.1.x86_64.rpm -vy
-  echo "Procedure not yet implemented. I don't know what to do."
-} # end _fedora_36__64
-
-function _mitrapo_on_error() {
-  echo $LINENO _mitrapo_on_error
-  local -ir __trapped_error_exit_num="${2:-0}"
-  echo -e "\\n \033[01;7m*** ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR ...\033[0m\n \n "
-  echo ". ${1}"
-  echo ". exit  ${__trapped_error_exit_num}  "
-  echo ". caller $(caller) "
-  echo ". ${BASH_COMMAND}"
-  local -r __caller=$(caller)
-  local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
-  local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-  awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
-
-  $(eval ${BASH_COMMAND}  2>&1; )
-  echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
-  exit 1
-} # end _mitrapo_on_error
-
-_fedora_37__64() {
-  trap  '_mitrapo_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR INT
-  # set -xE
-	DEBUG=1
-  source /etc/os-release
-  Comment Based on OpenSuse Repos REF: https://build.opensuse.org/repositories/network:im:signal
-  Testing "$0 $1 $LINENO ${FUNCNAME[-0]}()"
-
-  local _url="https://download.opensuse.org/repositories/network:/im:/signal/Fedora_${VERSION_ID}/x86_64/"
-  enforce_variable_with_value _url "${_url}"
-
-  local _list="$(curl -sSL "${_url}"  | grep rpm | grep name | cut -d\" -f4 | cut -c3- | grep -v debug | sed 's/[\^]/%5e/g')"
-  enforce_variable_with_value _list "${_list}"
-
-  local _list_node="$(grep "nodejs-electron" <<< "${_list}" | grep -v "nodejs-electron-devel" )"
-  enforce_variable_with_value _list_node "${_list_node}"
-  dnf install "${_url}${_list_node}" -y
-
-  local _list_node_devel="$(grep "nodejs-electron-devel" <<< "${_list}")"
-  enforce_variable_with_value _list_node_devel "${_list_node_devel}"
-  dnf install "${_url}${_list_node_devel}"  -y
-
-  local _list_rtc="$(grep "libringrtc" <<< "${_list}")"
-  enforce_variable_with_value _list_rtc "${_list_rtc}"
-  dnf install "${_url}${_list_rtc}" -y
-
-  local _list_esbuild="$(grep "esbuild-" <<< "${_list}")"
-  enforce_variable_with_value _list_esbuild "${_list_esbuild}"
-  dnf install "${_url}${_list_esbuild}" -y
-
-  local _list_app="$(grep "app-builder" <<< "${_list}")"
-  enforce_variable_with_value _list_app "${_list_app}"
-  curl -sSLO "${_url}${_list_app}"
-  dnf install ./"${_list_app}" -y
-  rm ./"${_list_app}"
-
-  local _list_signal="$(grep "signal-desktop" <<< "${_list}")"
-  enforce_variable_with_value _list_signal "${_list_signal}"
-  dnf install "${_url}${_list_signal}" -y
-} # end _fedora_37__64
 
 _gentoo__32() {
   _redhat_flavor_install
@@ -845,7 +788,7 @@ _windows__32() {
 
 
 
- #--------/\/\/\/\-- 2tasks_templates_sudo/signal …install_signal.bash” -- Custom code-/\/\/\/\-------
+ #--------/\/\/\/\-- 2tasks_templates_sudo/snapd …install_snapd.bash” -- Custom code-/\/\/\/\-------
 
 
 

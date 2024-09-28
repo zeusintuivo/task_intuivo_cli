@@ -9,7 +9,8 @@ _debian_flavor_install() {
 # shellcheck disable=SC2120
 _redhat_flavor_install() {
   trap  '_mitrapo_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR INT
-  set -xE
+  # set -xE
+	DEBUG=1
   source /etc/os-release
   Comment Based on OpenSuse Repos REF: https://build.opensuse.org/repositories/network:im:signal
   Testing "$0 $1 $LINENO ${FUNCNAME[-0]}()"
@@ -28,7 +29,7 @@ _redhat_flavor_install() {
     [ -z "${_other}" ] && continue
     enforce_variable_with_value _other "${_other}"
     dnf install "${_url}${_other}" -y
-  } 
+  }
   done <<< "${_others}"
 
   local _list_node="$(grep "nodejs-electron" <<< "${_list}" | grep -v "nodejs-electron-devel" )"
@@ -94,12 +95,12 @@ _fedora__64() {
   # _redhat_flavor_install
   source /etc/os-release
   case ${VERSION_ID} in
-    36|37) _fedora__64_${VERSION_ID};;
+    # 36|37) _fedora__64_${VERSION_ID};;
     *)	   _redhat_flavor_install;;
   esac
 } # end _fedora__64
 
-_fedora__64_36() {
+_fedora_36__64() {
   trap  '_mitrapo_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR INT
   Comment Based on OpenSuse Repos REF: https://build.opensuse.org/repositories/network:im:signal
   local _url="https://download.opensuse.org/repositories/network:/im:/signal/Fedora_36/x86_64/"
@@ -112,7 +113,7 @@ _fedora__64_36() {
   rm ./app-builder-3.4.2%5e20220309g4e2aa6a1-5.116.x86_64.rpm
   dnf install ${_url}signal-desktop-5.63.1-3.1.x86_64.rpm -vy
   echo "Procedure not yet implemented. I don't know what to do."
-} # end _fedora__64_36
+} # end _fedora_36__64
 
 function _mitrapo_on_error() {
   echo $LINENO _mitrapo_on_error
@@ -132,9 +133,23 @@ function _mitrapo_on_error() {
   exit 1
 } # end _mitrapo_on_error
 
-_fedora__64_37() {
+_fedora_37__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  callsomething "${_parameters-}"
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _fedora_37__64
+
+_fedora_37__64() {
   trap  '_mitrapo_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR INT
-  set -xE
+  # set -xE
+	DEBUG=1
   source /etc/os-release
   Comment Based on OpenSuse Repos REF: https://build.opensuse.org/repositories/network:im:signal
   Testing "$0 $1 $LINENO ${FUNCNAME[-0]}()"
@@ -170,7 +185,7 @@ _fedora__64_37() {
   local _list_signal="$(grep "signal-desktop" <<< "${_list}")"
   enforce_variable_with_value _list_signal "${_list_signal}"
   dnf install "${_url}${_list_signal}" -y
-} # end _fedora__64_37
+} # end _fedora_37__64
 
 _gentoo__32() {
   _redhat_flavor_install

@@ -1,0 +1,166 @@
+#!/usr/bin/env bash
+#
+# @author Zeus Intuivo <zeus@intuivo.com>
+#
+_debian_flavor_install() {
+  anounce_command apt-get install snap -y
+} # end _debian_flavor_install
+
+_redhat_flavor_install() {
+    local _target_snapd=""
+    if it_exists_with_spaces "/repo" ; then
+    {
+      if it_exists_with_spaces "/repo/snapd" ; then
+      {
+        anounce_command chown -R "${SUDO_USER}" "/repo/snapd"
+        _target_snapd="/repo/snapd"
+      }
+      else
+      {
+        anounce_command mkdir -p "/repo/snapd"
+        anounce_command chown -R "${SUDO_USER}" "/repo/snapd"
+        _target_snapd="/repo/snapd"
+      }
+      fi
+    }
+    elif it_exists_with_spaces "${USER_HOME}" ; then
+    {
+      _target_snapd="${USER_HOME}/_/software/snapd"
+      anounce_command mkdir -p "${_target_snapd}"
+      anounce_command chown -R "${SUDO_USER}" "${_target_snapd}"
+    }
+    fi
+
+    # if it_exists_with_spaces "${_target_snapd}" ; then
+    if [[ -d  "${_target_snapd}" ]] ; then
+    {
+      # if [[ -e /var/lib/snapd ]] && it_softlink_exists_with_spaces "/var/lib/snapd>${_target_snapd}" ; then
+      #if [[ -e /var/lib/snapd ]] ; then
+      # {
+      #  passed "${_target_snapd}" Dir is there and softlink "/var/lib/snapd>${_target_snapd}" points
+      #}
+      #else
+      # {
+        Comment "forcing /var/lib/snapd to point  ${_target_snapd}"
+        echo  "ln -sf "${_target_snapd}" /var/lib/snapd"
+        ln -sf "${_target_snapd}" /var/lib/snapd
+      #}
+      #fi
+      # if [[ -e /snapd ]] && it_softlink_exists_with_spaces "/snapd>${_target_snapd}" ; then
+      # if [[ -L /snapd ]] ; then
+      # {
+      #  passed "${_target_snapd}" Dir is there and softlink "/snapd>${_target_snapd}" points
+      # }
+      # else
+      # {
+        Comment "forcing /snap to point  ${_target_snapd}"
+        echo "ln -sf ${_target_snapd}  /snap"
+        ln -sf "${_target_snapd}"  /snap
+      #}
+      #fi
+    }
+    fi
+    anounce_command dnf builddep snapd -y
+    anounce_command dnf install snapd -y
+    Comment ls -la "${_target_snapd}"
+    ls -la "${_target_snapd}"
+    anounce_command unlink "${_target_snapd}/snapd"
+    ls -la "${_target_snapd}"
+    directory_exists_with_spaces "${_target_snapd}"
+    Comment ls -la /var/lib/snapd
+    ls -la /var/lib/snapd
+    softlink_exists_with_spaces "/var/lib/snapd>${_target_snapd}"
+    if [[ -e /snapd ]] ; then
+    {
+      Comment ls -la /snapd
+      ls -la /snapd
+      softlink_exists_with_spaces "/snapd>${_target_snapd}"
+    }
+    fi
+
+} # end _redhat_flavor_install
+
+_arch_flavor_install() {
+  anounce_command pacman install snap -y
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _arch_flavor_install
+
+_arch__32() {
+  _arch_flavor_install
+} # end _arch__32
+
+_arch__64() {
+  _arch_flavor_install
+} # end _arch__64
+
+_centos__32() {
+  _redhat_flavor_install
+} # end _centos__32
+
+_centos__64() {
+  _redhat_flavor_install
+} # end _centos__64
+
+_debian__32() {
+  _debian_flavor_install
+} # end _debian__32
+
+_debian__64() {
+  _debian_flavor_install
+} # end _debian__64
+
+_fedora__32() {
+  _redhat_flavor_install
+} # end _fedora__32
+
+_fedora__64() {
+  _redhat_flavor_install
+} # end _fedora__64
+
+_gentoo__32() {
+  _redhat_flavor_install
+} # end _gentoo__32
+
+_gentoo__64() {
+  _redhat_flavor_install
+} # end _gentoo__64
+
+_madriva__32() {
+  _redhat_flavor_install
+} # end _madriva__32
+
+_madriva__64() {
+  _redhat_flavor_install
+} # end _madriva__64
+
+_suse__32() {
+  _redhat_flavor_install
+} # end _suse__32
+
+_suse__64() {
+  _redhat_flavor_install
+} # end _suse__64
+
+_ubuntu__32() {
+  _debian_flavor_install
+} # end _ubuntu__32
+
+_ubuntu__64() {
+  _debian_flavor_install
+} # end _ubuntu__64
+
+_darwin__64() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _darwin__64
+
+_tar() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end tar
+
+_windows__64() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _windows__64
+
+_windows__32() {
+  echo "Procedure not yet implemented. I don't know what to do."
+} # end _windows__32
