@@ -694,7 +694,8 @@ _fedora_37__64() {
 	anounce_command dnf install glibc glibc-common  glibc-devel  glibc-static glibc-nss-devel glibc-utils -yv
   anounce_command dnf install libfaketime -vy
 	anounce_command dnf install kf5-bluez-qt-devel kf5-kauth-devel kf5-plasma kf5-modemmanager-qt kf5-networkmanager-qt kf5-kwayland kf5-knotifications kf5-bluez-qt kf5-networkmanager-qt-devel kf5-plasma-devel kf5-kcoreaddons-devel kf5-kconfig-devel -vy
-	anounce_command dnf install  kf5-plasma-devel kf5-plasma mingw32-qt5-qtbase-5 kdelibs-apidocs-6 mingw32-qt6-qtbase-6 qt-devel-1 qt3-devel-docs-3 qt5-qtbase-devel-5 qt6-qtbase-devel-6 -vy
+	# anounce_command dnf install  kf5-plasma-devel kf5-plasma mingw32-qt5-qtbase-5 kdelibs-apidocs-6 mingw32-qt6-qtbase-6 qt-devel-1 qt3-devel-docs-3 qt5-qtbase-devel-5 qt6-qtbase-devel-6 -vy
+	anounce_command dnf install  kf5-plasma-devel kf5-plasma  -vy
 	anounce_command dnf build-dep kf5-plasma  -yv --allowerasing
 	anounce_command dnf install fedora-release-kde   -yv --allowerasing
   anounce_command dnf build-dep qt5-qtbase -yv --allowerasing
