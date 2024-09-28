@@ -679,7 +679,8 @@ _fedora_37__64() {
   local -i _err=0
   anounce_command dnf install kglobalacceld kf5-kglobalaccel kglobalacceld-devel kf5-kglobalaccel-devel -y --allowerasing
   _redhat_flavor_install "${_parameters}"
-  anounce_command dnf install qt5-qtwebengine-freeworld-5 qt5-qtbase-5 qt5-qtbase-devel-5 -y --allowerasing
+  # anounce_command dnf install qt5-qtwebengine-freeworld-5
+ 	anounce_command dnf install qt5-qtbase-5 qt5-qtbase-devel-5 -y --allowerasing
   anounce_command dnf build-dep yakuake -y --allowerasing
   anounce_command dnf install yakuake -y --allowerasing
 	anounce_command dnf install qt5-qtbase qt5-qtbase-common qt5-qtbase-devel qt5-qtbase-doc qt5-qtbase-examples qt5-qtbase-gui qt5-qtbase-mysql qt6-qtbase qt6-qtbase-common qt6-qtbase-devel qt6-qtbase-examples qt6-qtbase-gui qt6-qtbase-static qt5-qtbase-static -yv --allowerasing

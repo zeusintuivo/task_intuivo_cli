@@ -14,7 +14,7 @@ _redhat_flavor_install() {
   # ln -s /var/lib/snapd/snap /snap
   #if ! it_exists_with_spaces /var/lib/snapd/snap ; then
   #{
-  # ln -sf /var/lib/snapd/snap /snap
+  anounce_command "ln -sf /var/lib/snapd/snap /snap"
   #}
   #fi
   anounce_command snap install core
