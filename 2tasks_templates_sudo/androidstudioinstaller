@@ -9,25 +9,29 @@ _redhat_flavor_install() {
   HOW_TO_LOAD_JUST_ONE_SCRIPT_LOCAL_AND_ONLINE_EXECUTE_COMMAND
   echo "fix for pangosys lib not working and gtk requirement for flutter"
   # dnf install rust-gtk4-devel libnma-gtk4-devel rust-gtk4+default-devel gplugin-gtk4-devel libportal-gtk4-devel wxGTK3-devel    -y
-  dnf install rust-gtk4-devel libnma-gtk4-devel rust-gtk4+default-devel gplugin-gtk4-devel libportal-gtk4-devel   -y
-  dnf install -y snapd
+  anounce_command dnf install rust-gtk4-devel libnma-gtk4-devel rust-gtk4+default-devel gplugin-gtk4-devel libportal-gtk4-devel   -y
+  anounce_command dnf install -y snapd
   # ln -s /var/lib/snapd/snap /snap
-  #if ! it_exists_with_spaces /var/lib/snapd/snap ; then 
+  #if ! it_exists_with_spaces /var/lib/snapd/snap ; then
   #{
-  ln -sf /var/lib/snapd/snap /snap
+  # ln -sf /var/lib/snapd/snap /snap
   #}
   #fi
-  snap install core
-  snap refresh core
-  snap install android-studio --classic
-  snap list android-studio
-  ln -sf /snap/bin/android-studio /usr/local/bin/android-studio
-  dnf install -y zlib.i686 ncurses-libs.i686 bzip2-libs.i686
-  cd /tmp
+  anounce_command snap install core
+  anounce_command snap refresh core
+  anounce_command snap install android-studio --classic
+  anounce_command snap list android-studio
+  anounce_command ln -sf /snap/bin/android-studio /usr/local/bin/android-studio
+  anounce_command dnf install -y zlib.i686 ncurses-libs.i686 bzip2-libs.i686
+  anounce cd /tmp || exit 1
+  cd /tmp || exit 1
+  anounce wget https://dl.google.com/dl/android/studio/ide-zips/2021.2.1.14/android-studio-2021.2.1.14-linux.tar.gz
   wget https://dl.google.com/dl/android/studio/ide-zips/2021.2.1.14/android-studio-2021.2.1.14-linux.tar.gz
+  anounce tar -zxvf android-studio-*-linux.tar.gz
   tar -zxvf android-studio-*-linux.tar.gz
+  anounce mv android-studio /opt/
   mv android-studio /opt/
-  ln -sf /opt/android-studio/bin/studio.sh /usr/local/bin/android-studio
+  anounce_command ln -sf /opt/android-studio/bin/studio.sh /usr/local/bin/android-studio
   # vi /usr/share/applications/android-studio.desktop
   echo "[Desktop Entry]
 Version=1.0
@@ -43,20 +47,19 @@ StartupWMClass=jetbrains-android-studio
 Name[en_GB]=android-studio.desktop
   " > /usr/share/applications/android-studio.desktop
 
-  su - "${SUDO_USER}" -c 'pip install xattr'
-  su - "${SUDO_USER}" -c 'brew install GCC'
-  su - "${SUDO_USER}" -c 'brew reinstall --cask android-studio'
-  su - "${SUDO_USER}" -c 'brew reinstall --cask android-SDK'
-  su - "${SUDO_USER}" -c 'brew reinstall --cask android-ndk'
-  su - "${SUDO_USER}" -c 'brew reinstall --cask flutter'
-  su - "${SUDO_USER}" -c 'brew reinstall --HEAD libimobiledevice'
-  su - "${SUDO_USER}" -c 'brew reinstall ideviceinstaller'
-  su - "${SUDO_USER}" -c 'brew reinstall ios-deploy cocoapods'
-  su - "${SUDO_USER}" -c 'pod setup'
-  su - "${SUDO_USER}" -c 'flutter doctor'
-  # anounce_command xcodebuild -license
-  su - "${SUDO_USER}" -c 'flutter config --android-SDK'
-  su - "${SUDO_USER}" -c 'brew install --cask intel-haxm'
+  anounce_command "su - \"${SUDO_USER}\" -c 'pip install xattr'"
+  anounce_command "su - \"${SUDO_USER}\" -c 'brew install GCC'"
+  anounce_command "su - \"${SUDO_USER}\" -c 'brew install --cask android-studio'"
+  anounce_command "su - \"${SUDO_USER}\" -c 'brew install --cask android-SDK'"
+  anounce_command "su - \"${SUDO_USER}\" -c 'brew install --cask android-ndk'"
+  anounce_command "su - \"${SUDO_USER}\" -c 'brew install --cask flutter'"
+  anounce_command "su - \"${SUDO_USER}\" -c 'brew install --HEAD libimobiledevice'"
+  anounce_command "su - \"${SUDO_USER}\" -c 'brew install ideviceinstaller'"
+  anounce_command "su - \"${SUDO_USER}\" -c 'brew install ios-deploy cocoapods'"
+  anounce_command "su - \"${SUDO_USER}\" -c 'pod setup'"
+  anounce_command "su - \"${SUDO_USER}\" -c 'flutter doctor'"
+  anounce_command "su - \"${SUDO_USER}\" -c 'flutter config --android-SDK'"
+  anounce_command "su - \"${SUDO_USER}\" -c 'brew install --cask intel-haxm'"
 
 } # end _redhat_flavor_install
 
@@ -145,7 +148,7 @@ _ubuntu__64() {
 } # end _ubuntu__64
 
 _darwin__arm64() {
-  
+
     # Over write say with text version since Struct Testing say will speak on mac and make it so I can use anounce_command
 
   HOW_TO_LOAD_JUST_ONE_SCRIPT_LOCAL_AND_ONLINE_EXECUTE_COMMAND
@@ -165,7 +168,7 @@ _darwin__arm64() {
 } # end _darwin__arm64
 
 _darwin__64() {
-  
+
     # Over write say with text version since Struct Testing say will speak on mac and make it so I can use anounce_command
 
   HOW_TO_LOAD_JUST_ONE_SCRIPT_LOCAL_AND_ONLINE_EXECUTE_COMMAND
