@@ -633,12 +633,13 @@ _redhat_flavor_install() {
   anounce_command dnf install rust-gtk4-devel libnma-gtk4-devel rust-gtk4+default-devel gplugin-gtk4-devel libportal-gtk4-devel   -y
   anounce_command dnf install -y snapd
   # ln -s /var/lib/snapd/snap /snap
-  #if ! it_exists_with_spaces /var/lib/snapd/snap ; then
-  #{
-  anounce_command "ln -sf /var/lib/snapd/snap /snap"
-  #}
-  #fi
-  anounce_command snap install core
+  # if ! it_exists_with_spaces /var/lib/snapd/snap ; then
+  # {
+      anounce_command "ln -sf /var/lib/snapd/snap /snap"
+  # }
+  # fi
+
+	anounce_command snap install core
   anounce_command snap refresh core
   anounce_command snap install android-studio --classic
   anounce_command snap list android-studio
@@ -646,12 +647,21 @@ _redhat_flavor_install() {
   anounce_command dnf install -y zlib.i686 ncurses-libs.i686 bzip2-libs.i686
   anounce cd /tmp || exit 1
   cd /tmp || exit 1
-  anounce wget https://dl.google.com/dl/android/studio/ide-zips/2021.2.1.14/android-studio-2021.2.1.14-linux.tar.gz
-  wget https://dl.google.com/dl/android/studio/ide-zips/2021.2.1.14/android-studio-2021.2.1.14-linux.tar.gz
-  anounce tar -zxvf android-studio-*-linux.tar.gz
-  tar -zxvf android-studio-*-linux.tar.gz
-  anounce mv android-studio /opt/
-  mv android-studio /opt/
+ 	# if [[ -e "/opt/android-studio" ]] ; then
+	# {
+	#	  rm -rf "/opt/android-studio"
+	# }
+	# fi
+  if [[ ! -e "/opt/android-studio" ]] ; then
+	{
+	  anounce wget https://dl.google.com/dl/android/studio/ide-zips/2021.2.1.14/android-studio-2021.2.1.14-linux.tar.gz
+    wget https://dl.google.com/dl/android/studio/ide-zips/2021.2.1.14/android-studio-2021.2.1.14-linux.tar.gz
+    anounce tar -zxvf android-studio-*-linux.tar.gz
+    tar -zxvf android-studio-*-linux.tar.gz
+    anounce mv android-studio /opt/
+	  mv android-studio /opt/
+	}
+	fi
   anounce_command ln -sf /opt/android-studio/bin/studio.sh /usr/local/bin/android-studio
   # vi /usr/share/applications/android-studio.desktop
   echo "[Desktop Entry]
