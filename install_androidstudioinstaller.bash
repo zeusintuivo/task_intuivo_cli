@@ -678,19 +678,6 @@ StartupWMClass=jetbrains-android-studio
 Name[en_GB]=android-studio.desktop
   " > /usr/share/applications/android-studio.desktop
 
-  anounce_command "su - \"${SUDO_USER}\" -c 'brew install GCC'"
-  anounce_command "su - \"${SUDO_USER}\" -c 'brew install --cask android-studio'"
-  anounce_command "su - \"${SUDO_USER}\" -c 'brew install --cask android-SDK'"
-  anounce_command "su - \"${SUDO_USER}\" -c 'brew install --cask android-ndk'"
-  anounce_command "su - \"${SUDO_USER}\" -c 'brew install --cask flutter'"
-  anounce_command "su - \"${SUDO_USER}\" -c 'brew install --HEAD libimobiledevice'"
-  anounce_command "su - \"${SUDO_USER}\" -c 'brew install ideviceinstaller'"
-  anounce_command "su - \"${SUDO_USER}\" -c 'brew install ios-deploy cocoapods'"
-  anounce_command "su - \"${SUDO_USER}\" -c 'pod setup'"
-  anounce_command "su - \"${SUDO_USER}\" -c 'flutter doctor'"
-  anounce_command "su - \"${SUDO_USER}\" -c 'flutter config --android-SDK'"
-  anounce_command "su - \"${SUDO_USER}\" -c 'brew install --cask intel-haxm'"
-
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
