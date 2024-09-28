@@ -679,14 +679,18 @@ _fedora_37__64() {
   local -i _err=0
   anounce_command dnf install kglobalacceld kf5-kglobalaccel kglobalacceld-devel kf5-kglobalaccel-devel -y --allowerasing
   _redhat_flavor_install "${_parameters}"
+  # conflicts when rpm fussion is enabled
   # anounce_command dnf install qt5-qtwebengine-freeworld-5
- 	anounce_command dnf install qt5-qtbase-5 qt5-qtbase-devel-5 -y --allowerasing
+ 	# anounce_command dnf install qt5-qtbase-5  -y --allowerasing
+ 	anounce_command dnf install qt5-qtbase-devel -y --allowerasing
   anounce_command dnf build-dep yakuake -y --allowerasing
   anounce_command dnf install yakuake -y --allowerasing
 	anounce_command dnf install qt5-qtbase qt5-qtbase-common qt5-qtbase-devel qt5-qtbase-doc qt5-qtbase-examples qt5-qtbase-gui qt5-qtbase-mysql qt6-qtbase qt6-qtbase-common qt6-qtbase-devel qt6-qtbase-examples qt6-qtbase-gui qt6-qtbase-static qt5-qtbase-static -yv --allowerasing
 	anounce_command dnf install ucrt64-libstdc++ ucrt64-libgcc ucrt64-gcc ucrt64-gcc-c++ ucrt64-binutils ucrt64-cpp ucrt64-headers ucrt64-winpthreads-static ucrt64-gcc-objc ucrt64-gcc-objc++ -yv
 	anounce_command dnf install libstdc++ mingw64-libstdc++ libstdc++-devel libstdc++-docs libstdc++-static -yv
-	anounce_command dnf install glibc-2.36-18 libfaketime-0.9.10-2 -yv
+	# Some oldshit tried to add since yuakake was not building
+  # anounce_command dnf install glibc-2.36-18 libfaketime-0.9.10-2 -yv
+	anounce_command dnf install libfaketime -yv
 	anounce_command dnf install glibc glibc-common  glibc-devel  glibc-static glibc-nss-devel glibc-utils -yv
   anounce_command dnf install libfaketime -vy
 	anounce_command dnf install kf5-bluez-qt-devel kf5-kauth-devel kf5-plasma kf5-modemmanager-qt kf5-networkmanager-qt kf5-kwayland kf5-knotifications kf5-bluez-qt kf5-networkmanager-qt-devel kf5-plasma-devel kf5-kcoreaddons-devel kf5-kconfig-devel -vy
