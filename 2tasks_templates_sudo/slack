@@ -3,16 +3,16 @@
 _debian_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-	apt remove slack-desktop -y
-	wget https://downloads.slack-edge.com/releases/linux/4.27.154/prod/x64/slack-desktop-4.27.154-amd64.deb
-	dpkg -I slack-desktop-4.27.154-amd64.deb
-	dpkg -i slack-desktop-4.27.154-amd64.deb
-	snap install slack
-	echo to remove snap remove slack
-	# flatpak install flathub com.slack.Slack
-	exit 0
-	# echo to remove flatpak uninstall flathub com.slack.Slack
-	if (
+  apt remove slack-desktop -y
+  wget https://downloads.slack-edge.com/releases/linux/4.27.154/prod/x64/slack-desktop-4.27.154-amd64.deb
+  dpkg -I slack-desktop-4.27.154-amd64.deb
+  dpkg -i slack-desktop-4.27.154-amd64.deb
+  snap install slack
+  echo to remove snap remove slack
+  # flatpak install flathub com.slack.Slack
+  exit 0
+  # echo to remove flatpak uninstall flathub com.slack.Slack
+  if (
   install_requirements "linux" "
     base64
     unzip
@@ -56,12 +56,12 @@ _debian_flavor_install() {
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   snap refresh
-	echo This was old command snap install slack-classic
+  echo This was old command snap install slack-classic
   anounce_command snap install slack
-	echo to remove snap remove slack
-	# anounce_command flatpak install flathub com.slack.Slack
-	# echo to remove flatpak uninstall flathub com.slack.Slack
-	# echo "_redhat_flavor_install Procedure not yet implemented. I don't know what to do."
+  echo to remove snap remove slack
+  # anounce_command flatpak install flathub com.slack.Slack
+  # echo to remove flatpak uninstall flathub com.slack.Slack
+  # echo "_redhat_flavor_install Procedure not yet implemented. I don't know what to do."
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
@@ -106,8 +106,20 @@ _fedora__32() {
 
 _fedora__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _redhat_flavor_install
+  local _parameters="${*-}"
+  local -i _err=0
+  _redhat_flavor_install "${_parameters-}"
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO while running callsomething above _err:${_err}"
+  }
+  fi
 } # end _fedora__64
+
+_fedora_37__64() {
+  _fedora__64 "${*-}"
+} # end _fedora_37__64
 
 _gentoo__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
