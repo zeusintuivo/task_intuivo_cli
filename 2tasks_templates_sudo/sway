@@ -77,104 +77,112 @@ _find_target_brew() {
 
   _brew_source_profiles(){
     if [[ -f "${USER_HOME}/.profile" ]] ; then
-  	{
-  		if ! 	\. "${USER_HOME}/.profile" ; then
-  		{
-  			echo "
-  			If it complains about ''Begin Root or sudo'' on a certain line
-  			exclude that command with this code:
+    {
+      if !   \. "${USER_HOME}/.profile" ; then
+      {
+        echo "
+        If it complains about ''Begin Root or sudo'' on a certain line
+        exclude that command with this code:
 
-  			if [[ -n \"${SUDO_USER:-}\" ]] ; then
-  			{
-  				 ...line to exclude from sudo /root user
-  			}
-  		  fi
+        if [[ -n \"${SUDO_USER:-}\" ]] ; then
+        {
+           ...line to exclude from sudo /root user
+        }
+        fi
         "
-  			failed something is wrong with file:"${USER_HOME}/.profile"
-  		}
-  		fi
-  	}
-  	fi
+        failed something is wrong with file:"${USER_HOME}/.profile"
+      }
+      fi
+    }
+    fi
     if [[ -f "${USER_HOME}/.bash_profile" ]] ; then
-  	{
-  	  if ! 	\. "${USER_HOME}/.bash_profile" ; then
-  		{
-  			echo "
-  			If it complains about ''Begin Root or sudo'' on a certain line
-  			exclude that command with this code:
+    {
+      if !   \. "${USER_HOME}/.bash_profile" ; then
+      {
+        echo "
+        If it complains about ''Begin Root or sudo'' on a certain line
+        exclude that command with this code:
 
-  			if [[ -n \"${SUDO_USER:-}\" ]] ; then
-  			{
-  				 ...line to exclude from sudo /root user
-  			}
-  		  fi
+        if [[ -n \"${SUDO_USER:-}\" ]] ; then
+        {
+           ...line to exclude from sudo /root user
+        }
+        fi
         "
-  			failed something is wrong with file:"${USER_HOME}/.bash_profile"
-  		}
-  		fi
-  	}
-  	fi
-  	return 0
+        failed something is wrong with file:"${USER_HOME}/.bash_profile"
+      }
+      fi
+    }
+    fi
+    return 0
   } # end _brew_source_profiles
 
 
   Checking homebrew is installed
-	_brew_source_profiles
-	if (!  su - "${SUDO_USER}" -c "command -v brew" >/dev/null 2>&1; )  ; then
-	{
-	ensure_brew_in_linux_mac
-  local -i _err=0
-	local -i ret=0
-	local -i found=0
-	local _msg_info_list=""
-	local _target_bin_brew=""
-  _target_bin_brew="$(_find_executable_for "brew" "--prefix"  "bin/brew")"
-  _err=$?
-  if [ $_err -gt 0 ] ; then # failed
+  _brew_source_profiles
+  if (!  su - "${SUDO_USER}" -c "command -v brew" >/dev/null 2>&1; )  ; then
   {
-    echo "${_target_bin_brew}"
-    warning "failed to find brew"
-		found=1
+    ensure_brew_in_linux_mac
+    local -i _err=0
+    local -i ret=0
+    local -i found=0
+    local _msg_info_list=""
+    local _target_bin_brew=""
+    _target_bin_brew="$(_find_executable_for "brew" "--prefix"  "bin/brew")"
+    _err=$?
+    if [ $_err -gt 0 ] ; then # failed
+    {
+      echo "${_target_bin_brew}"
+      warning "failed to find brew"
+      found=1
+    }
+    else
+    {
+      found=0
+      _target_bin_brew="$(echo -n "${_target_bin_brew}" | tail -1)"
+      enforce_variable_with_value _target_bin_brew "${_target_bin_brew}"
+      Checking "the found ${RED}${_target_bin_brew}${CYAN} to respond to ${YELLOW}brew list"
+      # _msg_info_list="$(su - "${SUDO_USER}" -c "${_target_bin_brew} list  >/dev/null 2>&1")"
+      #
+      # ret=$?
+      # [ $ret -gt 0 ] && found=1
+      # [[ "$_msg_info_list" == *"No such"* ]] && found=1
+      # [[ "$_msg_info_list" == *"nicht gefunden"* ]] && found=1
+      # [[ "$_msg_info_list" == *"Error"*   ]] && found=1
+    }
+    fi
+
+
+    if [ ${found} -eq 1  ]  ; then
+    {
+      passed "Seems like brew is not installed. Should I attempt to RESET and resintall brew. WARNING this will remove the brew folder and all its installations [Y/n] ?"
+      if yes_or_no ; then  # using then so that return 1 will not trigger trap
+      {
+        _err=0 # yes
+      }
+      else
+      {
+        _err=1 # no
+      }
+      fi
+      if [ $_err -gt 0 ] ; then # no
+      {
+        _brew_you_said_no
+
+      }
+      fi
+    }
+    fi
   }
-  else
-	{
-		found=0
-    _target_bin_brew="$(echo -n "${_target_bin_brew}" | tail -1)"
-    enforce_variable_with_value _target_bin_brew "${_target_bin_brew}"
-	  Checking "the found ${RED}${_target_bin_brew}${CYAN} to respond to ${YELLOW}brew list"
-    # _msg_info_list="$(su - "${SUDO_USER}" -c "${_target_bin_brew} list  >/dev/null 2>&1")"
-    #
-		# ret=$?
-    # [ $ret -gt 0 ] && found=1
-    # [[ "$_msg_info_list" == *"No such"* ]] && found=1
-    # [[ "$_msg_info_list" == *"nicht gefunden"* ]] && found=1
-    # [[ "$_msg_info_list" == *"Error"*   ]] && found=1
-	}
-	fi
+  fi
 
-
-	if [ ${found} -eq 1  ]  ; then
-  {
-	  passed "Seems like brew is not installed. Should I attempt to RESET and resintall brew. WARNING this will remove the brew folder and all its installations [Y/n] ?"
-	  if yes_or_no ; then  # using then so that return 1 will not trigger trap
-  	{
-			_err=0 # yes
-		}
-		else
-	  {
-	    _err=1 # no
-	  }
-	  fi
-    if [ $_err -gt 0 ] ; then # no
-		{
-			_brew_you_said_no
 } # end _find_target_brew
 
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
 
 
-	cd "${USER_HOME}/_/software/" || return 1
+  cd "${USER_HOME}/_/software/" || return 1
   local cdinto=""
   local -i found=0
    if [ -e "./sway" ] ; then
@@ -194,7 +202,7 @@ _redhat_flavor_install() {
   {
     anounce_command dnf build-dep sway -y
     anounce_command dnf install -y git gcc meson ninja-build wayland-devel mesa-libEGL-devel mesa-libGLES-devel mesa-dri-drivers
-		anounce_command dnf install -y libxkbcommon-x11-devel libxkbcommon rust-xkbcommon+default-devel rust-xkbcommon-devel rust-xkbcommon+wayland-devel libxkbcommon-x11
+    anounce_command dnf install -y libxkbcommon-x11-devel libxkbcommon rust-xkbcommon+default-devel rust-xkbcommon-devel rust-xkbcommon+wayland-devel libxkbcommon-x11
     anounce_command dnf install -y libdrm-devel libgbm-devel libxkbcommon-devel libudev-devel systemd-devel cairo-devel libpcap-devel json-c-devel pam-devel pango-devel pcre-devel gdk-pixbuf2-devel
     anounce_command dnf install libevdev-devel libevdev libevdev-utils libevdevPlus libevdevPlus-devel  -y
     anounce_command dnf install pixman pixman-devel -y
@@ -210,16 +218,20 @@ _redhat_flavor_install() {
     anounce_command dnf install sway -y
     anounce_command
     if [ ${found} -eq 0 ] ; then
+    {
       cdinto=./sway
-      anounce git clone https://github.com/swaywm/sway.git
-      git clone https://github.com/swaywm/sway.git
+      anounce git clone https://github.com/swaywm/sway.git --depth=1 --branch=master
+      git clone https://github.com/swaywm/sway.git --depth=1 --branch=master
+    }
     fi
     cd "${cdinto}" || return 1
-		anounce current folder:$(pwd)
-		pwd
-		anounce git pull origin master
+    anounce current folder:$(pwd)
+    pwd
+    anounce git pull origin master
     if ( git pull origin master ) ; then
+    {
       warning failed to pull master
+    }
     fi
 
 
