@@ -57,6 +57,7 @@ _git_clone_pyenv() {
 } # _git_clone_pyenv
 
 _add_variables_to_bashrc_zshrc(){
+  local msg=''
   local PYENV_SH_CONTENT='
 
 # PYENV
@@ -81,15 +82,40 @@ fi
    .zshenv
    .zprofile
   "
+  local INITCHANGED=""
   while read INITFILE; do
   {
+    Checking "${USER_HOME-}/${INITFILE-}"
     [ -z ${INITFILE} ] && continue
-    Checking "${USER_HOME}/${INITFILE}"
-    _if_not_contains "${USER_HOME}/${INITFILE}"  "# PYENV" ||  echo "${PYENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
-    _if_not_contains "${USER_HOME}/${INITFILE}"  "PYENV_ROOT" ||  echo "${PYENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
-    _if_not_contains "${USER_HOME}/${INITFILE}"  "pyenv/bin" ||  echo "${PYENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+    [[ ! -e "${USER_HOME-}/${INITFILE}" ]] && continue
+    chown "${SUDO_USER}" "${USER_HOME-}/${INITFILE}"
+    if  _if_not_contains  "${USER_HOME}/${INITFILE}" "# PYENV" ; then
+    {
+      Configuring "${INITFILE}"
+      echo -e "${PYENV_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
+      INITCHANGED="${INITCHANGED} ${USER_HOME}/${INITFILE}"
+    }
+    else
+    {
+      Skipping "configuration for ${INITFILE}"
+    }
+    fi
+    wait
   }
   done <<< "${INITFILES}"
+
+  echo "ALL init files check configs:"
+  echo ${INITFILES} | xargs | xargs -I {} echo "vim {}"
+  echo ${INITFILES} | xargs | xargs -I {} echo "nano {}"
+  echo " "
+  if [[ -z "${INITCHANGED}" ]] ; then
+  {
+    echo "All init changed configs:"
+    echo ${INITCHANGED} | xargs | xargs -I {} echo "vim {}"
+    echo ${INITCHANGED} | xargs | xargs -I {} echo "nano {}"
+    echo " "
+  }
+  fi
   export PYENV_ROOT="${USER_HOME}/.pyenv"
   export PATH="${USER_HOME}/.pyenv/bin:${PATH}"
   eval "$("${USER_HOME}/.pyenv/bin/pyenv" init -)"

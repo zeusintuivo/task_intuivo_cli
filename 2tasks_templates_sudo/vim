@@ -45,19 +45,7 @@ _debian_flavor_install() {
 
 } # end _debian_flavor_install
 
-_redhat_flavor_install() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  echo "_redhat_flavor_install Procedure not yet implemented. I don't know what to do."
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
-  anounce_command dnf install vim -y
-  curl -fLo "${USER_HOME}/.vim/autoload/plug.vim" --create-dirs \
-    https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-  anounce_command chown -R  "${SUDO_USER}" "${USER_HOME}/.vim/"
-  curl -fLo "/root/.vim/autoload/plug.vim" --create-dirs \
-    https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-  touch "${USER_HOME}/.vimrc"
-  touch "/root/.vimrc"
+_write_vimrc() {
   echo "
 if v:lang =~ \"utf8$\" || v:lang =~ \"UTF-8$\"
 set fileencodings=ucs-bom,utf-8,latin1
@@ -318,8 +306,29 @@ let g:ale_fixers = {
 \\   '*': ['remove_trailing_lines', 'trim_whitespace'],
 \\   'javascript': ['biome'],
 \\}
-\" end  
-" >> "${USER_HOME}/.vimrc" >> "/root/.vimrc"
+\" end
+"
+} # _write_vimrc
+
+
+_redhat_flavor_install() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  anounce_command dnf install vim -y
+  curl -fLo "${USER_HOME}/.vim/autoload/plug.vim" --create-dirs \
+    https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+  anounce_command chown -R  "${SUDO_USER}" "${USER_HOME}/.vim/"
+  curl -fLo "/root/.vim/autoload/plug.vim" --create-dirs \
+    https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+
+  local content="$(_write_vimrc)"
+  touch "${USER_HOME}/.vimrc"
+  touch "/root/.vimrc"
+
+  echo "${content}" > "${USER_HOME}/.vimrc"
+  echo "${content}" > "/root/.vimrc"
+
   chown -R "${SUDO_USER}" "${USER_HOME}/.vim/autoload/plug.vim"
   chown -R "${SUDO_USER}" "${USER_HOME}/.vimrc"
   # vim
@@ -378,7 +387,7 @@ _fedora__64() {
   _redhat_flavor_install
 } # end _fedora__64
 
-_deepin__64() {
+_fedora__64() {
   trap "echo Error:$?" ERR INT
   local _parameters="${*-}"
   local -i _err=0
@@ -389,9 +398,9 @@ _deepin__64() {
     failed "struct_testing:$LINENO $0:$LINENO  while running callsomething above _err:${_err}"
   }
   fi
-} # end _deepin__64
+} # end _fedora__64
 
-_deepin_39__64() {
+_fedora_39__64() {
   trap "echo Error:$?" ERR INT
   local _parameters="${*-}"
   local -i _err=0
@@ -403,8 +412,7 @@ _deepin_39__64() {
     failed "struct_testing:$LINENO $0:$LINENO while running callsomething above _err:${_err}"
   }
   fi
-} # end _deepin_39__64
-
+} # end _fedora_39__64
 
 _gentoo__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
@@ -448,7 +456,29 @@ _ubuntu__64() {
 
 _darwin__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  echo "_darwin__64 Procedure not yet implemented. I don't know what to do."
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  anounce_command "su - '${SUDO_USER}' -c 'brew install vim'"
+  anounce_command "curl -fLo '${USER_HOME}/.vim/autoload/plug.vim' --create-dirs \
+    https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
+  anounce_command "chown -R '${SUDO_USER}' '${USER_HOME}/.vim/'"
+  # anounce_command "curl -fLo '/root/.vim/autoload/plug.vim' --create-dirs \
+  #  https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
+
+  local content="$(_write_vimrc)"
+  touch "${USER_HOME}/.vimrc"
+  # touch "/root/.vimrc"
+
+  echo "${content}" > "${USER_HOME}/.vimrc"
+  # echo "${content}" > "/root/.vimrc"
+
+  anounce_command "chown -R '${SUDO_USER}' '${USER_HOME}/.vim/autoload/plug.vim'"
+  anounce_command "chown -R '${SUDO_USER}' '${USER_HOME}/.vimrc'"
+  # vim
+  # vim -es -u vimrc -i NONE -c "PlugInstall" -c "qa"
+  # anounce_command "vim -c PlugInstall -c qa"
+  anounce "su - '${SUDO_USER}' -c 'vim -c PlugInstall -c qa'"
+  su - "${SUDO_USER}" -c 'vim -c PlugInstall -c qa'
 } # end _darwin__64
 
 _darwin__arm64() {

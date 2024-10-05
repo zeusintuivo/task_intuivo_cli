@@ -66,8 +66,8 @@ load_struct_testing(){
   #   # exit 1
   # }
   # trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
- 
-  
+
+
   # if [[ -d "${HOME}/_/clis" ]] && [[ ! -f "${HOME}/_/clis/task_intuivo_cli/add_error_trap.sh" ]] ; then
   # {
   #   sudo rm -rf "${HOME}/_"
@@ -118,15 +118,15 @@ if  ! typeset -f passed >/dev/null 2>&1; then
   load_struct_testing
    _err=$?
   [ $_err -ne 0 ]  && echo -e "\n \n  ERROR FATAL! load_struct_testing_wget !!! returned:<$_err> \n \n  " && exit 69;
-else 
+else
   echo "4.1 sudologic not run load_struct_testing again"
 fi
 
 
 export sudo_it
 function sudo_it() {
-  # Call struct_testing.raise_to_sudo_and_user_home 
-  # \... which loads 
+  # Call struct_testing.raise_to_sudo_and_user_home
+  # \... which loads
   # _    \.... execute_command_intuivo_cli/execute_boot_basic.sh
   # _    \.... task_intuivo_cli/add_error_trap.sh
   # Will fail with ERROR Local File does not exists  or cannot be accessed if not found
@@ -191,7 +191,7 @@ _checka_node_commander() {
 
   function _trap_on_error(){
     local -ir __trapped_error_exit_num="${2:-0}"
-		echo -e "\\n \033[01;7m*** install.clis.bash:194 _trap_on_error() ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+    echo -e "\\n \033[01;7m*** install.clis.bash:194 _trap_on_error() ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
     echo ". ${1}"
     echo ". exit  ${__trapped_error_exit_num}  "
     echo ". caller $(caller) "
@@ -206,7 +206,7 @@ _checka_node_commander() {
     exit ${__trapped_error_exit_num}
   }
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  
+
   function _trap_on_INT(){
     local -ir __trapped_INT_num="${2:-0}"
     echo -e "\\n \033[01;7m*** 7 INT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n INT ...\033[0m  \n \n "
@@ -500,12 +500,12 @@ _add_launchd(){
      echo "LEGACY launchctl load "${launchfile}" "
      echo " now we need to make it owned by root"
      chown root "${launchfile}"
-     if /bin/launchctl bootout gui/501 "${launchfile}" ; then 
+     if /bin/launchctl bootout gui/501 "${launchfile}" ; then
      {
         warning it did not exists, no worries installing again
      }
      fi
-     if /bin/launchctl bootstrap gui/501 "${launchfile}" ; then 
+     if /bin/launchctl bootstrap gui/501 "${launchfile}" ; then
      {
         warning  bootstrap gui/501 has failed
      }
@@ -518,32 +518,32 @@ _add_launchd(){
       passed "done using bootstrap attempting to install launchctl for ${launchfile}"
 
    }
-   else 
+   else
    {
-     Installing before mac 10.15 we need LEGACY launchctl 
-     if su - "${SUDO_USER}" -c "launchctl load  -w  \"${launchfile}\"" ; then 
+     Installing before mac 10.15 we need LEGACY launchctl
+     if su - "${SUDO_USER}" -c "launchctl load  -w  \"${launchfile}\"" ; then
      {
         warning it did not exists, no worries installing again
      }
      fi
-     if launchctl load  -w "${launchfile}" ; then 
+     if launchctl load  -w "${launchfile}" ; then
      {
         warning it did not exists, no worries installing again
      }
      fi
-     if su - "${SUDO_USER}" -c "launchctl load  \"${launchfile}\"" ; then 
+     if su - "${SUDO_USER}" -c "launchctl load  \"${launchfile}\"" ; then
      {
         warning su -  launchctl load failed
      }
      fi
-     if launchctl load  "${launchfile}" ; then 
+     if launchctl load  "${launchfile}" ; then
      {
         warning launchctl load failed
      }
      fi
-     
+
      passed "done  LEGACY attempting to install launchctl for ${launchfile}"
-     
+
    }
    fi
    echo "end $0:$LINENO _add_launchd "
@@ -585,7 +585,7 @@ echo "$0:$LINENO "
 
 
                   local -i _err=0
-                  
+
                   local _target_bin_npm=""
 echo "$0:$LINENO "
                   _target_bin_npm="$(su - "${SUDO_USER}" -c "which npm")"
@@ -603,7 +603,7 @@ echo "$0:$LINENO "
 echo "$0:$LINENO "
                   enforce_variable_with_value _target_bin_npm "${_target_bin_npm}"
 echo "$0:$LINENO "
-                 
+
                   if ( command -v "${_target_bin_npm}" >/dev/null 2>&1; ) ; then
                   {
                     # _run_command npm install ${missing}
@@ -616,7 +616,7 @@ echo "$0:$LINENO "
                     err_buff=$?
                     # su - "${SUDO_USER}" -c "npm install ${missing} "
                   }
-                  else 
+                  else
                   {
                     warning failed "to find get command -v ${_target_bin_npm} to respond"
 
@@ -625,7 +625,7 @@ echo "$0:$LINENO "
 
 
     # Global node utils
-    if is_not_installed nodemon ; then 
+    if is_not_installed nodemon ; then
     {
       su - "${SUDO_USER}" -c "${_target_bin_npm}  i -g nodemon"
     }
@@ -870,14 +870,14 @@ _install_nerd_fonts(){
         function _find_executable_for() {
           trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
 
-          local _executable_test="${1:-}" 
+          local _executable_test="${1:-}"
           enforce_parameter_with_value           1:-        _executable_test     "${_executable_test:-}"     "nothing|brew"
           if [[ "${_executable_test:-}" == "nothing" ]] ; then
           {
             _executable_test=""
           }
           fi
-          local _argumentexecutable_test="${2:-}" 
+          local _argumentexecutable_test="${2:-}"
           if [[ "${_argumentexecutable_test:-}" == "nothing" ]] ; then
           {
             _argumentexecutable_test=""
@@ -907,7 +907,7 @@ _install_nerd_fonts(){
           local _target_found=""
           _target_found="$(echo -n "${_try_returned_echo:-}" | tail -1)"
           passed "found ${_executable_test} of ${_possibles} one = ${_target_found:-}"
-          if [[ -z "${_target_found:-}" ]] ; then 
+          if [[ -z "${_target_found:-}" ]] ; then
           {
             Checking "if ${_executable_test} is responds to command -v ${_executable_test} since \$_target_found  var is empty"
             if ( su - "${SUDO_USER}" -c "command -v ${_executable_test}" >/dev/null 2>&1; )  ; then
@@ -916,7 +916,7 @@ _install_nerd_fonts(){
               {
                 _target_found="$(su - "${SUDO_USER}" -c "${_executable_test}")"
               }
-              else 
+              else
               {
                 _target_found="$(su - "${SUDO_USER}" -c "${_executable_test} ${_argumentexecutable_test}")"
               }
@@ -926,8 +926,8 @@ _install_nerd_fonts(){
           }
           fi
           enforce_variable_with_value _target_found "${_target_found}"
-  
-          if [[ -n "${_target_found:-}" ]] ; then 
+
+          if [[ -n "${_target_found:-}" ]] ; then
           {
             echo "${_target_found}"
             return 0
@@ -939,7 +939,7 @@ _install_nerd_fonts(){
           # {
           # }
           # fi
-        } # end _find_executable_for 
+        } # end _find_executable_for
 
 
 _setup_ohmy(){
@@ -968,9 +968,9 @@ _setup_ohmy(){
         {
            echo "$0:$LINENO _setup_ohmy"
            $COMANDDER git wget curl ruby ruby-devel zsh util-linux-user redhat-rpm-config gcc gcc-c++ make
-					 echo "$0:$LINENO _setup_ohmy"
-					 _if_not_is_installed fontawesome-fonts && $COMANDDER fontawesome-fonts
-					 _if_not_is_installed powerline && $COMANDDER powerline-go  tmux-xpanes
+           echo "$0:$LINENO _setup_ohmy"
+           _if_not_is_installed fontawesome-fonts && $COMANDDER fontawesome-fonts
+           _if_not_is_installed powerline && $COMANDDER powerline-go  tmux-xpanes
            echo "$0:$LINENO _setup_ohmy"
            # if [ -f `which powerline-daemon` ]; then
            # {
@@ -995,13 +995,18 @@ _setup_ohmy(){
            echo "$0:$LINENO _setup_ohmy"
                   ensure_brew_in_linux_mac
            echo "$0:$LINENO _setup_ohmy"
-                  local _target_bin_brew=""
+                  local _target_bin_brew=""  # tail -1
            echo "$0:$LINENO _setup_ohmy"
-                  _target_bin_brew="$(_find_executable_for "which" "brew"  "bin/brew")"
-           echo "$0:$LINENO _setup_ohmy"
+   #               _target_bin_brew="$(_find_executable_for "which" "brew"  "bin/brew")" # tail -1
+   _target_bin_brew="$(_find_executable_for "brew" "--prefix"  "bin/brew")"   # tail -1
                   _err=$?
+  Checking "_target_bin_brew:<${_target_bin_brew}>"
+  _target_bin_brew="$(echo "${_target_bin_brew}" | tail -1 | xargs)"
+  ensure "${_target_bin_brew}" or "failed to check executable for brew <${_target_bin_brew}>"
+  su - "${SUDO_USER}" -c "${_target_bin_brew} list --formula"
            echo "$0:$LINENO _setup_ohmy"
-                  echo "_target_bin_brew:${_target_bin_brew}"                  
+           echo "$0:$LINENO _setup_ohmy"
+                  echo "_target_bin_brew:${_target_bin_brew}"
                   if [ $_err -gt 0 ] ; then # failed
            echo "$0:$LINENO _setup_ohmy"
                   {
@@ -1012,7 +1017,7 @@ _setup_ohmy(){
                   fi
                   _target_bin_brew="$(echo -n "${_target_bin_brew}" | tail -1)"
                   enforce_variable_with_value _target_bin_brew "${_target_bin_brew}"
-                 
+
                   if ( command -v "${_target_bin_brew}" >/dev/null 2>&1; ) ; then
                   {
                     # _run_command brew install ${missing}
@@ -1025,7 +1030,7 @@ _setup_ohmy(){
                     err_buff=$?
                     # su - "${SUDO_USER}" -c "brew install ${missing} "
                   }
-                  else 
+                  else
                   {
                     failed "to find get command -v ${_target_bin_brew} to respond"
                   }
@@ -1033,12 +1038,12 @@ _setup_ohmy(){
 
 
            echo "$0:$LINENO _setup_ohmy"
-          if [[ "$COMANDDER" == *"brew"* ]]  ; then # MAC and linux 
+          if [[ "$COMANDDER" == *"brew"* ]]  ; then # MAC and linux
           {
                   local -i _err=0
                   ensure_brew_in_linux_mac
                         # su - "${SUDO_USER}" -c "brew install --cask font-fontawesome" # This was fontawesome 4, new 6 is gone
-       
+
                   su - "${SUDO_USER}" -c "${_target_bin_brew} tap homebrew/cask-fonts "       # You only need to do this once!
                   su - "${SUDO_USER}" -c "${_target_bin_brew} install font-inconsolata"
                   su - "${SUDO_USER}" -c "${_target_bin_brew} install font-awesome-terminal-fonts "
@@ -1064,7 +1069,7 @@ _setup_ohmy(){
                   fi
                   _target_pip3="$(echo -n "${_target_pip3}" | tail -1)"
                   enforce_variable_with_value _target_pip3 "${_target_pip3}"
-                 
+
                   if ( command -v "${_target_pip3}" >/dev/null 2>&1; ) ; then
                   {
                     # _run_command pip3 install ${missing}
@@ -1076,11 +1081,11 @@ _setup_ohmy(){
                     su - "${SUDO_USER}" -c "${_target_pip3} install ${missing} "
                     err_buff=$?
                     _powerline_sh=$(su - "${SUDO_USER}" -c "${_target_pip3} show ${missing} " | grep "Location:" |  cut -d: -f2- | xargs)
-                   
+
                     err_buff=$?
                     # su - "${SUDO_USER}" -c "pip3 install ${missing} "
                   }
-                  else 
+                  else
                   {
                     failed "to find get command -v ${_target_pip3} to respond"
                   }
@@ -1090,7 +1095,7 @@ _setup_ohmy(){
           echo "$0:$LINENO _setup_ohmy"
           su - "${SUDO_USER}" -c "${_target_bin_brew} install powerline-go"
           echo "$0:$LINENO _setup_ohmy"
-          su - "${SUDO_USER}" -c "${_target_bin_brew} tmux-powerline" 
+          su - "${SUDO_USER}" -c "${_target_bin_brew} tmux-powerline"
           echo "$0:$LINENO _setup_ohmy"
           su - "${SUDO_USER}" -c "${_target_bin_brew} powerline-fonts"
                     if [[ -n "${_powerline_sh}" ]] ; then
@@ -1136,7 +1141,7 @@ echo  "$0:$LINENO"
                   fi
                   _target_zsh="$(echo -n "${_target_zsh}" | tail -1)"
                   enforce_variable_with_value _target_zsh "${_target_zsh}"
-                 
+
                   if ( command -v "${_target_zsh}" >/dev/null 2>&1; ) ; then
                   {
                     # _run_command zsh install ${missing}
@@ -1145,10 +1150,10 @@ echo  "$0:$LINENO"
                       echo "${_target_zsh} install ....${missing}"
                     fi
                     chsh -s "${_target_zsh}" "${SUDO_USER}"
-                    su - "${SUDO_USER}" -c "chsh -s \"${_target_zsh}\" \"${SUDO_USER}\""                  
+                    su - "${SUDO_USER}" -c "chsh -s \"${_target_zsh}\" \"${SUDO_USER}\""
                     err_buff=$?
                   }
-                  else 
+                  else
                   {
                     failed "to find get command -v ${_target_zsh} to respond so chsh -s zsh ${SUDO_USER} ...was not run and not changed "
                   }
@@ -1229,18 +1234,18 @@ else
     {
       Comment xcodebuild \-version Xcode 11.3.1 is ruby broken fix here \-\> REF: https://stackoverflow.com/questions/20559255/error-while-installing-json-gem-mkmf-rb-cant-find-header-files-for-ruby
       local non_existent_path=$(ruby -rrbconfig -e 'puts RbConfig::CONFIG["rubyhdrdir"]')
-      if  ! it_exists_with_spaces  "${non_existent_path}"  ; then 
+      if  ! it_exists_with_spaces  "${non_existent_path}"  ; then
       {
-        if  it_exists_with_spaces /Applications/Xcode.app  ; then 
+        if  it_exists_with_spaces /Applications/Xcode.app  ; then
         {
-        
+
           Comment "see ! filepath \"${non_existent_path}\" does not exists !!!  "
           Comment "changing to  xcode-select --switch /Library/Developer/CommandLineTools"
           xcode-select --switch /Library/Developer/CommandLineTools
-          touch "${USER_HOME}/.install.clis.step_xcode_ruby_change.lock" 
+          touch "${USER_HOME}/.install.clis.step_xcode_ruby_change.lock"
           Comment "checking again .."
           non_existent_path=$(ruby -rrbconfig -e 'puts RbConfig::CONFIG["rubyhdrdir"]')
-          if  ! it_exists_with_spaces  "${non_existent_path}"  ; then 
+          if  ! it_exists_with_spaces  "${non_existent_path}"  ; then
           {
               Comment "ok even afer doing patch from REF: https://stackoverflow.com/questions/20559255/error-while-installing-json-gem-mkmf-rb-cant-find-header-files-for-ruby "
               Comment "it still does not work "
@@ -1248,7 +1253,7 @@ else
               rm "${USER_HOME}/.install.clis.step_xcode_ruby_change.lock"
               warning nah "cannot install colorls To add ruby path to compile colorls install it manually and try again"
           }
-          else 
+          else
           {
   Installing colorls
   yes | DEVELOPER_DIR=/Library/Developer/CommandLineTools/  gem install colorls
@@ -1258,15 +1263,15 @@ else
   _if_not_contains "${USER_HOME}/.zshrc" "colorls" || echo "alias ls='colorls --group-directories-first'" >> "${USER_HOME}/.zshrc"
   _if_not_contains "${USER_HOME}/.bashrc" "colorls" || echo "alias ll='colorls -lA --sd --gs --group-directories-first'" >> "${USER_HOME}/.bashrc"
   _if_not_contains "${USER_HOME}/.bashrc" "colorls" || echo "alias ls='colorls --group-directories-first'" >> "${USER_HOME}/.bashrc"
-               passed "Found new rubyfilepath !!!  \<${non_existent_path}\> " 
+               passed "Found new rubyfilepath !!!  \<${non_existent_path}\> "
           }
-          fi        
+          fi
         }
         fi
-      } 
-      else 
+      }
+      else
       {
-        Comment "Never mind filepath does exists  \<${non_existent_path}\> " 
+        Comment "Never mind filepath does exists  \<${non_existent_path}\> "
       }
       fi
     }
@@ -1577,7 +1582,7 @@ _setup_mycd(){
     fi
   }
   fi
-  Comment end ${0:-} ${1:-}  _setup_mycd 
+  Comment end ${0:-} ${1:-}  _setup_mycd
   # return 0
 } # end _setup_mycd
 
@@ -1648,8 +1653,8 @@ _install_dmgs_list() {
       continue
     }
     fi
-    
-      echo -e " ${BRIGHT_BLUE87} === ${ORANGE}Install "${app_name}" ❓${RESET} [y/n] ? " 
+
+      echo -e " ${BRIGHT_BLUE87} === ${ORANGE}Install "${app_name}" ❓${RESET} [y/n] ? "
       if yes_or_no ; then
       {
         _err=0
@@ -1664,28 +1669,28 @@ _install_dmgs_list() {
     # [ $_err -gt 0 ] &&  # no
     if [ $_err -gt 0 ] ; then # no
     {
-      passed you said no 
-      touch "${USER_HOME}/.___${app_name}" 
+      passed you said no
+      touch "${USER_HOME}/.___${app_name}"
       continue
     }
     fi
     # yes
-    passed you said yes 
-    Installing "${app_name}" 
-    touch "${USER_HOME}/.___${app_name}" 
+    passed you said yes
+    Installing "${app_name}"
+    touch "${USER_HOME}/.___${app_name}"
 
     if  _install_dmgs_dmg__64 "${target_name}" "${target_app}" "${target_url}" ; then
     {
       _err=$?
       warning "could not install ${app_name}"
     }
-    else 
+    else
     {
       passed installed ${app_name}
-      touch "${USER_HOME}/.___${app_name}" 
+      touch "${USER_HOME}/.___${app_name}"
     }
     fi
-   
+
   }
   done <<< "$(echo "${installlist}" | grep -vE '^#' | grep -vE '^\s+#')"
   _sublime_softlink_command_line "/Applications/Sublime\\ Text.app"
@@ -2037,7 +2042,7 @@ _fedora__64() {
   # epel-release
   # python3-paramiko
 
-  install_requirements "linux" 
+  install_requirements "linux"
   # epel-release
   install_requirements "linux"  snap
     # xclip
@@ -2129,9 +2134,14 @@ _fedora__64() {
                   local -i _err=0
                   ensure_brew_in_linux_mac
                   local _target_bin_brew=""
-                  _target_bin_brew="$(_find_executable_for "which" "brew"  "bin/brew")"
+   #               _target_bin_brew="$(_find_executable_for "which" "brew"  "bin/brew")" # tail -1
+   _target_bin_brew="$(_find_executable_for "brew" "--prefix"  "bin/brew")" # tail -1
+  Checking "_target_bin_brew:<${_target_bin_brew}>"
+  _target_bin_brew="$(echo "${_target_bin_brew}" | tail -1 | xargs)"
+  ensure "${_target_bin_brew}" or "failed to check executable for brew <${_target_bin_brew}>"
+  su - "${SUDO_USER}" -c "${_target_bin_brew} list --formula"
                   _err=$?
-                  echo "_target_bin_brew:${_target_bin_brew}"                  
+                  echo "_target_bin_brew:${_target_bin_brew}"
                   if [ $_err -gt 0 ] ; then # failed
                   {
                     echo "${_target_bin_brew}"
@@ -2140,7 +2150,7 @@ _fedora__64() {
                   fi
                   _target_bin_brew="$(echo -n "${_target_bin_brew}" | tail -1)"
                   enforce_variable_with_value _target_bin_brew "${_target_bin_brew}"
-                 
+
                   if ( command -v "${_target_bin_brew}" >/dev/null 2>&1; ) ; then
                   {
                     # _run_command brew install ${missing}
@@ -2153,7 +2163,7 @@ _fedora__64() {
                     err_buff=$?
                     # su - "${SUDO_USER}" -c "brew install ${missing} "
                   }
-                  else 
+                  else
                   {
                     failed "to find get command -v ${_target_bin_brew} to respond"
                   }
@@ -2167,9 +2177,9 @@ _fedora__64() {
     su - "${SUDO_USER}" -c "${_target_bin_brew} install the_platinum_searcher"
     su - "${SUDO_USER}" -c "${_target_bin_brew} install pt@the_platinum_searcher"
   }
-  else 
+  else
   {
-    warning "${RED}Brew${ORANGE} is not installed. Or  bashtv and zshrc files are missing" 
+    warning "${RED}Brew${ORANGE} is not installed. Or  bashtv and zshrc files are missing"
   }
   fi
 
@@ -2183,7 +2193,7 @@ _darwin__arm64() {
 } # end _darwin__arm64
 
 _darwin__64() {
-  #_darwin_flavor_1
+  _darwin_flavor_1
   _darwin_flavor_2
 } # end _darwin__64
 
@@ -2253,8 +2263,13 @@ _darwin_flavor_1() {
                   local -i _err=0
                   ensure_brew_in_linux_mac
                   local _target_bin_brew=""
-                  _target_bin_brew="$(_find_executable_for "brew" "--prefix"  "bin/brew")"
+                  # _target_bin_brew="$(_find_executable_for "brew" "--prefix"  "bin/brew")" # tail -1
+   _target_bin_brew="$(_find_executable_for "brew" "--prefix"  "bin/brew")" # tail -1
                   _err=$?
+  Checking "_target_bin_brew:<${_target_bin_brew}>"
+  _target_bin_brew="$(echo "${_target_bin_brew}" | tail -1 | xargs)"
+  ensure "${_target_bin_brew}" or "failed to check executable for brew <${_target_bin_brew}>"
+  su - "${SUDO_USER}" -c "${_target_bin_brew} list --formula"
                   echo "$0:$LINENO _target_bin_brew:${_target_bin_brew}"
                   if [ $_err -gt 0 ] ; then # failed
                   {
@@ -2264,7 +2279,7 @@ _darwin_flavor_1() {
                   fi
                   _target_bin_brew="$(echo -n "${_target_bin_brew}" | tail -1)"
                   enforce_variable_with_value _target_bin_brew "${_target_bin_brew}"
-                 
+
                   if ( command -v "${_target_bin_brew}" >/dev/null 2>&1; ) ; then
                   {
                     # _run_command brew install ${missing}
@@ -2277,7 +2292,7 @@ _darwin_flavor_1() {
                     err_buff=$?
                     # su - "${SUDO_USER}" -c "brew install ${missing} "
                   }
-                  else 
+                  else
                   {
                     failed "to find get command -v ${_target_bin_brew} to respond"
                   }
@@ -2327,7 +2342,7 @@ _darwin_flavor_1() {
     powerlevel10k
     zsh-completions
     bash-completion
-    zsh-syntax-highlighting 
+    zsh-syntax-highlighting
     zsh-autosuggestions
 
   "
@@ -2357,18 +2372,18 @@ _darwin_flavor_1() {
   if su - "${SUDO_USER}" -c "command -v ${_target_bin_brew}" >/dev/null 2>&1   ; then # MAC
   {
   echo "$0:$LINENO"
-    su - "${SUDO_USER}" -c "${_target_bin_brew} unlink the_silver_searcher" 
+    su - "${SUDO_USER}" -c "${_target_bin_brew} unlink the_silver_searcher"
   echo "$0:$LINENO"
-    su - "${SUDO_USER}" -c "${_target_bin_brew} link the_silver_searcher" 
+    su - "${SUDO_USER}" -c "${_target_bin_brew} link the_silver_searcher"
      # $LINKER the_silver_searcher
   }
-  else 
+  else
   {
   echo "$0:$LINENO"
-    warning "${RED}Brew${ORANGE} is not installed. Or  bashtv and zshrc files are missing" 
+    warning "${RED}Brew${ORANGE} is not installed. Or  bashtv and zshrc files are missing"
   }
   fi
-  
+
 
   # verify_is_installed "
   #  wget
@@ -2447,15 +2462,15 @@ _darwin_flavor_2() {
 
   _add_self_cron_update /usr/lib/cron/  /usr/lib/cron/cron.allow
   # _add_launchd "${USER_HOME}/Library/LaunchAgents" "${USER_HOME}/Library/LaunchAgents/com.intuivo.clis_pull_all.plist"
-   
+
   if  su - "${SUDO_USER}" -c 'command -v php' >/dev/null 2>&1;  then # MAC
   {
-    Installing composer global require laravel/valet 
+    Installing composer global require laravel/valet
     local php_version="$(major_minor_version "$(php --version  |  head -1 | extract_version )")"
-    if version_lt "$php_version" "7.2.5"; then 
+    if version_lt "$php_version" "7.2.5"; then
     {
-      Warning PHP Vesion is too old 
-      Comment trying to install version 7.4 
+      Warning PHP Vesion is too old
+      Comment trying to install version 7.4
       if [[ "$(uname)" == "Darwin" ]] ; then
       {
         #brew install php@7.4
@@ -2488,7 +2503,7 @@ EOINSERT
   mdutil -as | open -ef
   echo " Disable gamed "
   echo "
-    
+
     REF: https://discussions.apple.com/thread/5521495
 
     You can prevent gamed from running by logging in as an administrative user, running the Terminal application, and typing (or copying and pasting) at the prompt:
@@ -2525,4 +2540,3 @@ determine_os_and_fire_action
 
 echo "🥦"
 exit 0
-

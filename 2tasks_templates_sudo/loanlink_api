@@ -231,7 +231,7 @@ _redhat_flavor_install() {
   PROJECTREPO="${PROJECT_DIR_F}/loanlink-api"
   PROJECTGITREPO="git@github.com:LoanLink/loanlink-api.git"
   PROJECTGITREPOBRANCH="main"
- 
+
 	# _find_project_location_PROJECT_DIR_F
   if [[ ! -f "${PROJECTREPO}/.step1_brew_check_requirements_postgress_12_install"  ]] ; then
   {
@@ -454,8 +454,12 @@ _brew_check_requirements_postgress_12_install() {
 	local -i found=0
 	local _msg_info_list=""
 	local _target_bin_brew=""
-  _target_bin_brew="$(_find_executable_for "brew" "--prefix"  "bin/brew")"
-  _err=$?
+     _target_bin_brew="$(_find_executable_for "brew" "--prefix"  "bin/brew")"   # tail -1
+                  _err=$?
+  Checking "_target_bin_brew:<${_target_bin_brew}>"
+  _target_bin_brew="$(echo "${_target_bin_brew}" | tail -1 | xargs)"
+  ensure "${_target_bin_brew}" or "failed to check executable for brew <${_target_bin_brew}>"
+  su - "${SUDO_USER}" -c "${_target_bin_brew} list --formula"
   if [ $_err -gt 0 ] ; then # failed
   {
     echo "${_target_bin_brew}"
@@ -819,7 +823,12 @@ _brew_postgres_redis_restart() {
     # anounce_command su - "${SUDO_USER}" -c "brew services restart  postgresql@12 "
     local -i _err=0
 		local _target_bin_brew=""
-    _target_bin_brew="$(_find_executable_for "brew" "--prefix"  "bin/brew")"
+		_target_bin_brew="$(_find_executable_for "brew" "--prefix"  "bin/brew")"   # tail -1
+                  _err=$?
+  Checking "_target_bin_brew:<${_target_bin_brew}>"
+  _target_bin_brew="$(echo "${_target_bin_brew}" | tail -1 | xargs)"
+  ensure "${_target_bin_brew}" or "failed to check executable for brew <${_target_bin_brew}>"
+  su - "${SUDO_USER}" -c "${_target_bin_brew} list --formula"
     _err=$?
     if [ $_err -gt 0 ] ; then # failed
     {

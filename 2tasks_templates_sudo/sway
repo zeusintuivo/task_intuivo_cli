@@ -128,8 +128,12 @@ _find_target_brew() {
     local -i found=0
     local _msg_info_list=""
     local _target_bin_brew=""
-    _target_bin_brew="$(_find_executable_for "brew" "--prefix"  "bin/brew")"
-    _err=$?
+    _target_bin_brew="$(_find_executable_for "brew" "--prefix"  "bin/brew")"   # tail -1
+                  _err=$?
+  Checking "_target_bin_brew:<${_target_bin_brew}>"
+  _target_bin_brew="$(echo "${_target_bin_brew}" | tail -1 | xargs)"
+  ensure "${_target_bin_brew}" or "failed to check executable for brew <${_target_bin_brew}>"
+  su - "${SUDO_USER}" -c "${_target_bin_brew} list --formula"
     if [ $_err -gt 0 ] ; then # failed
     {
       echo "${_target_bin_brew}"

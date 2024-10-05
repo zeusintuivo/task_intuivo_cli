@@ -1,4 +1,5 @@
 #!/bin/bash
+# set -x
 alias egrep='grep -E --color=auto --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox}'
 _add_variables_to_bashrc_zshrc(){
   local FINDBREW="/opt/homebrew/bin/brew"
@@ -26,8 +27,10 @@ _add_variables_to_bashrc_zshrc(){
   fi
 
   local _target_bin_brew=""
-  _target_bin_brew="$(_find_executable_for "brew" "--prefix"  "bin/brew")"
-	
+  _target_bin_brew="$(_find_executable_for "brew" "--prefix"  "bin/brew")" # tail -1
+  Checking "_target_bin_brew:<${_target_bin_brew}>"
+  _target_bin_brew="$(echo "${_target_bin_brew}" | tail -1 | xargs)"
+  ensure "${_target_bin_brew}" or "failed to check executable for brew <${_target_bin_brew}>"
   su - "${SUDO_USER}" -c "${_target_bin_brew} list --formula"
   # $(brew --prefix)/bin/brew
   local BREW_SH_CONTENT='
@@ -104,7 +107,7 @@ _add_to_file() {
 _clone_linuxbrew() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
 
-  git clone https://github.com/Homebrew/brew "/home/linuxbrew/.linuxbrew/Homebrew" --depth 1 
+  git clone https://github.com/Homebrew/brew "/home/linuxbrew/.linuxbrew/Homebrew" --depth 1
   chown -R "${SUDO_USER}" /home/linuxbrew
   chgrp -R "${SUDO_USER}" /home/linuxbrew
 }
@@ -344,5 +347,3 @@ _fedora__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _fedora__64
-
-
