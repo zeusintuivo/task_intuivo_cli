@@ -738,7 +738,7 @@ _fedora__64() {
   return  $_err
 } # end _fedora__64
 
-_deepin__64() {
+_fedora__64() {
   trap "echo Error:$?" ERR INT
   local _parameters="${*-}"
   local -i _err=0
@@ -749,7 +749,7 @@ _deepin__64() {
 	  failed "$0:$LINENO while running callsomething above _err:${_err}"
   }
   fi
-} # end _deepin__64
+} # end _fedora__64
 
 
 
