@@ -5,10 +5,17 @@
 #
 
 _linux_prepare(){
-  sudo_it
-  [ $? -gt 0 ] && (failed to sudo_it raise_to_sudo_and_user_home  || exit 1)
+  # sudo_it
   # export USER_HOME="/home/${SUDO_USER}"
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  local -i _err=0
+	enforce_variable_with_value USER_HOME "${USER_HOME}"
+  _err=$?
+	if [ ${_err} -gt 0 ] ; then
+  {
+    failed "to sudo_it raise_to_sudo_and_user_home"
+    exit 1
+	}
+	fi
 }  # end _linux_prepare
 
 

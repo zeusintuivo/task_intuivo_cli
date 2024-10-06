@@ -20,16 +20,106 @@ echo "0. sudologic $0:$LINENO       THISSCRIPTPARAMS:${THISSCRIPTPARAMS:-}"
 
 echo "0. sudologic $0 Start Checking realpath  "
 if ! ( command -v realpath >/dev/null 2>&1; )  ; then
+{
   echo "... realpath not found. Downloading REF:https://github.com/swarmbox/realpath.git "
-  cd $HOME
+  if [[ -n "${USER_HOME}" ]] ;  then
+  {
+    cd "${USER_HOME}" || echo "ERROR! failed realpath compile cd " && exit 1
+  }
+  else
+  {
+    cd "${HOME}" || echo "ERROR! failed realpath compile cd " && exit 1
+  }
+  fi
   git clone https://github.com/swarmbox/realpath.git
-  cd realpath
+  _err=$?
+  [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Builing realpath. returned error did not download or is installed err:$_err  \n \n  " && exit 1
+  cd realpath || echo "ERROR! failed realpath compile cd " && exit 1
   make
+  _err=$?
+  [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Builing realpath. returned error did not download or is installed err:$_err  \n \n  " && exit 1
   sudo make install
   _err=$?
   [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Builing realpath. returned error did not download or is installed err:$_err  \n \n  " && exit 1
+  _err=$?
+  [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Builing realpath. returned error did not download or is installed err:$_err  \n \n  " && exit 1
+}
 else
+{
   echo "... realpath exists .. check!"
+}
+fi
+if ! ( command -v paeth >/dev/null 2>&1; )  ; then
+{
+  function paeth(){
+  local path_to_file=""
+  local -i _err=0
+  path_to_file="${*}"
+  if [[ ! -e "${path_to_file}" ]] ; then   # not found in current folder
+  {
+    path_to_file="$(pwd)/${*}"
+    if [[ ! -e "${path_to_file}" ]] ; then  # add full pwd and see if finds it
+    {
+      path_to_file="$(which "${*}")"   # search in system $PATH and env system
+      _err=$?
+      if [ ${_err} -gt 0 ] ; then
+      {
+        if ! type  -f "${*}" >/dev/null 2>&1  ; then 
+        {
+          echo "is a function"
+          type  -f "${*}"
+        }
+        fi
+        >&2 echo "error 1. ${*} not found in ≤$(pwd)≥ or ≤\${PATH}≥ or ≤\$(env)≥ "
+        exit 1  # not found, silent fail
+      }
+      fi
+      path_to_file="$(realpath "$(which "${*}")")"   # updated realpath macos 20210902
+      _err=$?
+      if [ ${_err} -gt 0 ] ; then
+      {
+         if ! type  -f "${*}" >/dev/null 2>&1  ; then 
+        {
+          echo "is a function"
+          type  -f "${*}"
+        }
+        fi
+         >&2 echo "error 2. ${*} not found in ≤$(pwd)≥ or ≤\${PATH}≥ or ≤\$(env)≥ "
+        exit 1  # not found, silent fail
+      }
+      fi
+      if [[ ! -e "${path_to_file}" ]] ; then
+      {
+         if ! type  -f "${*}" >/dev/null 2>&1  ; then 
+        {
+          echo "is a function"
+          type  -f "${*}"
+        }
+        fi
+         >&2 echo "error 3. ${path_to_file} does not exist or is not accesible "
+        exit 1  # not found, silent fail
+      }
+      fi
+    }
+    fi
+  }
+  fi
+  path_to_file="$(realpath "${path_to_file}")"
+  if ! type  -f "${*}" >/dev/null 2>&1  ; then 
+  {
+    echo "is also a function"
+    type  -f "${*}"
+  }
+  fi
+  
+  echo "${path_to_file}"
+  } # end paeth 
+}
+fi
+if ! ( command -v realpath >/dev/null 2>&1; )  ; then
+{
+  echo "... realpath not found. and did not install . ABORTING"
+}
 fi
 
 typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")"   # updated realpath macos 20210902
@@ -76,7 +166,7 @@ INT ..."
 load_struct_testing(){
   function _trap_on_error(){
     local -ir __trapped_error_exit_num="${2:-0}"
-		echo -e "\\n \033[01;7m*** 0tasks_base/sudoer.bash:$LINENO load_struct_testing() ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+    echo -e "\\n \033[01;7m*** 0tasks_base/sudoer.bash:$LINENO load_struct_testing() ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
 
     echo ". ${1}"
     echo ". exit  ${__trapped_error_exit_num}  "
@@ -85,15 +175,53 @@ load_struct_testing(){
     local -r __caller=$(caller)
     local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
     local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
-
+    #                awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    local output="$(awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}")"
+    if ( command -v pygmentize >/dev/null 2>&1; )  ; then
+    {
+      echo "${output}" | pygmentize -g
+    }
+    else
+    {
+      echo "${output}"
+    }
+    fi
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
     exit 1
   }
+  function source_library(){
+    # Sample usage 
+    #    if ( source_library "${provider}" ) ; then 
+    #      failed
+    #    fi
+    local -i _DEBUG=${DEBUG:-0}
+    local provider="${*-}"
+    local structsource=""
+      if [[  -e "${provider}" ]] ; then
+      {
+        structsource="""$(<"${provider}")"""
+        _err=$?
+        if [ $_err -gt 0 ] ; then
+        {
+          >&2 echo -e "#\n #\n# 4.1 WARNING Loading ${provider}. Occured while running 'source' err:$_err  \n \n  "
+          return 1
+        }
+        fi
+	if (( _DEBUG )) ; then
+          >&2 echo "# $0: 0tasks_base/sudoer.bash Loading locally"
+        fi
+        echo """${structsource}"""
+        return 0
+      }
+      fi
+      >&2 echo -e "\n 4.2 nor found  ${provider}. 'source' err:$_err  \n  "
+      return 1
+  } # end source_library
   function load_library(){
     local _library="${1:-struct_testing}"
     local -i _DEBUG=${DEBUG:-0}
+    local -i _err=0
     if [[ -z "${1}" ]] ; then
     {
        echo "Must call with name of library example: struct_testing execute_command"
@@ -101,41 +229,63 @@ load_struct_testing(){
     }
     fi
     trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-      local provider="$HOME/_/clis/execute_command_intuivo_cli/${_library}"
-      if [[ -n "${SUDO_USER:-}" ]] && [[ -n "${HOME:-}" ]] && [[ "${HOME:-}" == "/root" ]] && [[ !  -e "${provider}"  ]] ; then
+      local providers="
+/home/${SUDO_USER-}/_/clis/execute_command_intuivo_cli/${_library-}
+/Users/${SUDO_USER-}/_/clis/execute_command_intuivo_cli/${_library-}
+/home/${USER-}/_/clis/execute_command_intuivo_cli/${_library-}
+/Users/${USER-}/_/clis/execute_command_intuivo_cli/${_library-}
+${HOME-}/_/clis/execute_command_intuivo_cli/${_library-}
+"
+      local provider=""
+      local -i _loaded=0
+      local -i _found=0 
+      local structsource
+      while read -r provider ; do
       {
-        provider="/home/${SUDO_USER}/_/clis/execute_command_intuivo_cli/${_library}"
-      }
-      elif [[ -z "${SUDO_USER:-}" ]] && [[ -n "${HOME:-}" ]] && [[ "${HOME:-}" == "/root" ]] && [[ !  -e "${provider}"  ]] ; then
-      {
-        provider="/home/${USER}/_/clis/execute_command_intuivo_cli/${_library}"
-      }
-      fi
-      echo "$0: ${provider}"
-      echo "$0: SUDO_USER:${SUDO_USER:-nada SUDOUSER}: USER:${USER:-nada USER}: ${SUDO_HOME:-nada SUDO_HOME}: {${HOME:-nada HOME}}"
-      local _err=0 structsource
-      if [[  -e "${provider}" ]] ; then
-        if (( _DEBUG )) ; then
-          echo "$0: 0tasks_base/sudoer.bash Loading locally"
-        fi
-        structsource="""$(<"${provider}")"""
+        [[ -z "${provider}" ]] && continue
+        [[ ! -e "${provider}" ]] && continue
+	_loaded=0
+	_found=0
+	structsource="""$(source_library "${provider}")"""
         _err=$?
+        _loaded=1
+	_found=1
         if [ $_err -gt 0 ] ; then
         {
-           echo -e "\n \n  ERROR! Loading ${_library}. running 'source locally' returned error did not download or is empty err:$_err  \n \n  "
-           exit 1
+          echo -e "\n \n 4.1 WARNING Loading ${_library}. Occured while running 'source' err:$_err  \n \n  "
+          _loaded=0
+	  _found=0
         }
         fi
-      else
+      }
+      done <<< "${providers}"
+
+#       provider="$HOME/_/clis/execute_command_intuivo_cli/${_library}"
+#       if [[ -n "${SUDO_USER:-}" ]] && [[ -n "${HOME:-}" ]] && [[ "${HOME:-}" == "/root" ]] && [[ !  -e "${provider}"  ]] ; then
+#       {
+#         provider="/home/${SUDO_USER}/_/clis/execute_command_intuivo_cli/${_library}"
+#       }
+#       elif [[ -z "${USER:-}" ]] && [[ -n "${HOME:-}" ]] && [[ "${HOME:-}" == "/root" ]] && [[ !  -e "${provider}"  ]] ; then
+#       {
+#         provider="/home/${USER}/_/clis/execute_command_intuivo_cli/${_library}"
+#       }
+#       fi
+#       echo "$0: ${provider}"
+#       echo "$0: SUDO_USER:${SUDO_USER:-nada SUDOUSER}: USER:${USER:-nada USER}: ${SUDO_HOME:-nada SUDO_HOME}: {${HOME:-nada HOME}}"
+      
+      if (( ! _loaded )) ; then 
         if ( command -v curl >/dev/null 2>&1; )  ; then
           if (( _DEBUG )) ; then
             echo "$0: 0tasks_base/sudoer.bash Loading ${_library} from the net using curl "
           fi
+	  _loaded=0
           structsource="""$(curl https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/${_library}  -so -   2>/dev/null )"""  #  2>/dev/null suppress only curl download messages, but keep curl output for variable
           _err=$?
+	  _loaded=1
           if [ $_err -gt 0 ] ; then
           {
             echo -e "\n \n  ERROR! Loading ${_library}. running 'curl' returned error did not download or is empty err:$_err  \n \n  "
+	    _loaded=0
             exit 1
           }
           fi
@@ -143,16 +293,19 @@ load_struct_testing(){
           if (( _DEBUG )) ; then
             echo "$0: 0tasks_base/sudoer.bash Loading ${_library} from the net using wget "
           fi
+	  _loaded=0
           structsource="""$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/${_library} -O -   2>/dev/null )"""  #  2>/dev/null suppress only wget download messages, but keep wget output for variable
           _err=$?
+	  _loaded=1
           if [ $_err -gt 0 ] ; then
           {
             echo -e "\n \n  ERROR! Loading ${_library}. running 'wget' returned error did not download or is empty err:$_err  \n \n  "
+	    _loaded=0
             exit 1
           }
           fi
         else
-          echo -e "\n \n 2  ERROR! Loading ${_library} could not find wget or curl to download  \n \n "
+          echo -e "\n \n 2  ERROR! Loading ${_library} could not find local, wget, curl to load or download  \n \n "
           exit 69
         fi
       fi
@@ -381,7 +534,17 @@ directory_exists_with_spaces "${USER_HOME}"
     local -r __caller=$(caller)
     local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
     local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    #                awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    local output="$(awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}")"
+    if ( command -v pygmentize >/dev/null 2>&1; )  ; then
+    {
+      echo "${output}" | pygmentize -g
+    }
+    else
+    {
+      echo "${output}"
+    }
+    fi
 
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
@@ -399,7 +562,17 @@ directory_exists_with_spaces "${USER_HOME}"
     local -r __caller=$(caller)
     local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
     local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    #               awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    local output="$(awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}")"
+    if ( command -v pygmentize >/dev/null 2>&1; )  ; then
+    {
+      echo "${output}" | pygmentize -g
+    }
+    else
+    {
+      echo "${output}"
+    }
+    fi
 
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
@@ -417,7 +590,17 @@ directory_exists_with_spaces "${USER_HOME}"
     local -r __caller=$(caller)
     local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
     local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    #               awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    local output="$(awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}")"
+    if ( command -v pygmentize >/dev/null 2>&1; )  ; then
+    {
+      echo "${output}" | pygmentize -g
+    }
+    else
+    {
+      echo "${output}"
+    }
+    fi
 
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
@@ -448,44 +631,44 @@ _git_clone() {
   if  it_exists_with_spaces "${_target}" && it_exists_with_spaces "${_target}/.git" ; then
   {
     cd "${_target}"
-		if ( git config pull.rebase false ) ; then
-		{
-	    warning "could not git config pull.rebase false"
+    if ( git config pull.rebase false ) ; then
+    {
+      warning "could not git config pull.rebase false"
     }
-		fi
+    fi
     if ( git fetch -f origin master:master ) ; then
-		{
-	    warning "could not git fetch -f origin master:master"
+    {
+      warning "could not git fetch -f origin master:master"
     }
-		fi
-		if ( git fetch -f origin main:main ) ; then
-		{
-	    warning "could not git fetch -f origin main:main"
+    fi
+    if ( git fetch -f origin main:main ) ; then
+    {
+      warning "could not git fetch -f origin main:main"
     }
-		fi
-		if ( git fetch  ) ; then
-		{
-	    warning "could not git fetch"
+    fi
+    if ( git fetch  ) ; then
+    {
+      warning "could not git fetch"
     }
-		fi
-		if ( git pull ) ; then
-		{
-	    warning "could not git pull"
+    fi
+    if ( git pull ) ; then
+    {
+      warning "could not git pull"
     }
-		fi
-		if ( git fetch --tags origin ) ; then
-		{
-	    warning "could not git fetch --tags origin"
+    fi
+    if ( git fetch --tags origin ) ; then
+    {
+      warning "could not git fetch --tags origin"
     }
-		fi
+    fi
   }
   else
   {
-		if ( git clone "${_source}" "${_target}" ) ; then
-		{
+    if ( git clone "${_source}" "${_target}" ) ; then
+    {
       warning "could not git clone \"${_source}\" \"${_target}\"  "
-		}
-		fi
+    }
+    fi
   }
   fi
   chown -R "${SUDO_USER}" "${_target}"
@@ -495,31 +678,31 @@ _git_clone() {
 PROJECT_DIR_F=""
 
 _find_project_location_PROJECT_DIR_F() {
-		local _target_project=""
+    local _target_project=""
     Checking "location of project "
     local _list_posssibles="
-		   ${USER_HOME}/_/work/finlink/projects
-		   ${USER_HOME}/_/work/finlink
-		   /repo/work/finlink/projects
-		"
-		local one=""
-		while read -r one ; do
-		{
-			[[ -z "${one}" ]] && continue
- 		  if it_exists_with_spaces "${one}" ; then
-		  {
+       ${USER_HOME}/_/work/finlink/projects
+       ${USER_HOME}/_/work/finlink
+       /repo/work/finlink/projects
+    "
+    local one=""
+    while read -r one ; do
+    {
+      [[ -z "${one}" ]] && continue
+       if it_exists_with_spaces "${one}" ; then
+      {
         _target_project="${one}"
-				break
-		  }
-		  fi
-		}
+        break
+      }
+      fi
+    }
     done <<< "${_list_posssibles}"
 
   [[ -z "${one}" ]] && warning "Could not find/determine location of project" && return 1
 
-		passed "found of project dir ${_target_project}"
-		PROJECT_DIR_F="${_target_project}"
-		return 0
+    passed "found of project dir ${_target_project}"
+    PROJECT_DIR_F="${_target_project}"
+    return 0
 
 } # end _find_project_location_PROJECT_DIR_F
 
@@ -640,9 +823,9 @@ PROJECTGITREPOBRANCH="will_experiments" # global
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
 
-	Installing "--start"
+  Installing "--start"
   dnf remove openssl1.1-devel-1 openssl-devel-1 openssl-devel -y
-	dnf builddep ruby-devel -y --allowerasing
+  dnf builddep ruby-devel -y --allowerasing
   dnf builddep rbenv -y --allowerasing
   local -i _err=0
   if _find_project_location_PROJECT_DIR_F ; then
@@ -657,7 +840,7 @@ _redhat_flavor_install() {
   echo _err:$_err
   if [ ${_err} -gt 0 ] ; then
   {
-		PROJECT_DIR_F="${USER_HOME}/_/work/finlink/projects"
+    PROJECT_DIR_F="${USER_HOME}/_/work/finlink/projects"
     warning "could not find  project folder. Making one.. _err:${_err}"
     mkdir -p "${PROJECT_DIR_F}"
     chown -R "${SUDO_USER}" "${USER_HOME}/_/work"
@@ -670,7 +853,7 @@ _redhat_flavor_install() {
   PROJECTGITREPO="git@github.com:LoanLink/loanlink-api.git"
   PROJECTGITREPOBRANCH="main"
 
-	# _find_project_location_PROJECT_DIR_F
+  # _find_project_location_PROJECT_DIR_F
   if [[ ! -f "${PROJECTREPO}/.step1_brew_check_requirements_postgress_12_install"  ]] ; then
   {
     Working "Step .step1_brew_check_requirements_postgress_12_install"
@@ -824,57 +1007,57 @@ _ubuntu__64() {
 } # end _ubuntu__64
 
 _brew_you_said_no() {
-		  warning "You said no. So we are keeping the current one"
-			echo -e  "Try to run :
-			\ncurl -O - https://raw.githubusercontent.com/zeusintuivo/task_intuivo_cli/master/install_brew.bash
-			\nchmod -x install_brew.bash
-			\n./install_brew.bash
-			\n		"
-			failed "You said no. install brew first then, or Check your .dot files"
-			exit 1 # flow should stop
+      warning "You said no. So we are keeping the current one"
+      echo -e  "Try to run :
+      \ncurl -O - https://raw.githubusercontent.com/zeusintuivo/task_intuivo_cli/master/install_brew.bash
+      \nchmod -x install_brew.bash
+      \n./install_brew.bash
+      \n    "
+      failed "You said no. install brew first then, or Check your .dot files"
+      exit 1 # flow should stop
 
 } # end _brew_you_said_no
 
 _brew_source_profiles(){
   if [[ -f "${USER_HOME}/.profile" ]] ; then
-	{
-		if ! 	\. "${USER_HOME}/.profile" ; then
-		{
-			echo "
-			If it complains about ''Begin Root or sudo'' on a certain line
-			exclude that command with this code:
+  {
+    if !   \. "${USER_HOME}/.profile" ; then
+    {
+      echo "
+      If it complains about ''Begin Root or sudo'' on a certain line
+      exclude that command with this code:
 
-			if [ -n "${SUDO_USER:-}" ] ; then
-			{
-				 ...line to exclude from sudo /root user
-			}
-		  fi
+      if [ -n "${SUDO_USER:-}" ] ; then
+      {
+         ...line to exclude from sudo /root user
+      }
+      fi
       "
-			failed something is wrong with file:"${USER_HOME}/.profile"
-		}
-		fi
-	}
-	fi
+      failed something is wrong with file:"${USER_HOME}/.profile"
+    }
+    fi
+  }
+  fi
   if [[ -f "${USER_HOME}/.bash_profile" ]] ; then
-	{
-	  if ! 	\. "${USER_HOME}/.bash_profile" ; then
-		{
-			echo "
-			If it complains about ''Begin Root or sudo'' on a certain line
-			exclude that command with this code:
+  {
+    if !   \. "${USER_HOME}/.bash_profile" ; then
+    {
+      echo "
+      If it complains about ''Begin Root or sudo'' on a certain line
+      exclude that command with this code:
 
-			if [ -n "${SUDO_USER:-}" ] ; then
-			{
-				 ...line to exclude from sudo /root user
-			}
-		  fi
+      if [ -n "${SUDO_USER:-}" ] ; then
+      {
+         ...line to exclude from sudo /root user
+      }
+      fi
       "
-			failed something is wrong with file:"${USER_HOME}/.bash_profile"
-		}
-		fi
-	}
-	fi
-	return 0
+      failed something is wrong with file:"${USER_HOME}/.bash_profile"
+    }
+    fi
+  }
+  fi
+  return 0
 } # end _brew_source_profiles
 
 _brew_check_requirements_postgress_12_install() {
@@ -883,77 +1066,77 @@ _brew_check_requirements_postgress_12_install() {
   Comment "### Prerequisites"
 
   Checking homebrew is installed
-	_brew_source_profiles
-	if (!  su - "${SUDO_USER}" -c "command -v brew" >/dev/null 2>&1; )  ; then
-	{
-	ensure_brew_in_linux_mac
+  _brew_source_profiles
+  if (!  su - "${SUDO_USER}" -c "command -v brew" >/dev/null 2>&1; )  ; then
+  {
+  ensure_brew_in_linux_mac
   local -i _err=0
-	local -i ret=0
-	local -i found=0
-	local _msg_info_list=""
-	local _target_bin_brew=""
+  local -i ret=0
+  local -i found=0
+  local _msg_info_list=""
+  local _target_bin_brew=""
   _target_bin_brew="$(_find_executable_for "brew" "--prefix"  "bin/brew")"
   _err=$?
   if [ $_err -gt 0 ] ; then # failed
   {
     echo "${_target_bin_brew}"
     warning "failed to find brew"
-		found=1
+    found=1
   }
   else
-	{
-		found=0
+  {
+    found=0
     _target_bin_brew="$(echo -n "${_target_bin_brew}" | tail -1)"
     enforce_variable_with_value _target_bin_brew "${_target_bin_brew}"
-	  Checking "the found ${RED}${_target_bin_brew}${CYAN} to respond to ${YELLOW}brew list"
+    Checking "the found ${RED}${_target_bin_brew}${CYAN} to respond to ${YELLOW}brew list"
     # _msg_info_list="$(su - "${SUDO_USER}" -c "${_target_bin_brew} list  >/dev/null 2>&1")"
     #
-		# ret=$?
+    # ret=$?
     # [ $ret -gt 0 ] && found=1
     # [[ "$_msg_info_list" == *"No such"* ]] && found=1
     # [[ "$_msg_info_list" == *"nicht gefunden"* ]] && found=1
     # [[ "$_msg_info_list" == *"Error"*   ]] && found=1
-	}
-	fi
+  }
+  fi
 
 
-	if [ ${found} -eq 1  ]  ; then
+  if [ ${found} -eq 1  ]  ; then
   {
-	  passed "Seems like brew is not installed. Should I attempt to RESET and resintall brew. WARNING this will remove the brew folder and all its installations [Y/n] ?"
-	  if yes_or_no ; then  # using then so that return 1 will not trigger trap
-  	{
-			_err=0 # yes
-		}
-		else
-	  {
-	    _err=1 # no
-	  }
-	  fi
-    if [ $_err -gt 0 ] ; then # no
-		{
-			_brew_you_said_no
-			exit 1 # added in case the above function fails
-    }
-		fi
-		# else yes erase brew
-  	passed "You said ${RED} YES ERASE BREW ${YELLOW} Confirm again please [Y/n] ?"
-	  if yes_or_no ; then  # using then so that return 1 will not trigger trap
-  	{
+    passed "Seems like brew is not installed. Should I attempt to RESET and resintall brew. WARNING this will remove the brew folder and all its installations [Y/n] ?"
+    if yes_or_no ; then  # using then so that return 1 will not trigger trap
+    {
       _err=0 # yes
-		}
-		else
-		{
-	    _err=1 # no
-	  }
-	  fi
-    if [ $_err -gt 0 ] ; then # no
-		{
-			_brew_you_said_no
-			exit 1 # added in case the above function fails
     }
-		fi
-		# else yes
-  	passed "You said ${RED} YES ${CYAN} twice ${YELLOW} "
+    else
+    {
+      _err=1 # no
+    }
+    fi
+    if [ $_err -gt 0 ] ; then # no
+    {
+      _brew_you_said_no
+      exit 1 # added in case the above function fails
+    }
+    fi
+    # else yes erase brew
+    passed "You said ${RED} YES ERASE BREW ${YELLOW} Confirm again please [Y/n] ?"
+    if yes_or_no ; then  # using then so that return 1 will not trigger trap
+    {
+      _err=0 # yes
+    }
+    else
+    {
+      _err=1 # no
+    }
+    fi
+    if [ $_err -gt 0 ] ; then # no
+    {
+      _brew_you_said_no
+      exit 1 # added in case the above function fails
+    }
+    fi
+    # else yes
+    passed "You said ${RED} YES ${CYAN} twice ${YELLOW} "
     Installing Erasing, Reseting and Re installing homebrew / linuxBrew
     local DOWNLOADFOLDER="$(_find_downloads_folder)"
     local TARGET_URL="https://raw.githubusercontent.com/zeusintuivo/task_intuivo_cli/master/install_brew.bash"
@@ -961,30 +1144,30 @@ _brew_check_requirements_postgress_12_install() {
     _do_not_downloadtwice   "${TARGET_URL}"  "${DOWNLOADFOLDER}"  "${CODENAME}"
     chmod a+x "${CODENAME}"
     cd  "${DOWNLOADFOLDER}"
-		# Cannot run as su - because it will complain not having tty for sudo
+    # Cannot run as su - because it will complain not having tty for sudo
     # su - "${SUDO_USER}" -c "${DOWNLOADFOLDER}/${CODENAME}"
     export NONINTERACTIVE=1
-		export HAVE_SUDO_ACCESS=1
-		if ! "${DOWNLOADFOLDER}/${CODENAME}" ; then
-		{
-			echo "${RED} ERROR ${CYAN}Failed to run installer, is as if you said no"
-			_brew_you_said_no
-			exit 1 # added in case the above function fails
-		}
-		fi
-		_brew_source_profiles
+    export HAVE_SUDO_ACCESS=1
+    if ! "${DOWNLOADFOLDER}/${CODENAME}" ; then
+    {
+      echo "${RED} ERROR ${CYAN}Failed to run installer, is as if you said no"
+      _brew_you_said_no
+      exit 1 # added in case the above function fails
+    }
+    fi
+    _brew_source_profiles
 
-		wait
+    wait
   } # not found
   fi
   } # not command -v brew
-	fi
+  fi
   # ensure brew or "Homebrew is required to continue "
 
   Comment "### install_requirements  darwin"
   Comment LINENO:$LINENO  local _requirements=
   local -i _err=0
-	local _requirements="
+  local _requirements="
       shared-mime-info
       libpq
       redis
@@ -1018,40 +1201,40 @@ _brew_check_requirements_postgress_12_install() {
     su - "${SUDO_USER}" -c "${_target_bin_brew} services"
     if (su - "${SUDO_USER}" -c "${_target_bin_brew}  services" 2>&1 | grep "${__pg}" >/dev/null 2>&1; )  ; then
     {
-			echo -e "${PURPLE_BLUE} === ${__pg} ${BRIGHT_BLUE87}installed. Remove and reinstall${PURPLE_BLUE} ${RESET}?"
+      echo -e "${PURPLE_BLUE} === ${__pg} ${BRIGHT_BLUE87}installed. Remove and reinstall${PURPLE_BLUE} ${RESET}?"
       if yes_or_no ; then
-			{
+      {
         _err=0
-			}
-		  else
-			{
-			  _err=1
-			}
-			fi
+      }
+      else
+      {
+        _err=1
+      }
+      fi
       if [ $_err -gt 0 ] ; then # no
       {
         passed "You said no. So we are keeping the current one"
-				Installing things that might be need it
+        Installing things that might be need it
         su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' ${_target_bin_brew} reinstall shared-mime-info"
         su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' ${_target_bin_brew} reinstall libpq"
         su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' ${_target_bin_brew} reinstall ruby-build"
         su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' ${_target_bin_brew} reinstall redis"
       }
-		  else
-			{
-				passed "You said yes ERASE Are you sure ?"
-	      if yes_or_no ; then
-  			{
+      else
+      {
+        passed "You said yes ERASE Are you sure ?"
+        if yes_or_no ; then
+        {
           _err=0
-		  	}
-		    else
-	  		{
-	  		  _err=1
-	  		}
-	  		fi
+        }
+        else
+        {
+          _err=1
+        }
+        fi
         if [ $_err -gt 0 ] ; then # no
-				{
-					passed "You said no. So we are keeping the current one"
+        {
+          passed "You said no. So we are keeping the current one"
         }
         else
         {
@@ -1062,26 +1245,26 @@ _brew_check_requirements_postgress_12_install() {
             killall postgres
           }
           fi
-			    Installing "${__pg}"
+          Installing "${__pg}"
           su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' ${_target_bin_brew} install shared-mime-info"
           su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' ${_target_bin_brew} install libpq"
           su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' ${_target_bin_brew} install ruby-build"
           su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' ${_target_bin_brew} install redis"
           su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' ${_target_bin_brew} install  postgresql@12"
-				}
-				fi
-			}
-			fi
+        }
+        fi
+      }
+      fi
     }
-	  else
-	  {
-			Installing "${__pg}"
+    else
+    {
+      Installing "${__pg}"
       su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' ${_target_bin_brew} install shared-mime-info"
       su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' ${_target_bin_brew} install libpq"
       su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' ${_target_bin_brew} install ruby-build"
       su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' ${_target_bin_brew} install redis"
       su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' ${_target_bin_brew} install postgresql@12"
-	  }
+    }
     fi
     # Working "initdb" "--username=postgres --pgdata=/opt/homebrew/var/postgresql@12 --auth-host=md5 --auth-local=md5 --lc-collate=en_US.UTF-8 --lc-ctype=en_US.UTF-8 --lc-messages=en_US.UTF-8 --lc-monetary=en_US.UTF-8 --lc-numeric=en_US.UTF-8 --lc-time=en_US.UTF-8 --pwfile=\"${USER_HOME}/custom-initdb.conf\" "
     # Comment "Here's what this command does:" '
@@ -1093,8 +1276,8 @@ _brew_check_requirements_postgress_12_install() {
     # # --authz=postgres: Specifies the default authorization identifier. ' '
     # # --pwfile=-: Indicates that the password will be read from stdin. ' '
     # #
-		local -i _err=0
-		_target_brew_base_pg="$(_try_more_times_find "
+    local -i _err=0
+    _target_brew_base_pg="$(_try_more_times_find "
 var/${__pg}
 var/postgres
 var/postgresql
@@ -1102,17 +1285,17 @@ var/postgresql
     _err=$?
     if [ $_err -gt 0 ] ; then # failed
     {
-			echo "${_target_brew_base_pg}"
+      echo "${_target_brew_base_pg}"
       passed "Failed to find brw var"
-		}
-		fi
+    }
+    fi
 
-		_target_brew_base_pg="$(echo -n "${_target_brew_base_pg}" | tail -1)"
-		enforce_variable_with_value _target_brew_base_pg "${_target_brew_base_pg}"
+    _target_brew_base_pg="$(echo -n "${_target_brew_base_pg}" | tail -1)"
+    enforce_variable_with_value _target_brew_base_pg "${_target_brew_base_pg}"
 
-		passed found of var "${__pg} = ${_target_brew_base_pg}"
+    passed found of var "${__pg} = ${_target_brew_base_pg}"
 
-		Message "preparing some files inside ${USER_HOME} with some defaults"
+    Message "preparing some files inside ${USER_HOME} with some defaults"
 
     # try 2
     cat << EOF > "${USER_HOME}/custom-pg_hba_postgres12.conf"
@@ -1158,44 +1341,44 @@ EOF
     "
     # su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' cat /opt/homebrew/opt/postgresql@12/share/postgresql@12/pg_hba.conf.sample \"${USER_HOME}/custom-pg_hba_postgres12.conf\" >   /opt/homebrew/var/postgresql@12/pg_hba.conf "
 
-		local _context="${_target_brew_base_pg}/pg_hba.conf"
- 		if file_exists_with_spaces "${_context}" ; then
-		{
-  	  Question "File ${_context}  already exists. Overwrite  ?"
-	    if yes_or_no ; then
-  		{
+    local _context="${_target_brew_base_pg}/pg_hba.conf"
+     if file_exists_with_spaces "${_context}" ; then
+    {
+      Question "File ${_context}  already exists. Overwrite  ?"
+      if yes_or_no ; then
+      {
          _err=0
-		  }
-		  else
-	  	{
-	  	  _err=1
-	  	}
-	  	fi
-      if [ $_err -gt 0 ] ; then # no
-			{
-			  passed "You said no. We are not touching ${_context}"
       }
       else
       {
-			  passed "You said YES. We are reseting file ${_context}"
-				CURRENTDATE=$(date +%Y%m%d)
-				CURRENTTIME="$(date +%H:%M)"
+        _err=1
+      }
+      fi
+      if [ $_err -gt 0 ] ; then # no
+      {
+        passed "You said no. We are not touching ${_context}"
+      }
+      else
+      {
+        passed "You said YES. We are reseting file ${_context}"
+        CURRENTDATE=$(date +%Y%m%d)
+        CURRENTTIME="$(date +%H:%M)"
         cp "${_context}" "${_context}_${CURRENTDATE}_${CURRENTTIME}"
         su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' cat  \"${USER_HOME}/custom-pg_hba_postgres12.conf\" >   ${_context}"
-			}
-			fi
-		}
-	  else
-		{
+      }
+      fi
+    }
+    else
+    {
       passed "Reseting file ${_context}"
- 			CURRENTDATE=$(date +%Y%m%d)
-			CURRENTTIME="$(date +%H:%M)"
+       CURRENTDATE=$(date +%Y%m%d)
+      CURRENTTIME="$(date +%H:%M)"
       cp "${_context}" "${_context}_${CURRENTDATE}_${CURRENTTIME}"
       su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' cat  \"${USER_HOME}/custom-pg_hba_postgres12.conf\" >   ${_context}"
-		}
-		fi
+    }
+    fi
 
-		echo "psql -d postgres -h 0.0.0.0 -U ${SUDO_USER} -W
+    echo "psql -d postgres -h 0.0.0.0 -U ${SUDO_USER} -W
 
     SHOW ident_file;
                       ident_file
@@ -1204,43 +1387,43 @@ EOF
     (1 row)
     "
     # su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' cat /opt/homebrew/opt/postgresql@12/share/postgresql@12/pg_ident.conf.sample \"${USER_HOME}/custom-pg_hba_postgres12.conf\" >  /opt/homebrew/var/postgresql@12/pg_ident.conf "
- 		local _context="${_target_brew_base_pg}/pg_ident.conf"
- 		if file_exists_with_spaces "${_context}" ; then
-		{
-  	  Question "File ${_context}  already exists. Overwrite  ?"
-	    if yes_or_no ; then
-  		{
+     local _context="${_target_brew_base_pg}/pg_ident.conf"
+     if file_exists_with_spaces "${_context}" ; then
+    {
+      Question "File ${_context}  already exists. Overwrite  ?"
+      if yes_or_no ; then
+      {
         _err=0
-		  }
-		  else
-	  	{
-	  	  _err=1
-	  	}
-	  	fi
-      if [ $_err -gt 0 ] ; then # no
-			{
-			  passed "You said no. We are not touching ${_context}"
       }
       else
       {
-			  passed "You said YES. We are reseting file ${_context}"
- 				CURRENTDATE=$(date +%Y%m%d)
-				CURRENTTIME="$(date +%H:%M)"
+        _err=1
+      }
+      fi
+      if [ $_err -gt 0 ] ; then # no
+      {
+        passed "You said no. We are not touching ${_context}"
+      }
+      else
+      {
+        passed "You said YES. We are reseting file ${_context}"
+         CURRENTDATE=$(date +%Y%m%d)
+        CURRENTTIME="$(date +%H:%M)"
         cp "${_context}" "${_context}_${CURRENTDATE}_${CURRENTTIME}"
         su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' cat \"${USER_HOME}/custom-pg_hba_postgres12.conf\" >  ${_context}"
-			}
-			fi
-		}
-	  else
-		{
-		  passed "You said YES. We are reseting file ${_context}"
- 			CURRENTDATE=$(date +%Y%m%d)
-			CURRENTTIME="$(date +%H:%M)"
+      }
+      fi
+    }
+    else
+    {
+      passed "You said YES. We are reseting file ${_context}"
+       CURRENTDATE=$(date +%Y%m%d)
+      CURRENTTIME="$(date +%H:%M)"
       cp "${_context}" "${_context}_${CURRENTDATE}_${CURRENTTIME}"
       su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' cat \"${USER_HOME}/custom-pg_hba_postgres12.conf\" >  ${_context}"
-		}
-		fi
-		_brew_postgres_redis_restart
+    }
+    fi
+    _brew_postgres_redis_restart
   }
   fi
 
@@ -1256,7 +1439,7 @@ _brew_postgres_redis_restart() {
     # anounce_command brew services restart  "postgresql@12"
     # anounce_command su - "${SUDO_USER}" -c "brew services restart  postgresql@12 "
     local -i _err=0
-		local _target_bin_brew=""
+    local _target_bin_brew=""
     _target_bin_brew="$(_find_executable_for "brew" "--prefix"  "bin/brew")"
     _err=$?
     if [ $_err -gt 0 ] ; then # failed
@@ -1268,30 +1451,30 @@ _brew_postgres_redis_restart() {
     _target_bin_brew="$(echo -n "${_target_bin_brew}" | tail -1)"
     enforce_variable_with_value _target_bin_brew "${_target_bin_brew}"
 
-		if su - "${SUDO_USER}" -c "${_target_bin_brew} services restart  postgresql@12 " ; then
-		{
-			warning failed brew services restart  postgresql@12
-		}
-		fi
-		Message "LINE:$LINENO ${_target_bin_brew} services restart  redis"
+    if su - "${SUDO_USER}" -c "${_target_bin_brew} services restart  postgresql@12 " ; then
+    {
+      warning failed brew services restart  postgresql@12
+    }
+    fi
+    Message "LINE:$LINENO ${_target_bin_brew} services restart  redis"
     # anounce_command brew services restart  redis
-		# anounce_command su - "${SUDO_USER}" -c "brew services restart  redis "
-		if su - "${SUDO_USER}" -c "${_target_bin_brew} services restart  redis " ; then
-		{
-			warning failed brew ${_target_bin_brew} services restart  redis
-		}
-		fi
-		Message "${_target_bin_brew} services"
+    # anounce_command su - "${SUDO_USER}" -c "brew services restart  redis "
+    if su - "${SUDO_USER}" -c "${_target_bin_brew} services restart  redis " ; then
+    {
+      warning failed brew ${_target_bin_brew} services restart  redis
+    }
+    fi
+    Message "${_target_bin_brew} services"
     # anounce_command brew services
     # anounce_command su - "${SUDO_USER}" -c "brew services "
     if su - "${SUDO_USER}" -c "${_target_bin_brew} services " ; then
-		{
-			warning brew ${_target_bin_brew} services
-		}
-		fi
+    {
+      warning brew ${_target_bin_brew} services
+    }
+    fi
     Message Here is your postgress running
-		ps axt | grep postgres
-		Message Here is your redis running
+    ps axt | grep postgres
+    Message Here is your redis running
     ps axt | grep redis
 
 
@@ -1320,19 +1503,19 @@ _docker_mac() {
 
 
 _docker_cygwin() {
-	echo "I do not know how to do _docker_cygwin"
+  echo "I do not know how to do _docker_cygwin"
 } # end _docker_cygwin
 
 
 
 _docker_linux() {
-	echo "I do not know how to do _docker_linux"
+  echo "I do not know how to do _docker_linux"
 } # end _docker_linux
 
 
 
 _docker_msys() {
-	echo "I do not know how to do _docker_msys"
+  echo "I do not know how to do _docker_msys"
 } # end _docker_msys
 
 
@@ -1342,7 +1525,7 @@ _attempt_to_download_docker() {
   local TARGETSYSTEM=${1}
   enforce_parameter_with_value           1        TARGETSYSTEM      "${TARGETSYSTEM}"     "amd64 | arm64"
 
-	case "$OSTYPE" in
+  case "$OSTYPE" in
     (darwin*) _docker_mac ;;
     (cygwin*) _docker_cygwin ;;
     (linux*) _docker_linux ;;
@@ -1395,34 +1578,34 @@ _ruby_check() {
 
 
   Checking that libpq/bin can be found
-	local -i _err=0
-	local _libpg_bin=""
-	if _libpg_bin="$(_try_more_times_find "
+  local -i _err=0
+  local _libpg_bin=""
+  if _libpg_bin="$(_try_more_times_find "
 opt/libpq/bin")" ; then
   {
-	  _err=0
-		passed "Found libpq/bin"
-	}
+    _err=0
+    passed "Found libpq/bin"
+  }
   else
-	{
-	  _err=1
-		warning "Failed to find libpq/bin"
-	}
-	fi
+  {
+    _err=1
+    warning "Failed to find libpq/bin"
+  }
+  fi
 
   if [ $_err -gt 0 ] ; then # failed
   {
-	  echo "${_libpg_bin}"
+    echo "${_libpg_bin}"
     failed "to find opt/libpq/bin"
-	}
-	fi
-	_libpg_bin="$(echo -n "${_libpg_bin}" | tail -1)"
-	passed "found of opt/libpq/bin  = ${_libpg_bin}"
+  }
+  fi
+  _libpg_bin="$(echo -n "${_libpg_bin}" | tail -1)"
+  passed "found of opt/libpq/bin  = ${_libpg_bin}"
 
 
 
 
-	Checking clone "${PROJECTGITREPO}"
+  Checking clone "${PROJECTGITREPO}"
   mkdir -p  "${PROJECTSBASEDIR}"
   cd  "${PROJECTSBASEDIR}"
   _git_clone  "${PROJECTGITREPO}" "${PROJECTREPO}"
@@ -1483,7 +1666,7 @@ opt/libpq/bin")" ; then
     Comment "LINENO:$LINENO ------ else"
     su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&  ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"${_libpg_bin}:$PATH\"  rbenv install ${_RUBYVERSION} ' "
   }
-	fi
+  fi
   Comment LINENO:$LINENO local _RUBYLOCATION=
   # set +x
   local _RUBYLOCATION="$(su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" && rbenv which ruby ' ")"
@@ -1504,29 +1687,29 @@ _bundle_check() {
   cd  "${PROJECTREPO}"
 
   Checking that libpq/bin can be found
-	local -i _err=0
-	local _libpg_bin=""
-	if _libpg_bin="$(_try_more_times_find "
+  local -i _err=0
+  local _libpg_bin=""
+  if _libpg_bin="$(_try_more_times_find "
 opt/libpq/bin")" ; then
   {
-	  _err=0
-		passed "Found libpq/bin"
-	}
+    _err=0
+    passed "Found libpq/bin"
+  }
   else
-	{
-	  _err=1
-		warning "Failed to find libpq/bin"
-	}
-	fi
+  {
+    _err=1
+    warning "Failed to find libpq/bin"
+  }
+  fi
 
   if [ $_err -gt 0 ] ; then # failed
   {
-	  echo "${_libpg_bin}"
+    echo "${_libpg_bin}"
     failed "to find opt/libpq/bin"
-	}
-	fi
-	_libpg_bin="$(echo -n "${_libpg_bin}" | tail -1)"
-	passed "found of opt/libpq/bin  = ${_libpg_bin}"
+  }
+  fi
+  _libpg_bin="$(echo -n "${_libpg_bin}" | tail -1)"
+  passed "found of opt/libpq/bin  = ${_libpg_bin}"
 
 
 
@@ -1540,9 +1723,9 @@ opt/libpq/bin")" ; then
 
 
   Checking "that opt/postgresql@12 can be found"
-	local -i _err=0
-	local _pg_lib=""
-	_pg_lib="$(_try_more_times_find "
+  local -i _err=0
+  local _pg_lib=""
+  _pg_lib="$(_try_more_times_find "
 opt/postgresql@12
 opt/postgres
 opt/postgresql
@@ -1550,12 +1733,12 @@ opt/postgresql
   _err=$?
   if [ $_err -gt 0 ] ; then # failed
   {
-	  echo "${_pg_lib}"
+    echo "${_pg_lib}"
     passed "Failed to find opt/postgresql@12"
-	}
-	fi
-	_pg_lib="$(echo -n "${_pg_lib}" | tail -1)"
-	passed "found of opt/postgresql@12  = ${_pg_lib}"
+  }
+  fi
+  _pg_lib="$(echo -n "${_pg_lib}" | tail -1)"
+  passed "found of opt/postgresql@12  = ${_pg_lib}"
 
 
 
@@ -1570,48 +1753,48 @@ opt/postgresql
 
   Comment "### gem pg"
   if su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"${_libpg_bin}:$PATH\" gem install pg ' " ; then
-	{
-		warning Failed to gem install pg
-	}
-	fi
+  {
+    warning Failed to gem install pg
+  }
+  fi
 
   Comment "### gem pg -v 1.2.3"
   if su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"${_libpg_bin}:$PATH\" gem install pg -v 1.2.3' " ; then
-	{
-		warning Failed to gem install pg -v 1.2.3
-	}
-	fi
+  {
+    warning Failed to gem install pg -v 1.2.3
+  }
+  fi
   Comment "### gem activerecord-postgres_enum"
   if su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"${_libpg_bin}:$PATH\" gem install activerecord-postgres_enum ' " ; then
-	{
-		warning Failed to gem install activerecord-postgres_enum
-	}
-	fi
+  {
+    warning Failed to gem install activerecord-postgres_enum
+  }
+  fi
   Comment "### gem activerecord-postgres_enum"
   if su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   ARCHFLAGS=\"-arch \$(uname -m)\" PATH=\"${_libpg_bin}:$PATH\" gem install activerecord-postgres_enum -v 1.6.0 ' " ; then
-	{
-		warning Failed to gem install activerecord-postgres_enum -v 1.6.0
-	}
-	fi
+  {
+    warning Failed to gem install activerecord-postgres_enum -v 1.6.0
+  }
+  fi
    Comment "### gem bundler 2.4.10"
   if su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   gem install bundler:2.4.10 ' " ; then
-	{
-		warning Failed to gem install bundler:2.4.10
-	}
-	fi
+  {
+    warning Failed to gem install bundler:2.4.10
+  }
+  fi
   Comment "### gem bundler 2.3.17"
   if su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   gem install bundler:2.3.17 ' " ; then
-	{
-		warning Failed to gem install bundler:2.3.17
-	}
-	fi
+  {
+    warning Failed to gem install bundler:2.3.17
+  }
+  fi
   Comment "### bundle bundle install"
   su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" && bundle config build.pg --with-pg-config=${_libpg_bin}/pg_config ' "
   if su - "${SUDO_USER}" -c "bash -c 'cd \"${PROJECTREPO}\" &&   bundle install ' " ; then
-	{
-		warning "Failed to cd \"${PROJECTREPO}\" &&   bundle install"
-	}
-	fi
+  {
+    warning "Failed to cd \"${PROJECTREPO}\" &&   bundle install"
+  }
+  fi
 } # end _bundle_check
 
 
@@ -1621,9 +1804,9 @@ _add_postgress_to_bashrc_zshrc(){
 
 
   Checking "that opt/postgresql@12 can be found"
-	local -i _err=0
-	local _pg_lib=""
-	_pg_lib="$(_try_more_times_find "
+  local -i _err=0
+  local _pg_lib=""
+  _pg_lib="$(_try_more_times_find "
 opt/postgresql@12
 opt/postgres
 opt/postgresql
@@ -1631,12 +1814,12 @@ opt/postgresql
   _err=$?
   if [ $_err -gt 0 ] ; then # failed
   {
-	  echo "${_pg_lib}"
+    echo "${_pg_lib}"
     passed "Failed to find opt/postgresql@12"
-	}
-	fi
-	_pg_lib="$(echo -n "${_pg_lib}" | tail -1)"
-	passed "found of opt/postgresql@12  = ${_pg_lib}"
+  }
+  fi
+  _pg_lib="$(echo -n "${_pg_lib}" | tail -1)"
+  passed "found of opt/postgresql@12  = ${_pg_lib}"
 
 
 
@@ -2383,7 +2566,7 @@ _vpn_check() {
 _darwin__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
 
-	_find_project_location_PROJECT_DIR_F
+  _find_project_location_PROJECT_DIR_F
   local PROJECTSBASEDIR="${PROJECT_DIR_F}"
   local PROJECTREPO="${PROJECT_DIR_F}/loanlink-api"
   local PROJECTGITREPO="git@github.com:LoanLink/loanlink-api.git"
