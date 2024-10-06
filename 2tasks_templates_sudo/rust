@@ -224,10 +224,20 @@ _redhat_flavor_install() {
   Installing "_add_variables_to_bashrc_zshrc for ROOT and USER"
   _add_variables_to_bashrc_zshrc
 
+	chown -R "${SUDO_USER}"   "${USER_HOME}/.rustup"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/bin"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/env"
+
   Installing "ROOT: rustup default stable"
   rustup default stable
   Installing "USER: su - \"${SUDO_USER}\" -c \"rustup default stable\""
   su - "${SUDO_USER}" -c "rustup default stable"
+	chown -R "${SUDO_USER}"   "${USER_HOME}/.rustup"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/bin"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/env"
+
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {

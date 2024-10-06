@@ -179,17 +179,20 @@ _darwin__64() {
   # REF: https://github.com/scopatz/nanorc
   # curl https://raw.githubusercontent.com/scopatz/nanorc/master/install.sh | sh
   wget https://raw.githubusercontent.com/scopatz/nanorc/master/install.sh -O- | sh
-  ls ~/.nanorc
-  cd ~/.nano/
-  cp ~/.nano/javascript.nanorc ~/.nano/typescript.nanorc
-  ersetzeindatei ~/.nano/typescript.nanorc "JavaScript" "Typescript"
-  ersetzeindatei ~/.nano/typescript.nanorc "\.js$"  "\.ts$"
-  sed -i'' 's/\.js$/\.ts$/g' ~/.nano/typescript.nanorc
+  ls "${USER_HOME}/.nanorc"
+  cd "${USER_HOME}/.nano/" || exit 1
+  cp "${USER_HOME}/.nano/javascript.nanorc" "${USER_HOME}/.nano/typescript.nanorc"
+  ersetzeindatei "${USER_HOME}/.nano/typescript.nanorc" "JavaScript" "Typescript"
+  ersetzeindatei "${USER_HOME}/.nano/typescript.nanorc" "\.js$"  "\.ts$"
+  sed -i'' 's/\.js$/\.ts$/g' "${USER_HOME}/.nano/typescript.nanorc"
   # from
   # syntax "JavaScript" "\.js$"
   # syntax "Typescript" "\.ts$"
   # in   ~/.nano/typescript.nanorc
   ersetzeindatei ~/.nanorc 'include "~/.nano/tex.nanorc"' 'include "~/.nano/tex.nanorc"\ninclude "~/.nano/typescript.nanorc"'
+  chown -R "${SUDO_USER}" "${USER_HOME}/.nano/"
+	chown -R "${SUDO_USER}" "${USER_HOME}/.nanorc"
+
 } # end _darwin__64
 
 
@@ -558,6 +561,7 @@ _download_compile_install() {
   file_does_not_exist_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
   return 0
 } # end _download_and_install
+
 _build_add_nanorc(){
   # Sample use
   #  _build_add_nanorc "${DOWNLOADFOLDER}" "${CODENAME}" "${USER_HOME}"
@@ -645,6 +649,7 @@ _build_add_nanorc(){
   nano --version
   return 0
 } # end _build_add_nanorc
+
 _mingw__64() {
     local CODENAME=$(_version "win" "nano*.*.*.*.exe")
     # THOUGHT        local CODENAME="nano-4.3.3.24545.exe"
@@ -675,5 +680,3 @@ _main() {
 _main
 
 echo ":)"
-
-
