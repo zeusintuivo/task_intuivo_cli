@@ -2246,21 +2246,50 @@ _darwin_flavor_1() {
 
   Installing "## macOS Preferences"
 
-  Comment "# Set a blazingly fast keyboard repeat rate ms"
-  defaults write NSGlobalDomain KeyRepeat -int 1
+	sudo defaults write NSGlobalDomain KeyRepeat -int 2
+	sudo defaults write NSGlobalDomain InitialKeyRepeat -int 25
+	sudo defaults write NSGlobalDomain InitialKeyRepeat_Level_Saved -int 1
+	Comment "# Keyboard - KeyRepeat"
+	sudo defaults read NSGlobalDomain KeyRepeat
+	defaults read NSGlobalDomain KeyRepeat
+	Comment "# Keyboard - Delay until"
+  sudo defaults read NSGlobalDomain InitialKeyRepeat
+  defaults read NSGlobalDomain InitialKeyRepeat
+	Comment "# Keyboard KeyLevel"
+	sudo defaults read NSGlobalDomain InitialKeyRepeat_Level_Saved
+	defaults read NSGlobalDomain InitialKeyRepeat_Level_Saved
 
-  Comment "# Set a shorter Delay until key repeat ms"
-  defaults write NSGlobalDomain InitialKeyRepeat -int 10
+	Comment "# Keyboard - KeyRepeat  - Set a blazingly fast keyboard repeat rate ms"
+  anounce KeyRepeat 120 Slow, 2 Fast,  From Fast to Slow 2,6,12,30,60,90,120
+	anounce_comand defaults write NSGlobalDomain KeyRepeat -int 2
+
+  Comment "# Keyboard - Delay until repeat - Set a shorter Delay until key repeat ms"
+  anounce KeyDelay Until Repeat 300000 off,   short 15, long 120, short delay to longer 12,15,25,35,68,94,120
+	anounce_comand defaults write NSGlobalDomain InitialKeyRepeat -int 25
+
+	Comment "# Keyboard KeyLevel Saved"
+	anounce KeyLevel 1 fast, 1 short, 6 slow, 6 long
+	anounce_comand defaults write NSGlobalDomain InitialKeyRepeat_Level_Saved -int 1
+
+	Comment "# Keyboard - KeyRepeat "
+	sudo defaults read NSGlobalDomain KeyRepeat
+	defaults read NSGlobalDomain KeyRepeat
+  Comment "# Keyboard - Delay until"
+  sudo defaults read NSGlobalDomain InitialKeyRepeat
+  defaults read NSGlobalDomain InitialKeyRepeat
+	Comment "# Keyboard KeyLevel"
+	sudo defaults read NSGlobalDomain InitialKeyRepeat_Level_Saved
+	defaults read NSGlobalDomain InitialKeyRepeat_Level_Saved
 
   Comment "# Add a context menu item for showing the Web Inspector in web views"
-  defaults write NSGlobalDomain WebKitDeveloperExtras -bool true
+  anounce_comand defaults write NSGlobalDomain WebKitDeveloperExtras -bool true
 
   Comment "# Show the ~/Library folder"
-  chflags nohidden ~/Library
+  anounce_comand chflags nohidden "${USER_HOME}/Library"
 
   Comment "# Store screenshots in subfolder on desktop"
-  mkdir -p ~/Desktop/Screenshots
-  defaults write com.apple.screencapture location ~/Desktop/Screenshots
+  anounce_comand mkdir -p "${USER_HOME}/Desktop/Screenshots"
+  anounce_comand defaults write com.apple.screencapture location "${USER_HOME}/Desktop/Screenshots"
   SUDO_GRP='staff'
   [[  -e "${USER_HOME}/.bash_profile" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.bash_profile"
   [[  -e "${USER_HOME}/.bashrc" ]] && chown -R "${SUDO_USER}" "${USER_HOME}/.bashrc"
