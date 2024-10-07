@@ -20,7 +20,7 @@ echo "0. sudologic $0:$LINENO       THISSCRIPTPARAMS:${THISSCRIPTPARAMS:-}"
 
 echo "0. sudologic $0 Start Checking realpath  "
 if ! ( command -v realpath >/dev/null 2>&1; )  ; then
-{  
+{
   echo "... realpath not found. Downloading REF:https://github.com/swarmbox/realpath.git "
   if [[ -n "${USER_HOME}" ]] ;  then
   {
@@ -175,8 +175,17 @@ load_struct_testing(){
     local -r __caller=$(caller)
     local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
     local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
-
+    #                awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    local output="$(awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}")"
+    if ( command -v pygmentize >/dev/null 2>&1; )  ; then
+    {
+      echo "${output}" | pygmentize -g
+    }
+    else
+    {
+      echo "${output}"
+    }
+    fi
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
     exit 1
@@ -525,7 +534,17 @@ directory_exists_with_spaces "${USER_HOME}"
     local -r __caller=$(caller)
     local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
     local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    #                awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    local output="$(awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}")"
+    if ( command -v pygmentize >/dev/null 2>&1; )  ; then
+    {
+      echo "${output}" | pygmentize -g
+    }
+    else
+    {
+      echo "${output}"
+    }
+    fi
 
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
@@ -543,7 +562,17 @@ directory_exists_with_spaces "${USER_HOME}"
     local -r __caller=$(caller)
     local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
     local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    #               awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    local output="$(awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}")"
+    if ( command -v pygmentize >/dev/null 2>&1; )  ; then
+    {
+      echo "${output}" | pygmentize -g
+    }
+    else
+    {
+      echo "${output}"
+    }
+    fi
 
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
@@ -561,7 +590,17 @@ directory_exists_with_spaces "${USER_HOME}"
     local -r __caller=$(caller)
     local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
     local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    #               awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    local output="$(awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}")"
+    if ( command -v pygmentize >/dev/null 2>&1; )  ; then
+    {
+      echo "${output}" | pygmentize -g
+    }
+    else
+    {
+      echo "${output}"
+    }
+    fi
 
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
@@ -806,10 +845,20 @@ _redhat_flavor_install() {
   Installing "_add_variables_to_bashrc_zshrc for ROOT and USER"
   _add_variables_to_bashrc_zshrc
 
+	chown -R "${SUDO_USER}"   "${USER_HOME}/.rustup"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/bin"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/env"
+
   Installing "ROOT: rustup default stable"
   rustup default stable
   Installing "USER: su - \"${SUDO_USER}\" -c \"rustup default stable\""
   su - "${SUDO_USER}" -c "rustup default stable"
+	chown -R "${SUDO_USER}"   "${USER_HOME}/.rustup"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/bin"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/env"
+
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
@@ -925,9 +974,122 @@ _ubuntu_22__aarch64() {
 
 _darwin__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  Checking "if rust is installed by brew and attempting remove it"
+  local -i _err=0
+ 	local _target_bin_brew=""
+ 	_target_bin_brew="$(_find_executable_for "brew" "--prefix"  "bin/brew")"   # tail -1
+  _err=$?
+  if [ $_err -gt 0 ] ; then # failed
+  {
+    echo "${_target_bin_brew}"
+    failed "to find brew"
+  }
+  fi
+  Checking "_target_bin_brew:<${_target_bin_brew}>"
+  _target_bin_brew="$(echo "${_target_bin_brew}" | tail -1 | xargs)"
+  ensure "${_target_bin_brew}" or "failed to check executable for brew <${_target_bin_brew}>"
+  _target_bin_brew="$(echo -n "${_target_bin_brew}" | tail -1)"
+	enforce_variable_with_value _target_bin_brew "${_target_bin_brew}"
+  su - "${SUDO_USER}" -c "${_target_bin_brew} list --formula"
+  if ( ! su - "${SUDO_USER}" -c "${_target_bin_brew} list rust" >/dev/null 2>&1; ); then
+  {
+	  passed "rust not found"
+	}
+  else
+	{
+		passed "rust found"
+		if ( ! su - "${SUDO_USER}" -c "${_target_bin_brew} remove rust" >/dev/null 2>&1; ); then
+    {
+      warning "could not remove rust from brew"
+    }
+    else
+    {
+      passed "removed rust from brew"
+    }
+    fi
+  }
+	fi
+
+  if (install_requirements "linux" "
+      unzip
+      curl
+      wget
+    "
+    ); then
+  {
+      warning ": failed to install some deps "
+  }
+  fi
+  verify_is_installed "
+    unzip
+    curl
+    wget
+    tar
+  "
+  Installing "_add_variables_to_bashrc_zshrc for ROOT and USER"
+  _add_variables_to_bashrc_zshrc
+
   export ARCHFLAGS="-arch $(uname -m)"
-  ARCHFLAGS="-arch $(uname -m)" curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-  su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
+
+  ARCHFLAGS="-arch $(uname -m)"
+  Installing "ROOT install:ARCHFLAGS='-arch ${ARCHFLAGS-}' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup.sh
+  local cpwd=$(realpath .)
+  local -i _err=0
+  chmod +x "${cpwd}/rustup.sh"
+  ARCHFLAGS='-arch ${ARCHFLAGS-}' "${cpwd}/rustup.sh" --no-modify-path --target /root --quiet -y
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    rm -rf "${cpwd}/rustup.sh"
+    failed "Failed to install for root err:${_err}"
+  }
+  else
+  {
+    passed "install for root"
+  }
+  fi
+  [[ ! -e "${USER_HOME}/.cargo" ]] && cp -R /root/.cargo "${USER_HOME}/.cargo"
+  chmod -R 755 "${USER_HOME}/.cargo"
+	chown -R "${SUDO_USER}"   "${USER_HOME}/.rustup"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/bin"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/env"
+  Installing "USER install(${USER_HOME}):su - \"${SUDO_USER}\" -c \"ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh\""
+  # if su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh" ; then
+  chown -R "${SUDO_USER}" "${cpwd}/rustup.sh"
+  su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' "${cpwd}/rustup.sh" --no-modify-path --target /home/zeus --quiet -y"
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    rm -rf "${cpwd}/rustup.sh"
+    failed "Failed to install for user err:${_err}"
+  }
+  else
+  {
+    passed "install for user"
+  }
+  fi
+  rm -rf "${cpwd}/rustup.sh"
+  Installing "_add_variables_to_bashrc_zshrc for ROOT and USER"
+  _add_variables_to_bashrc_zshrc
+
+	chown -R "${SUDO_USER}"   "${USER_HOME}/.rustup"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/bin"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/env"
+
+  Installing "ROOT: rustup default stable"
+  rustup default stable
+  Installing "USER: su - \"${SUDO_USER}\" -c \"rustup default stable\""
+  su - "${SUDO_USER}" -c "rustup default stable"
+	chown -R "${SUDO_USER}"   "${USER_HOME}/.rustup"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/bin"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/env"
+
+
 } # end _darwin__64
 
 _darwin__arm64() {
