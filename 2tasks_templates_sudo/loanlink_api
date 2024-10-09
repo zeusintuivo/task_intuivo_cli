@@ -192,8 +192,8 @@ _debian_flavor_install() {
 
 
 PROJECT_DIR_F=""  # GLOBAL
-+ set -E -o functrace
-+ sudo cp ~/jetson-files/deepstream-6.3_6.3.0-1_arm64.deb /media/jetpack/flash/home/jetpack;
+# + set -E -o functrace
+# + sudo cp ~/jetson-files/deepstream-6.3_6.3.0-1_arm64.deb /media/jetpack/flash/home/jetpack;
 PROJECTSBASEDIR="${PROJECT_DIR_F-}" # global
 PROJECTREPO="${PROJECT_DIR_F-}/processing_data" #  global
 PROJECTGITREPO="git@github.com:agrivero-ai/processing_data.git" # global
@@ -343,7 +343,23 @@ _fedora__64() {
 
 _fedora_37__64(){
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _redhat_flavor_install
+  PROJECTREPO=/home/zeus/_/work/intuivo/projects/ical_fetch_rust
+
+  if [[ ! -f "${PROJECTREPO}/.step1_brew_check_requirements_postgress_12_install"  ]] ; then
+  {
+    Working "Step .step1_brew_check_requirements_postgress_12_install"
+    _brew_check_requirements_postgress_12_install
+    local _touch_name="\"${PROJECTREPO}/.step1_brew_check_requirements_postgress_12_install\""
+    _execute_project_command "${PROJECTREPO}" "touch ${_touch_name} "
+  }
+  fi
+  if [[ ! -f "${PROJECTREPO}/.step7_postgres_start_check"  ]] ; then
+  {
+    Working "Step .step7_postgres_start_check"
+    _postgres_start_check "${PROJECTREPO}"
+    _execute_project_command "${PROJECTREPO}" "touch \"${PROJECTREPO}/.step7_postgres_start_check\" "
+  }
+  fi
 } # end _fedora_37__64
 
 _gentoo__32() {
