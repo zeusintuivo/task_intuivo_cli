@@ -185,16 +185,56 @@ _fedora_38__64() {
 } # end _fedora_38__64
 
 _fedora_39__64() {
-  trap "echo Error:$?" ERR INT
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   local _parameters="${*-}"
   local -i _err=0
-  _err=$?
+  dnf copr enable solopasha/hyprland -y
+	_err=$?
   if [ ${_err} -gt 0 ] ; then
   {
-    failed "while running callsomething above _err:${_err}"
+    failed "$0:$LINENO while adding copr repo hypr _err:${_err}"
   }
   fi
-  _redhat_flavor_install "${_parameters-}"
+	dnf update -y
+	_err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO while running update _err:${_err}"
+  }
+  fi
+	dnf install hyprland hyprland-devel  -vy
+	_err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO while installing hyprland hyprland-devel  _err:${_err}"
+  }
+  fi
+	mkdir -p "${USER_HOME}/_/software/hypr/"
+  chown -R "${SUDO_USER}" "${USER_HOME}/_/software/hypr/"
+	cd "${USER_HOME}/_/software/hypr/" || exit 1
+  git clone https://github.com/prasanthrangan/hyprdots.git prasanthrangan/hyprdots --depth 1 --branch main
+	chown -R "${SUDO_USER}" "${USER_HOME}/_/software/hypr/prasanthrangan/"
+	cd "${USER_HOME}/_/software/hypr/prasanthrangan/" || exit 1
+
+	_err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO while adding copr repo hypr _err:${_err}"
+  }
+  fi
+	_err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO while adding copr repo hypr _err:${_err}"
+  }
+  fi
+	_err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO while adding copr repo hypr _err:${_err}"
+  }
+  fi
+
 } # end _fedora_39__64
 
 _gentoo__32() {
