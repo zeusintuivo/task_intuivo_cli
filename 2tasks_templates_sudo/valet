@@ -28,6 +28,35 @@ _debian_flavor_install(){
   return 0
 } # end _debian_flavor_install
 
+_package_list_installer() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local package packages
+  packages="${*}"
+  local -i _err
+  if ! install_requirements "linux" "${packages}" ; then
+  {
+    warning "installing requirements. ${CYAN} attempting to install one by one"
+    while read -r package; do
+    {
+      [[ -z "${package}" ]] && continue
+      if ! install_requirements "linux" "${package}" ; then
+      {
+        _err=$?
+        if [ ${_err} -gt 0 ] ; then
+        {
+          echo -e "${RED}"
+          echo failed to install requirements "${package}"
+          echo -e "${RESET}"
+        }
+        fi
+      }
+      fi
+    }
+    done <<< "${packages}"
+  }
+  fi
+} # end _package_list_installer
+
 _valet_steps_php_composer_pecl_valet_install(){
 
   Checking "$0:$LINENO find php for user"
@@ -140,7 +169,7 @@ _valet_steps_php_composer_pecl_valet_install(){
   if [ $_err -gt 0 ] ; then
   {
     warning "could not run composer as user $SUDO_USER -  composer global update  - or it failed trying as root _err:$_err"
-	  ( "$PHPS" "$COMPOSERS" global update )
+    ( "$PHPS" "$COMPOSERS" global update )
     _err=$?
     if [ $_err -gt 0 ] ; then
     {
@@ -157,7 +186,7 @@ _valet_steps_php_composer_pecl_valet_install(){
   if [ $_err -gt 0 ] ; then
   {
     warning "could not run composer as user $SUDO_USER -  composer global require cpriego/valet-linux  - or it failed trying as root _err:$_err"
-	  ( "$PHPS" "$COMPOSERS" global require cpriego/valet-linux )
+    ( "$PHPS" "$COMPOSERS" global require cpriego/valet-linux )
     _err=$?
     if [ $_err -gt 0 ] ; then
     {
@@ -202,7 +231,7 @@ _valet_steps_php_composer_pecl_valet_install(){
   if [ $_err -gt 0 ] ; then
   {
     warning "could not run valet as user $SUDO_USER -  valet install  - or it failed trying as root _err:$_err"
-	  ( "$VALETS"  install )
+    ( "$VALETS"  install )
     _err=$?
     if [ $_err -gt 0 ] ; then
     {
@@ -220,7 +249,7 @@ _valet_steps_php_composer_pecl_valet_install(){
   if [ $_err -gt 0 ] ; then
   {
     warning "could not run valet as user $SUDO_USER -  valet status  - or it failed trying as root _err:$_err"
-	  ( "$PHPS" "$VALETS"  status )
+    ( "$PHPS" "$VALETS"  status )
     _err=$?
     if [ $_err -gt 0 ] ; then
     {
@@ -238,7 +267,7 @@ _valet_steps_php_composer_pecl_valet_install(){
   if [ $_err -gt 0 ] ; then
   {
     warning "could not run valet as user $SUDO_USER -  valet restart  - or it failed trying as root _err:$_err"
-	  ( "$PHPS" "$VALETS"  restart )
+    ( "$PHPS" "$VALETS"  restart )
     _err=$?
     if [ $_err -gt 0 ] ; then
     {
@@ -255,7 +284,7 @@ _valet_steps_php_composer_pecl_valet_install(){
   if [ $_err -gt 0 ] ; then
   {
     warning "could not run valet as user $SUDO_USER -  valet status  - or it failed trying as root _err:$_err"
-	  ( "$PHPS" "$VALETS"  status )
+    ( "$PHPS" "$VALETS"  status )
     _err=$?
     if [ $_err -gt 0 ] ; then
     {
@@ -273,7 +302,7 @@ _valet_steps_php_composer_pecl_valet_install(){
   if [ $_err -gt 0 ] ; then
   {
     warning "could not run valet as user $SUDO_USER -  valet links  - or it failed trying as root _err:$_err"
-	  ( "$PHPS" "$VALETS"  links )
+    ( "$PHPS" "$VALETS"  links )
     _err=$?
     if [ $_err -gt 0 ] ; then
     {
@@ -285,16 +314,17 @@ _valet_steps_php_composer_pecl_valet_install(){
   fi
   passed "$0:$LINENO tasks "
 } # end _valet_steps_php_composer_pecl_valet_install
+
 _redhat_flavor_install(){
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  install_requirements "linux" "
+  local packages="
     # RedHat Flavor only
     nss-tools
     jq
     xsel
-		# fedora 37
-		php-intl
-		php-mbstring
+    # fedora 37 _redhat_flavor_install
+    php-intl
+    php-mbstring
     php-devel
     php-json
     php-cli
@@ -303,19 +333,19 @@ _redhat_flavor_install(){
     php-mysqlnd
     php-gd
     php-curl
-    php-psr
+    # php-psr
     php-zip
     php-fpm
     php-bcmath
     php-ctype
     php-fileinfo
-    php-mbstring
     php-pdo
     php-tokenizer
-    php-xml
     php-gmp
     php-mysqli
+    # _redhat_flavor_install
   "
+  _package_list_installer "${packages}"
   verify_is_installed "
     # nss-tools
     jq
@@ -379,6 +409,113 @@ _fedora__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _fedora__64
+
+_fedora_37__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local packages="
+    # RedHat Flavor only
+    nss-tools
+    jq
+    xsel
+    # fedora 37
+    php-intl
+    php-mbstring
+    php-devel
+    php-json
+    php-cli
+    php-xml
+    php-common
+    php-mysqlnd
+    php-gd
+    php-curl
+    # php-psr
+    php-zip
+    php-fpm
+    php-bcmath
+    php-ctype
+    php-fileinfo
+    php-pdo
+    php-tokenizer
+    php-gmp
+    php-mysqli
+    # fedora 37
+  "
+  _package_list_installer "${packages}"
+  verify_is_installed "
+    # nss-tools
+    jq
+    xsel
+    composer
+    php
+  "
+  setenforce 0
+  echo "Permanent:
+
+    Open /etc/selinux/config
+    Change SELINUX=enforcing to SELINUX=permissive"
+
+  _valet_steps_php_composer_pecl_valet_install
+
+} # end _fedora_37__64
+
+_fedora_39__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  Comment "Based on REF:https://medium.com/@donfiealex/rapid-guide-set-up-php-8-3-on-fedora-linux-39-83bbcc908f2d"
+   yes | dnf install https://rpms.remirepo.net/fedora/remi-release-39.rpm
+  yes | dnf module reset php
+  yes | dnf module enable php:remi-8.3
+  local packages="
+    # RedHat Flavor only
+    nss-tools
+    jq
+    xsel
+    # fedora 39
+    php
+    php-mysqlnd
+    php-intl
+    php-mbstring
+    php-devel
+    php-json
+    php-cli
+    php-common
+    php-gd
+    php-curl
+    php-zip
+    php-fpm
+    php-bcmath
+    php-ctype
+    php-fileinfo
+    php-pdo
+    php-tokenizer
+    php-xml
+    php-gmp
+    php-mysqli
+    # fedora 39
+  "
+  _package_list_installer "${packages}"
+  verify_is_installed "
+    # nss-tools
+    jq
+    xsel
+    composer
+    php
+  "
+  if setenforce 0 ; then
+  {
+    passed "/etc/selinux/config is already SELINUX=permissive"
+  }
+  else
+	{
+    echo "Permanent:
+    Open /etc/selinux/config
+    Change SELINUX=enforcing to SELINUX=permissive
+    Change SELINUX=enforcing to SELINUX=disabled
+	  "
+	}
+  fi
+  _valet_steps_php_composer_pecl_valet_install
+
+} # end _fedora_39__64
 
 _gentoo__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR

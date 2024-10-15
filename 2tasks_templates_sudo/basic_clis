@@ -4,15 +4,17 @@
 #
 _package_list_installer() {
   # trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  local package packages="${@}"
+  local package packages
+  packages="${*}"
+  local -i _err
   trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer i3status" && echo -e "${RESET}" && return 0' ERR
 
   if ! install_requirements "linux" "${packages}" ; then
   {
     warning "installing requirements. ${CYAN} attempting to install one by one"
-    while read package; do
+    while read -r package; do
     {
-      [ -z ${package} ] && continue
+      [[ -z "${package}" ]] && continue
       if ! install_requirements "linux" "${package}" ; then
       {
         _err=$?
