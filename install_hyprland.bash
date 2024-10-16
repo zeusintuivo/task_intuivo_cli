@@ -802,20 +802,20 @@ _fedora_38__64() {
     failed "while running callsomething above _err:${_err}"
   }
   fi
-  _redhat_flavor_install "${_parameters-}"
 } # end _fedora_38__64
 
 _fedora_39__64() {
-  trap "echo Error:$?" ERR INT
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   local _parameters="${*-}"
   local -i _err=0
-  _err=$?
+  dnf install -vy hyprland
+  dnf install -vy hyprland-devel # If you want to build plugins (use hyprpm)
+	_err=$?
   if [ ${_err} -gt 0 ] ; then
   {
     failed "while running callsomething above _err:${_err}"
   }
   fi
-  _redhat_flavor_install "${_parameters-}"
 } # end _fedora_39__64
 
 _gentoo__32() {
