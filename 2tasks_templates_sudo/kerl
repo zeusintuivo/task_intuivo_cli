@@ -208,7 +208,7 @@ _debian_flavor_install() {
 
    "
   _package_list_installer "${packages}"
-  
+
 	_git_clone "https://github.com/kerl/kerl.git" "${USER_HOME}/.kerl_install"
   local MSG=$(_install_and_add_variables_to_bashrc_zshrc)
   echo "${MSG}"
@@ -239,8 +239,8 @@ _redhat_flavor_install() {
   # Package openssl1.1-devel-1:1.1.1q-2.fc37.x86_64 is already installed.
   # Package ed-1.18-2.fc37.x86_64 is already installed.
   # Package emacs-common-1:28.3-0.rc1.fc37.x86_64 is already installed
-  _package_list_installer "openssl1.1
-   	openssl1.1-devel-1"
+  # _package_list_installer "openssl1.1
+  #  	openssl1.1-devel-1"
   local package packages="
     # Fedora 37
     wget
@@ -473,4 +473,3 @@ _finale_message(){
            \/      \/      \/      \//_____/       \/
   "
 } # end _finale_message
-
