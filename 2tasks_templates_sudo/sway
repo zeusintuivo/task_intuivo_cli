@@ -423,6 +423,21 @@ _fedora_39__64() {
   _redhat_flavor_install "${_parameters-}"
 } # end _fedora_39__64
 
+_fedora_40__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local _parameters="${*-}"
+  local -i _err=0
+  dnf group install "Sway Desktop" -vy
+	_err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running callsomething above _err:${_err}"
+  }
+  fi
+  _redhat_flavor_install "${_parameters-}"
+} # end _fedora_40__64
+
+
 _gentoo__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
