@@ -1,62 +1,5 @@
 #!/bin/bash
 
-_package_list_installer() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  local package packages="${@}"
-  # trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer kiex" && echo -e "${RESET}" && return 0' ERR
-
-  if ! install_requirements "linux" "${packages}" ; then
-  {
-    warning "installing requirements. ${CYAN} attempting to install one by one"
-    while read package; do
-    {
-      [ -z ${package} ] && continue
-      if ! install_requirements "linux" "${package}" ; then
-      {
-        _err=$?
-        if [ ${_err} -gt 0 ] ; then
-        {
-          echo -e "${RED}"
-          echo failed to install requirements "${package}"
-          echo -e "${RESET}"
-        }
-        fi
-      }
-      fi
-    }
-    done <<< "${packages}"
-  }
-  fi
-} # end _package_list_installer
-
-_git_clone() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO  _git_clone EVM" && echo -e "${RESET}" && return 0' ERR
-  local _source="${1}"
-  local _target="${2}"
-  Checking "${SUDO_USER}" "${_target}"
-  pwd
-  if  it_exists_with_spaces "${_target}" ; then # && it_exists_with_spaces "${_target}/.git" ; then
-  {
-    if it_exists_with_spaces "${_target}/.git" ; then
-    {
-      cd "${_target}"
-      git config pull.rebase false
-      git fetch
-      git pull
-    }
-    fi
-  }
-  else
-  {
-   git clone "${_source}" "${_target}"
-  }
-  fi
-  chown -R "${SUDO_USER}" "${_target}"
-
-} # _git_clone
-
-
 _install_and_add_variables_to_bashrc_zshrc(){
   trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _install_and_add_variables_to_bashrc_zshrc kiex" && echo -e "${RESET}" && return 0' ERR
 
@@ -91,11 +34,10 @@ _install_and_add_variables_to_bashrc_zshrc(){
 
   local KIEX_SH_CONTENT='
 
+
 # KIEX
 if [[ -e "'${USER_HOME}'/.kiex" ]] ; then
 {
-  test -s "'${USER_HOME}'/.kiex/scripts/kiex" && export KIEX_ROOT="'${USER_HOME}'/.kiex/scripts"
-  test -s "'${USER_HOME}'/.kiex/scripts/kiex" && export PATH="'${USER_HOME}'/.kiex/scripts:${PATH}"
   test -s "'${USER_HOME}'/.kiex/scripts/kiex" && source "'${USER_HOME}'/.kiex/scripts/kiex"
 }
 fi
@@ -117,10 +59,7 @@ fi
   }
   done <<< "${INITFILES}"
   # type kiex
-  test -s "'${USER_HOME}'/.kiex/scripts/kiex" && unlink "${USER_HOME}/.kiex/scripts/kiex"
-	cp "${USER_HOME}/.kiex/kiex"  "${USER_HOME}/.kiex/scripts"
-  export PATH="${USER_HOME}/.kiex/scripts:${PATH}"
-	source "${USER_HOME}/.kiex/scripts/kiex"
+  test -s "'${USER_HOME}'/.kiex/scripts/kiex" && source "${USER_HOME}/.kiex/scripts/kiex"
   _finale_message
 
 } # _add_variables_to_bashrc_zshrc

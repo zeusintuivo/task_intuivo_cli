@@ -624,114 +624,12 @@ directory_exists_with_spaces "${USER_HOME}"
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 
-_package_list_installer() {
-  # trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  local package packages="${@}"
-  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer kerl" && echo -e "${RESET}" && return 0' ERR
-
-  if ! install_requirements "linux" "${packages}" ; then
-  {
-    warning "installing requirements. ${CYAN} attempting to install one by one"
-    while read package; do
-    {
-      [ -z ${package} ] && continue
-      if ! install_requirements "linux" "${package}" ; then
-      {
-        _err=$?
-        if [ ${_err} -gt 0 ] ; then
-        {
-          echo -e "${RED}"
-          echo failed to install requirements "${package}"
-          echo -e "${RESET}"
-        }
-        fi
-      }
-      fi
-    }
-    done <<< "${packages}"
-  }
-  fi
-} # end _package_list_installer
-
-_git_clone() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO  _git_clone KERL" && echo -e "${RESET}" && return 0' ERR
-  local _source="${1}"
-  local _target="${2}"
-  Checking "${SUDO_USER}" "${_target}"
-  local _cwd="$(pwd)"
-  Checking "_cwd:${_cwd}"
-  if  it_exists_with_spaces "${_target}" ; then # && it_exists_with_spaces "${_target}/.git" ; then
-  {
-    if it_exists_with_spaces "${_target}/.git" ; then
-    {
-      cd "${_target}"
-      if git branch --set-upstream-to=origin/master master ; then
-      {
-        warning "Could not do git branch --set-upstream-to=origin/master master"
-      }
-      fi
-      if git branch --set-upstream-to=origin/main main ; then
-      {
-        warning "Could not do git branch --set-upstream-to=origin/main main"
-      }
-      fi
-      if git config pull.rebase false ; then
-      {
-        warning "Could not git config pull.rebase false"
-      }
-      fi
-      if git fetch  ; then
-      {
-        warning Could not git fetch
-      }
-      fi
-      if git pull  ; then
-      {
-        warning Could not git pull
-      }
-      fi
-    }
-    fi
-  }
-  else
-  {
-    if git clone "${_source}" "${_target}"  ; then
-    {
-      warning Could not git clone "${_source}" "${_target}"
-    }
-    else
-		{
-      if git branch --set-upstream-to=origin/master master ; then
-      {
-        warning "Could not do git branch --set-upstream-to=origin/master master"
-      }
-      fi
-      if git branch --set-upstream-to=origin/main main ; then
-      {
-        warning "Could not do git branch --set-upstream-to=origin/main main"
-      }
-      fi
-      if git config pull.rebase false ; then
-      {
-        warning "Could not git config pull.rebase false"
-      }
-      fi
-		}
-    fi
-  }
-  fi
-  chown -R "${SUDO_USER}" "${_target}"
-  cd "${_cwd}"
-} # end _git_clone
-
-
 _install_and_add_variables_to_bashrc_zshrc(){
   trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _install_and_add_variables_to_bashrc_zshrc KERL" && echo -e "${RESET}" && return 0' ERR
 
   local KERL_HOME="${USER_HOME}/.kerl_install"
-  cd "${KERL_HOME}"
-	mkdir -p "${USER_HOME}/.kerl"
+  cd "${KERL_HOME}" || exit 1
+  mkdir -p "${USER_HOME}/.kerl"
 
   local KERL_SH_CONTENT='
 
@@ -748,9 +646,9 @@ _install_and_add_variables_to_bashrc_zshrc(){
    .bash_profile
    .profile
   "
-  while read INITFILE; do
+  while read -r INITFILE; do
   {
-    [ -z ${INITFILE} ] && continue
+    [[ -z "${INITFILE}" ]] && continue
     Checking "${USER_HOME}/${INITFILE}"
     # if ! it_exists_with_spaces "${_target}" ; then
     # {
@@ -772,14 +670,14 @@ _install_and_add_variables_to_bashrc_zshrc(){
 
 '
   INITFILE=""
- 	INITFILES="
+   INITFILES="
    .zshrc
    .zshenv
    .zprofile
   "
-  while read INITFILE; do
+  while read -r INITFILE; do
   {
-    [ -z ${INITFILE} ] && continue
+    [[ -z "${INITFILE}" ]] && continue
     Checking "${USER_HOME}/${INITFILE}"
     # if ! it_exists_with_spaces "${_target}" ; then
     # {
@@ -795,7 +693,7 @@ _install_and_add_variables_to_bashrc_zshrc(){
   file_exists_with_spaces "${KERL_HOME}/kerl"
   export PATH="${KERL_HOME}:${PATH}"
   source "${KERL_HOME}/bash_completion/kerl"
-	_finale_message
+  _finale_message
 
 } # _add_variables_to_bashrc_zshrc
 
@@ -803,7 +701,6 @@ _debian_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _git_clone "https://github.com/robisonsantos/kerl.git" "${USER_HOME}/.kerl"
   apt update -y
-  trap 'echo -e "${RED}" && echo "ERROR err:$_err failed $0:$LINENO _debian_flavor_install kerl" && echo -e "${RESET}" && return 0' ERR
   local package packages="
     wget
     openssl
@@ -830,8 +727,9 @@ _debian_flavor_install() {
    "
   _package_list_installer "${packages}"
 
-	_git_clone "https://github.com/kerl/kerl.git" "${USER_HOME}/.kerl_install"
-  local MSG=$(_install_and_add_variables_to_bashrc_zshrc)
+  _git_clone "https://github.com/kerl/kerl.git" "${USER_HOME}/.kerl_install"
+  local MSG=""
+  MSG=$(_install_and_add_variables_to_bashrc_zshrc)
   echo "${MSG}"
   _finale_message
 } # end _debian_flavor_install
@@ -840,9 +738,9 @@ _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _git_clone "https://github.com/robisonsantos/kerl.git" "${USER_HOME}/.kerl"
   dnf groupinstall -y 'Development Tools' 'C Development Tools and Libraries'
-	dnf build-dep erlang -y --allowerasing # --skip-broken
+  dnf build-dep erlang -y --allowerasing # --skip-broken
 
-	# Package make-1:4.3-11.fc37.x86_64 is already installed.
+  # Package make-1:4.3-11.fc37.x86_64 is already installed.
   # Package gcc-12.3.1-1.fc37.x86_64 is already installed.
   # Package gcc-c++-12.3.1-1.fc37.x86_64 is already installed.
   # Package autoconf-2.71-4.fc37.noarch is already installed.
@@ -861,7 +759,7 @@ _redhat_flavor_install() {
   # Package ed-1.18-2.fc37.x86_64 is already installed.
   # Package emacs-common-1:28.3-0.rc1.fc37.x86_64 is already installed
   # _package_list_installer "openssl1.1
-  #  	openssl1.1-devel-1"
+  #    openssl1.1-devel-1"
   local package packages="
     # Fedora 37
     wget
@@ -877,13 +775,13 @@ _redhat_flavor_install() {
     flex
     compat-flex
     unixODBC-gui-qt
-		unixODBC-devel
+    unixODBC-devel
     erlang-odbc
     erlang-xmlrpc
     erlang-ssh
     erlang-tftp
     erlang-tools
-		erlang-ezlib
+    erlang-ezlib
     erlang-yconf
     erlang-riaknostic
     erlang-riak_pb
@@ -895,34 +793,35 @@ _redhat_flavor_install() {
     # libqt5opengl5-devel
     ncurses-devel
     wxGTK3-devel
-		wxGTK3-docs
-		wxGTK-devel
-		wxGTK-docs
-		compat-wxGTK3-gtk2-devel
-		compat-wxGTK3-gtk2-media
-		compat-wxGTK3-gtk2-gl
-		compat-wxGTK3-gtk2
-		wxGTK-webview
-		wxGTK3-gl
+    wxGTK3-docs
+    wxGTK-devel
+    wxGTK-docs
+    compat-wxGTK3-gtk2-devel
+    compat-wxGTK3-gtk2-media
+    compat-wxGTK3-gtk2-gl
+    compat-wxGTK3-gtk2
+    wxGTK-webview
+    wxGTK3-gl
     # gtk3-devel
     # wx-common
-		wxGTK
-		wxGTK3
-		wxGlade
-		wxBase3
-		wxBase
-		erlang-wx
-		commons-compiler-jdk
-		javac@https://download.oracle.com/java/21/latest/jdk-21_linux-x64_bin.rpm
-		glib
-		glib-devel
-		libiodbc
-		libiodbc-devel
+    wxGTK
+    wxGTK3
+    wxGlade
+    wxBase3
+    wxBase
+    erlang-wx
+    commons-compiler-jdk
+    javac@https://download.oracle.com/java/21/latest/jdk-21_linux-x64_bin.rpm
+    glib
+    glib-devel
+    libiodbc
+    libiodbc-devel
    "
 
   _package_list_installer "${packages}"
   _git_clone "https://github.com/kerl/kerl.git" "${USER_HOME}/.kerl_install"
-  local MSG=$(_install_and_add_variables_to_bashrc_zshrc)
+  local MSG=""
+  MSG=$(_install_and_add_variables_to_bashrc_zshrc)
   echo "${MSG}"
   _finale_message
 } # end _redhat_flavor_install
@@ -1044,7 +943,8 @@ _darwin__arm64() {
   "
   _package_list_installer "${packages}"
   _git_clone "https://github.com/robisonsantos/kerl.git" "${USER_HOME}/.kerl"
-  local MSG=$(_install_and_add_variables_to_bashrc_zshrc)
+  local MSG=""
+  MSG=$(_install_and_add_variables_to_bashrc_zshrc)
   echo "${MSG}"
   _finale_message
 } # end _darwin__arm64

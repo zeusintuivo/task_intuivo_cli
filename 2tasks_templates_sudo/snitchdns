@@ -4,6 +4,8 @@ _debian_flavor_install() {
   # trap  '_trap_on_exit $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  EXIT
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   enforce_variable_with_value USER_HOME "${USER_HOME}"
+  sudo apt install git python3-pip python3-venv libpq-dev
+
   if
     (
     install_requirements "linux" "
@@ -29,6 +31,15 @@ _debian_flavor_install() {
     ufw
     nginx
   "
+  mkdir  "${USER_HOME}/_/software"
+  cd "${USER_HOME}/_/software" || exit 1
+  git clone https://github.com/ctxis/SnitchDNS /opt/snitch
+  cd /opt/snitch || exit 1
+  python3 -m venv venv
+  . venv/bin/activate
+  pip --no-cache-dir install -r requirements.txt
+  deactivate
+
   local PB_VERSION=0.16.7
   local CODENAME="pocketbase_${PB_VERSION}_linux_amd64.zip"
   local TARGET_URL="https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/${CODENAME}"
@@ -93,81 +104,60 @@ _fedora__32() {
 
 _fedora__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  local _parameters="${*-}"
-  local -i _err=0
-  _redhat_flavor_install "${_parameters-}"
-  _err=$?
-  if [ ${_err} -gt 0 ] ; then
-  {
-    failed "while running callsomething above _err:${_err}"
-  }
-  fi
+  _redhat_flavor_install
 } # end _fedora__64
 
 _fedora_36__64() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  trap "echo Error:$?" ERR INT
   local _parameters="${*-}"
   local -i _err=0
-  _redhat_flavor_install "${_parameters-}"
   _err=$?
   if [ ${_err} -gt 0 ] ; then
   {
     failed "while running callsomething above _err:${_err}"
   }
   fi
+  _redhat_flavor_install "${_parameters-}"
 } # end _fedora_36__64
 
 _fedora_37__64() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  trap "echo Error:$?" ERR INT
   local _parameters="${*-}"
   local -i _err=0
-  _redhat_flavor_install "${_parameters-}"
   _err=$?
   if [ ${_err} -gt 0 ] ; then
   {
     failed "while running callsomething above _err:${_err}"
   }
   fi
+  _redhat_flavor_install "${_parameters-}"
 } # end _fedora_37__64
 
 _fedora_38__64() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  trap "echo Error:$?" ERR INT
   local _parameters="${*-}"
   local -i _err=0
-  _redhat_flavor_install "${_parameters-}"
   _err=$?
   if [ ${_err} -gt 0 ] ; then
   {
     failed "while running callsomething above _err:${_err}"
   }
   fi
+  _redhat_flavor_install "${_parameters-}"
 } # end _fedora_38__64
 
 _fedora_39__64() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  trap "echo Error:$?" ERR INT
   local _parameters="${*-}"
   local -i _err=0
-  _redhat_flavor_install "${_parameters-}"
   _err=$?
   if [ ${_err} -gt 0 ] ; then
   {
     failed "while running callsomething above _err:${_err}"
   }
   fi
+  _redhat_flavor_install "${_parameters-}"
 } # end _fedora_39__64
-
-_fedora_40__64() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  local _parameters="${*-}"
-  local -i _err=0
-  _redhat_flavor_install "${_parameters-}"
-  _err=$?
-  if [ ${_err} -gt 0 ] ; then
-  {
-    failed "while running callsomething above _err:${_err}"
-  }
-  fi
-} # end _fedora_40__64
 
 _gentoo__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR

@@ -616,124 +616,76 @@ directory_exists_with_spaces "${USER_HOME}"
 
 
 
- #--------\/\/\/\/-- 2tasks_templates_sudo/kiex …install_kiex.bash” -- Custom code -\/\/\/\/-------
+ #--------\/\/\/\/-- 2tasks_templates_sudo/snitchdns …install_snitchdns.bash” -- Custom code -\/\/\/\/-------
 
 
-#!/bin/bash
-
-_install_and_add_variables_to_bashrc_zshrc(){
-  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _install_and_add_variables_to_bashrc_zshrc kiex" && echo -e "${RESET}" && return 0' ERR
-
-  local dir DIRS="erlang_tars erlang_versions kiex_config scripts"
-  local KIEX_HOME="${USER_HOME}/.kiex"
-  # For each dir, check whether it's already exists or not
-  for dir in $DIRS ; do
-  {
-    if [[ ! -d "$KIEX_HOME/$dir" ]] ; then
-    {
-      mkdir -p "$KIEX_HOME/$dir"
-      echo "$KIEX_HOME/$dir successfully created"
-    }
-    else
-    {
-      echo "$KIEX_HOME/$dir already exists and will not be replaced"
-    }
-    fi
-  }
-  done
-  # Create the config file
-  if [[ ! -f "$KIEX_HOME/kiex_config/erlang_default" ]] ; then
-  {
-    touch "$KIEX_HOME/kiex_config/erlang_default"
-    echo "$KIEX_HOME/kiex_config/erlang_default succesfully created"
-  }
-  else
-  {
-    echo "$KIEX_HOME/kiex_config/erlang_default already exists and will not be replaced"
-  }
-  fi
-
-  local KIEX_SH_CONTENT='
-
-
-# KIEX
-if [[ -e "'${USER_HOME}'/.kiex" ]] ; then
-{
-  test -s "'${USER_HOME}'/.kiex/scripts/kiex" && source "'${USER_HOME}'/.kiex/scripts/kiex"
-}
-fi
-'
-  echo "${KIEX_SH_CONTENT}"
-  local INITFILE INITFILES="
-   .bashrc
-   .zshrc
-   .bash_profile
-   .profile
-   .zshenv
-   .zprofile
-  "
-  while read INITFILE; do
-  {
-    [ -z ${INITFILE} ] && continue
-    _if_not_contains "${USER_HOME}/${INITFILE}"  "# KIEX" ||  echo "${KIEX_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
-    _if_not_contains "${USER_HOME}/${INITFILE}"  "kiex/scripts" ||  echo "${KIEX_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
-  }
-  done <<< "${INITFILES}"
-  # type kiex
-  test -s "'${USER_HOME}'/.kiex/scripts/kiex" && source "${USER_HOME}/.kiex/scripts/kiex"
-  _finale_message
-
-} # _add_variables_to_bashrc_zshrc
-
-_finale_message(){
-  echo
-  echo "
-   ___________        .__   <>           <>
-   \_   _____/_______ |  |  ___ __    __ __. _______
-    |    __)_ \_  __ \|  |  \ | \ \  / / \ | \\\_  __ \\
-    |        \ |  | \/|  |__| |  \_|/_/  | |  |  | \\/
-   /_______  / |__|   |____/|_|  / /\ \  |_|  |__|
-           \/                   /_/  \_\
-
-
-   ____   ____                     .__
-   \   \ /   / ____ _______  ______|__|  ____    ____
-    \   Y   /_/ __ \\\\_  __ \/  ___/|  | /  _ \\  /    \\
-     \     / \  ___/ |  | \/\___ \ |  |(  <_> )|   |  \\
-      \___/   \___  >|__|  /____  >|__| \____/ |___|  /
-                  \/            \/                  \/
-      _____
-     /     \  _____     ____  _____     ____    ____ _______
-    /  \ /  \ \__  \   /    \ \__  \   / ___\ _/ __ \\\\_  __ \\
-   /    Y    \ / __ \_|   |  \ / __ \_/ /_/  >\  ___/ |  | \/
-   \____|__  /(____  /|___|  /(____  /\___  /  \___  >|__|
-           \/      \/      \/      \//_____/       \/
-  "
-} # end _finale_message
+#!/usr/bin/bash
 
 _debian_flavor_install() {
+  # trap  '_trap_on_exit $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  EXIT
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  curl -Lqs https://raw.githubusercontent.com/taylor/kiex/master/install | bash -s
-  _git_clone "https://github.com/taylor/kiex.git" "${USER_HOME}/.kiex"
-  local MSG=$(_install_and_add_variables_to_bashrc_zshrc)
-  echo "${MSG}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  sudo apt install git python3-pip python3-venv libpq-dev
+
+  if
+    (
+    install_requirements "linux" "
+      base64
+      unzip
+      curl
+      wget
+      ufw
+      nginx
+    "
+    ); then
+    {
+      apt install base64 -y
+      apt install unzip -y
+      apt install nginx -y
+    }
+  fi
+  verify_is_installed "
+    unzip
+    curl
+    wget
+    tar
+    ufw
+    nginx
+  "
+  mkdir  "${USER_HOME}/_/software"
+  cd "${USER_HOME}/_/software" || exit 1
+  git clone https://github.com/ctxis/SnitchDNS /opt/snitch
+  cd /opt/snitch || exit 1
+  python3 -m venv venv
+  . venv/bin/activate
+  pip --no-cache-dir install -r requirements.txt
+  deactivate
+
+  local PB_VERSION=0.16.7
+  local CODENAME="pocketbase_${PB_VERSION}_linux_amd64.zip"
+  local TARGET_URL="https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/${CODENAME}"
+  local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  directory_exists_with_spaces "${DOWNLOADFOLDER}"
+  cd "${DOWNLOADFOLDER}"
+  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+  # unzip "${DOWNLOADFOLDER}/${CODENAME}" -d $HOME/pb/
+  local UNZIPDIR="${USER_HOME}/_/software"
+  mkdir -p "${UNZIPDIR}"
+  _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
+  local PATHTOPOCKETBASE="${UNZIPDIR}/pocketbase"
+  local THISIP=$(myip)
+
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
-	trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _redhat_flavor_install() Cloning failed kiex" && echo -e "${RESET}" ' ERR
-  curl -Lqs https://raw.githubusercontent.com/taylor/kiex/master/install | bash -s
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _git_clone "https://github.com/taylor/kiex.git" "${USER_HOME}/.kiex"
-  local MSG=$(_install_and_add_variables_to_bashrc_zshrc)
-  echo "${MSG}"
+  echo "_redhat_flavor_install Procedure not yet implemented. I don't know what to do."
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  curl -Lqs https://raw.githubusercontent.com/taylor/kiex/master/install | bash -s
-  _git_clone "https://github.com/taylor/kiex.git" "${USER_HOME}/.kiex"
-  local MSG=$(_install_and_add_variables_to_bashrc_zshrc)
-  echo "${MSG}"
+  echo "_arch_flavor_install Procedure not yet implemented. I don't know what to do."
 } # end _readhat_flavor_install
 
 _arch__32() {
@@ -776,6 +728,58 @@ _fedora__64() {
   _redhat_flavor_install
 } # end _fedora__64
 
+_fedora_36__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running callsomething above _err:${_err}"
+  }
+  fi
+  _redhat_flavor_install "${_parameters-}"
+} # end _fedora_36__64
+
+_fedora_37__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running callsomething above _err:${_err}"
+  }
+  fi
+  _redhat_flavor_install "${_parameters-}"
+} # end _fedora_37__64
+
+_fedora_38__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running callsomething above _err:${_err}"
+  }
+  fi
+  _redhat_flavor_install "${_parameters-}"
+} # end _fedora_38__64
+
+_fedora_39__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running callsomething above _err:${_err}"
+  }
+  fi
+  _redhat_flavor_install "${_parameters-}"
+} # end _fedora_39__64
+
 _gentoo__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
@@ -801,6 +805,11 @@ _suse__32() {
   _redhat_flavor_install
 } # end _suse__32
 
+_netbsd__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "This is installer is missing"
+} # end _netbsd__64
+
 _suse__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
@@ -816,47 +825,44 @@ _ubuntu__64() {
   _debian_flavor_install
 } # end _ubuntu__64
 
+_ubuntu__aarch64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _ubuntu__aarch64
+
+_ubuntu_22__aarch64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _ubuntu_22__aarch64
+
 _darwin__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  curl -Lqs https://raw.githubusercontent.com/taylor/kiex/master/install | bash -s
-  export HOMEBREW_NO_AUTO_UPDATE=1
-  trap 'echo -e "${RED}" && echo "ERROR err:$_err failed $0:$LINENO _darwin__64 kiex" && echo -e "${RESET}" && return 0' ERR
-  local package packages="
-    wget
-    openssl
-    wxWidgets
-    fop
-    libxslt
-  "
-  _package_list_installer "${packages}"
-  _git_clone "https://github.com/taylor/kiex.git" "${USER_HOME}/.kiex"
-  local MSG=$(_install_and_add_variables_to_bashrc_zshrc)
-  echo "${MSG}"
+  echo "_darwin__64 Procedure not yet implemented. I don't know what to do."
 } # end _darwin__64
 
 _darwin__arm64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _darwin__64
+  echo "_darwin__arm64 Procedure not yet implemented. I don't know what to do."
 } # end _darwin__arm64
 
 _tar() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  echo "Procedure not yet implemented. I don't know what to do."
+  echo "_tar Procedure not yet implemented. I don't know what to do."
 } # end tar
 
 _windows__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  echo "Procedure not yet implemented. I don't know what to do."
+  echo "_windows__64 Procedure not yet implemented. I don't know what to do."
 } # end _windows__64
 
 _windows__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  echo "Procedure not yet implemented. I don't know what to do."
+  echo "_windows__32 Procedure not yet implemented. I don't know what to do."
 } # end _windows__32
 
 
 
- #--------/\/\/\/\-- 2tasks_templates_sudo/kiex …install_kiex.bash” -- Custom code-/\/\/\/\-------
+ #--------/\/\/\/\-- 2tasks_templates_sudo/snitchdns …install_snitchdns.bash” -- Custom code-/\/\/\/\-------
 
 
 

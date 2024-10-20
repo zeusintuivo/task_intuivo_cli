@@ -35,7 +35,7 @@ _debian_flavor_install() {
   local DOWNLOADFOLDER="$(_find_downloads_folder)"
   enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
   directory_exists_with_spaces "${DOWNLOADFOLDER}"
-  cd "${DOWNLOADFOLDER}"
+  cd "${DOWNLOADFOLDER}" || exit 1
   _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
   # unzip "${DOWNLOADFOLDER}/${CODENAME}" -d $HOME/pb/
   local UNZIPDIR="${USER_HOME}/_/software"
@@ -147,7 +147,13 @@ _fedora_39__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   local _parameters="${*-}"
   local -i _err=0
-  _redhat_flavor_install "${_parameters-}"
+  # _redhat_flavor_install "${_parameters-}"
+  _package_list_installer "
+   elixir
+   erlang
+   elixir-doc
+   erlang-doc
+  "
   _err=$?
   if [ ${_err} -gt 0 ] ; then
   {
