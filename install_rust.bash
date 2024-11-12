@@ -668,7 +668,7 @@ source "'${FINDCARGO_USER}'/env"
   while read INITFILE; do
   {
     [ -z ${INITFILE} ] && continue
-		# USER
+    # USER
     [[ ! -e "${USER_HOME}/${INITFILE}" ]] && continue
     Checking "${USER_HOME}/${INITFILE}"
     chown "${SUDO_USER}" "${USER_HOME}/${INITFILE}"
@@ -678,7 +678,7 @@ source "'${FINDCARGO_USER}'/env"
     (_if_not_contains  "${USER_HOME}/${INITFILE}" "# CARGO - RUST" ) || echo -e "${CARGO_SH_CONTENT_USER}" >> "${USER_HOME}/${INITFILE}"
     (_if_not_contains  "${USER_HOME}/${INITFILE}" "# CARGO - RUST" ) && changed_files="${changed_files} \"${USER_HOME}/${INITFILE}\" "
 
-		# ROOT
+    # ROOT
     [[ ! -e "${HOME}/${INITFILE}" ]] && continue
     Checking "${HOME}/${INITFILE}"
     # chown "${SUDO_USER}" "${HOME}/${INITFILE}"
@@ -737,8 +737,8 @@ _debian_flavor_install() {
   chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo"
   chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/bin"
   chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/env"
- #  su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
- if su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh" ; then
+  #  su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
+  if su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh" ; then
           {
                   echo "oops"
           }
@@ -799,7 +799,9 @@ _redhat_flavor_install() {
     tar
   "
   Installing "_add_variables_to_bashrc_zshrc for ROOT and USER"
-  _add_variables_to_bashrc_zshrc
+  mkdir -p  "${USER_HOME}/.cargo"
+  chmod -R 755 "${USER_HOME}/.cargo"
+ _add_variables_to_bashrc_zshrc
 
   export ARCHFLAGS="-arch $(uname -m)"
 
@@ -829,7 +831,7 @@ _redhat_flavor_install() {
   Installing "USER install(${USER_HOME}):su - \"${SUDO_USER}\" -c \"ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh\""
   # if su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh" ; then
   chown -R "${SUDO_USER}" "${cpwd}/rustup.sh"
-  su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' "${cpwd}/rustup.sh" --no-modify-path --target /home/zeus --quiet -y"
+  su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' "${cpwd}/rustup.sh" --no-modify-path --target \"${USER_HOME}\" --quiet -y"
   _err=$?
   if [ ${_err} -gt 0 ] ; then
   {
@@ -845,7 +847,7 @@ _redhat_flavor_install() {
   Installing "_add_variables_to_bashrc_zshrc for ROOT and USER"
   _add_variables_to_bashrc_zshrc
 
-	chown -R "${SUDO_USER}"   "${USER_HOME}/.rustup"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.rustup"
   chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo"
   chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/bin"
   chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/env"
@@ -854,7 +856,7 @@ _redhat_flavor_install() {
   rustup default stable
   Installing "USER: su - \"${SUDO_USER}\" -c \"rustup default stable\""
   su - "${SUDO_USER}" -c "rustup default stable"
-	chown -R "${SUDO_USER}"   "${USER_HOME}/.rustup"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.rustup"
   chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo"
   chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/bin"
   chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/env"
@@ -977,8 +979,8 @@ _darwin__64() {
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   Checking "if rust is installed by brew and attempting remove it"
   local -i _err=0
- 	local _target_bin_brew=""
- 	_target_bin_brew="$(_find_executable_for "brew" "--prefix"  "bin/brew")"   # tail -1
+   local _target_bin_brew=""
+   _target_bin_brew="$(_find_executable_for "brew" "--prefix"  "bin/brew")"   # tail -1
   _err=$?
   if [ $_err -gt 0 ] ; then # failed
   {
@@ -990,16 +992,16 @@ _darwin__64() {
   _target_bin_brew="$(echo "${_target_bin_brew}" | tail -1 | xargs)"
   ensure "${_target_bin_brew}" or "failed to check executable for brew <${_target_bin_brew}>"
   _target_bin_brew="$(echo -n "${_target_bin_brew}" | tail -1)"
-	enforce_variable_with_value _target_bin_brew "${_target_bin_brew}"
+  enforce_variable_with_value _target_bin_brew "${_target_bin_brew}"
   su - "${SUDO_USER}" -c "${_target_bin_brew} list --formula"
   if ( ! su - "${SUDO_USER}" -c "${_target_bin_brew} list rust" >/dev/null 2>&1; ); then
   {
-	  passed "rust not found"
-	}
+    passed "rust not found"
+  }
   else
-	{
-		passed "rust found"
-		if ( ! su - "${SUDO_USER}" -c "${_target_bin_brew} remove rust" >/dev/null 2>&1; ); then
+  {
+    passed "rust found"
+    if ( ! su - "${SUDO_USER}" -c "${_target_bin_brew} remove rust" >/dev/null 2>&1; ); then
     {
       warning "could not remove rust from brew"
     }
@@ -1009,7 +1011,7 @@ _darwin__64() {
     }
     fi
   }
-	fi
+  fi
 
   if (install_requirements "mac" "
       unzip
@@ -1028,6 +1030,8 @@ _darwin__64() {
     tar
   "
   Installing "_add_variables_to_bashrc_zshrc for ROOT and USER"
+  mkdir -p  "${USER_HOME}/.cargo"
+  chmod -R 755 "${USER_HOME}/.cargo"
   _add_variables_to_bashrc_zshrc
 
   export ARCHFLAGS="-arch $(uname -m)"
@@ -1052,14 +1056,14 @@ _darwin__64() {
   fi
   [[ ! -e "${USER_HOME}/.cargo" ]] && cp -R /root/.cargo "${USER_HOME}/.cargo"
   chmod -R 755 "${USER_HOME}/.cargo"
-	chown -R "${SUDO_USER}"   "${USER_HOME}/.rustup"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.rustup"
   chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo"
   chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/bin"
   chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/env"
   Installing "USER install(${USER_HOME}):su - \"${SUDO_USER}\" -c \"ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh\""
   # if su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh" ; then
   chown -R "${SUDO_USER}" "${cpwd}/rustup.sh"
-  su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' "${cpwd}/rustup.sh" --no-modify-path --target /home/zeus --quiet -y"
+  su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' "${cpwd}/rustup.sh" --no-modify-path --target \"${USER_HOME}\" --quiet -y"
   _err=$?
   if [ ${_err} -gt 0 ] ; then
   {
@@ -1075,7 +1079,7 @@ _darwin__64() {
   Installing "_add_variables_to_bashrc_zshrc for ROOT and USER"
   _add_variables_to_bashrc_zshrc
 
-	chown -R "${SUDO_USER}"   "${USER_HOME}/.rustup"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.rustup"
   chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo"
   chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/bin"
   chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/env"
@@ -1084,7 +1088,7 @@ _darwin__64() {
   rustup default stable
   Installing "USER: su - \"${SUDO_USER}\" -c \"rustup default stable\""
   su - "${SUDO_USER}" -c "rustup default stable"
-	chown -R "${SUDO_USER}"   "${USER_HOME}/.rustup"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.rustup"
   chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo"
   chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/bin"
   chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/env"
@@ -1094,11 +1098,12 @@ _darwin__64() {
 
 _darwin__arm64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  set -xu +E -o pipefail -o functrace
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   Checking "if rust is installed by brew and attempting remove it"
   local -i _err=0
- 	local _target_bin_brew=""
- 	_target_bin_brew="$(_find_executable_for "brew" "--prefix"  "bin/brew")"   # tail -1
+  local _target_bin_brew=""
+  _target_bin_brew="$(_find_executable_for "brew" "--prefix"  "bin/brew")"   # tail -1
   _err=$?
   if [ $_err -gt 0 ] ; then # failed
   {
@@ -1110,16 +1115,16 @@ _darwin__arm64() {
   _target_bin_brew="$(echo "${_target_bin_brew}" | tail -1 | xargs)"
   ensure "${_target_bin_brew}" or "failed to check executable for brew <${_target_bin_brew}>"
   _target_bin_brew="$(echo -n "${_target_bin_brew}" | tail -1)"
-	enforce_variable_with_value _target_bin_brew "${_target_bin_brew}"
+  enforce_variable_with_value _target_bin_brew "${_target_bin_brew}"
   su - "${SUDO_USER}" -c "${_target_bin_brew} list --formula"
   if ( ! su - "${SUDO_USER}" -c "${_target_bin_brew} list rust" >/dev/null 2>&1; ); then
   {
-	  passed "rust not found"
-	}
+    passed "rust not found"
+  }
   else
-	{
-		passed "rust found"
-		if ( ! su - "${SUDO_USER}" -c "${_target_bin_brew} remove rust" >/dev/null 2>&1; ); then
+  {
+    passed "rust found"
+    if ( ! su - "${SUDO_USER}" -c "${_target_bin_brew} remove rust" >/dev/null 2>&1; ); then
     {
       warning "could not remove rust from brew"
     }
@@ -1129,7 +1134,7 @@ _darwin__arm64() {
     }
     fi
   }
-	fi
+  fi
 
   if (install_requirements "mac" "
       unzip
@@ -1148,6 +1153,8 @@ _darwin__arm64() {
     tar
   "
   Installing "_add_variables_to_bashrc_zshrc for ROOT and USER"
+  mkdir -p  "${USER_HOME}/.cargo"
+  chmod -R 755 "${USER_HOME}/.cargo"
   _add_variables_to_bashrc_zshrc
 
   export ARCHFLAGS="-arch $(uname -m)"
@@ -1158,7 +1165,8 @@ _darwin__arm64() {
   local cpwd=$(realpath .)
   local -i _err=0
   chmod +x "${cpwd}/rustup.sh"
-  ARCHFLAGS='-arch ${ARCHFLAGS-}' "${cpwd}/rustup.sh" --no-modify-path --target /root --quiet -y
+  ARCHFLAGS='-arch ${ARCHFLAGS-}'
+  "${cpwd}/rustup.sh" --no-modify-path --target /root --quiet -y
   _err=$?
   if [ ${_err} -gt 0 ] ; then
   {
@@ -1172,14 +1180,14 @@ _darwin__arm64() {
   fi
   [[ ! -e "${USER_HOME}/.cargo" ]] && cp -R /root/.cargo "${USER_HOME}/.cargo"
   chmod -R 755 "${USER_HOME}/.cargo"
-	chown -R "${SUDO_USER}"   "${USER_HOME}/.rustup"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.rustup"
   chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo"
   chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/bin"
   chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/env"
   Installing "USER install(${USER_HOME}):su - \"${SUDO_USER}\" -c \"ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh\""
   # if su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh" ; then
   chown -R "${SUDO_USER}" "${cpwd}/rustup.sh"
-  su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' "${cpwd}/rustup.sh" --no-modify-path --target /home/zeus --quiet -y"
+  su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' "${cpwd}/rustup.sh" --no-modify-path --target \"${USER_HOME}\" --quiet -y"
   _err=$?
   if [ ${_err} -gt 0 ] ; then
   {
@@ -1195,7 +1203,7 @@ _darwin__arm64() {
   Installing "_add_variables_to_bashrc_zshrc for ROOT and USER"
   _add_variables_to_bashrc_zshrc
 
-	chown -R "${SUDO_USER}"   "${USER_HOME}/.rustup"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.rustup"
   chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo"
   chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/bin"
   chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/env"
@@ -1204,7 +1212,7 @@ _darwin__arm64() {
   rustup default stable
   Installing "USER: su - \"${SUDO_USER}\" -c \"rustup default stable\""
   su - "${SUDO_USER}" -c "rustup default stable"
-	chown -R "${SUDO_USER}"   "${USER_HOME}/.rustup"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.rustup"
   chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo"
   chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/bin"
   chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/env"
