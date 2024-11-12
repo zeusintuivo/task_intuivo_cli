@@ -466,7 +466,7 @@ _darwin__64() {
   #  https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
 
   local content="$(_write_vimrc)"
-  touch "${USER_HOME}/.vimrc"
+  touch "${user_home}/.vimrc"
   # touch "/root/.vimrc"
 
   echo "${content}" > "${USER_HOME}/.vimrc"
@@ -483,7 +483,31 @@ _darwin__64() {
 
 _darwin__arm64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  echo "_darwin__arm64 Procedure not yet implemented. I don't know what to do."
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  # anounce_command "su - '${SUDO_USER}' -c 'brew install vim'"
+  # anounce_command "curl -fLo '${USER_HOME}/.vim/autoload/plug.vim' --create-dirs \
+   #  https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
+  curl -fLo "${USER_HOME}/.vim/autoload/plug.vim" --create-dirs \
+     https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+
+  local content="$(_write_vimrc)"
+  touch "${USER_HOME}/.vimrc"
+  # touch "/root/.vimrc"
+
+  echo "${content}" > "${USER_HOME}/.vimrc"
+  # echo "${content}" > "/root/.vimrc"
+
+  chown -R "${SUDO_USER}" "${USER_HOME}/.vim"
+  chown -R "${SUDO_USER}" "${USER_HOME}/.vimrc"
+  # vim
+  # vim -es -u vimrc -i NONE -c "PlugInstall" -c "qa"
+  # vim -c PlugInstall -c qa
+  su - "${SUDO_USER}" -c 'vim -c PlugInstall -c qa'
+  # su - "${SUDO_USER}" -c 'vim -es -u vimrc -i NONE -c "PlugInstall" -c "qa"'
+
+
+  # echo "_darwin__arm64 Procedure not yet implemented. I don't know what to do."
 } # end _darwin__arm64
 
 _tar() {
