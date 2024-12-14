@@ -78,7 +78,7 @@ _install_and_add_variables_to_bashrc_zshrc(){
 
 _debian_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _git_clone "https://github.com/robisonsantos/kerl.git" "${USER_HOME}/.kerl"
+  _git_clone "https://github.com/kerl/kerl.git" "${USER_HOME}/.kerl"
   apt update -y
   local package packages="
     wget
@@ -115,7 +115,7 @@ _debian_flavor_install() {
 
 _redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _git_clone "https://github.com/robisonsantos/kerl.git" "${USER_HOME}/.kerl"
+  _git_clone "https://github.com/kerl/kerl.git" "${USER_HOME}/.kerl"
   dnf groupinstall -y 'Development Tools' 'C Development Tools and Libraries'
   dnf build-dep erlang -y --allowerasing # --skip-broken
 
@@ -321,7 +321,7 @@ _darwin__arm64() {
     libxslt
   "
   _package_list_installer "${packages}"
-  _git_clone "https://github.com/robisonsantos/kerl.git" "${USER_HOME}/.kerl"
+  _git_clone "https://github.com/kerl/kerl.git" "${USER_HOME}/.kerl"
   local MSG=""
   MSG=$(_install_and_add_variables_to_bashrc_zshrc)
   echo "${MSG}"
