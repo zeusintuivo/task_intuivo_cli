@@ -707,10 +707,7 @@ _debian_flavor_install() {
     libssl-dev
     fop
     flex
-    libxml
-    libxml-dev
-    libxslt
-    libxslt-dev
+    libxslt1-dev
     xsltproc
     unixodbc-dev
     libxml2-utils
