@@ -623,19 +623,18 @@ directory_exists_with_spaces "${USER_HOME}"
 #
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
-
+set -u -E -o functrace
 _package_list_installer() {
   # trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   local package packages="${@}"
   trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer evm" && echo -e "${RESET}" && return 0' ERR
-
-  if ! install_requirements "linux" "${packages}" ; then
+  if ! ( install_requirements "linux" "${packages}" ) ; then
   {
     warning "installing requirements. ${CYAN} attempting to install one by one"
     while read package; do
     {
-      [ -z ${package} ] && continue
-      if ! install_requirements "linux" "${package}" ; then
+      [[ "${package-}empty" == "empty" ]] && continue
+      if ! ( install_requirements "linux" "${package}" ) ; then
       {
         _err=$?
         if [ ${_err} -gt 0 ] ; then
@@ -665,20 +664,36 @@ _git_clone() {
     if it_exists_with_spaces "${_target}/.git" ; then
     {
       cd "${_target}"
-      git config pull.rebase false
-      git fetch
-      git pull
+      if git config pull.rebase false ; then
+      {
+        warning Could not git config pull.rebase false
+      }
+      fi
+      if git fetch  ; then
+      {
+        warning Could not git fetch
+      }
+      fi
+      if git pull  ; then
+      {
+        warning Could not git pull
+      }
+      fi
     }
     fi
   }
   else
   {
-   git clone "${_source}" "${_target}"
+    if git clone "${_source}" "${_target}"  ; then
+    {
+      warning Could not git clone "${_source}" "${_target}"
+    }
+    fi
   }
   fi
   chown -R "${SUDO_USER}" "${_target}"
 
-} # _git_clone
+} # end _git_clone
 
 
 _install_and_add_variables_to_bashrc_zshrc(){
@@ -750,6 +765,14 @@ fi
     _if_not_contains "${USER_HOME}/${INITFILE}"  "evm/scripts" ||  echo "${EVM_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
   }
   done <<< "${INITFILES}"
+  echo -n "vim " 
+  while read INITFILE; do
+  {
+    [ -z ${INITFILE} ] && continue
+    echo -n "${USER_HOME}/${INITFILE} "
+  }
+  done <<< "${INITFILES}"
+  echo " "
   # type EVM
   file_exists_with_spaces "${USER_HOME}/.evm/scripts/evm"
   source "${USER_HOME}/.evm/scripts/evm"
@@ -921,8 +944,25 @@ _fedora__32() {
 
 _fedora__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _redhat_flavor_install
+  local _parameters="${*-}"
+  _redhat_flavor_install "${_parameters-}"
 } # end _fedora__64
+
+_fedora_37__64(){
+  # trap "echo Error:$?" ERR INT
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local _parameters="${*-}"
+  local -i _err=0
+  _redhat_flavor_install "${_parameters-}"
+} # end _fedora_37__64
+
+_fedora_39__64(){
+  # trap "echo Error:$?" ERR INT
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local _parameters="${*-}"
+  local -i _err=0
+  _redhat_flavor_install "${_parameters-}"
+} # end _fedora_39__64
 
 _gentoo__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR

@@ -33,7 +33,7 @@ _package_list_installer() {
 
 _git_clone() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO  _git_clone KERL" && echo -e "${RESET}" && return 0' ERR
+  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO  _git_clone FVM" && echo -e "${RESET}" && return 0' ERR
   local _source="${1}"
   local _target="${2}"
   Checking "${SUDO_USER}" "${_target}"
@@ -120,7 +120,7 @@ export PATH=\$(echo -n \$PATH | sed 's/:/\\n/g'  | uniq | sed -e ':a' -e 'N' -e 
   }
   done <<< "${INITFILES}"
   echo -n "vim " 
-	while read INITFILE; do
+  while read INITFILE; do
   {
     [ -z ${INITFILE} ] && continue
     echo -n "${USER_HOME}/${INITFILE} "
@@ -162,13 +162,13 @@ _debian_flavor_install() {
   # Batch 1 18.04
   local package packages="
     curl
-		git
-		unzip
-		xz-utils
-		zip
-		libglu1-mesa
+	git
+	unzip
+	xz-utils
+	zip
+	libglu1-mesa
 	  
-		autoconf
+	autoconf
     bison
     build-essential
     libssl-dev
