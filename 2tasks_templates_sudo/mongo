@@ -189,7 +189,12 @@ _centos__64() {
 } # end _centos__64
 
 _fedora__64() {
-  echo "Need to implement"
+  ausearch -c 'mongod' --raw | audit2allow -M my-mongod
+	semodule -i my-mongod.pp
+  ausearch -c '(mongod)' --raw | audit2allow -M my-mongod2
+  semodule -X 300 -i my-mongod2.pp
+
+	echo "Need to implement"
 
 } # end _fedora__64
 
@@ -211,5 +216,3 @@ _main() {
 _main
 
 echo ":)"
-
-
