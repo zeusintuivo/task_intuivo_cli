@@ -698,6 +698,8 @@ _redhat_flavor_install() {
       softlink_exists_with_spaces "/snapd>${_target_snapd}"
     }
     fi
+    ausearch -c 'snapd' --raw | audit2allow -M my-snapd
+    semodule -X 300 -i my-snapd.pp
 
 } # end _redhat_flavor_install
 
