@@ -32,17 +32,20 @@ _debian_flavor_install() {
   local PB_VERSION=0.16.7
   local CODENAME="pocketbase_${PB_VERSION}_linux_amd64.zip"
   local TARGET_URL="https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/${CODENAME}"
-  local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  local DOWNLOADFOLDER=""
+	DOWNLOADFOLDER="$(_find_downloads_folder)"
   enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
   directory_exists_with_spaces "${DOWNLOADFOLDER}"
-  cd "${DOWNLOADFOLDER}"
+  cd "${DOWNLOADFOLDER}" || echo "$0:$LINENO error cd ${DOWNLOADFOLDER}" && exit 1
   _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
   # unzip "${DOWNLOADFOLDER}/${CODENAME}" -d $HOME/pb/
   local UNZIPDIR="${USER_HOME}/_/software"
   mkdir -p "${UNZIPDIR}"
   _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
-  local PATHTOPOCKETBASE="${UNZIPDIR}/pocketbase"
-  local THISIP=$(myip)
+  local PATHTOPOCKETBASE=""
+	PATHTOPOCKETBASE="${UNZIPDIR}/pocketbase"
+  local THISIP=""
+	THISIP=$(myip)
 
 } # end _debian_flavor_install
 
