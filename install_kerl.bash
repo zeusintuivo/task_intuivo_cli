@@ -627,7 +627,7 @@ directory_exists_with_spaces "${USER_HOME}"
 _install_and_add_variables_to_bashrc_zshrc(){
   trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _install_and_add_variables_to_bashrc_zshrc KERL" && echo -e "${RESET}" && return 0' ERR
 
-  local KERL_HOME="${USER_HOME}/.kerl_install"
+  local KERL_HOME="${USER_HOME}/.kerl"
   cd "${KERL_HOME}" || exit 1
   mkdir -p "${USER_HOME}/.kerl"
 
