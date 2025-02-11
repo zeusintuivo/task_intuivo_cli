@@ -187,6 +187,23 @@ _fedora_37__64() {
   dnf install "${_url}${_list_signal}" -y
 } # end _fedora_37__64
 
+_fedora_rawhide__64() {
+  yes | dnf config-manager addrepo --from-repofile=https://download.opensuse.org/repositories/network:im:signal/Fedora_Rawhide/network:im:signal.repo
+  yes | dnf install signal-desktop -y
+} # end _fedora_rawhide__64
+
+_fedora_40__64() {
+	yes | dnf config-manager --add-repo https://download.opensuse.org/repositories/network:im:signal/Fedora_40/network:im:signal.repo
+  yes | dnf install signal-desktop -y
+} # end _fedora_40__64
+
+_fedora_41__64() {
+	yes | dnf config-manager addrepo --from-repofile=https://download.opensuse.org/repositories/network:im:signal/Fedora_41/network:im:signal.repo
+  yes | dnf install signal-desktop -y
+
+} # end _fedora_41__64
+
+
 _gentoo__32() {
   _redhat_flavor_install
 } # end _gentoo__32

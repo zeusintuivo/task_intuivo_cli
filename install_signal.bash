@@ -716,7 +716,7 @@ _fedora__64() {
   # _redhat_flavor_install
   source /etc/os-release
   case ${VERSION_ID} in
-    36|37) _fedora__64_${VERSION_ID};;
+    # 36|37) _fedora__64_${VERSION_ID};;
     *)	   _redhat_flavor_install;;
   esac
 } # end _fedora__64
@@ -753,6 +753,19 @@ function _mitrapo_on_error() {
   echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
   exit 1
 } # end _mitrapo_on_error
+
+_fedora_37__64() {
+  trap "echo Error:$?" ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  callsomething "${_parameters-}"
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _fedora_37__64
 
 _fedora_37__64() {
   trap  '_mitrapo_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR INT
@@ -794,6 +807,23 @@ _fedora_37__64() {
   enforce_variable_with_value _list_signal "${_list_signal}"
   dnf install "${_url}${_list_signal}" -y
 } # end _fedora_37__64
+
+_fedora_rawhide__64() {
+  yes | dnf config-manager addrepo --from-repofile=https://download.opensuse.org/repositories/network:im:signal/Fedora_Rawhide/network:im:signal.repo
+  yes | dnf install signal-desktop -y
+} # end _fedora_rawhide__64
+
+_fedora_40__64() {
+	yes | dnf config-manager --add-repo https://download.opensuse.org/repositories/network:im:signal/Fedora_40/network:im:signal.repo
+  yes | dnf install signal-desktop -y
+} # end _fedora_40__64
+
+_fedora_41__64() {
+	yes | dnf config-manager addrepo --from-repofile=https://download.opensuse.org/repositories/network:im:signal/Fedora_41/network:im:signal.repo
+  yes | dnf install signal-desktop -y
+
+} # end _fedora_41__64
+
 
 _gentoo__32() {
   _redhat_flavor_install

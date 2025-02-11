@@ -119,6 +119,65 @@ _fedora__64() {
   _redhat_flavor_install
 } # end _fedora__64
 
+_fedora_41__64() {
+  trap 'echo Error:$?' ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  /sbin/restorecon -v /var/lib/snapd/snap
+  echo "where FILE_TYPE is one of the following: "
+  echo "admin_home_t
+bin_t
+boot_t
+device_t
+etc_runtime_t
+etc_t
+fonts_cache_t
+fonts_t
+home_root_t
+ld_so_t
+lib_t
+locale_t
+man_cache_t
+man_t
+mandb_cache_t
+proc_t
+root_t
+rpm_script_tmp_t
+security_t
+shell_exec_t
+src_t
+system_conf_t
+system_db_t
+textrel_shlib_t
+tmp_t
+user_home_dir_t
+usr_t
+var_lock_t
+var_run_t
+var_t" | xargs -I {} semanage fcontext -a -t {} '/var/lib/snapd/snap'
+  restorecon -v '/var/lib/snapd/snap'
+  ausearch -c 'mandb' --raw | audit2allow -M my-mandb
+  semodule -X 300 -i my-mandb.pp
+  echo "# semanage fcontext -a -t FILE_TYPE '/var/lib/snapd/snap'"
+  echo "where FILE_TYPE is one of the following: "
+  echo "NetworkManager_unit_file_t, abrt_unit_file_t, accountsd_unit_file_t, admin_home_t, afterburn_unit_file_t, alsa_unit_file_t, amanda_unit_file_t, anaconda_unit_file_t, antivirus_unit_file_t, apcupsd_unit_file_t, apmd_unit_file_t, arpwatch_unit_file_t, auditd_unit_file_t, automount_unit_file_t, avahi_unit_file_t, bin_t, bluetooth_unit_file_t, boinc_unit_file_t, boot_t, boothd_unit_file_t, bootupd_unit_file_t, brltty_unit_file_t, cert_t, certmonger_unit_file_t, cgroup_memory_pressure_t, cgroup_t, chronyd_unit_file_t, cinder_api_unit_file_t, cinder_backup_unit_file_t, cinder_scheduler_unit_file_t, cinder_volume_unit_file_t, cloud_init_unit_file_t, cluster_unit_file_t, collectd_unit_file_t, colord_unit_file_t, condor_unit_file_t, config_home_t, conman_unit_file_t, conntrackd_unit_file_t, consolekit_unit_file_t, container_unit_file_t, coreos_boot_mount_generator_unit_file_t, coreos_installer_unit_file_t, couchdb_unit_file_t, crond_unit_file_t, cupsd_unit_file_t, dbusd_etc_t, dbusd_unit_file_t, device_t, devlog_t, dhcpd_unit_file_t, dirsrv_unit_file_t, dnsmasq_unit_file_t, dnssec_trigger_unit_file_t, dovecot_cert_t, etc_runtime_t, etc_t, fdo_unit_file_t, file_context_t, firewalld_unit_file_t, fonts_cache_t, fonts_t, freeipmi_bmc_watchdog_unit_file_t, freeipmi_ipmidetectd_unit_file_t, freeipmi_ipmiseld_unit_file_t, ftpd_unit_file_t, fwupd_cert_t, fwupd_unit_file_t, getty_unit_file_t, glance_api_unit_file_t, glance_registry_unit_file_t, glance_scrubber_unit_file_t, gssproxy_unit_file_t, haproxy_unit_file_t, home_cert_t, home_root_t, hostapd_unit_file_t, hsqldb_unit_file_t, httpd_unit_file_t, hwloc_dhwd_unit_t, hypervkvp_unit_file_t, hypervvssd_unit_file_t, init_var_run_t, innd_unit_file_t, insights_client_unit_file_t, iodined_unit_file_t, ipmievd_unit_file_t, ipsec_mgmt_unit_file_t, iptables_unit_file_t, iscsi_unit_file_t, jetty_unit_file_t, kdump_dep_unit_file_t, kdump_unit_file_t, keepalived_unit_file_t, keystone_unit_file_t, ksm_unit_file_t, ksmtuned_unit_file_t, ktalkd_unit_file_t, ld_so_t, lib_t, locale_t, lsmd_unit_file_t, lttng_sessiond_unit_file_t, lvm_unit_file_t, man_cache_t, man_t, mdadm_unit_file_t, modemmanager_unit_file_t, mongod_unit_file_t, motion_unit_file_t, mysqld_unit_file_t, named_unit_file_t, nbdkit_unit_file_t, net_conf_t, netlabel_mgmt_unit_file_t, neutron_unit_file_t, nfsd_unit_file_t, ninfod_unit_file_t, nis_unit_file_t, nova_unit_file_t, nscd_unit_file_t, ntpd_unit_file_t, numad_unit_file_t, nut_unit_file_t, nvme_stas_unit_file_t, oddjob_unit_file_t, opendnssec_unit_file_t, opensm_unit_file_t, openvswitch_unit_file_t, openwsman_unit_file_t, pdns_unit_file_t, pesign_unit_file_t, pkcs_slotd_unit_file_t, pki_tomcat_cert_t, pki_tomcat_unit_file_t, polipo_unit_file_t, postgresql_unit_file_t, power_unit_file_t, pppd_unit_file_t, proc_t, proc_xen_t, prosody_unit_file_t, qatlib_unit_file_t, rabbitmq_unit_file_t, radiusd_unit_file_t, rasdaemon_unit_file_t, rdisc_unit_file_t, redis_unit_file_t, rhcd_unit_file_t" | sed 's/, /\n/g' | xargs -I {} semanage fcontext -a -t {} '/var/lib/snapd/snap'
+  restorecon -v '/var/lib/snapd/snap'
+  echo "rhnsd_unit_file_t, rngd_unit_file_t, root_t, rpcbind_unit_file_t, rpcd_unit_file_t, rpm_script_tmp_t, rshim_unit_file_t, rtas_errd_unit_file_t, samba_cert_t, samba_unit_file_t, sanlk_resetd_unit_file_t, sanlock_unit_file_t, sbd_unit_file_t, security_t, selinux_autorelabel_generator_unit_file_t, sensord_unit_file_t, shell_exec_t, slapd_cert_t, slapd_unit_file_t, snappy_home_t, snappy_snap_t, snappy_tmp_t, snappy_unit_file_t, snappy_var_cache_t, snappy_var_lib_t, snappy_var_t, spamd_unit_file_t, spamd_update_unit_file_t, speech_dispatcher_unit_file_t, src_t, sshd_keygen_unit_file_t, sshd_unit_file_t, sslh_unit_file_t, sssd_unit_file_t, sssd_var_lib_t, stalld_unit_file_t, svnserve_unit_file_t, swift_unit_file_t, sysfs_t, syslogd_unit_file_t, system_conf_t, system_db_t, system_dbusd_var_lib_t, systemd_bless_boot_generator_unit_file_t, systemd_bootchart_unit_file_t, systemd_cryptsetup_generator_unit_file_t, systemd_debug_generator_unit_file_t, systemd_fstab_generator_unit_file_t, systemd_generic_generator_unit_file_t, systemd_getty_generator_unit_file_t, systemd_gpt_generator_unit_file_t, systemd_homed_unit_file_t, systemd_hwdb_unit_file_t, systemd_import_generator_unit_file_t, systemd_machined_unit_file_t, systemd_modules_load_unit_file_t, systemd_networkd_unit_file_t, systemd_rc_local_generator_unit_file_t, systemd_resolved_unit_file_t, systemd_rfkill_unit_file_t, systemd_runtime_unit_file_t, systemd_socket_proxyd_unit_file_t, systemd_ssh_generator_unit_file_t, systemd_sysv_generator_unit_file_t, systemd_timedated_unit_file_t, systemd_tpm2_generator_unit_file_t, systemd_unit_file_t, systemd_userdbd_runtime_t, systemd_userdbd_unit_file_t, systemd_vconsole_unit_file_t, systemd_vsftpd_generator_unit_file_t, systemd_zram_generator_unit_file_t, tangd_unit_file_t, targetclid_unit_file_t, targetd_unit_file_t, textrel_shlib_t, tlp_unit_file_t, tmp_t, tomcat_unit_file_t, tor_unit_file_t, usbmuxd_unit_file_t, user_home_dir_t, user_tmp_t, usr_t, var_run_t, var_t, virt_var_lib_t, virtd_unit_file_t, virtlogd_unit_file_t, vmtools_unit_file_t, wireguard_unit_file_t, xdm_unit_file_t, ypbind_unit_file_t, zebra_unit_file_t, zoneminder_unit_file_t" | sed 's/, /\n/g' | xargs -I {} semanage fcontext -a -t {} '/var/lib/snapd/snap'
+  restorecon -v '/var/lib/snapd/snap'
+  ausearch -c 'snapd' --raw | audit2allow -M my-snapd
+  semodule -X 300 -i my-snapd.pp
+  echo "admin_home_t, bin_t, boot_t, cert_t, cgroup_memory_pressure_t, cgroup_t, device_t, dovecot_cert_t, etc_runtime_t, etc_t, file_context_t, fonts_cache_t, fonts_t, fwupd_cert_t, home_cert_t, home_root_t, ld_so_t, lib_t, locale_t, man_cache_t, man_t, pki_tomcat_cert_t, proc_t, root_t, rpm_script_tmp_t, samba_cert_t, security_t, selinux_config_t, shell_exec_t, slapd_cert_t, snappy_home_t, snappy_snap_t, snappy_var_lib_t, src_t, sysfs_t, system_conf_t, system_db_t, system_dbusd_var_lib_t, textrel_shlib_t, tmp_t, usr_t, var_run_t, var_t" | sed 's/, /\n/g' | xargs -I {} semanage fcontext -a -t {} '/var/lib/snapd/snap'
+  restorecon -v '/var/lib/snapd/snap'
+  _err=$?
+  echo "${_parameters-}"
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO while running callsomething above _err:${_err}"
+  }
+  fi
+  # '
+} # end _fedora_41__64
+
 _gentoo__32() {
   _redhat_flavor_install
 } # end _gentoo__32
