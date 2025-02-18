@@ -98,19 +98,50 @@ _fedora__32() {
 } # end _fedora__32
 
 _fedora__64() {
-  local TARGET_URL=https://zoom.us/client/latest/zoom_x86_64.rpm
+  local -i _pid=0
+	local TARGET_URL=https://zoom.us/client/latest/zoom_x86_64.rpm
   enforce_variable_with_value TARGET_URL "${TARGET_URL}"
 	local CODENAME=$(basename "${TARGET_URL}")
 	enforce_variable_with_value CODENAME "${CODENAME}"
-  local DOWNLOADFOLDER="$(_find_downloads_folder)"
-  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-	_do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+	enforce_variable_with_value USER_HOME "${USER_HOME}"
+	# local DOWNLOADFOLDER="$(_find_downloads_folder)"
+  local DOWNLOADFOLDER="${USER_HOME}/Downloads"
+	enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+	if [[ -e "${DOWNLOADFOLDER}/zoom_x86_64.rpm" ]] ; then
+	{
+		rm -rf "${DOWNLOADFOLDER}/zoom_x86_64.rpm"
+	}
+	fi
+	# _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+
+
+	Installing Zoom from https://zoom.us/client/latest/zoom_x86_64.rpm
+	Comment downloading using firefox headless
+	local _command='firefox --headless --kiosk --first-startup -P default https://zoom.us/client/latest/zoom_x86_64.rpm'
+  anounce "${_command}"
+	su - "${SUDO_USER}" -c '${_command}' &  #  "${_parameters-}"
+	_pid=$!
+  Comment "waiting for _pid:${_pid} to complete"
+	wait ${_pid}
   _install_rpm "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
   _err=$?
   _remove_downloaded_codename_or_err  $_err "${DOWNLOADFOLDER}/${CODENAME}"
   _err=$?
   return  $_err
 } # end _fedora__64
+
+_fedora_40__64() {
+  trap 'echo Error:$?' ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  _fedora__64 "${_parameters-}"
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _fedora_40__64
 
 _darwin__64() {
   trap "echo Error:$?" ERR INT
@@ -125,4 +156,3 @@ _darwin__64() {
   }
   fi
 } # end _darwin__64
-
