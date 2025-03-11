@@ -765,7 +765,7 @@ fi
     _if_not_contains "${USER_HOME}/${INITFILE}"  "evm/scripts" ||  echo "${EVM_SH_CONTENT}" >> "${USER_HOME}/${INITFILE}"
   }
   done <<< "${INITFILES}"
-  echo -n "vim " 
+  echo -n "vim "
   while read INITFILE; do
   {
     [ -z ${INITFILE} ] && continue
@@ -963,6 +963,84 @@ _fedora_39__64(){
   local -i _err=0
   _redhat_flavor_install "${_parameters-}"
 } # end _fedora_39__64
+
+_fedora_42__64(){
+  # trap "echo Error:$?" ERR INT
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local _parameters="${*-}"
+  local -i _err=0
+  echo -e  "params:${_parameters-}"
+
+  _git_clone "https://github.com/robisonsantos/evm.git" "${USER_HOME}/.evm"
+  dnf group install -y c-development development-tools
+  dnf build-dep erlang -y --allowerasing # --skip-broken
+
+  local package packages="
+    # Fedora 37
+    wget
+    # openssl
+    # openssl-devel
+    fop
+    libwbxml
+    libwbxml-devel
+    rust-libxml-devel
+    libxslt
+    libxslt-devel
+    # xsltproc
+    flex
+    compat-flex
+    unixODBC-gui-qt
+		unixODBC-devel
+    erlang-odbc
+    erlang-xmlrpc
+    erlang-ssh
+    erlang-tftp
+    erlang-tools
+		erlang-ezlib
+    erlang-yconf
+    erlang-riaknostic
+    erlang-riak_pb
+    erlang-riak_sysmon
+    erlang-rebar3-pc
+    erlang-ranch
+    erlang-snmp
+    erlang-webmachine
+    # libqt5opengl5-devel
+    ncurses-devel
+    wxGTK3-devel
+		wxGTK3-docs
+		wxGTK-devel
+		wxGTK-docs
+		compat-wxGTK3-gtk2-devel
+		compat-wxGTK3-gtk2-media
+		compat-wxGTK3-gtk2-gl
+		compat-wxGTK3-gtk2
+		wxGTK-webview
+		wxGTK3-gl
+    # gtk3-devel
+    # wx-common
+		wxGTK
+		wxGTK3
+		wxGlade
+		wxBase3
+		wxBase
+		erlang-wx
+		commons-compiler-jdk
+		javac@https://download.oracle.com/java/21/latest/jdk-21_linux-x64_bin.rpm
+		glib
+		glib-devel
+		libiodbc
+		libiodbc-devel
+   "
+
+  _package_list_installer "${packages}"
+  local MSG=$(_install_and_add_variables_to_bashrc_zshrc)
+  echo "${MSG}"
+  _finale_message
+
+
+} # end _fedora_42__64
+
 
 _gentoo__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
