@@ -408,7 +408,7 @@ function sudo_it() {
     SUDO_UID=502
     SUDO_GID=20
   }
-  elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]] ; then
+  elif [[ "$(cut -c1-5 <<< "$(uname -s)")" == "Linux" ]] ; then
   {
       # Do something under GNU/Linux platform
       raise_to_sudo_and_user_home "${*-}"
@@ -423,7 +423,7 @@ function sudo_it() {
       }
       trap _trap_on_error ERR INT
   }
-  elif [[ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]] || [[ "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT" ]] ; then
+  elif [[ "$(cut -c1-10 <<< "$(uname -s)")" == "MINGW32_NT" ]] || [[ "$(cut -c1-10 <<< "$(uname -s)")" == "MINGW64_NT" ]] ; then
   {
       # Do something under Windows NT platform
       # nothing here
@@ -789,6 +789,8 @@ var_t" | xargs -I {} semanage fcontext -a -t {} '/var/lib/snapd/snap'
   semodule -X 300 -i my-snapd.pp
   echo "admin_home_t, bin_t, boot_t, cert_t, cgroup_memory_pressure_t, cgroup_t, device_t, dovecot_cert_t, etc_runtime_t, etc_t, file_context_t, fonts_cache_t, fonts_t, fwupd_cert_t, home_cert_t, home_root_t, ld_so_t, lib_t, locale_t, man_cache_t, man_t, pki_tomcat_cert_t, proc_t, root_t, rpm_script_tmp_t, samba_cert_t, security_t, selinux_config_t, shell_exec_t, slapd_cert_t, snappy_home_t, snappy_snap_t, snappy_var_lib_t, src_t, sysfs_t, system_conf_t, system_db_t, system_dbusd_var_lib_t, textrel_shlib_t, tmp_t, usr_t, var_run_t, var_t" | sed 's/, /\n/g' | xargs -I {} semanage fcontext -a -t {} '/var/lib/snapd/snap'
   restorecon -v '/var/lib/snapd/snap'
+  ausearch -c 'systemd' --raw | audit2allow -M my-systemd
+  semodule -X 300 -i my-systemd.pp
   _err=$?
   echo "${_parameters-}"
   if [ ${_err} -gt 0 ] ; then

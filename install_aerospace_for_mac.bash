@@ -255,7 +255,7 @@ function sudo_it() {
     SUDO_UID=502
     SUDO_GID=20
   }
-  elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]] ; then
+  elif [[ "$(cut -c1-5 <<< "$(uname -s)")" == "Linux" ]] ; then
   {
       # Do something under GNU/Linux platform
       raise_to_sudo_and_user_home "${*-}"
@@ -270,7 +270,7 @@ function sudo_it() {
       }
       trap _trap_on_error ERR INT
   }
-  elif [[ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]] || [[ "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT" ]] ; then
+  elif [[ "$(cut -c1-10 <<< "$(uname -s)")" == "MINGW32_NT" ]] || [[ "$(cut -c1-10 <<< "$(uname -s)")" == "MINGW64_NT" ]] ; then
   {
       # Do something under Windows NT platform
       # nothing here
