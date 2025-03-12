@@ -255,7 +255,7 @@ function sudo_it() {
     SUDO_UID=502
     SUDO_GID=20
   }
-  elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]] ; then
+  elif [[ "$(cut -c1-5 <<< "$(uname -s)")" == "Linux" ]] ; then
   {
       # Do something under GNU/Linux platform
       raise_to_sudo_and_user_home "${*-}"
@@ -270,7 +270,7 @@ function sudo_it() {
       }
       trap _trap_on_error ERR INT
   }
-  elif [[ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]] || [[ "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT" ]] ; then
+  elif [[ "$(cut -c1-10 <<< "$(uname -s)")" == "MINGW32_NT" ]] || [[ "$(cut -c1-10 <<< "$(uname -s)")" == "MINGW64_NT" ]] ; then
   {
       # Do something under Windows NT platform
       # nothing here
@@ -532,12 +532,12 @@ if [[ "$(uname)" == "Darwin" ]] ; then
     [[ "$(uname -m)" == "x86_64" ]] && install_darwin_lastest_sublime_64 "$@"
     [[ "$(uname -m)" == "i686"   ]] && install_darwin_lastest_sublime_64 "$@"
     [[ "$(uname -m)" == "arm64"   ]] && install_darwin_lastest_sublime_64 "$@"
-elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]] ; then
+elif [[ "$(cut -c1-5 <<< "$(uname -s)")" == "Linux" ]] ; then
   # Do something under GNU/Linux platform
   # ubuntu lsb_release -i | sed 's/Distributor\ ID://g' = \tUbuntu\n
     [[ "$(uname -i)" == "x86_64" ]] && install_linux_lastest_sublime_64 "$@"
     [[ "$(uname -i)" == "i686"   ]] && install_linux_lastest_sublime_32 "$@"
-elif [[ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]] || [[ "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT" ]] ; then
+elif [[ "$(cut -c1-10 <<< "$(uname -s)")" == "MINGW32_NT" ]] || [[ "$(cut -c1-10 <<< "$(uname -s)")" == "MINGW64_NT" ]] ; then
   # Do something under Windows NT platform
     [[ "$(uname -i)" == "x86_64" ]] && install_windows_lastest_sublime_64 "$*"
     [[ "$(uname -i)" == "i686"   ]] && install_windows_lastest_sublime_32 "$*"

@@ -198,7 +198,7 @@ _fedora_40__64() {
 } # end _fedora_40__64
 
 _fedora_41__64() {
-	yes | dnf config-manager addrepo --from-repofile=https://download.opensuse.org/repositories/network:im:signal/Fedora_41/network:im:signal.repo
+	yes | dnf config-manager addrepo --from-repofile=https://download.opensuse.org/repositories/network:im:signal/Fedora_41/network:im:signal.repo --overwrite
   yes | dnf install signal-desktop -y
 
 } # end _fedora_41__64
