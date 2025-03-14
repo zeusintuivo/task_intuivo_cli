@@ -31,6 +31,8 @@ function main(){
 	sudo dnf install dracut-config-rescue -y
 	sudo rpm --rebuilddb
 	sudo dnf distro-sync --allowerasing -y
+  sudo dnf install --allowerasing --nobest https://rpms.remirepo.net/fedora/remi-release-$(rpm -E %fedora).rpm -y
+	# sudo dnf install https://rpms.remirepo.net/fedora/remi-release-${target}.rpm -y
 	sudo fixfiles -B onboot
 } # end main
 
