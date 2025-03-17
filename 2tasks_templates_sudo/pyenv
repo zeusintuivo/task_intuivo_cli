@@ -3,35 +3,35 @@
 # @author Zeus Intuivo <zeus@intuivo.com>
 #
 
-_package_list_installer() {
-  # trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  local package packages="${@}"
-  trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer pyenv" && echo -e "${RESET}" && return 0' ERR
-
-  if ! install_requirements "linux" "${packages}" ; then
-  {
-    warning "installing requirements. ${CYAN} attempting to install one by one"
-    while read package; do
-    {
-      [ -z ${package} ] && continue
-      if ! install_requirements "linux" "${package}" ; then
-      {
-      _err=$?
-      if [ ${_err} -gt 0 ] ; then
-      {
-          echo -e "${RED}"
-          echo failed to install requirements "${package}"
-          echo -e "${RESET}"
-        }
-        fi
-      }
-      fi
-    }
-    done <<< "${packages}"
-  }
-  fi
-} # end _package_list_installer
-
+# _package_list_installer() {
+#   # trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+#   local package packages="${@}"
+#   trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _package_list_installer pyenv" && echo -e "${RESET}" && return 0' ERR
+#
+#   if ! install_requirements "linux" "${packages}" ; then
+#   {
+#     warning "installing requirements. ${CYAN} attempting to install one by one"
+#     while read package; do
+#     {
+#       [ -z ${package} ] && continue
+#       if ! install_requirements "linux" "${package}" ; then
+#       {
+#       _err=$?
+#       if [ ${_err} -gt 0 ] ; then
+#       {
+#           echo -e "${RED}"
+#           echo failed to install requirements "${package}"
+#           echo -e "${RESET}"
+#         }
+#         fi
+#       }
+#       fi
+#     }
+#     done <<< "${packages}"
+#   }
+#   fi
+# } # end _package_list_installer
+#
 
 _git_clone_pyenv() {
   trap 'echo -e "${RED}" && echo "ERROR failed $0:$LINENO _git_clone_pyenv pyenv" && echo -e "${RESET}" && return 0' ERR
@@ -134,6 +134,8 @@ fi
 _debian_flavor_install() {
  # export USER_HOME="/home/${SUDO_USER}"
   enforce_variable_with_value USER_HOME "${USER_HOME}"
+	apt-get install  libbz2-dev libsqlite3-dev python-tk python3-tk tk-dev -y
+
   local package packages="
     libreadline-dev
     libbz2-dev
@@ -335,6 +337,7 @@ _ubuntu__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _debian_flavor_install
 } # end _ubuntu__64
+
 _ubuntu__aarch64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _ubuntu_22__aarch64
