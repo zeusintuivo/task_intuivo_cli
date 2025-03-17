@@ -1,47 +1,33 @@
 #!/usr/bin/bash
 
 _debian_flavor_install() {
-  # trap  '_trap_on_exit $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  EXIT
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  if (
-  install_requirements "linux" "
-    base64
-    unzip
-    curl
-    wget
-    ufw
-    nginx
-  "
-  ); then
-    {
-      apt install base64 -y
-      apt install unzip -y
-      apt install nginx -y
-    }
-  fi
-  verify_is_installed "
-    unzip
-    curl
-    wget
-    tar
-    ufw
-    nginx
-  "
-  local PB_VERSION=0.16.7
-  local CODENAME="pocketbase_${PB_VERSION}_linux_amd64.zip"
-  local TARGET_URL="https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/${CODENAME}"
-  local DOWNLOADFOLDER="$(_find_downloads_folder)"
-  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-  directory_exists_with_spaces "${DOWNLOADFOLDER}"
-  cd "${DOWNLOADFOLDER}"
-  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
-  # unzip "${DOWNLOADFOLDER}/${CODENAME}" -d $HOME/pb/
-  local UNZIPDIR="${USER_HOME}/_/software"
-  mkdir -p "${UNZIPDIR}"
-  _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
-  local PATHTOPOCKETBASE="${UNZIPDIR}/pocketbase"
-  local THISIP=$(myip)
+  anounce_command apt-get install vim -y
+  curl -fLo "${USER_HOME}/.vim/autoload/plug.vim" --create-dirs \
+    https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+  anounce_command chown -R  "${SUDO_USER}" "${USER_HOME}/.vim/"
+  curl -fLo "/root/.vim/autoload/plug.vim" --create-dirs \
+    https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+
+  local content="$(_write_vimrc)"
+  touch "${USER_HOME}/.vimrc"
+  touch "/root/.vimrc"
+
+  echo "${content}" > "${USER_HOME}/.vimrc"
+  echo "${content}" > "/root/.vimrc"
+
+  chown -R "${SUDO_USER}" "${USER_HOME}/.vim/autoload/plug.vim"
+  chown -R "${SUDO_USER}" "${USER_HOME}/.vimrc"
+  # vim
+  # vim -es -u vimrc -i NONE -c "PlugInstall" -c "qa"
+  vim -c PlugInstall -c qa
+  su - "${SUDO_USER}" -c 'vim -c PlugInstall -c qa'
+  # su - "${SUDO_USER}" -c 'vim -es -u vimrc -i NONE -c "PlugInstall" -c "qa"'
+
+
+  # neovim
+  # nvim -es -u init.vim -i NONE -c "PlugInstall" -c "qa"
 
 } # end _debian_flavor_install
 
