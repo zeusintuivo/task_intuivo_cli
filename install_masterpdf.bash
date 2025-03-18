@@ -6,7 +6,7 @@
 #set -u
 set -E -o functrace
 export THISSCRIPTCOMPLETEPATH
-
+typeset -i -err=0
 echo "0. sudologic $0:$LINENO           SUDO_COMMAND:${SUDO_COMMAND:-}"
 echo "0. sudologic $0:$LINENO               SUDO_GRP:${SUDO_GRP:-}"
 echo "0. sudologic $0:$LINENO               SUDO_UID:${SUDO_UID:-}"
@@ -20,63 +20,164 @@ echo "0. sudologic $0:$LINENO       THISSCRIPTPARAMS:${THISSCRIPTPARAMS:-}"
 
 echo "0. sudologic $0 Start Checking realpath  "
 if ! ( command -v realpath >/dev/null 2>&1; )  ; then
+{
   echo "... realpath not found. Downloading REF:https://github.com/swarmbox/realpath.git "
-  cd $HOME
+  if [[ -n "${USER_HOME}" ]] ;  then
+  {
+    cd "${USER_HOME}" || echo "ERROR! failed realpath compile cd " && exit 1
+  }
+  else
+  {
+    cd "${HOME}" || echo "ERROR! failed realpath compile cd " && exit 1
+  }
+  fi
   git clone https://github.com/swarmbox/realpath.git
-  cd realpath
+  _err=$?
+  [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Builing realpath. returned error did not download or is installed err:$_err  \n \n  " && exit 1
+  cd realpath || echo "ERROR! failed realpath compile cd " && exit 1
   make
+  _err=$?
+  [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Builing realpath. returned error did not download or is installed err:$_err  \n \n  " && exit 1
   sudo make install
   _err=$?
   [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Builing realpath. returned error did not download or is installed err:$_err  \n \n  " && exit 1
+  _err=$?
+  [ $_err -gt 0 ] &&  echo -e "\n \n  ERROR! Builing realpath. returned error did not download or is installed err:$_err  \n \n  " && exit 1
+}
 else
+{
   echo "... realpath exists .. check!"
+}
+fi
+if ! ( command -v paeth >/dev/null 2>&1; )  ; then
+{
+  function paeth(){
+  local path_to_file=""
+  local -i _err=0
+  path_to_file="${*}"
+  if [[ ! -e "${path_to_file}" ]] ; then   # not found in current folder
+  {
+    path_to_file="$(pwd)/${*}"
+    if [[ ! -e "${path_to_file}" ]] ; then  # add full pwd and see if finds it
+    {
+      path_to_file="$(which "${*}")"   # search in system $PATH and env system
+      _err=$?
+      if [ ${_err} -gt 0 ] ; then
+      {
+        if ! type  -f "${*}" >/dev/null 2>&1  ; then
+        {
+          echo "is a function"
+          type  -f "${*}"
+        }
+        fi
+        >&2 echo "error 1. ${*} not found in ≤$(pwd)≥ or ≤\${PATH}≥ or ≤\$(env)≥ "
+        exit 1  # not found, silent fail
+      }
+      fi
+      path_to_file="$(realpath "$(which "${*}")")"   # updated realpath macos 20210902
+      _err=$?
+      if [ ${_err} -gt 0 ] ; then
+      {
+         if ! type  -f "${*}" >/dev/null 2>&1  ; then
+        {
+          echo "is a function"
+          type  -f "${*}"
+        }
+        fi
+         >&2 echo "error 2. ${*} not found in ≤$(pwd)≥ or ≤\${PATH}≥ or ≤\$(env)≥ "
+        exit 1  # not found, silent fail
+      }
+      fi
+      if [[ ! -e "${path_to_file}" ]] ; then
+      {
+         if ! type  -f "${*}" >/dev/null 2>&1  ; then
+        {
+          echo "is a function"
+          type  -f "${*}"
+        }
+        fi
+         >&2 echo "error 3. ${path_to_file} does not exist or is not accesible "
+        exit 1  # not found, silent fail
+      }
+      fi
+    }
+    fi
+  }
+  fi
+  path_to_file="$(realpath "${path_to_file}")"
+  if ! type  -f "${*}" >/dev/null 2>&1  ; then
+  {
+    echo "is also a function"
+    type  -f "${*}"
+  }
+  fi
+
+  echo "${path_to_file}"
+  } # end paeth
+}
+fi
+if ! ( command -v realpath >/dev/null 2>&1; )  ; then
+{
+  echo "... realpath not found. and did not install . ABORTING"
+}
 fi
 
+# shellcheck disable=SC2155
+# SC2155: Declare and assign separately to avoid masking return values.
 typeset -r THISSCRIPTCOMPLETEPATH="$(realpath  "$0")"   # updated realpath macos 20210902
 # typeset -r THISSCRIPTCOMPLETEPATH="$(realpath "$(basename "$0")")"  # updated realpath macos 20210902  # § This goe$
 export BASH_VERSION_NUMBER
-typeset BASH_VERSION_NUMBER=$(echo $BASH_VERSION | cut -f1 -d.)
+typeset BASH_VERSION_NUMBER=""
+BASH_VERSION_NUMBER=$( cut -f1 -d.  <<< "${BASH_VERSION}")
 
 export  THISSCRIPTNAME
+# shellcheck disable=SC2155
+# SC2155: Declare and assign separately to avoid masking return values.
 typeset -r THISSCRIPTNAME="$(basename "$0")"
 
 export THISSCRIPTPARAMS
+# shellcheck disable=SC2155
+# SC2155: Declare and assign separately to avoid masking return values.
 typeset -r THISSCRIPTPARAMS="${*:-}"
 echo "0. sudologic $0:$LINENO       THISSCRIPTPARAMS:${THISSCRIPTPARAMS:-}"
 
 export _err
 typeset -i _err=0
 
-  function _trap_on_error(){
+  function _trap_on_error1(){
     #echo -e "\\n \033[01;7m*** 1 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR ...\033[0m"
-    local cero="$0"
-    local file1="$(paeth ${BASH_SOURCE})"
-    local file2="$(paeth ${cero})"
-    echo -e "ERROR TRAP $THISSCRIPTNAME $THISSCRIPTPARAMS
+    local cero="${0-}"
+    local file1=""
+    file1="$(paeth "${BASH_SOURCE[0]}")"
+    local file2=""
+    file2="$(paeth "${cero}")"
+    echo -e "$0:$LINENO ERROR TRAP _trap_on_error1  $THISSCRIPTNAME $THISSCRIPTPARAMS
 ${file1}:${BASH_LINENO[-0]}     \t ${FUNCNAME[-0]}()
 $file2:${BASH_LINENO[1]}    \t ${FUNCNAME[1]}()
 ERR ..."
     exit 1
   }
-  trap _trap_on_error ERR
-  function _trap_on_int(){
+  trap _trap_on_error1 ERR
+  function _trap_on_int1(){
     # echo -e "\\n \033[01;7m*** 1 INTERRUPT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n  INT ...\033[0m"
     local cero="$0"
-    local file1="$(paeth ${BASH_SOURCE})"
-    local file2="$(paeth ${cero})"
-    echo -e "INTERRUPT TRAP $THISSCRIPTNAME $THISSCRIPTPARAMS
+    local file1=""
+    file1="$(paeth "${BASH_SOURCE[0]}")"
+    local file2=""
+    file2="$(paeth "${cero}")"
+    echo -e "$0:$LINENO INTERRUPT TRAP 1 $THISSCRIPTNAME $THISSCRIPTPARAMS
 ${file1}:${BASH_LINENO[-0]}     \t ${FUNCNAME[-0]}()
 $file2:${BASH_LINENO[1]}    \t ${FUNCNAME[1]}()
 INT ..."
     exit 0
   }
 
-  trap _trap_on_int INT
+  trap _trap_on_int1 INT
 
 load_struct_testing(){
-  function _trap_on_error(){
+  function _trap_on_error2(){
     local -ir __trapped_error_exit_num="${2:-0}"
-		echo -e "\\n \033[01;7m*** 0tasks_base/sudoer.bash:$LINENO load_struct_testing() ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+    echo -e "$0:$LINENO error trap 2 \\n \033[01;7m*** 0tasks_base/sudoer.bash:$LINENO load_struct_testing() ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE[0]}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
 
     echo ". ${1}"
     echo ". exit  ${__trapped_error_exit_num}  "
@@ -85,57 +186,118 @@ load_struct_testing(){
     local -r __caller=$(caller)
     local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
     local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
-
+    #                awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    local output=""
+		output="$(awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}")"
+    if ( command -v pygmentize >/dev/null 2>&1; )  ; then
+    {
+      echo "${output}" | pygmentize -g
+    }
+    else
+    {
+      echo "${output}"
+    }
+    fi
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
     exit 1
-  }
+  } # end _trap_on_error2
+  function source_library(){
+    # Sample usage
+    #    if ( source_library "${provider}" ) ; then
+    #      failed
+    #    fi
+    local -i _DEBUG=${DEBUG:-0}
+    local provider="${*-}"
+    local structsource=""
+      if [[  -e "${provider}" ]] ; then
+      {
+        structsource="""$(<"${provider}")"""
+        _err=$?
+        if [ $_err -gt 0 ] ; then
+        {
+          >&2 echo -e "#\n #\n# 4.1 WARNING Loading ${provider}. Occured while running 'source' err:$_err  \n \n  "
+          return 1
+        }
+        fi
+  if (( _DEBUG )) ; then
+          >&2 echo "# $0: 0tasks_base/sudoer.bash Loading locally"
+        fi
+        echo """${structsource}"""
+        return 0
+      }
+      fi
+      >&2 echo -e "\n 4.2 nor found  ${provider}. 'source' err:$_err  \n  "
+      return 1
+  } # end source_library
   function load_library(){
     local _library="${1:-struct_testing}"
     local -i _DEBUG=${DEBUG:-0}
+    local -i _err=0
     if [[ -z "${1}" ]] ; then
     {
        echo "Must call with name of library example: struct_testing execute_command"
        exit 1
     }
     fi
-    trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-      local provider="$HOME/_/clis/execute_command_intuivo_cli/${_library}"
-      if [[ -n "${SUDO_USER:-}" ]] && [[ -n "${HOME:-}" ]] && [[ "${HOME:-}" == "/root" ]] && [[ !  -e "${provider}"  ]] ; then
+    trap  '_trap_on_error2 $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+      local providers="
+/home/${SUDO_USER-}/_/clis/execute_command_intuivo_cli/${_library-}
+/Users/${SUDO_USER-}/_/clis/execute_command_intuivo_cli/${_library-}
+/home/${USER-}/_/clis/execute_command_intuivo_cli/${_library-}
+/Users/${USER-}/_/clis/execute_command_intuivo_cli/${_library-}
+${HOME-}/_/clis/execute_command_intuivo_cli/${_library-}
+"
+      local provider=""
+      local -i _loaded=0
+      local -i _found=0
+      local structsource
+      while read -r provider ; do
       {
-        provider="/home/${SUDO_USER}/_/clis/execute_command_intuivo_cli/${_library}"
-      }
-      elif [[ -z "${SUDO_USER:-}" ]] && [[ -n "${HOME:-}" ]] && [[ "${HOME:-}" == "/root" ]] && [[ !  -e "${provider}"  ]] ; then
-      {
-        provider="/home/${USER}/_/clis/execute_command_intuivo_cli/${_library}"
-      }
-      fi
-      echo "$0: ${provider}"
-      echo "$0: SUDO_USER:${SUDO_USER:-nada SUDOUSER}: USER:${USER:-nada USER}: ${SUDO_HOME:-nada SUDO_HOME}: {${HOME:-nada HOME}}"
-      local _err=0 structsource
-      if [[  -e "${provider}" ]] ; then
-        if (( _DEBUG )) ; then
-          echo "$0: 0tasks_base/sudoer.bash Loading locally"
-        fi
-        structsource="""$(<"${provider}")"""
+        [[ -z "${provider}" ]] && continue
+        [[ ! -e "${provider}" ]] && continue
+  _loaded=0
+  _found=0
+  structsource="""$(source_library "${provider}")"""
         _err=$?
+        _loaded=1
+  _found=1
         if [ $_err -gt 0 ] ; then
         {
-           echo -e "\n \n  ERROR! Loading ${_library}. running 'source locally' returned error did not download or is empty err:$_err  \n \n  "
-           exit 1
+          echo -e "\n \n 4.1 WARNING Loading ${_library}. Occured while running 'source' err:$_err  \n \n  "
+          _loaded=0
+    _found=0
         }
         fi
-      else
+      }
+      done <<< "${providers}"
+
+#       provider="$HOME/_/clis/execute_command_intuivo_cli/${_library}"
+#       if [[ -n "${SUDO_USER:-}" ]] && [[ -n "${HOME:-}" ]] && [[ "${HOME:-}" == "/root" ]] && [[ !  -e "${provider}"  ]] ; then
+#       {
+#         provider="/home/${SUDO_USER}/_/clis/execute_command_intuivo_cli/${_library}"
+#       }
+#       elif [[ -z "${USER:-}" ]] && [[ -n "${HOME:-}" ]] && [[ "${HOME:-}" == "/root" ]] && [[ !  -e "${provider}"  ]] ; then
+#       {
+#         provider="/home/${USER}/_/clis/execute_command_intuivo_cli/${_library}"
+#       }
+#       fi
+#       echo "$0: ${provider}"
+#       echo "$0: SUDO_USER:${SUDO_USER:-nada SUDOUSER}: USER:${USER:-nada USER}: ${SUDO_HOME:-nada SUDO_HOME}: {${HOME:-nada HOME}}"
+
+      if (( ! _loaded )) ; then
         if ( command -v curl >/dev/null 2>&1; )  ; then
           if (( _DEBUG )) ; then
             echo "$0: 0tasks_base/sudoer.bash Loading ${_library} from the net using curl "
           fi
-          structsource="""$(curl https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/${_library}  -so -   2>/dev/null )"""  #  2>/dev/null suppress only curl download messages, but keep curl output for variable
+          _loaded=0
+          structsource="""$(curl "https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/${_library}"  -so -   2>/dev/null )"""  #  2>/dev/null suppress only curl download messages, but keep curl output for variable
           _err=$?
+          _loaded=1
           if [ $_err -gt 0 ] ; then
           {
             echo -e "\n \n  ERROR! Loading ${_library}. running 'curl' returned error did not download or is empty err:$_err  \n \n  "
+            _loaded=0
             exit 1
           }
           fi
@@ -143,16 +305,19 @@ load_struct_testing(){
           if (( _DEBUG )) ; then
             echo "$0: 0tasks_base/sudoer.bash Loading ${_library} from the net using wget "
           fi
-          structsource="""$(wget --quiet --no-check-certificate  https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/${_library} -O -   2>/dev/null )"""  #  2>/dev/null suppress only wget download messages, but keep wget output for variable
+          _loaded=0
+          structsource="""$(wget --quiet --no-check-certificate  "https://raw.githubusercontent.com/zeusintuivo/execute_command_intuivo_cli/master/${_library}" -O -   2>/dev/null )"""  #  2>/dev/null suppress only wget download messages, but keep wget output for variable
           _err=$?
+          _loaded=1
           if [ $_err -gt 0 ] ; then
           {
             echo -e "\n \n  ERROR! Loading ${_library}. running 'wget' returned error did not download or is empty err:$_err  \n \n  "
+            _loaded=0
             exit 1
           }
           fi
         else
-          echo -e "\n \n 2  ERROR! Loading ${_library} could not find wget or curl to download  \n \n "
+          echo -e "\n \n 2  ERROR! Loading ${_library} could not find local, wget, curl to load or download  \n \n "
           exit 69
         fi
       fi
@@ -162,11 +327,15 @@ load_struct_testing(){
         exit 1
       }
       fi
+      # shellcheck disable=SC2155
+      # SC2155: Declare and assign separately to avoid masking return values.
       local _temp_dir="$(mktemp -d 2>/dev/null || mktemp -d -t "${_library}_source")"
       echo "${structsource}">"${_temp_dir}/${_library}"
       if (( _DEBUG )) ; then
         echo "1. sudologic $0: 0tasks_base/sudoer.bash Temp location ${_temp_dir}/${_library}"
       fi
+      # shellcheck disable=SC1090
+      # SC1090: ShellCheck can't follow non-constant source. Use a directive to specify location.
       source "${_temp_dir}/${_library}"
       _err=$?
       if [ $_err -gt 0 ] ; then
@@ -247,30 +416,35 @@ function sudo_it() {
   if [[ "$(uname)" == "Darwin" ]] ; then
   {
     passed "sudo_it() # Do something under Mac OS X platform "
-      # nothing here
-      raise_to_sudo_and_user_home "${*-}"
-      [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
+    # nothing here
+    raise_to_sudo_and_user_home "${*-}"
+    _err=$?
+    [ ${_err} -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
     SUDO_USER="${USER}"
     SUDO_COMMAND="$0"
     SUDO_UID=502
     SUDO_GID=20
   }
-  elif [[ "$(cut -c1-5 <<< "$(uname -s)")" == "Linux" ]] ; then
+  elif [[ "$(uname -s)" == "Linux" ]] ; then
   {
-      # Do something under GNU/Linux platform
+ 			# shellcheck disable=SC2317
+			# SC2317: Command appears to be unreachable. Check usage (or ignore if invoked indirectly).
+      function _trap_on_error3(){
+        echo -e "$0:$LINENO \033[01;7m*** 3 ERROR + INT TRAP 3 "
+        echo -e "  $THISSCRIPTNAME \\n${BASH_SOURCE[0]}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR INT ...\033[0m"
+
+      }
+      trap _trap_on_error3 ERR INT     # Do something under GNU/Linux platform
       raise_to_sudo_and_user_home "${*-}"
-      [ $? -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
+      _err=$?
+      [ ${_err} -gt 0 ] && failed to sudo_it raise_to_sudo_and_user_home && exit 1
       enforce_variable_with_value SUDO_USER "${SUDO_USER}"
       enforce_variable_with_value SUDO_UID "${SUDO_UID}"
       enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
       # Override bigger error trap  with local
-      function _trap_on_error(){
-        echo -e "\033[01;7m*** 3 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR INT ...\033[0m"
 
-      }
-      trap _trap_on_error ERR INT
   }
-  elif [[ "$(cut -c1-10 <<< "$(uname -s)")" == "MINGW32_NT" ]] || [[ "$(cut -c1-10 <<< "$(uname -s)")" == "MINGW64_NT" ]] ; then
+elif [[ "$(cut -c1-10 <<< "$(uname -s)")"  == "MINGW32_NT" ]] || [[  "$(cut -c1-10 <<< "$(uname -s)")" == "MINGW64_NT" ]] ; then
   {
       # Do something under Windows NT platform
       # nothing here
@@ -299,18 +473,22 @@ function sudo_it() {
   enforce_variable_with_value SUDO_UID "${SUDO_UID}"
   enforce_variable_with_value SUDO_COMMAND "${SUDO_COMMAND}"
   # Override bigger error trap  with local
-  function _trap_on_err_int(){
+  # shellcheck disable=SC2317
+	# SC2317: Command appears to be unreachable. Check usage (or ignore if invoked indirectly).
+  function _trap_on_err_int1(){
     # echo -e "\033[01;7m*** 7 ERROR OR INTERRUPT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[-0]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[1]}() \\n ERR INT ...\033[0m"
-    local cero="$0"
-    local file1="$(paeth ${BASH_SOURCE})"
-    local file2="$(paeth ${cero})"
-    echo -e " ERROR OR INTERRUPT  TRAP $THISSCRIPTNAME $THISSCRIPTPARAMS
+    local cero="${0-}"
+    local file1=""
+		file1="$(paeth "${BASH_SOURCE[0]}")"
+    local file2=""
+		file2="$(paeth "${cero}")"
+    echo -e "$0:$LINENO  ERROR OR INTERRUPT 1  TRAP $THISSCRIPTNAME $THISSCRIPTPARAMS
 ${file1}:${BASH_LINENO[-0]}     \t ${FUNCNAME[-0]}()
 $file2:${BASH_LINENO[1]}    \t ${FUNCNAME[1]}()
 ERR INT ..."
     exit 1
   }
-  trap _trap_on_err_int ERR INT
+  trap _trap_on_err_int1 ERR INT
 } # end sudo_it
 
 # _linux_prepare(){
@@ -346,6 +524,8 @@ typeset -i tomporalDEBUG=${DEBUG:-}
   export USER_HOME
   # shellcheck disable=SC2046
   # shellcheck disable=SC2031
+  # shellcheck disable=SC2155
+  # SC2155: Declare and assign separately to avoid masking return values.
   typeset -r USER_HOME="$(echo -n $(bash -c "cd ~${SUDO_USER} && pwd"))"  # Get the caller's of sudo home dir LINUX and MAC
   # USER_HOME=$(getent passwd "${SUDO_USER}" | cut -d: -f6)   # Get the caller's of sudo home dir LINUX
   enforce_variable_with_value USER_HOME "${USER_HOME}"
@@ -368,12 +548,12 @@ fi
   if (( tomporalDEBUG )) ; then
     Comment DEBUG_err?:${?}
   fi
-directory_exists_with_spaces "${USER_HOME}"
+  directory_exists_with_spaces "${USER_HOME}"
 
 
-  function _trap_on_error(){
+  function _trap_on_error4(){
     local -ir __trapped_error_exit_num="${2:-0}"
-    echo -e "\\n \033[01;7m*** 2 ERROR TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
+    echo -e "$0:$LINENO \\n \033[01;7m*** ERROR TRAP 4 $THISSCRIPTNAME \\n${BASH_SOURCE[0]}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n ERR ...\033[0m  \n \n "
     echo ". ${1}"
     echo ". exit  ${__trapped_error_exit_num}  "
     echo ". caller $(caller) "
@@ -381,17 +561,28 @@ directory_exists_with_spaces "${USER_HOME}"
     local -r __caller=$(caller)
     local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
     local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    #                awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    local output=""
+		output="$(awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}")"
+    if ( command -v pygmentize >/dev/null 2>&1; )  ; then
+    {
+      echo "${output}" | pygmentize -g
+    }
+    else
+    {
+      echo "${output}"
+    }
+    fi
 
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
     exit ${__trapped_error_exit_num}
   }
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  trap  '_trap_on_error4 $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
 
-  function _trap_on_exit(){
+  function _trap_on_exit5(){
     local -ir __trapped_exit_num="${2:-0}"
-    echo -e "\\n \033[01;7m*** 5 EXIT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n EXIT ...\033[0m  \n \n "
+		echo -e "$0:$LINENO \\n \033[01;7m*** 5 EXIT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE[0]}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n EXIT ...\033[0m  \n \n "
     echo ". ${1}"
     echo ". exit  ${__trapped_exit_num}  "
     echo ". caller $(caller) "
@@ -399,17 +590,28 @@ directory_exists_with_spaces "${USER_HOME}"
     local -r __caller=$(caller)
     local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
     local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    #               awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    local output=""
+		output="$(awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}")"
+    if ( command -v pygmentize >/dev/null 2>&1; )  ; then
+    {
+      echo "${output}" | pygmentize -g
+    }
+    else
+    {
+      echo "${output}"
+    }
+    fi
 
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
-    exit ${__trapped_INT_num}
-  }
+    exit ${__trapped_exit_num}
+  } # end _trap_on_exit5
   # trap  '_trap_on_exit $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  EXIT
 
   function _trap_on_INT(){
     local -ir __trapped_INT_num="${2:-0}"
-    echo -e "\\n \033[01;7m*** 7 INT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n INT ...\033[0m  \n \n "
+    echo -e "$0:$LINENO \\n \033[01;7m*** 7 INT TRAP $THISSCRIPTNAME \\n${BASH_SOURCE[0]}:${BASH_LINENO[-0]} ${FUNCNAME[1]}() \\n$0:${BASH_LINENO[1]} ${FUNCNAME[2]}()  \\n$0:${BASH_LINENO[2]} ${FUNCNAME[3]}() \\n INT ...\033[0m  \n \n "
     echo ". ${1}"
     echo ". INT  ${__trapped_INT_num}  "
     echo ". caller $(caller) "
@@ -417,13 +619,26 @@ directory_exists_with_spaces "${USER_HOME}"
     local -r __caller=$(caller)
     local -ir __caller_line=$(echo "${__caller}" | cut -d' ' -f1)
     local -r __caller_script_name=$(echo "${__caller}" | cut -d' ' -f2)
-    awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    #               awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}"
+    local output=""
+		output="$(awk 'NR>L-10 && NR<L+10 { printf "%-10d%10s%s\n",NR,(NR==L?"☠ » » » > ":""),$0 }' L="${__caller_line}" "${__caller_script_name}")"
+    if ( command -v pygmentize >/dev/null 2>&1; )  ; then
+    {
+      echo "${output}" | pygmentize -g
+    }
+    else
+    {
+      echo "${output}"
+    }
+    fi
 
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
     exit ${__trapped_INT_num}
-  }
+  } # end _trap_on_INT
   trap  '_trap_on_INT $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  INT
+
+#
 
 
 
@@ -517,13 +732,35 @@ _download_just_download() {
 
 _darwin__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-    local CODENAME="MasterPDFEditor.dmg"
+    # https://code-industry.net/public/MasterPDFEditor.dmg
+		local CODENAME="MasterPDFEditor.dmg"
     local URL="https://code-industry.net/public/"
     cd $USER_HOME/Downloads/
-    _download "${URL}"
-    sudo hdiutil attach ${CODENAME}
-    sudo cp -R /Volumes/Master\ PDF\ Editor/Master\ PDF\ Editor.app /Applications/
-    sudo hdiutil detach /Volumes/Master\ PDF\ Editor
+		_download "${URL}" "$USER_HOME/Downloads"
+    _assure_success
+    sudo hdiutil attach "${CODENAME}"
+    _assure_success
+		if [[ -d "/Volumes/Master\ PDF\ Editor/Master\ PDF\ Editor.app"  ]] ; then
+		{
+      sudo cp -R "/Volumes/Master\ PDF\ Editor/Master\ PDF\ Editor.app" /Applications/
+      _assure_success
+			sudo hdiutil detach /Volumes/Master\ PDF\ Editor
+      _assure_success
+    }
+		elif [[ -d /Volumes/MasterPDFEditor/Master\ PDF\ Editor.app  ]] ; then
+		{
+      sudo cp -R /Volumes/MasterPDFEditor/Master\ PDF\ Editor.app /Applications/
+      _assure_success
+			sudo hdiutil detach /Volumes/MasterPDFEditor
+      _assure_success
+		}
+	  else
+		{
+			failed "could not find mount  /Volumes"
+			sudo ls -lactrl "/Volumes"
+      _assure_success
+		}
+		fi
 } # end _darwin__64
 
 _ubuntu__64() {
@@ -547,7 +784,7 @@ _ubuntu__32() {
 _centos__64() {
   _fedora__64
 } # end _centos__64
-
+# https://code-industry.net/public/MasterPDFEditor.dmg
 _fedora__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
    # https://code-industry.net/public/master-pdf-editor-5.4.38-qt5.x86_64.rpm
@@ -568,7 +805,7 @@ _fedora__64() {
     [[ -z "${LASTEST_DOWNLOAD_FILE}" ]] && failed "Master PDF Version Dowload File NOT found! :${LASTEST_DOWNLOAD_FILE}:"
     passed "Master PDF Version Download File :${LASTEST_DOWNLOAD_FILE}:"
     local TARGET_URL=$(echo $WEBPAGE_TO_GET_DOWNLOAD_FILE | sed s/\</\\n\</g | grep --color=none -E "${CODELASTESTBUILD}.*${ARCHITECTURE}.*.rpm" | sed s/\ /\\n\</g | grep http | cut -d'"' -f2 | tail -1)
-    [[ -z "${TARGET_URL}" ]] && failed "Master PDF Version Target URL NOT found! :${Target URL}:"
+    [[ -z "${TARGET_URL}" ]] && failed "Master PDF Version Target URL NOT found! :${TARGET_URL}:"
     passed "Master PDF Version Target URL :${TARGET_URL}:"
 
   # get download link
