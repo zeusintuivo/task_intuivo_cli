@@ -717,6 +717,12 @@ _fedora_41__64() {
     rm /root/module-signing
   }
 	fi
+	if [[ "${*-}" == *"--help"* ]] ; then
+  {
+		echo " There are these options --extension7 --extension6 --reset --startover --restart --help"
+		exit 0
+	}
+	fi
 	dnf builddep libvpx-devel -y  --allowerasing
 	dnf builddep dkms -y  --allowerasing
   dnf builddep kernel-devel  -y  --allowerasing
@@ -787,12 +793,12 @@ _fedora_41__64() {
     modinfo
   "
   echo sudo dnf install VirtualBox-6.1 -y
-  #install_requirements "linux" "
-    # RedHat Flavor only
+  # install_requirements "linux" "
+  # RedHat Flavor only
   #  VirtualBox-6.1
   #"
-  #verify_is_installed "
-  #VirtualBox
+  # verify_is_installed "
+  # VirtualBox
   #"
 	if wget -P /etc/yum.repos.d/ https://download.virtualbox.org/virtualbox/rpm/fedora/virtualbox.repo ; then
 		{
@@ -1231,6 +1237,13 @@ _fedora_40__64() {
     rm /root/module-signing
   }
 	fi
+	if [[ "${*-}" == *"--help"* ]] ; then
+  {
+		echo " There are these options --extension7 --extension6 --reset --startover --restart --help"
+		exit 0
+	}
+	fi
+
 	dnf builddep libvpx-devel -y  --allowerasing
 	dnf builddep dkms -y  --allowerasing
   dnf builddep kernel-devel  -y  --allowerasing
@@ -1745,7 +1758,7 @@ _fedora__64() {
 		exit 0
 	}
  	fi
-	if [[ "${*-}" == *"--reset"* ]] || [[ "${*-}" == *"--startover"* ]] || [[ "${*-}" == *"--restart"* ]] then
+	if [[ "${*-}" == *"--reset"* ]] || [[ "${*-}" == *"--startover"* ]] || [[ "${*-}" == *"--restart"* ]] ; then
 	{
 		echo "--reset --startover --restart "
 		echo "reseting now"
@@ -1756,6 +1769,13 @@ _fedora__64() {
     rm /root/module-signing
   }
 	fi
+	if [[ "${*-}" == *"--help"* ]] ; then
+  {
+		echo " There are these options --extension7 --extension6 --reset --startover --restart --help"
+		exit 0
+	}
+	fi
+
 	dnf builddep libvpx-devel -y  --allowerasing
 	dnf builddep dkms -y  --allowerasing
   dnf builddep kernel-devel  -y  --allowerasing
@@ -1765,7 +1785,7 @@ _fedora__64() {
   }
   else
   {
-    cd "/etc/yum.repos.d/"
+    cd "/etc/yum.repos.d/" || exit 1
     wget http://download.virtualbox.org/virtualbox/rpm/fedora/virtualbox.repo
     file_exists_with_spaces "/etc/yum.repos.d/virtualbox.repo"
   }
@@ -1793,7 +1813,8 @@ _fedora__64() {
   if ( ! command -v pygmentize >/dev/null 2>&1; ) ;  then
     pip3 install pygments
   fi
-  local groupsinstalled=$(dnf group list --installed)
+  local groupsinstalled=""
+	groupsinstalled=$(dnf group list --installed)
   if [[ "${groupsinstalled}" = *"Development Tools"* ]] ; then
   {
     passed installed 'Development Tools'
@@ -1838,11 +1859,11 @@ _fedora__64() {
 	  dnf install VirtualBox-7.0 -y
   }
 	fi
-  Installing "usermod -aG vboxusers "\${USER}:${USER}" "
+  Installing "usermod -aG vboxusers \"\${USER}:${USER}\" "
 	usermod -aG vboxusers "${USER}"
-	Installing "usermod -aG vboxusers "\${SUDO_USER}:${SUDO_USER}" "
+	Installing "usermod -aG vboxusers \"\${SUDO_USER}:${SUDO_USER}\" "
 	usermod -aG vboxusers "${SUDO_USER}"
-  cd  "${USER_HOME}"
+  cd  "${USER_HOME}" || exit 1
   if [ ! -f  "${USER_HOME}/.virtualboxinstallreboot" ] ; then
 	{
 		[ ! -f  "${USER_HOME}/.virtualboxinstallreboot" ] && echo System will reboot now, after youpress any key
@@ -1854,9 +1875,10 @@ _fedora__64() {
 	  exit 0
 	}
 	fi
-  export KERN_DIR=/usr/src/kernels/`uname -r`
-  echo $KERN_DIR
-  cd  "${USER_HOME}"
+  export KERN_DIR
+	KERN_DIR=/usr/src/kernels/$(uname -r)
+  echo "$KERN_DIR"
+  cd  "${USER_HOME}" || exit 1
 	if [ -f  "${USER_HOME}/.virtualboxinstallrebootsigned" ] && [ ! -d /root/signed-modules ] ; then
 	{
 		rm -rf "${USER_HOME}/.virtualboxinstallrebootsigned"
@@ -1865,7 +1887,7 @@ _fedora__64() {
   if [ ! -f  "${USER_HOME}/.virtualboxinstallrebootsigned" ] ; then
   {
     mkdir -p /root/signed-modules
-    cd /root/signed-modules
+    cd /root/signed-modules || exit 1
     openssl req -new -x509 -newkey rsa:2048 -keyout MOK.priv -outform DER -out MOK.der -nodes -days 36500 -subj "/CN=VirtualBox/"
     chmod 600 MOK.priv
 		echo 3-
@@ -1875,24 +1897,25 @@ _fedora__64() {
 		echo Sign Mok REF: https://stackoverflow.com/questions/61248315/sign-virtual-box-modules-vboxdrv-vboxnetflt-vboxnetadp-vboxpci-centos-8
     echo 3-
 	 	echo 3- NOTE: This command will ask you to
-		echo 3-                                    add a password,
-		echo 3-                                                     write 1234678
-	  echo 3-  	you need this password after the next reboot.
+		echo "3-                                    add a password,"
+		echo "3-                                                     write 1234678"
+	  echo "3-  	you need this password after the next reboot."
     echo 3-
 		echo 3-
 	 	mokutil --import MOK.der
 
     echo REF: https://gist.github.com/reillysiemens/ac6bea1e6c7684d62f544bd79b2182a4
-    local name="$(getent passwd $(whoami) | awk -F: '{print $5}')"
+    local name=
+		name="$(getent passwd "$(whoami)" | awk -F: '{print $5}')"
     local out_dir=/root/module-signing
     mkdir  -p  "${out_dir}"
     echo 3-
-		echo 3- This command will ask you to add PEM key, for PEM Just press enter,  and input a password enter asd, you need this password after the next reboot.
-    echo 3-
-		echo 3-                            AGAIN: This command will ask you to
-    echo 3-            add a password,
- 	  echo 3-                            write 1234678
-    echo 3-                                           you need this password after the next reboot.
+		echo "3- This command will ask you to add PEM key, for PEM Just press enter,  and input a password enter asd, you need this password after the next reboot."
+    echo "3-"
+		echo "3-                            AGAIN: This command will ask you to"
+    echo "3-            add a password,"
+ 	  echo "3-                            write 1234678"
+    echo "3-                                           you need this password after the next reboot."
     echo 3-
     echo 3-
 		echo "3- openssl \
@@ -1908,7 +1931,7 @@ rsa:2048 \
 -subj /CN=${name}/"
 		echo 3-
 		echo 3-
-    cd "${out_dir}"
+    cd "${out_dir}" || exit 1
     openssl \
         req \
         -new \
@@ -1923,19 +1946,19 @@ rsa:2048 \
     chmod 600 ${out_dir}/MOK.*
     echo "mokutil --import /root/module-signing/MOK.der"
     mokutil --import /root/module-signing/MOK.der
-    echo 4-
-    echo 4- Reboot your system and a blue screen appear, select Enroll MOK --> Continue --> put the previous password and your system will start.
-    echo 4-
-		echo 4- System will reboot now, after you press any key
-		echo 4-
-		echo 4-
+    echo "4-"
+    echo "4- Reboot your system and a blue screen appear, select Enroll MOK --> Continue --> put the previous password and your system will start."
+    echo "4-"
+		echo "4- System will reboot now, after you press any key"
+		echo "4-"
+		echo "4-"
 
     [ ! -f  "${USER_HOME}/.virtualboxinstallrebootsigned" ] && touch "${USER_HOME}/.virtualboxinstallrebootsigned"  && _pause "sign reboot 4" && reboot
   }
   fi
   if [ ! -f  "${USER_HOME}/.virtualboxinstallrebootsigned2" ] ; then
   {
-      cd /root/signed-modules
+      cd /root/signed-modules || exit 1
       # need to sign the kernel modules (vboxdrv, vboxnetflt, vboxnetadp, vboxpci)
 			local modules_to_be_signed_up="
 vboxdrv
@@ -2217,7 +2240,7 @@ echo now login as root su
 echo and run
 echo "
 su
-KERN_DIR=/usr/src/kernels/`uname -r`
+KERN_DIR=/usr/src/kernels/$(uname -r)
 export KERN_DIR
 /sbin/vboxconfig
 
@@ -2242,10 +2265,12 @@ _darwin__64() {
 
 
 _pause() {
+	local -i _err=0
   echo "Press any key to continue ${1}"
-  while [ true ] ; do
-    read -t 3 -n 1
-    if [ $? = 0 ] ; then
+  while  true  ; do
+    read -rt 3 -n 1
+		_err=$?
+		if [ $_err -eq 0 ] ; then
       break ;
     else
       echo "waiting for the keypress ${1}"
