@@ -710,11 +710,11 @@ _fedora_41__64() {
 	{
 		echo "--reset --startover --restart "
 		echo "reseting now"
-    rm "${USER_HOME}/.virtualboxinstallrebootsigned"
-    rm "${USER_HOME}/.virtualboxinstallrebootsigned2"
-    rm "${USER_HOME}/.virtualboxinstallreboot"
-    rm /root/signed-modules
-    rm /root/module-signing
+    rm -rf "${USER_HOME}/.virtualboxinstallrebootsigned"
+    rm -rf "${USER_HOME}/.virtualboxinstallrebootsigned2"
+    rm -rf "${USER_HOME}/.virtualboxinstallreboot"
+    rm -rf /root/signed-modules
+    rm -rf /root/module-signing
   }
 	fi
 	if [[ "${*-}" == *"--help"* ]] ; then
@@ -803,7 +803,8 @@ _fedora_41__64() {
 	if wget -P /etc/yum.repos.d/ https://download.virtualbox.org/virtualbox/rpm/fedora/virtualbox.repo ; then
 		{
 		yes | dnf search virtualbox -y
-	  dnf install VirtualBox -y
+		dnf remove VirtualBox -y
+		dnf install VirtualBox -y
 	  # dnf install VirtualBox-7.0 -y
   }
 	fi
@@ -1027,9 +1028,9 @@ EOF
   fi
 
 
-rm "${USER_HOME}/.virtualboxinstallrebootsigned"
-rm "${USER_HOME}/.virtualboxinstallrebootsigned2"
-rm "${USER_HOME}/.virtualboxinstallreboot"
+rm -rf "${USER_HOME}/.virtualboxinstallrebootsigned"
+rm -rf "${USER_HOME}/.virtualboxinstallrebootsigned2"
+rm -rf "${USER_HOME}/.virtualboxinstallreboot"
 
   /usr/lib/virtualbox/vboxdrv.sh setup
 
@@ -1230,11 +1231,11 @@ _fedora_40__64() {
 	{
 		echo "--reset --startover --restart "
 		echo "reseting now"
-    rm "${USER_HOME}/.virtualboxinstallrebootsigned"
-    rm "${USER_HOME}/.virtualboxinstallrebootsigned2"
-    rm "${USER_HOME}/.virtualboxinstallreboot"
-    rm /root/signed-modules
-    rm /root/module-signing
+    rm -rf "${USER_HOME}/.virtualboxinstallrebootsigned"
+    rm -rf "${USER_HOME}/.virtualboxinstallrebootsigned2"
+    rm -rf "${USER_HOME}/.virtualboxinstallreboot"
+    rm -rf /root/signed-modules
+    rm -rf /root/module-signing
   }
 	fi
 	if [[ "${*-}" == *"--help"* ]] ; then
@@ -1324,6 +1325,7 @@ _fedora_40__64() {
 	if wget -P /etc/yum.repos.d/ https://download.virtualbox.org/virtualbox/rpm/fedora/virtualbox.repo ; then
 		{
 		yes | dnf search virtualbox -y
+		dnf remove VirtualBox -y
 	  dnf install VirtualBox -y
 	  # dnf install VirtualBox-7.0 -y
   }
@@ -1548,9 +1550,9 @@ EOF
   fi
 
 
-rm "${USER_HOME}/.virtualboxinstallrebootsigned"
-rm "${USER_HOME}/.virtualboxinstallrebootsigned2"
-rm "${USER_HOME}/.virtualboxinstallreboot"
+rm -rf "${USER_HOME}/.virtualboxinstallrebootsigned"
+rm -rf "${USER_HOME}/.virtualboxinstallrebootsigned2"
+rm -rf "${USER_HOME}/.virtualboxinstallreboot"
 
   /usr/lib/virtualbox/vboxdrv.sh setup
 
@@ -1762,11 +1764,11 @@ _fedora__64() {
 	{
 		echo "--reset --startover --restart "
 		echo "reseting now"
-    rm "${USER_HOME}/.virtualboxinstallrebootsigned"
-    rm "${USER_HOME}/.virtualboxinstallrebootsigned2"
-    rm "${USER_HOME}/.virtualboxinstallreboot"
-    rm /root/signed-modules
-    rm /root/module-signing
+    rm -rf "${USER_HOME}/.virtualboxinstallrebootsigned"
+    rm -rf "${USER_HOME}/.virtualboxinstallrebootsigned2"
+    rm -rf "${USER_HOME}/.virtualboxinstallreboot"
+    rm -rf /root/signed-modules
+    rm -rf /root/module-signing
   }
 	fi
 	if [[ "${*-}" == *"--help"* ]] ; then
@@ -2079,9 +2081,9 @@ EOF
   fi
 
 
-rm "${USER_HOME}/.virtualboxinstallrebootsigned"
-rm "${USER_HOME}/.virtualboxinstallrebootsigned2"
-rm "${USER_HOME}/.virtualboxinstallreboot"
+rm -rf "${USER_HOME}/.virtualboxinstallrebootsigned"
+rm -rf "${USER_HOME}/.virtualboxinstallrebootsigned2"
+rm -rf "${USER_HOME}/.virtualboxinstallreboot"
 
   /usr/lib/virtualbox/vboxdrv.sh setup
 
