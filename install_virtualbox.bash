@@ -715,6 +715,19 @@ _fedora_41__64() {
     rm -rf "${USER_HOME}/.virtualboxinstallreboot"
     rm -rf /root/signed-modules
     rm -rf /root/module-signing
+
+		Installing dependencies
+  	yes | dnf builddep libvpx-devel -y  --allowerasing
+  	yes | dnf builddep dkms -y  --allowerasing
+    yes | dnf builddep kernel-devel  -y  --allowerasing
+    yes | dnf builddep kernel-headers  -y  --allowerasing
+		yes | dnf install @development-tools -y
+		yes | dnf install kernel-headers kernel-devel dkms -y
+    yes | dnf remove VirtualBox -y
+	  Installing 3. Import the VirtualBox GPG Key
+		yes | rpm --import https://www.virtualbox.org/download/oracle_vbox_2016.asc
+		yes | wget -P /etc/yum.repos.d/ https://download.virtualbox.org/virtualbox/rpm/fedora/virtualbox.repo
+		yes | dnf install VirtualBox-7.1
   }
 	fi
 	if [[ "${*-}" == *"--help"* ]] ; then
@@ -723,10 +736,7 @@ _fedora_41__64() {
 		exit 0
 	}
 	fi
-	dnf builddep libvpx-devel -y  --allowerasing
-	dnf builddep dkms -y  --allowerasing
-  dnf builddep kernel-devel  -y  --allowerasing
-	if it_exists_with_spaces "/etc/yum.repos.d/virtualbox.repo" ; then
+  if it_exists_with_spaces "/etc/yum.repos.d/virtualbox.repo" ; then
   {
     file_exists_with_spaces "/etc/yum.repos.d/virtualbox.repo"
   }
@@ -793,18 +803,18 @@ _fedora_41__64() {
     modinfo
   "
   echo sudo dnf install VirtualBox-6.1 -y
-  # install_requirements "linux" "
-  # RedHat Flavor only
+  #install_requirements "linux" "
+    # RedHat Flavor only
   #  VirtualBox-6.1
   #"
-  # verify_is_installed "
-  # VirtualBox
+  #verify_is_installed "
+  #VirtualBox
   #"
 	if wget -P /etc/yum.repos.d/ https://download.virtualbox.org/virtualbox/rpm/fedora/virtualbox.repo ; then
 		{
 		yes | dnf search virtualbox -y
 		dnf remove VirtualBox -y
-		dnf install VirtualBox -y
+	  dnf install VirtualBox -y
 	  # dnf install VirtualBox-7.0 -y
   }
 	fi
@@ -1195,6 +1205,8 @@ export KERN_DIR
 
 "
 _pause " Presiona tecla para terminar aqui "
+
+
 
 } # end _fedora_41__64
 
