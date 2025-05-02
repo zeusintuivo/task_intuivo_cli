@@ -5,6 +5,7 @@
 
 set -e
 set -u
+set -x
 
 readonly BASE_URL="https://github.com/stalwartlabs/mail-server/releases/latest/download"
 
