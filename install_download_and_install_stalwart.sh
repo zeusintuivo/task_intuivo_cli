@@ -68,11 +68,32 @@ main() {
     local _file="${_dir}/bin/stalwart-mail.tar.gz"
     local _url="${BASE_URL}/${_component}-${_arch}.tar.gz"
     ensure mkdir -p "$_dir"
-    ensure downloader "$_url" "$_file" "$_arch"
-    ensure tar zxvf "$_file" -C "$_dir/bin"
-    ignore chmod +x "$_dir/bin/stalwart-mail"
-    ignore rm "$_file"
-
+		local -i _err=0
+    if [ ! -f "${_file}" ] ; then
+    {
+		  ignore downloader "$_url" "$_file" "$_arch"
+      _err=$?
+			if [ ${_err} -gt 0 ] ; then
+			{
+				say "Failed to download with curl, attepmting with k to ignore"
+				ensure curl -sSkL --location "$_url" --output "$_file"
+				_err=$?
+        if [ ${_err} -gt 0 ] ; then
++       {
+					say "error ok I tried, I cannot download $_url and save it into $_file"
+					exit ${_err}
+			}
+			fi
+      ensure tar zxvf "$_file" -C "$_dir/bin"
+      ignore chmod +x "$_dir/bin/stalwart-mail"
+      ignore rm "$_file"
+    }
+	  else
+    {
+      ensure tar zxvf "$_file" -C "$_dir/bin"
+      ignore chmod +x "$_dir/bin/stalwart-mail"
+    }
+    fi
     # Create system account
     if ! id -u ${_account} > /dev/null 2>&1; then
         say "🖥️  Creating '${_account}' account..."
