@@ -79,9 +79,11 @@ main() {
 				ensure curl -sSkL --location "$_url" --output "$_file"
 				_err=$?
         if [ ${_err} -gt 0 ] ; then
-+       {
+        {
 					say "error ok I tried, I cannot download $_url and save it into $_file"
 					exit ${_err}
+				}
+			  fi
 			}
 			fi
       ensure tar zxvf "$_file" -C "$_dir/bin"
