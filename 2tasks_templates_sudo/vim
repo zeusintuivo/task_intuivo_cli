@@ -4,13 +4,14 @@ _debian_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   anounce_command apt-get install vim -y
-  curl -fLo "${USER_HOME}/.vim/autoload/plug.vim" --create-dirs \
+  HOMEBREW_FORCE_BREWED_CURL=1 curl -fkLo "${USER_HOME}/.vim/autoload/plug.vim" --create-dirs \
     https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
   anounce_command chown -R  "${SUDO_USER}" "${USER_HOME}/.vim/"
-  curl -fLo "/root/.vim/autoload/plug.vim" --create-dirs \
+  HOMEBREW_FORCE_BREWED_CURL=1 curl -fkLo "/root/.vim/autoload/plug.vim" --create-dirs \
     https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 
-  local content="$(_write_vimrc)"
+  local content=""
+	content="$(_write_vimrc)"
   touch "${USER_HOME}/.vimrc"
   touch "/root/.vimrc"
 
@@ -302,13 +303,14 @@ _redhat_flavor_install() {
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   anounce_command dnf install vim -y
-  curl -fLo "${USER_HOME}/.vim/autoload/plug.vim" --create-dirs \
+  HOMEBREW_FORCE_BREWED_CURL=1 curl -fkLo "${USER_HOME}/.vim/autoload/plug.vim" --create-dirs \
     https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
   anounce_command chown -R  "${SUDO_USER}" "${USER_HOME}/.vim/"
-  curl -fLo "/root/.vim/autoload/plug.vim" --create-dirs \
+  HOMEBREW_FORCE_BREWED_CURL=1 curl -fkLo "/root/.vim/autoload/plug.vim" --create-dirs \
     https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 
-  local content="$(_write_vimrc)"
+  local content=""
+	content="$(_write_vimrc)"
   touch "${USER_HOME}/.vimrc"
   touch "/root/.vimrc"
 
@@ -369,12 +371,7 @@ _fedora__32() {
 } # end _fedora__32
 
 _fedora__64() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  _redhat_flavor_install
-} # end _fedora__64
-
-_fedora__64() {
-  trap "echo Error:$?" ERR INT
+  trap 'echo Error:$?' ERR INT
   local _parameters="${*-}"
   local -i _err=0
   _redhat_flavor_install "${_parameters-}"
@@ -387,7 +384,7 @@ _fedora__64() {
 } # end _fedora__64
 
 _fedora_39__64() {
-  trap "echo Error:$?" ERR INT
+  trap 'echo Error:$?' ERR INT
   local _parameters="${*-}"
   local -i _err=0
   _redhat_flavor_install "${_parameters-}"
@@ -444,15 +441,16 @@ _darwin__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  anounce_command "su - '${SUDO_USER}' -c 'brew install vim'"
-  anounce_command "curl -fLo '${USER_HOME}/.vim/autoload/plug.vim' --create-dirs \
+  anounce_command "su - '${SUDO_USER}' -c 'HOMEBREW_FORCE_BREWED_CURL=1 brew install vim'"
+  anounce_command "HOMEBREW_FORCE_BREWED_CURL=1 curl -fkLo '${USER_HOME}/.vim/autoload/plug.vim' --create-dirs \
     https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
   anounce_command "chown -R '${SUDO_USER}' '${USER_HOME}/.vim/'"
-  # anounce_command "curl -fLo '/root/.vim/autoload/plug.vim' --create-dirs \
+  # anounce_command "HOMEBREW_FORCE_BREWED_CURL=1 curl -fkLo '/root/.vim/autoload/plug.vim' --create-dirs \
   #  https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
 
-  local content="$(_write_vimrc)"
-  touch "${user_home}/.vimrc"
+  local content=""
+	content="$(_write_vimrc)"
+  touch "${USER_HOME}/.vimrc"
   # touch "/root/.vimrc"
 
   echo "${content}" > "${USER_HOME}/.vimrc"
@@ -471,13 +469,14 @@ _darwin__arm64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  # anounce_command "su - '${SUDO_USER}' -c 'brew install vim'"
-  # anounce_command "curl -fLo '${USER_HOME}/.vim/autoload/plug.vim' --create-dirs \
+  # anounce_command "su - '${SUDO_USER}' -c 'HOMEBREW_FORCE_BREWED_CURL=1 brew install vim'"
+  # anounce_command "HOMEBREW_FORCE_BREWED_CURL=1 curl -fkLo '${USER_HOME}/.vim/autoload/plug.vim' --create-dirs \
    #  https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
-  curl -fLo "${USER_HOME}/.vim/autoload/plug.vim" --create-dirs \
+  HOMEBREW_FORCE_BREWED_CURL=1 curl -fkLo "${USER_HOME}/.vim/autoload/plug.vim" --create-dirs \
      https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 
-  local content="$(_write_vimrc)"
+  local content=""
+	content="$(_write_vimrc)"
   touch "${USER_HOME}/.vimrc"
   # touch "/root/.vimrc"
 
