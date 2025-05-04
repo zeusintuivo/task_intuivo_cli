@@ -6,7 +6,7 @@
 #set -u
 set -E -o functrace
 export THISSCRIPTCOMPLETEPATH
-typeset -i -err=0
+typeset -i _err=0
 echo "0. sudologic $0:$LINENO           SUDO_COMMAND:${SUDO_COMMAND:-}"
 echo "0. sudologic $0:$LINENO               SUDO_GRP:${SUDO_GRP:-}"
 echo "0. sudologic $0:$LINENO               SUDO_UID:${SUDO_UID:-}"
