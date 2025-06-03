@@ -654,9 +654,20 @@ fi
 #!/bin/bash
 echo based on REF: https://support.1password.com/install-linux/
 _debian_flavor_install() {
-  echo "
+echo "
+Debian or Ubuntu (or derivatives)
 
-    1. Add the key for the 1Password apt repository:
+    Add the key for the 1Password apt repository again:
+"
+    curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo gpg --dearmor --output /usr/share/keyrings/1password-archive-keyring.gpg
+echo "
+    Update the key for the debsig-verify policy:
+"
+    curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo gpg --dearmor --output /usr/share/debsig/keyrings/AC2D62742012EA22/debsig.gpg
+
+	echo "
+
+  1. Add the key for the 1Password apt repository:
   "
   curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo gpg --dearmor --output /usr/share/keyrings/1password-archive-keyring.gpg
   echo "
@@ -709,7 +720,7 @@ _arch_flavor_install() {
   echo "
     3. Install 1Password:
   "
-  cd 1password
+  cd 1password ||  exit 1
   makepkg -si
 
 } # end _readhat_flavor_install
@@ -739,7 +750,25 @@ _debian__64() {
 } # end _debian__64
 
 _fedora__32() {
-  _redhat_flavor_install
+  local -i _err=0
+	enforce_variable_with_value USER_HOME "${USER_HOME}"
+  local TARGET_URL=https://downloads.1password.com/linux/rpm/stable/x86_64/1password-latest.rpm
+  Comment TARGET_URL "${TARGET_URL}"
+  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
+  local CODENAME=""
+	CODENAME=$(basename "${TARGET_URL}")
+  Comment CODENAME "${CODENAME}"
+  enforce_variable_with_value CODENAME "${CODENAME}"
+  local DOWNLOADFOLDER=""
+	DOWNLOADFOLDER="$(_find_downloads_folder)"
+  Comment DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+  _install_rpm "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
+  _err=$?
+  _remove_downloaded_codename_or_err  $_err "${DOWNLOADFOLDER}/${CODENAME}"
+  _err=$?
+  return  $_err
 } # end _fedora__32
 
 _fedora__64() {
@@ -758,6 +787,70 @@ _fedora_39__64() {
   }
   fi
 } # end _fedora_39__64
+
+_fedora_41__64() {
+  trap 'echo Error:$?' ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+echo "
+	Fedora, Red Hat Enterprise Linux, SUSE, or openSUSE
+
+    Remove the old signing key:
+"
+set -x
+    yes | rpm -e gpg-pubkey-2012ea22-591e021e
+set +x
+		echo "
+
+    Add the key for the 1Password RPM repository again:
+"
+set -x
+    yes | rpm --import https://downloads.1password.com/linux/keys/1password.asc
+set +x
+	Installing install 1Password manually:
+
+  Checking  Add the key for the 1Password yum repository:
+  set -x
+  yes | rpm --import https://downloads.1password.com/linux/keys/1password.asc
+  set +s
+  Checking  Add the 1Password yum repository:
+  set -x
+  yes | sh -c 'echo -e "[1password]\nname=1Password Stable Channel\nbaseurl=https://downloads.1password.com/linux/rpm/stable/\$basearch\nenabled=1\ngpgcheck=1\nrepo_gpgcheck=1\ngpgkey=\"https://downloads.1password.com/linux/keys/1password.asc\"" > /etc/yum.repos.d/1password.repo'
+  set +x
+  Installing 1Password:
+
+  dnf install 1password -y
+
+  Comment The packages and repository are signed with the GPG key 3FEF9748469ADBE15DA7CA80AC2D62742012EA22.i
+
+  # callsomething "${_parameters-}"
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO while running callsomething above _err:${_err}"
+  }
+  fi
+  local -i _err=0
+	enforce_variable_with_value USER_HOME "${USER_HOME}"
+  local TARGET_URL=https://downloads.1password.com/linux/rpm/stable/x86_64/1password-latest.rpm
+  Comment TARGET_URL "${TARGET_URL}"
+  enforce_variable_with_value TARGET_URL "${TARGET_URL}"
+  local CODENAME=""
+	CODENAME=$(basename "${TARGET_URL}")
+  Comment CODENAME "${CODENAME}"
+  enforce_variable_with_value CODENAME "${CODENAME}"
+  local DOWNLOADFOLDER=""
+	DOWNLOADFOLDER="$(_find_downloads_folder)"
+  Comment DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+  _install_rpm "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
+  _err=$?
+  _remove_downloaded_codename_or_err  $_err "${DOWNLOADFOLDER}/${CODENAME}"
+  _err=$?
+  return  $_err
+
+} # end _fedora_41__64
 
 _gentoo__32() {
   _redhat_flavor_install
