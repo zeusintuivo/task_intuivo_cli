@@ -663,6 +663,9 @@ _debian_flavor_install() {
   HOMEBREW_FORCE_BREWED_CURL=1 curl -fkLo "/root/.vim/autoload/plug.vim" --create-dirs \
     https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 
+  HOMEBREW_FORCE_BREWED_CURL=1 curl -fkLo "/root/.vim/autoload/plug.vim" --create-dirs \
+    https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+
   local content=""
 	content="$(_write_vimrc)"
   touch "${USER_HOME}/.vimrc"
@@ -813,21 +816,6 @@ set csverb
 endif
 
 
-if has(\"cscope\") && filereadable(\"/usr/bin/cscope\")
-set csprg=/usr/bin/cscope
-set csto=0
-set cst
-set nocsverb
-\" add any database in current directory
-if filereadable(\"cscope.out\")
-cs add \$PWD/cscope.out
-\" else add database pointed to by environment
-elseif \$CSCOPE_DB != \"\"
-cs add \$CSCOPE_DB
-endif
-set csverb
-endif
-
 \" Switch syntax highlighting on, when the terminal has colors
 \" Also switch on highlighting the last used search pattern.
 if &t_Co > 2 || has(\"gui_running\")
@@ -920,7 +908,11 @@ Plug 'evanleck/vim-svelte', {'branch': 'main'}
 \" Using vim-plug
 Plug 'elixir-editors/vim-elixir'
 
+\" Using colorschemes install
+Plug 'morhetz/gruvbox'
+
 call plug#end()
+
 \" You can revert the settings after the call like so:
 \"   filetype indent off   \" Disable file-type-specific indentation
 \"   syntax off            \" Disable syntax highlighting
@@ -947,6 +939,11 @@ let g:ale_fixers = {
 \\   'javascript': ['biome'],
 \\}
 \" end
+
+
+\" Using colorschemes activate
+colorscheme gruvbox
+
 "
 } # _write_vimrc
 
@@ -1007,6 +1004,19 @@ _centos__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
 } # end _centos__64
+
+_centos_8__64() {
+  trap 'echo Error:$?' ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  callsomething "${_parameters-}"
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _centos_8__64
 
 _debian__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
