@@ -79,13 +79,35 @@ _download_just_download() {
 
 _darwin__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-    local CODENAME="MasterPDFEditor.dmg"
+    # https://code-industry.net/public/MasterPDFEditor.dmg
+		local CODENAME="MasterPDFEditor.dmg"
     local URL="https://code-industry.net/public/"
     cd $USER_HOME/Downloads/
-    _download "${URL}"
-    sudo hdiutil attach ${CODENAME}
-    sudo cp -R /Volumes/Master\ PDF\ Editor/Master\ PDF\ Editor.app /Applications/
-    sudo hdiutil detach /Volumes/Master\ PDF\ Editor
+		_download "${URL}" "$USER_HOME/Downloads"
+    _assure_success
+    sudo hdiutil attach "${CODENAME}"
+    _assure_success
+		if [[ -d "/Volumes/Master\ PDF\ Editor/Master\ PDF\ Editor.app"  ]] ; then
+		{
+      sudo cp -R "/Volumes/Master\ PDF\ Editor/Master\ PDF\ Editor.app" /Applications/
+      _assure_success
+			sudo hdiutil detach /Volumes/Master\ PDF\ Editor
+      _assure_success
+    }
+		elif [[ -d /Volumes/MasterPDFEditor/Master\ PDF\ Editor.app  ]] ; then
+		{
+      sudo cp -R /Volumes/MasterPDFEditor/Master\ PDF\ Editor.app /Applications/
+      _assure_success
+			sudo hdiutil detach /Volumes/MasterPDFEditor
+      _assure_success
+		}
+	  else
+		{
+			failed "could not find mount  /Volumes"
+			sudo ls -lactrl "/Volumes"
+      _assure_success
+		}
+		fi
 } # end _darwin__64
 
 _ubuntu__64() {
@@ -109,7 +131,7 @@ _ubuntu__32() {
 _centos__64() {
   _fedora__64
 } # end _centos__64
-
+# https://code-industry.net/public/MasterPDFEditor.dmg
 _fedora__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
    # https://code-industry.net/public/master-pdf-editor-5.4.38-qt5.x86_64.rpm
@@ -130,7 +152,7 @@ _fedora__64() {
     [[ -z "${LASTEST_DOWNLOAD_FILE}" ]] && failed "Master PDF Version Dowload File NOT found! :${LASTEST_DOWNLOAD_FILE}:"
     passed "Master PDF Version Download File :${LASTEST_DOWNLOAD_FILE}:"
     local TARGET_URL=$(echo $WEBPAGE_TO_GET_DOWNLOAD_FILE | sed s/\</\\n\</g | grep --color=none -E "${CODELASTESTBUILD}.*${ARCHITECTURE}.*.rpm" | sed s/\ /\\n\</g | grep http | cut -d'"' -f2 | tail -1)
-    [[ -z "${TARGET_URL}" ]] && failed "Master PDF Version Target URL NOT found! :${Target URL}:"
+    [[ -z "${TARGET_URL}" ]] && failed "Master PDF Version Target URL NOT found! :${TARGET_URL}:"
     passed "Master PDF Version Target URL :${TARGET_URL}:"
 
   # get download link
@@ -186,5 +208,3 @@ _main() {
 _main
 
 echo ":)"
-
-

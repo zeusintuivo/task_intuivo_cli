@@ -374,8 +374,9 @@ _ubuntu__64() {
 
   # install_nano.bash
   sudo add-apt-repository ppa:n-muench/programs-ppa
-  sudo apt install nano
-  sudo apt update nano
+  sudo apt-get satisfy nano -y
+  sudo apt-get install nano -y
+  sudo apt-get update nano -y
   install_requirements "linux" "
     curl
     wget
@@ -390,6 +391,30 @@ _ubuntu__64() {
   _download_compile_install
     return 0
 } # end _ubuntu__64
+
+_ubuntu_22__64() {
+  directory_exists_with_spaces "$USER_HOME"
+
+  # install_nano.bash
+  sudo add-apt-repository ppa:n-muench/programs-ppa
+  sudo apt-get satisfy nano -y
+  sudo apt-get install nano -y
+  sudo apt-get update nano -y
+	sudo apt-get libncursesw5-dev groff -y
+  install_requirements "linux" "
+    curl
+    wget
+    libncurses-dev
+    libncursesw5-dev
+    groff
+  "
+  verify_is_installed "
+    curl
+    wget
+  "
+  _download_compile_install
+    return 0
+} # end _ubuntu_22__64
 
 _ubuntu__32() {
     local CODENAME=$(_version "linux" "nano-*.*.*.*i386.deb")

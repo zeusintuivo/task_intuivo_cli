@@ -298,6 +298,125 @@ _fedora_40__64(){
   _redhat_flavor_install
 } # end _fedora_40__64
 
+_fedora_42__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  Checking if rust is installed by brew and attempting remove it
+  if ( ! su - "${SUDO_USER}" -c "command -v /home/linuxbrew/.linuxbrew/bin/brew" >/dev/null 2>&1; ); then
+  {
+    if su - "${SUDO_USER}" -c "/home/linuxbrew/.linuxbrew/bin/brew remove rust" ; then
+    {
+      warning "could not remove rust from user root brew"
+    }
+    else
+    {
+      passed "removed rust from brew user root"
+    }
+    fi
+  }
+  fi
+
+  if ( ! command -v /home/linuxbrew/.linuxbrew/bin/brew >/dev/null 2>&1; ); then
+  {
+    if /home/linuxbrew/.linuxbrew/bin/brew remove rust ; then
+    {
+      warning "could not remove rust from user root brew"
+    }
+    else
+    {
+      passed "removed rust from brew user root"
+    }
+    fi
+  }
+  fi
+
+  dnf build-dep rust  -y --allowerasing
+  if (install_requirements "linux" "
+      unzip
+      curl
+      wget
+    "
+    ); then
+  {
+      echo "warning: failed to install some deps"
+  }
+  fi
+  verify_is_installed "
+    unzip
+    curl
+    wget
+    tar
+  "
+  Installing "_add_variables_to_bashrc_zshrc for ROOT and USER"
+  mkdir -p  "${USER_HOME}/.cargo"
+  chmod -R 755 "${USER_HOME}/.cargo"
+ _add_variables_to_bashrc_zshrc
+
+  export ARCHFLAGS="-arch $(uname -m)"
+
+  ARCHFLAGS="-arch $(uname -m)"
+  Installing "ROOT install:ARCHFLAGS='-arch ${ARCHFLAGS-}' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup.sh
+  local cpwd=$(realpath .)
+  local -i _err=0
+  chmod +x "${cpwd}/rustup.sh"
+  ARCHFLAGS='-arch ${ARCHFLAGS-}' "${cpwd}/rustup.sh" --no-modify-path --target /root --quiet -y
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    rm -rf "${cpwd}/rustup.sh"
+    failed "Failed to install for root err:${_err}"
+  }
+  else
+  {
+    passed "install for root"
+  }
+  fi
+  [[ ! -e "${USER_HOME}/.cargo" ]] && cp -R /root/.cargo "${USER_HOME}/.cargo"
+  chmod -R 755 "${USER_HOME}/.cargo"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/bin"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/env"
+  Installing "USER install(${USER_HOME}):su - \"${SUDO_USER}\" -c \"ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh\""
+  # if su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh" ; then
+  chown -R "${SUDO_USER}" "${cpwd}/rustup.sh"
+  su - "${SUDO_USER}" -c "ARCHFLAGS='-arch $(uname -m)' "${cpwd}/rustup.sh" --no-modify-path --target \"${USER_HOME}\" --quiet -y"
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    rm -rf "${cpwd}/rustup.sh"
+    failed "Failed to install for user err:${_err}"
+  }
+  else
+  {
+    passed "install for user"
+  }
+  fi
+  rm -rf "${cpwd}/rustup.sh"
+  Installing "_add_variables_to_bashrc_zshrc for ROOT and USER"
+  _add_variables_to_bashrc_zshrc
+
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.rustup"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/bin"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/env"
+
+  Installing "ROOT: rustup default stable"
+  rustup default stable
+  Installing "USER: su - \"${SUDO_USER}\" -c \"rustup default stable\""
+  su - "${SUDO_USER}" -c "rustup default stable"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.rustup"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/bin"
+  chown -R "${SUDO_USER}"   "${USER_HOME}/.cargo/env"
+  cargo install topgrade
+	cargo install rusty-rain
+	cargo install cargo-update
+	cargo install duf
+	cargo install static-web-server
+} # end _fedora_42__64
+
+
 _fedora__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install

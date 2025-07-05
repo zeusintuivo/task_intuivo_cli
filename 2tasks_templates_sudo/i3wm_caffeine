@@ -125,9 +125,20 @@ _add_variables_to_bashrc_zshrc(){
   # i3wm rehash
   # ruby -v
 } # _add_variables_to_bashrc_zshrc
+
 _debian_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  apt update -y
+	if [[ ${_OS:-} != "brew" ]] && ( ( command -v apt-get >/dev/null 2>&1; ) && ( command -v dpkg >/dev/null 2>&1; ) ) ; then
+	{
+	  apt-get update -y
+  }
+  elif [[ ${_OS:-} != "brew" ]] && ( ( command -v apt >/dev/null 2>&1; ) && ( command -v dpkg >/dev/null 2>&1; ) ) ; then
+  {
+		apt update -y
+  }
+	fi
+
+
   trap 'echo -e "${RED}" && echo "ERROR err:$_err failed $0:$LINENO _debian_flavor_install i3wm" && echo -e "${RESET}" && return 0' ERR
 
 	local base_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
@@ -877,7 +888,7 @@ _fedora_40__64() {
   pulseaudio -D
   su - "${SUDO_USER}" -c 'pulseaudio --check'
   su - "${SUDO_USER}" -c 'pulseaudio -D'
-  
+
   # _add_variables_to_bashrc_zshrc
   # ensure i3wm or "Canceling until i3wm did not install"
   # su - "${SUDO_USER}" -c 'i3wm install -l'
@@ -923,6 +934,262 @@ _ubuntu__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _debian_flavor_install
 } # end _ubuntu__64
+
+_ubuntu_22__64() {
+  trap 'echo Error:$?' ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  # callsomething "${_parameters-}"
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO while running callsomething above _err:${_err}"
+  }
+  fi
+
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+	if [[ ${_OS:-} != "brew" ]] && ( ( command -v apt-get >/dev/null 2>&1; ) && ( command -v dpkg >/dev/null 2>&1; ) ) ; then
+	{
+	  apt-get update -y
+	  apt-get satisfy -y python3-pip
+		apt-get satisfy -y rxvt-unicode
+		apt-get install -y libxcb1-dev
+		apt-get install pavucontrol screen mc aptitude source-highlight htop nload nmap net-tools autogen figlet cowsay w3m mediainfo unoconv odt2txt catdoc python-pip numlockx xclip arandr acpi rofi compton redshift xbacklight mpc ncmpcpp zathura mpv feh scrot vim-gtk -y
+		apt-get install -y python3-piplibxcb-keysyms1-dev libpango1.0-dev libxcb-util0-dev libxcb-icccm4-dev libyajl-dev libstartup-notification0-dev libxcb-randr0-dev libev-dev libxcb-cursor-dev libxcb-xinerama0-dev libxcb-xkb-dev libxkbcommon-dev libxkbcommon-x11-dev libxcb-xrm-dev libxcb-shape0-dev libreadline-dev
+		apt-get install -y pipx
+		apt-get install -y python3-mpd
+  }
+  elif [[ ${_OS:-} != "brew" ]] && ( ( command -v apt >/dev/null 2>&1; ) && ( command -v dpkg >/dev/null 2>&1; ) ) ; then
+  {
+		apt update -y
+	  apt satisfy -y python3-pip
+		apt satisfy -y rxvt-unicode
+		apt install -y libxcb1-dev
+		apt install pavucontrol screen mc aptitude source-highlight htop nload nmap net-tools autogen figlet cowsay w3m mediainfo unoconv odt2txt catdoc python-pip numlockx xclip arandr acpi rofi compton redshift xbacklight mpc ncmpcpp zathura mpv feh scrot vim-gtk -y
+		apt-get install -y python3-piplibxcb-keysyms1-dev libpango1.0-dev libxcb-util0-dev libxcb-icccm4-dev libyajl-dev libstartup-notification0-dev libxcb-randr0-dev libev-dev libxcb-cursor-dev libxcb-xinerama0-dev libxcb-xkb-dev libxkbcommon-dev libxkbcommon-x11-dev libxcb-xrm-dev libxcb-shape0-dev libreadline-dev
+		apt install -y pipx
+		apt install -y python3-mpd
+  }
+	fi
+
+
+  trap 'echo -e "${RED}" && echo "ERROR err:$_err failed $0:$LINENO _debian_flavor_install i3wm" && echo -e "${RESET}" && return 0' ERR
+
+	local base_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+  local config_dir="${SUDO_HOME}/.config"
+  local temp_dir="/tmp/caffeine-installer"
+  if [[ ! -d "${temp_dir}" ]]; then
+	{
+    mkdir -p "${temp_dir}"
+  }
+	fi
+  directory_exists_with_spaces "${temp_dir}"
+  chown -R "${SUDO_USER}" "${temp_dir}"
+
+	if [[ ! -d "${config_dir}" ]]; then
+  {
+ 		mkdir -p "${config_dir}";
+	}
+	fi
+  directory_exists_with_spaces "${config_dir}"
+  chown -R "${SUDO_USER}" "${config_dir}"
+
+  local package packages="
+	  # install apt pre requisites
+    xserver-xorg
+    xdm
+    pulseaudio
+    pulseaudio-utils
+    pavucontrol
+    dunst
+    libnotify-bin
+    dbus-x11
+    vim
+    git
+    screen
+    curl
+    mc
+    rsync
+    aptitude
+    source-highlight
+
+    htop
+    nload
+    nmap
+    net-tools
+    build-essential
+    autoconf
+    automake
+    autogen
+
+    figlet
+    cowsay
+    w3m
+    mediainfo
+
+    unoconv
+    odt2txt
+    catdoc
+
+    python-pip
+    # python3-pip
+    numlockx
+    xclip
+    # rxvt-unicode-256color
+    arandr
+    acpi
+
+    rofi
+    compton
+    redshift
+    xbacklight
+
+    # mpd
+    mpc
+    ncmpcpp
+
+    zathura
+    mpv
+    feh
+    scrot
+    # vlc
+    vim-gtk
+    gtk2-engines-pixbuf
+    gtk2-engines-murrine
+
+
+    # install i3
+    # ibxcb1-dev
+    libxcb-keysyms1-dev
+    libpango1.0-dev
+    libxcb-util0-dev
+
+    libxcb-icccm4-dev
+    libyajl-dev
+    libstartup-notification0-dev
+
+    libxcb-randr0-dev
+    libev-dev
+    libxcb-cursor-dev
+    libxcb-xinerama0-dev
+    libxcb-xkb-dev
+    libxkbcommon-dev
+    libxkbcommon-x11-dev
+    libxcb-xrm0
+    libxcb-xrm-dev
+    libxcb-shape0-dev
+    autoconf
+    bison
+    build-essential
+    libssl-dev
+    libyaml-dev
+    # libreadline6-dev
+		libreadline-dev
+    zlib1g-dev
+    libncurses5-dev
+    libffi-dev
+    libgdbm6
+    libgdbm-dev
+  "
+  _package_list_installer "${packages}"
+
+  ensure pip3 or "Canceling until pip3 is installed. try install_pyenv.bash"
+  ensure pipx or "Canceling until pip3 is installed. try install_pyenv.bash"
+  su - "${SUDO_USER}" -c 'pipx install py3status'
+
+  if [[ ! -d /usr/share/backgrounds ]]; then
+    mkdir -p /usr/share/backgrounds
+  fi
+  directory_exists_with_spaces /usr/share/backgrounds
+  file_exists_with_spaces "${base_dir}/global/usr/share/backgrounds/caffeine.png"
+  su - "${SUDO_USER}" -c 'cp '"${base_dir}/global/usr/share/backgrounds/caffeine.png"' /usr/share/backgrounds'
+  file_exists_with_spaces /usr/share/backgrounds/caffeine.png
+
+  if [[ ! -d /usr/share/fonts/caffeine-font ]]; then
+    mkdir -p /usr/share/fonts/caffeine-font
+  fi
+  directory_exists_with_spaces /usr/share/fonts/caffeine-font
+  su - "${SUDO_USER}" -c 'cp -R '"${base_dir}/global/usr/share/fonts/caffeine-font"' /usr/share/fonts/'
+  file_exists_with_spaces /usr/share/fonts/readme.md
+
+  Checking "# Set urxvt as default terminal"
+  update-alternatives --set x-terminal-emulator /usr/bin/urxvt
+
+  Checking "# Disable system-wide MPD"
+  if [ -f /etc/mpd.conf ]; then
+    rm /etc/mpd.conf;
+  fi
+  systemctl disable mpd
+
+  Checking "# urxvt plugins"
+  if [ ! -d /usr/lib/urxv/perl ]; then
+    mkdir -p /usr/lib/urxvt/perl
+  fi
+  directory_exists_with_spaces /usr/lib/urxvt/perl
+  su - "${SUDO_USER}" -c 'cp -R '"${base_dir}/global/usr/lib/urxvt/perl/*"' /usr/lib/urxvt/perl/'
+  file_exists_with_spaces /usr/lib/urxvt/perl/keyboard-select
+  file_exists_with_spaces /usr/lib/urxvt/perl/resize-font
+
+
+  _git_clone "https://github.com/Airblader/i3" "${temp_dir}"
+
+  directory_exists_with_spaces "${temp_dir}/i3"
+  cd "${temp_dir}/i3"
+  if [ -d build/ ]; then
+    rm -rf build/
+  fi
+
+  mkdir build/ || return 1
+
+  autoreconf --force --install || return 1
+  cd build || return 1
+  ../configure --prefix=/usr --sysconfdir=/etc --disable-sanitizers || return 1
+  make || return 1
+  make install || return 1
+
+  _package_list_installer "
+   i3lock
+   i3status
+  "
+
+  if [[ -f "${SUDO_HOME}/.Xresources" ]];        then
+    rm "${SUDO_HOME}/.Xresources"
+  fi
+  if [[ -d "${config_dir}/i3" ]];           then
+    rm -rf "${config_dir}/i3"
+  fi
+  if [[ -d "${config_dir}/i3status" ]];     then
+    rm -rf "${config_dir}/i3status"
+  fi
+  if [[ -d "${config_dir}/mpd" ]];          then
+    rm -rf "${config_dir}/mpd"
+  fi
+  if [[ -d "${config_dir}/mpv" ]];          then
+    rm -rf "${config_dir}/mpv"
+  fi
+  if [[ -d "${config_dir}/scripts" ]];      then
+    rm -rf "${config_dir}/scripts"
+  fi
+
+  ln -s "${base_dir}/home/.Xresources"          "${SUDO_HOME}/.Xresources"
+  ln -s "${base_dir}/home/.config/i3"           "${config_dir}/i3"
+  ln -s "${base_dir}/home/.config/i3status"     "${config_dir}/i3status"
+  ln -s "${base_dir}/home/.config/mpd"          "${config_dir}/mpd"
+  ln -s "${base_dir}/home/.config/mpv"          "${config_dir}/mpv"
+  ln -s "${base_dir}/home/.config/scripts"      "${config_dir}/scripts"
+  ln -s "${base_dir}/home/.config/dunst"        "${config_dir}/dunst"
+
+  echo "exec i3 > ${SUDO_HOME}/.xsession"
+
+  xdg-mime default feh.desktop image/jpeg
+  xdg-mime default feh.desktop image/png
+  su - "${SUDO_USER}" -c 'xdg-mime default feh.desktop image/jpeg'
+  su - "${SUDO_USER}" -c 'xdg-mime default feh.desktop image/png'
+
+  # _add_variables_to_bashrc_zshrc
+  # ensure i3wm or "Canceling until i3wm did not install"
+  # su - "${SUDO_USER}" -c 'i3wm install -l'
+} # end _ubuntu_22__64
 
 _darwin__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
