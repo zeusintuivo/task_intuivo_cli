@@ -110,13 +110,72 @@ _darwin__64() {
 		fi
 } # end _darwin__64
 
+_ubuntu_22__64() {
+  trap 'echo Error:$?' ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  _ubuntu__64 "${_parameters-}"
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _ubuntu_22__64
+
 _ubuntu__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-    local CODENAME="master-pdf-editor-${VERSION_NUMBER}-qt5.amd64.deb"
-    local URL="https://code-industry.net/public/"
-    cd $USER_HOME/Downloads/
-    _download "${URL}"
-    sudo dpkg -i ${CODENAME}
+    # local CODENAME="master-pdf-editor-${VERSION_NUMBER}-qt5.amd64.deb"
+    # local URL="https://code-industry.net/public/"
+    cd $USER_HOME/Downloads/ || exit 1
+    # _download "${URL}"
+    # sudo dpkg -i ${CODENAME}
+    local WEBPAGE_TO_READ_VERSION_NUMBER=$(curl -sSLo -  https://code-industry.net/get-masterpdfeditor/  2>&1;) # suppress only wget download messages, but keep wget output for variable
+    local VERSION_NUMBER=$(echo $WEBPAGE_TO_READ_VERSION_NUMBER | sed s/\</\\n\</g | grep "now available for Linux" | sed s/\>/\>\\n/g | sed s/\ /\\n/g | head -3 | tail -1)
+    local ARCHITECTURE=$(uname -m)
+    echo enforce_variable_with_value ARCHITECTURE "${ARCHITECTURE}"
+    enforce_variable_with_value ARCHITECTURE "${ARCHITECTURE}"
+    wait
+    [[ -z "${VERSION_NUMBER}" ]] && failed "Master PDF Version not found! :${VERSION_NUMBER}:"
+
+    local WEBPAGE_TO_GET_DOWNLOAD_FILE=$(curl -sSLo -  https://code-industry.net/free-pdf-editor/\#get  2>&1;)
+    local LASTEST_DOWNLOAD_FILE=$(echo $WEBPAGE_TO_GET_DOWNLOAD_FILE | sed s/\</\\n\</g | grep --color=none -E "${CODELASTESTBUILD}.*${ARCHITECTURE}.*.deb" | cut -d'>' -f2 | tail -1)
+
+    passed "Master PDF Version :${VERSION_NUMBER}:"
+    [[ -z "${LASTEST_DOWNLOAD_FILE}" ]] && failed "Master PDF Version Dowload File NOT found! :${LASTEST_DOWNLOAD_FILE}:"
+    passed "Master PDF Version Download File :${LASTEST_DOWNLOAD_FILE}:"
+    local TARGET_URL=$(echo $WEBPAGE_TO_GET_DOWNLOAD_FILE | sed s/\</\\n\</g | grep --color=none -E "${CODELASTESTBUILD}.*${ARCHITECTURE}.*.rpm" | sed s/\ /\\n\</g | grep http | cut -d'"' -f2 | tail -1)
+    [[ -z "${TARGET_URL}" ]] && failed "Master PDF Version Target URL NOT found! :${TARGET_URL}:"
+    passed "Master PDF Version Target URL :${TARGET_URL}:"
+
+  # get download link
+  local ID
+  local VERSION
+  local VERSION_ID
+  file_exists_with_spaces "/etc/os-release"
+  _assure_success
+
+  source /etc/os-release
+  # $ echo $ID
+  # fedora
+  # $ echo $VERSION_ID
+  # 17
+  # $ echo $VERSION
+  # 17 (Beefy Miracle)
+  echo  enforce_variable_with_value ID "${ID}"
+  enforce_variable_with_value ID "${ID}"
+  echo enforce_variable_with_value VERSION_ID "${VERSION_ID}"
+  enforce_variable_with_value VERSION_ID "${VERSION_ID}"
+  echo enforce_variable_with_value USER_HOME "${USER_HOME}"
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  echo enforce_variable_with_value VERSION_NUMBER "${VERSION_NUMBER}"
+  enforce_variable_with_value VERSION_NUMBER "${VERSION_NUMBER}"
+  local TARGET_DOWNLOAD_PATH="$USER_HOME/Downloads/${LASTEST_DOWNLOAD_FILE}"
+
+  _do_not_downloadtwice "${TARGET_URL}" $USER_HOME/Downloads  ${LASTEST_DOWNLOAD_FILE}
+  _install_apt "${TARGET_URL}" "$USER_HOME/Downloads"  "${LASTEST_DOWNLOAD_FILE}"  0
+
+
 } # end _ubuntu__64
 
 _ubuntu__32() {

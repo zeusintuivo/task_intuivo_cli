@@ -1040,6 +1040,23 @@ _ubuntu__64() {
   _debian_flavor_install
 } # end _ubuntu__64
 
+_ubuntu__24_64() {
+  _debian_flavor_install
+} # end _ubuntu__64
+
+_ubuntu_22__64() {
+  trap 'echo Error:$?' ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  callsomething "${_parameters-}"
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _ubuntu_22__64
+
 _darwin__64() {
   echo "_darwin__64 Procedure not yet implemented. I don't know what to do."
 } # end _darwin__64

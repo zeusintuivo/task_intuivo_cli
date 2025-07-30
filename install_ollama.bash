@@ -648,282 +648,329 @@ fi
 
 
 
- #--------\/\/\/\/-- 2tasks_templates_sudo/masterpdf …install_masterpdf.bash” -- Custom code -\/\/\/\/-------
+ #--------\/\/\/\/-- 2tasks_templates_sudo/ollama …install_ollama.bash” -- Custom code -\/\/\/\/-------
 
 
-#!/usr/bin/env bash
-#!/bin/bash
-#
-# @author Zeus Intuivo <zeus@intuivo.com>
-#
-#
-# SUDO_USER only exists during execution of sudo
-# REF: https://stackoverflow.com/questions/7358611/get-users-home-directory-when-they-run-a-script-as-root
-# Global:
+#!/usr/bin/bash
 
-echo enforce_variable_with_value SUDO_USER "${SUDO_USER}"
-enforce_variable_with_value SUDO_USER "${SUDO_USER}"
-passed Caller user identified:$SUDO_USER
-echo enforce_variable_with_value USER_HOME "${USER_HOME}"
-enforce_variable_with_value USER_HOME "${USER_HOME}"
-passed Home identified:$USER_HOME
-directory_exists_with_spaces "$USER_HOME"
-
-
-# https://code.visualstudio.com/docs/?dv=linux64_rpm
-get_lastest_studio_code_version() {
+_debian_flavor_install() {
+  # trap  '_trap_on_exit $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  EXIT
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-    local WEBPAGE_TO_READ_VERSION_NUMBER=$(curl -sSLo -  https://code.visualstudio.com/docs/?dv=linux32_deb&build=insiders  2>&1;) # suppress only wget download messages, but keep wget output for variable
-    echo "${WEBPAGE_TO_READ_VERSION_NUMBER}" | grep 'facebook'  | head -3
-    local VERSION_NUMBER=$(echo "${VERSION_NUMBER}" | grep 'direct download link ....' )
-    wait
-    [[ -z "${VERSION_NUMBER}" ]] && failed "Master PDF Editor Version not found! :${VERSION_NUMBER}:"
-    echo "${VERSION_NUMBER}"
-    if [ -z "${VERSION_NUMBER}" ] ; then  # if empty
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  if
+    (
+    install_requirements "linux" "
+      base64
+      unzip
+      curl
+      wget
+      ufw
+      nginx
+    "
+    ); then
     {
-      failed Could not find Code version
+      apt install base64 -y
+      apt install unzip -y
+      apt install nginx -y
     }
-    fi
-
-} # end get_lastest_studio_code_version
-
-_download_just_download() {
-  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-  #  url  https://code-industry.net/public/master-pdf-editor-3133_amd64.deb
-  _trap_try_start
-  local target_url="${1}"
-  if [ -z "${target_url}" ] ; then  # if empty
-  {
-    failed Could not load target_url string or it was empty
-  }
   fi
-  _trap_catch_check
-  # wget --directory-prefix="${USER_HOME}/Downloads/" --quiet --no-check-certificate "${target_url}" 2>/dev/null
-  echo -e "\033[01;7m*** Downloading file to temp location...\033[0m"
-  if ( command -v wget >/dev/null 2>&1; ) ; then
-    # # REF: about :> http://unix.stackexchange.com/questions/37507/what-does-do-here
-    _trap_try_start
-    :> wgetrc   # here :> equals to Equivalent to the following: cat /dev/null > wgetrc which Nulls out the file called "wgetrc" in the current directory. As in creates an empty file "wgetrc" if one doesn't exist or overwrites one with nothing if it does.
-    _trap_catch_check
-    file_exists_with_spaces wgetrc
-    _trap_try_start
-    echo "noclobber=off" >> wgetrc
-    _trap_catch_check
-    echo "dir_prefix=." >> wgetrc
-    echo "dirstruct=off" >> wgetrc
-    echo "verbose=off" >> wgetrc    # NOTE Can't be verbose and quiet at the same time.--quiet
-    echo "progress=bar:default" >> wgetrc
-    echo "tries=3" >> wgetrc
-    # _trap_try_start # _trap_catch_check
-    # WGETRC=wgetrc wget --directory-prefix="${USER_HOME}/Downloads/" --quiet --no-check-certificate "${target_url}" 2>/dev/null
-    #  _trap_catch_check
-    # WGETRC=wgetrc wget --quiet --no-check-certificate "${target_url}" 2>/dev/null   # suppress only wget download messages, but keep wget output for variable
-    _try "WGETRC=wgetrc wget --directory-prefix=\"${USER_HOME}/Downloads/\" --quiet --no-check-certificate \"${target_url}\"" # 2>/dev/null"
-    echo -e "\033[7m*** Download Wget executed completed.\033[0m"
-    rm -f wgetrc
-    file_does_not_exist_with_spaces wgetrc
-  elif ( command -v curl >/dev/null 2>&1; ); then
-    curl -O "${target_url}" 2>/dev/null   # suppress only wget download messages, but keep wget output for variable
-    _assure_success
-  else
-    failed "I cannot find wget or curl programs to perform a download action! ${target_url}"
-  fi
-}
+  verify_is_installed "
+    unzip
+    curl
+    wget
+    tar
+    ufw
+    nginx
+  "
+  local PB_VERSION=0.16.7
+  local CODENAME="pocketbase_${PB_VERSION}_linux_amd64.zip"
+  local TARGET_URL="https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/${CODENAME}"
+  local DOWNLOADFOLDER=""
+  DOWNLOADFOLDER="$(_find_downloads_folder)"
+  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
+  directory_exists_with_spaces "${DOWNLOADFOLDER}"
+  cd "${DOWNLOADFOLDER}" || echo "$0:$LINENO error cd ${DOWNLOADFOLDER}" && exit 1
+  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+  # unzip "${DOWNLOADFOLDER}/${CODENAME}" -d $HOME/pb/
+  local UNZIPDIR="${USER_HOME}/_/software"
+  mkdir -p "${UNZIPDIR}"
+  _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
+  local PATHTOPOCKETBASE=""
+  PATHTOPOCKETBASE="${UNZIPDIR}/pocketbase"
+  local THISIP=""
+  THISIP=$(myip)
 
-_darwin__64() {
+} # end _debian_flavor_install
+
+_redhat_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-    # https://code-industry.net/public/MasterPDFEditor.dmg
-		local CODENAME="MasterPDFEditor.dmg"
-    local URL="https://code-industry.net/public/"
-    cd $USER_HOME/Downloads/
-		_download "${URL}" "$USER_HOME/Downloads"
-    _assure_success
-    sudo hdiutil attach "${CODENAME}"
-    _assure_success
-		if [[ -d "/Volumes/Master\ PDF\ Editor/Master\ PDF\ Editor.app"  ]] ; then
-		{
-      sudo cp -R "/Volumes/Master\ PDF\ Editor/Master\ PDF\ Editor.app" /Applications/
-      _assure_success
-			sudo hdiutil detach /Volumes/Master\ PDF\ Editor
-      _assure_success
-    }
-		elif [[ -d /Volumes/MasterPDFEditor/Master\ PDF\ Editor.app  ]] ; then
-		{
-      sudo cp -R /Volumes/MasterPDFEditor/Master\ PDF\ Editor.app /Applications/
-      _assure_success
-			sudo hdiutil detach /Volumes/MasterPDFEditor
-      _assure_success
-		}
-	  else
-		{
-			failed "could not find mount  /Volumes"
-			sudo ls -lactrl "/Volumes"
-      _assure_success
-		}
-		fi
-} # end _darwin__64
+  echo "_redhat_flavor_install Procedure not yet implemented. I don't know what to do."
+} # end _redhat_flavor_install
 
-_ubuntu_22__64() {
-  trap 'echo Error:$?' ERR INT
+_arch_flavor_install() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_arch_flavor_install Procedure not yet implemented. I don't know what to do."
+} # end _arch_flavor_install
+
+_arch__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _arch_flavor_install
+} # end _arch__32
+
+_arch__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _arch_flavor_install
+} # end _arch__64
+
+_centos__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _centos__32
+
+_centos__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _centos__64
+
+_debian__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _debian__32
+
+_debian__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _debian__64
+
+_fedora__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _fedora__32
+
+_fedora__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   local _parameters="${*-}"
   local -i _err=0
-  _ubuntu__64 "${_parameters-}"
+  _redhat_flavor_install "${_parameters-}"
   _err=$?
   if [ ${_err} -gt 0 ] ; then
   {
-    failed "$0:$LINENO while running callsomething above _err:${_err}"
+    failed "while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _fedora__64
+
+_fedora_36__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local _parameters="${*-}"
+  local -i _err=0
+  _redhat_flavor_install "${_parameters-}"
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _fedora_36__64
+
+_fedora_37__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local _parameters="${*-}"
+  local -i _err=0
+  _redhat_flavor_install "${_parameters-}"
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _fedora_37__64
+
+_fedora_38__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local _parameters="${*-}"
+  local -i _err=0
+  _redhat_flavor_install "${_parameters-}"
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _fedora_38__64
+
+_fedora_39__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local _parameters="${*-}"
+  local -i _err=0
+  _redhat_flavor_install "${_parameters-}"
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _fedora_39__64
+
+_fedora_40__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local _parameters="${*-}"
+  local -i _err=0
+  _redhat_flavor_install "${_parameters-}"
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _fedora_40__64
+
+_fedora_41__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local _parameters="${*-}"
+  local -i _err=0
+  _redhat_flavor_install "${_parameters-}"
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _fedora_41__64
+
+
+_fedora_42__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local _parameters="${*-}"
+  local -i _err=0
+  _redhat_flavor_install "${_parameters-}"
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _fedora_42__64
+
+_gentoo__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _gentoo__32
+
+_gentoo__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _gentoo__64
+
+_madriva__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _madriva__32
+
+_madriva__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _madriva__64
+
+_suse__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _suse__32
+
+_netbsd__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "This is installer is missing"
+} # end _netbsd__64
+
+_suse__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _redhat_flavor_install
+} # end _suse__64
+
+_ubuntu__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  _debian_flavor_install
+} # end _ubuntu__32
+
+_ubuntu__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local _parameters="${*-}"
+  local -i _err=0
+  _debian_flavor_install "${_parameters-}"
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _ubuntu__64
+
+_ubuntu_22__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  local _parameters="${*-}"
+  local -i _err=0
+  #_debian_flavor_install "${_parameters-}"
+  anounce_command "su - '${SUDO_USER}' -c 'HOMEBREW_FORCE_BREWED_CURL=1 curl -fsSL https://ollama.com/install.sh | sh'"
+	# curl -fsSL https://ollama.com/install.sh | sh
+	_err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running callsomething above _err:${_err}"
   }
   fi
 } # end _ubuntu_22__64
 
-_ubuntu__64() {
+_ubuntu_24__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-    # local CODENAME="master-pdf-editor-${VERSION_NUMBER}-qt5.amd64.deb"
-    # local URL="https://code-industry.net/public/"
-    cd $USER_HOME/Downloads/ || exit 1
-    # _download "${URL}"
-    # sudo dpkg -i ${CODENAME}
-    local WEBPAGE_TO_READ_VERSION_NUMBER=$(curl -sSLo -  https://code-industry.net/get-masterpdfeditor/  2>&1;) # suppress only wget download messages, but keep wget output for variable
-    local VERSION_NUMBER=$(echo $WEBPAGE_TO_READ_VERSION_NUMBER | sed s/\</\\n\</g | grep "now available for Linux" | sed s/\>/\>\\n/g | sed s/\ /\\n/g | head -3 | tail -1)
-    local ARCHITECTURE=$(uname -m)
-    echo enforce_variable_with_value ARCHITECTURE "${ARCHITECTURE}"
-    enforce_variable_with_value ARCHITECTURE "${ARCHITECTURE}"
-    wait
-    [[ -z "${VERSION_NUMBER}" ]] && failed "Master PDF Version not found! :${VERSION_NUMBER}:"
+  local _parameters="${*-}"
+  local -i _err=0
+  _debian_flavor_install "${_parameters-}"
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _ubuntu_24__64
 
-    local WEBPAGE_TO_GET_DOWNLOAD_FILE=$(curl -sSLo -  https://code-industry.net/free-pdf-editor/\#get  2>&1;)
-    local LASTEST_DOWNLOAD_FILE=$(echo $WEBPAGE_TO_GET_DOWNLOAD_FILE | sed s/\</\\n\</g | grep --color=none -E "${CODELASTESTBUILD}.*${ARCHITECTURE}.*.deb" | cut -d'>' -f2 | tail -1)
-
-    passed "Master PDF Version :${VERSION_NUMBER}:"
-    [[ -z "${LASTEST_DOWNLOAD_FILE}" ]] && failed "Master PDF Version Dowload File NOT found! :${LASTEST_DOWNLOAD_FILE}:"
-    passed "Master PDF Version Download File :${LASTEST_DOWNLOAD_FILE}:"
-    local TARGET_URL=$(echo $WEBPAGE_TO_GET_DOWNLOAD_FILE | sed s/\</\\n\</g | grep --color=none -E "${CODELASTESTBUILD}.*${ARCHITECTURE}.*.rpm" | sed s/\ /\\n\</g | grep http | cut -d'"' -f2 | tail -1)
-    [[ -z "${TARGET_URL}" ]] && failed "Master PDF Version Target URL NOT found! :${TARGET_URL}:"
-    passed "Master PDF Version Target URL :${TARGET_URL}:"
-
-  # get download link
-  local ID
-  local VERSION
-  local VERSION_ID
-  file_exists_with_spaces "/etc/os-release"
-  _assure_success
-
-  source /etc/os-release
-  # $ echo $ID
-  # fedora
-  # $ echo $VERSION_ID
-  # 17
-  # $ echo $VERSION
-  # 17 (Beefy Miracle)
-  echo  enforce_variable_with_value ID "${ID}"
-  enforce_variable_with_value ID "${ID}"
-  echo enforce_variable_with_value VERSION_ID "${VERSION_ID}"
-  enforce_variable_with_value VERSION_ID "${VERSION_ID}"
-  echo enforce_variable_with_value USER_HOME "${USER_HOME}"
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
-  echo enforce_variable_with_value VERSION_NUMBER "${VERSION_NUMBER}"
-  enforce_variable_with_value VERSION_NUMBER "${VERSION_NUMBER}"
-  local TARGET_DOWNLOAD_PATH="$USER_HOME/Downloads/${LASTEST_DOWNLOAD_FILE}"
-
-  _do_not_downloadtwice "${TARGET_URL}" $USER_HOME/Downloads  ${LASTEST_DOWNLOAD_FILE}
-  _install_apt "${TARGET_URL}" "$USER_HOME/Downloads"  "${LASTEST_DOWNLOAD_FILE}"  0
-
-
-} # end _ubuntu__64
-
-_ubuntu__32() {
+_ubuntu__aarch64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-    local CODENAME="master-pdf-editor-${VERSION_NUMBER}.i386.deb"
-    local URL="https://code-industry.net/public/"
-    cd $USER_HOME/Downloads/
-    _download "${URL}"
-    sudo dpkg -i ${CODENAME}
-} # end _ubuntu__32
+  _debian_flavor_install
+} # end _ubuntu__aarch64
 
-_centos__64() {
-  _fedora__64
-} # end _centos__64
-# https://code-industry.net/public/MasterPDFEditor.dmg
-_fedora__64() {
+_ubuntu_22__aarch64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-   # https://code-industry.net/public/master-pdf-editor-5.4.38-qt5.x86_64.rpm
-  # get download link
-  # https://code.visualstudio.com/docs/?dv=linux64_rpm
-    local WEBPAGE_TO_READ_VERSION_NUMBER=$(curl -sSLo -  https://code-industry.net/get-masterpdfeditor/  2>&1;) # suppress only wget download messages, but keep wget output for variable
-    local VERSION_NUMBER=$(echo $WEBPAGE_TO_READ_VERSION_NUMBER | sed s/\</\\n\</g | grep "now available for Linux" | sed s/\>/\>\\n/g | sed s/\ /\\n/g | head -3 | tail -1)
-    local ARCHITECTURE=$(uname -m)
-    echo enforce_variable_with_value ARCHITECTURE "${ARCHITECTURE}"
-    enforce_variable_with_value ARCHITECTURE "${ARCHITECTURE}"
-    wait
-    [[ -z "${VERSION_NUMBER}" ]] && failed "Master PDF Version not found! :${VERSION_NUMBER}:"
+  _debian_flavor_install
+} # end _ubuntu_22__aarch64
 
-    local WEBPAGE_TO_GET_DOWNLOAD_FILE=$(curl -sSLo -  https://code-industry.net/free-pdf-editor/\#get  2>&1;)
-    local LASTEST_DOWNLOAD_FILE=$(echo $WEBPAGE_TO_GET_DOWNLOAD_FILE | sed s/\</\\n\</g | grep --color=none -E "${CODELASTESTBUILD}.*${ARCHITECTURE}.*.rpm" | cut -d'>' -f2 | tail -1)
-
-    passed "Master PDF Version :${VERSION_NUMBER}:"
-    [[ -z "${LASTEST_DOWNLOAD_FILE}" ]] && failed "Master PDF Version Dowload File NOT found! :${LASTEST_DOWNLOAD_FILE}:"
-    passed "Master PDF Version Download File :${LASTEST_DOWNLOAD_FILE}:"
-    local TARGET_URL=$(echo $WEBPAGE_TO_GET_DOWNLOAD_FILE | sed s/\</\\n\</g | grep --color=none -E "${CODELASTESTBUILD}.*${ARCHITECTURE}.*.rpm" | sed s/\ /\\n\</g | grep http | cut -d'"' -f2 | tail -1)
-    [[ -z "${TARGET_URL}" ]] && failed "Master PDF Version Target URL NOT found! :${TARGET_URL}:"
-    passed "Master PDF Version Target URL :${TARGET_URL}:"
-
-  # get download link
-  local ID
-  local VERSION
-  local VERSION_ID
-  file_exists_with_spaces "/etc/os-release"
-  _assure_success
-
-  source /etc/os-release
-  # $ echo $ID
-  # fedora
-  # $ echo $VERSION_ID
-  # 17
-  # $ echo $VERSION
-  # 17 (Beefy Miracle)
-  echo  enforce_variable_with_value ID "${ID}"
-  enforce_variable_with_value ID "${ID}"
-  echo enforce_variable_with_value VERSION_ID "${VERSION_ID}"
-  enforce_variable_with_value VERSION_ID "${VERSION_ID}"
-  echo enforce_variable_with_value USER_HOME "${USER_HOME}"
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
-  echo enforce_variable_with_value VERSION_NUMBER "${VERSION_NUMBER}"
-  enforce_variable_with_value VERSION_NUMBER "${VERSION_NUMBER}"
-  local TARGET_DOWNLOAD_PATH="$USER_HOME/Downloads/${LASTEST_DOWNLOAD_FILE}"
-
-  _do_not_downloadtwice "${TARGET_URL}" $USER_HOME/Downloads  ${LASTEST_DOWNLOAD_FILE}
-  _install_rpm "${TARGET_URL}" "$USER_HOME/Downloads"  "${LASTEST_DOWNLOAD_FILE}"  0
-
-} # end _fedora__64
-
-_mingw__64() {
+_darwin__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
-    local CODENAME="MasterPDFEditor-setup.exe"
-    cd $HOMEDIR
-    cd Downloads
-    curl -O https://code-industry.net/public/${CODENAME}
-    ${CODENAME}
-} # end _mingw__64
+  echo "_darwin__64 Procedure not yet implemented. I don't know what to do."
+} # end _darwin__64
 
-_mingw__32() {
-    local CODENAME="MasterPDFEditor-setup.exe"
-    cd $HOMEDIR
-    cd Downloads
-    curl -O https://code-industry.net/public/${CODENAME}
-    ${CODENAME}
-} # end
+_darwin__arm64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_darwin__arm64 Procedure not yet implemented. I don't know what to do."
+} # end _darwin__arm64
 
-_main() {
-  determine_os_and_fire_action
-} # end _main
+_tar() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_tar Procedure not yet implemented. I don't know what to do."
+} # end tar
 
-_main
+_windows__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_windows__64 Procedure not yet implemented. I don't know what to do."
+} # end _windows__64
 
-echo ":)"
+_windows__32() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_windows__32 Procedure not yet implemented. I don't know what to do."
+} # end _windows__32
 
 
 
- #--------/\/\/\/\-- 2tasks_templates_sudo/masterpdf …install_masterpdf.bash” -- Custom code-/\/\/\/\-------
+ #--------/\/\/\/\-- 2tasks_templates_sudo/ollama …install_ollama.bash” -- Custom code-/\/\/\/\-------
 
 
 
