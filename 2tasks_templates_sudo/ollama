@@ -256,9 +256,10 @@ _ubuntu_22__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   local _parameters="${*-}"
   local -i _err=0
-  #_debian_flavor_install "${_parameters-}"
-  anounce_command "su - '${SUDO_USER}' -c 'HOMEBREW_FORCE_BREWED_CURL=1 curl -fsSL https://ollama.com/install.sh | sh'"
-	# curl -fsSL https://ollama.com/install.sh | sh
+  # _debian_flavor_install "${_parameters-}"
+	# anounce_command "su - '${SUDO_USER}' -c 'HOMEBREW_FORCE_BREWED_CURL=1 curl -fsSL https://ollama.com/install.sh | sh'"
+  # anounce_command "'HOMEBREW_FORCE_BREWED_CURL=1 curl -fsSL https://ollama.com/install.sh | sh'"
+	curl -fsSL https://ollama.com/install.sh | sh
 	_err=$?
   if [ ${_err} -gt 0 ] ; then
   {
