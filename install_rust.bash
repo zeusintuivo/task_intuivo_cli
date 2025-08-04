@@ -898,12 +898,12 @@ _redhat_flavor_install() {
 _arch_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   echo "_arch_flavor_install Procedure not yet implemented. I don't know what to do."
-} # end _readhat_flavor_install
+} # end _arch_flavor_install
 
 _arch__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _arch_flavor_install
-} # end _arch__32
+} # end _arch_32
 
 _arch__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
