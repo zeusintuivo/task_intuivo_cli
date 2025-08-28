@@ -26,7 +26,7 @@ _rpm_bc_installer(){
 	# shellcheck disable=SC2001,SC2308
 	slash_pos=$(expr index "$cmd_path" /) || :
 	local full_path=""
-		full_path=$work_dir/$cmd_path
+  full_path="$work_dir/$cmd_path"
 	if [ "$slash_pos" = "1" ]; then
 		full_path=$cmd_path
 	fi
@@ -442,7 +442,8 @@ _fedora__32() {
 	DOWNLOADFOLDER="$(_find_downloads_folder)"
 	enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
 	cd "${DOWNLOADFOLDER}"
-	_download "${TARGET_URL}" "${USER_HOME}/Downloads" "${CODENAME}"
+	wget --max-redirect=10 -O "${DOWNLOADFOLDER}/${CODENAME}" "${TARGET_URL}"
+  # _download "${TARGET_URL}" "${USER_HOME}/Downloads" "${CODENAME}"
 	file_exists_with_spaces "${DOWNLOADFOLDER}/${CODENAME}"
 	ensure rpm or "Canceling Install. Could not find rpm command to execute install"
 	# provide error handling , once learned goes here. LEarn under if, once learned here.
@@ -487,11 +488,19 @@ _fedora__64() {
 	Checking "TARGET_URL:${TARGET_URL}"
 	enforce_variable_with_value TARGET_URL "${TARGET_URL}"
 	local DOWNLOADFOLDER=""
-	"$(_find_downloads_folder)"
+	DOWNLOADFOLDER="$(_find_downloads_folder)"
 	enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
 	cd "${DOWNLOADFOLDER}"
-	_do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
-	_install_rpm "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
+  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
+  # wget --max-redirect=10 -O "${DOWNLOADFOLDER}/${CODENAME}" "${TARGET_URL}"
+	_err=$?
+	if [ ${_err} -gt 0 ] ; then
+	{
+		warm "failed download:$LINENO $0:$LINENO above _err:${_err}"
+	}
+	fi
+
+  _install_rpm "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
 
 	ensure bcompare or "Failed to install Beyond Compare"
 	rm -f "${DOWNLOADFOLDER}/${CODENAME}"

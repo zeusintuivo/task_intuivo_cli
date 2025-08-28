@@ -1,0 +1,3 @@
+sudo dnf install -y knot-resolver
+sudo dnf install -y --enablerepo updates-testing knot-resolver
+sudo dnf install knot-utils knot knot-resolver -y
