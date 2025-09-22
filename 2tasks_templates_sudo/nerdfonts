@@ -1,0 +1,90 @@
+#!/bin/bash
+
+set -E -o functrace
+
+_fedora__64() {
+    COMANDDER="dnf"
+    _install_nerd_fonts
+
+    _if_not_is_installed fontawesome-fonts && $COMANDDER -y install fontawesome-fonts
+    _if_not_is_installed powerline && $COMANDDER -y install powerline vim-powerline tmux-powerline powerline-fonts
+    echo REF: https://fedoramagazine.org/tuning-your-bash-or-zsh-shell-in-workstation-and-silverblue/
+    if [ -f `which powerline-daemon` ]; then
+    {
+      powerline-daemon -q
+      POWERLINE_BASH_CONTINUATION=1
+      POWERLINE_BASH_SELECT=1
+      . /usr/share/powerline/bash/powerline.sh
+}
+    fi
+
+} # _fedora__64
+
+_install_nerd_fonts(){
+
+  set -xeu
+
+  if  it_does_not_exist_with_spaces "$USER_HOME/.nerd-fonts" ; then
+  {
+
+    cd $USER_HOME
+    git clone --depth=1 https://github.com/ryanoasis/nerd-fonts $USER_HOME/.nerd-fonts --single-branch --branch master
+    directory_exists_with_spaces "$USER_HOME/.nerd-fonts"
+    file_exists_with_spaces "$USER_HOME/.nerd-fonts/install.sh"
+    chown -R $SUDO_USER $USER_HOME/.nerd-fonts
+
+    cd "$USER_HOME/.nerd-fonts" || exit 1
+    su - $SUDO_USER -c  ./install.sh
+  }
+  else
+  {
+    cd "$USER_HOME/.nerd-fonts" || exit 1
+    su - $SUDO_USER -c 'git pull'
+    su - $SUDO_USER -c  ./install.sh
+
+  }
+  fi
+}
+
+_setup_ohmy(){
+
+  set -xeu
+  if  it_does_not_exist_with_spaces "$USER_HOME/.oh-my-zsh/" ; then
+  {
+    Installing ohmy
+    if [[ "$COMANDDER" == *"apt-get"* ]]  ; then
+    {
+      wget -q -O - https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | apt-key add -
+    }
+    elif [[ "$COMANDDER" == *"dnf"* ]]  ; then
+    {
+      $COMANDDER install -y git wget curl ruby ruby-devel zsh util-linux-user redhat-rpm-config gcc gcc-c++ make
+    }
+    fi
+
+
+    # install ohmyzsh
+    su - $SUDO_USER -c 'bash "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"'
+
+    echo Testing ohmyzsh
+    directory_exists_with_spaces "$USER_HOME/.oh-my-zsh"
+  }
+  else
+  {
+    passed that: ohmy is installed
+  }
+  fi
+
+
+
+
+  it_does_not_exist_with_spaces ${USER_HOME}/.oh-my-zsh/themes/powerlevel10k && git clone https://github.com/romkatv/powerlevel10k.git ${USER_HOME}/.oh-my-zsh/themes/powerlevel10k
+  _if_not_contains "$USER_HOME/.zshrc" "powerlevel10k" && echo "ZSH_THEME=powerlevel10k/powerlevel10k" >> $USER_HOME/.zshrc
+
+  it_does_not_exist_with_spaces ${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting &&  git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
+  it_does_not_exist_with_spaces ${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions &&  git clone https://github.com/zsh-users/zsh-autosuggestions ${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions
+
+  _if_not_contains "$USER_HOME/.zshrc" "zsh-syntax-highlighting" && echo "plugins=\(git zsh-syntax-highlighting zsh-autosuggestions\)"   >> $USER_HOME/.zshrc
+
+} # end _setup_ohmy
+#_setup_ohmy

@@ -1,0 +1,170 @@
+#!/usr/bin/bash
+
+_debian_flavor_install() {
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  echo "nothing todo here"
+} # end _debian_flavor_install
+
+_redhat_flavor_install() {
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  anounce_command dnf upgrade --refresh -y
+  anounce_command dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
+  anounce_command dnf install https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+  anounce_command dnf group install multimedia --exclude=PackageKit-gstreamer-plugin -y
+  anounce_command dnf group install sound-and-video -y
+  Installing rust
+
+  #install_rust.bash
+  [[ ! -d "${USER_HOME}/.cargo" ]] && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+  Installing rpmfusion free
+  Installing core group
+  anounce_command dnf group upgrade core -y
+  anounce_command dnf install https://rpms.remirepo.net/fedora/remi-release-$(rpm -E %fedora).rpm -y
+
+  if (install_requirements "linux" "
+    python3-pip
+    task
+    gparted
+    gpart
+    thunderbird
+    boxes
+    firefox
+    guake
+    yakuake
+    nginx
+    gnome-tweaks
+    breeze-cursor-theme
+    oxygen-cursor-themes
+    knock
+    arandr
+    xrandr
+  "); then
+  {
+    echo "Warning:  failed install some deps"
+  }
+  fi
+  Installing homebrew
+   su - "${SUDO_USER}" -c "${USER_HOME}/bin/install_brew.bash"
+  Installing clis basic
+  su - "${SUDO_USER}" -c "${USER_HOME}/bin/install_basic_clis.bash"
+  Installing old clis extra mix stuff
+  su - "${SUDO_USER}" -c "${USER_HOME}/bin/install_clis.bash"
+  Installing more libs with homebrew
+  su - "${SUDO_USER}" -c "brew install libxscrnsaver libnotify bzip2 freetype2"
+  Checking some programs as control
+  verify_is_installed "
+    unzip
+    curl
+    wget
+    tar
+    nginx
+    pip3
+  "
+  Installing several script now
+  su - "${SUDO_USER}" -c "${USER_HOME}/bin/install_1password.bash"
+  su - "${SUDO_USER}" -c "${USER_HOME}/bin/install_zoom.bash"
+  su - "${SUDO_USER}" -c "${USER_HOME}/bin/install_keybase.bash"
+  # anounce_command install_drogon.bash
+  su - "${SUDO_USER}" -c "${USER_HOME}/bin/install_sublime_dev.sh.bash"
+  # anounce_command install_taskwarrior.bash
+  su - "${SUDO_USER}" -c "${USER_HOME}/bin/compile_nano.bash &"
+  su - "${SUDO_USER}" -c "${USER_HOME}/bin/install_rbenv.bash"
+  su - "${SUDO_USER}" -c "${USER_HOME}/bin/install_nvm.bash"
+  #  su - "${SUDO_USER}" -c "# d install_evm.bash"
+  su - "${SUDO_USER}" -c "${USER_HOME}/bin/install_kiex.bash"
+  su - "${SUDO_USER}" -c "${USER_HOME}/bin/install_emacs.bash"
+  su - "${SUDO_USER}" -c "${USER_HOME}/bin/install_masterpdf.bash"
+  su - "${SUDO_USER}" -c "${USER_HOME}/bin/install_i3.bash"
+  su - "${SUDO_USER}" -c "${USER_HOME}/bin/install_beyondcompare.bash"
+
+  echo "End of install tasks should be installed. I don't know what to do next... "
+
+} # end _redhat_flavor_install
+
+_arch_flavor_install() {
+  echo "_arch_flavor_install Procedure not yet implemented. I don't know what to do."
+} # end _readhat_flavor_install
+
+_arch__32() {
+  _arch_flavor_install
+} # end _arch__32
+
+_arch__64() {
+  _arch_flavor_install
+} # end _arch__64
+
+_centos__32() {
+  _redhat_flavor_install
+} # end _centos__32
+
+_centos__64() {
+  _redhat_flavor_install
+} # end _centos__64
+
+_debian__32() {
+  _debian_flavor_install
+} # end _debian__32
+
+_debian__64() {
+  _debian_flavor_install
+} # end _debian__64
+
+_fedora__32() {
+  _redhat_flavor_install
+} # end _fedora__32
+
+_fedora__64() {
+  _redhat_flavor_install
+} # end _fedora__64
+
+_gentoo__32() {
+  _redhat_flavor_install
+} # end _gentoo__32
+
+_gentoo__64() {
+  _redhat_flavor_install
+} # end _gentoo__64
+
+_madriva__32() {
+  _redhat_flavor_install
+} # end _madriva__32
+
+_madriva__64() {
+  _redhat_flavor_install
+} # end _madriva__64
+
+_suse__32() {
+  _redhat_flavor_install
+} # end _suse__32
+
+_suse__64() {
+  _redhat_flavor_install
+} # end _suse__64
+
+_ubuntu__32() {
+  _debian_flavor_install
+} # end _ubuntu__32
+
+_ubuntu__64() {
+  _debian_flavor_install
+} # end _ubuntu__64
+
+_darwin__64() {
+  echo "_darwin__64 Procedure not yet implemented. I don't know what to do."
+} # end _darwin__64
+
+_darwin__arm64() {
+  echo "_darwin__arm64 Procedure not yet implemented. I don't know what to do."
+} # end _darwin__arm64
+
+_tar() {
+  echo "_tar Procedure not yet implemented. I don't know what to do."
+} # end tar
+
+_windows__64() {
+  echo "_windows__64 Procedure not yet implemented. I don't know what to do."
+} # end _windows__64
+
+_windows__32() {
+  echo "_windows__32 Procedure not yet implemented. I don't know what to do."
+} # end _windows__32

@@ -648,188 +648,90 @@ fi
 
 
 
- #--------\/\/\/\/-- 2tasks_templates_sudo/i3 …install_i3.bash” -- Custom code -\/\/\/\/-------
+ #--------\/\/\/\/-- 2tasks_templates_sudo/fedora42 …install_fedora42.bash” -- Custom code -\/\/\/\/-------
 
 
 #!/usr/bin/bash
 
 _debian_flavor_install() {
   enforce_variable_with_value USER_HOME "${USER_HOME}"
-  if (
-  install_requirements "linux" "
-    base64
-    unzip
-    curl
-    wget
-  "
-  ); then
-    {
-      apt install base64 -y
-      apt install unzip -y
-    }
+  echo "nothing todo here"
+} # end _debian_flavor_install
+
+_redhat_flavor_install() {
+  enforce_variable_with_value USER_HOME "${USER_HOME}"
+  anounce_command dnf upgrade --refresh -y
+  anounce_command dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
+  anounce_command dnf install https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+  anounce_command dnf group install multimedia --exclude=PackageKit-gstreamer-plugin -y
+  anounce_command dnf group install sound-and-video -y
+  Installing rust
+
+  #install_rust.bash
+  [[ ! -d "${USER_HOME}/.cargo" ]] && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+  Installing rpmfusion free
+  Installing core group
+  anounce_command dnf group upgrade core -y
+  anounce_command dnf install https://rpms.remirepo.net/fedora/remi-release-$(rpm -E %fedora).rpm -y
+
+  if (install_requirements "linux" "
+    python3-pip
+    task
+    gparted
+    gpart
+    thunderbird
+    boxes
+    firefox
+    guake
+    yakuake
+    nginx
+    gnome-tweaks
+    breeze-cursor-theme
+    oxygen-cursor-themes
+    knock
+    arandr
+    xrandr
+  "); then
+  {
+    echo "Warning:  failed install some deps"
+  }
   fi
+  Installing homebrew
+   su - "${SUDO_USER}" -c "${USER_HOME}/bin/install_brew.bash"
+  Installing clis basic
+  su - "${SUDO_USER}" -c "${USER_HOME}/bin/install_basic_clis.bash"
+  Installing old clis extra mix stuff
+  su - "${SUDO_USER}" -c "${USER_HOME}/bin/install_clis.bash"
+  Installing more libs with homebrew
+  su - "${SUDO_USER}" -c "brew install libxscrnsaver libnotify bzip2 freetype2"
+  Checking some programs as control
   verify_is_installed "
     unzip
     curl
     wget
     tar
+    nginx
+    pip3
   "
-  local PB_VERSION=0.16.7
-  local CODENAME="pocketbase_${PB_VERSION}_linux_amd64.zip"
-  local TARGET_URL="https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/${CODENAME}"
-  local DOWNLOADFOLDER="$(_find_downloads_folder)"
-  enforce_variable_with_value DOWNLOADFOLDER "${DOWNLOADFOLDER}"
-  directory_exists_with_spaces "${DOWNLOADFOLDER}"
-  cd "${DOWNLOADFOLDER}"
-  _do_not_downloadtwice "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}"
-  # unzip "${DOWNLOADFOLDER}/${CODENAME}" -d $HOME/pb/
-  local UNZIPDIR="${USER_HOME}/_/software"
-  mkdir -p "${UNZIPDIR}"
-  _unzip "${DOWNLOADFOLDER}" "${UNZIPDIR}" "${CODENAME}"
-  local PATHTOPOCKETBASE="${UNZIPDIR}/pocketbase"
-  local THISIP=$(myip)
+  Installing several script now
+  su - "${SUDO_USER}" -c "${USER_HOME}/bin/install_1password.bash"
+  su - "${SUDO_USER}" -c "${USER_HOME}/bin/install_zoom.bash"
+  su - "${SUDO_USER}" -c "${USER_HOME}/bin/install_keybase.bash"
+  # anounce_command install_drogon.bash
+  su - "${SUDO_USER}" -c "${USER_HOME}/bin/install_sublime_dev.sh.bash"
+  # anounce_command install_taskwarrior.bash
+  su - "${SUDO_USER}" -c "${USER_HOME}/bin/compile_nano.bash &"
+  su - "${SUDO_USER}" -c "${USER_HOME}/bin/install_rbenv.bash"
+  su - "${SUDO_USER}" -c "${USER_HOME}/bin/install_nvm.bash"
+  #  su - "${SUDO_USER}" -c "# d install_evm.bash"
+  su - "${SUDO_USER}" -c "${USER_HOME}/bin/install_kiex.bash"
+  su - "${SUDO_USER}" -c "${USER_HOME}/bin/install_emacs.bash"
+  su - "${SUDO_USER}" -c "${USER_HOME}/bin/install_masterpdf.bash"
+  su - "${SUDO_USER}" -c "${USER_HOME}/bin/install_i3.bash"
+  su - "${SUDO_USER}" -c "${USER_HOME}/bin/install_beyondcompare.bash"
 
-} # end _debian_flavor_install
-
-_fedora_37__64() {
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
-  echo "REF: https://fedoraproject.org/wiki/I3_guide#First_Login"
-  echo "REF: https://fedoramagazine.org/getting-started-i3-window-manager/"
-  local groupslist="$(dnf groups list)"
-  if ( grep -q "^[[:space:]]*KDE (K Desktop Environment)" <<<  "${groupslist}" ) ; then
-  {
-    anounce_command 'dnf group install "KDE (K Desktop Environment)" -y --allowerasing'
-  }
-  fi
-  if ( grep -q "^[[:space:]]*KDE Plasma Workspaces" <<<  "${groupslist}" ) ; then
-  {
-    anounce_command 'dnf group install "KDE Plasma Workspaces" -y --allowerasing'
-  }
-  fi
-  if ( grep -q "^[[:space:]]*i3 desktop" <<<  "${groupslist}" ) ; then
-  {
-    anounce_command 'dnf group install "i3 desktop" -y --allowerasing'
-  }
-  fi
-  anounce_command dnf builddep i3 -y --allowerasing
-  anounce_command dnf install i3 -y --allowerasing
-  anounce_command dnf builddep kitty -y --allowerasing
-  anounce_command dnf install kitty -y --allowerasing
-  if (
-  install_requirements "linux" "
-    bzip2-devel
-    libzip-devel
-    bzip2-libs
-    bzip2
-    lbzip2
-    pbzip2
-    rust-zip+bzip2-devel
-    rust-bzip2-devel
-    bzip2
-    yakuake
-    i3
-    i3status
-    i3lock
-    dmenu
-    feh
-    conky
-    dunst
-    flameshot
-    rofi
-    kitty
-    audacious
-    mpc
-    mpv
-    xset
-    # moc
-    xbacklight
-    terminator
-    rhythmbox
-    totem
-    # thunar
-    tmux
-    py3status
-    # until now no issues with boot or breaking gnome brightness
-    xrandr
-    arandr
-    brightnessctl
-    htop
-    btop
-    bpytop
-    polybar
-    # python-mpd2
-  "
-  ); then
-    {
-      echo "All installed no error"
-    }
-    else
-    {
-      echo "something failed while installing err:$?"
-    }
-  fi
-
-  anounce brew install libxscrnsaver libnotify bzip2 freetype2
-  if su - "${SUDO_USER}" -c 'brew install libxscrnsaver libnotify bzip2 freetype2' ; then
-    {
-      echo "All installed no error"
-    }
-    else
-    {
-      echo "something failed while installing err:$?"
-    }
-  fi
-  anounce brew install the_platinum_searcher
-  if su - "${SUDO_USER}" -c "brew install the_platinum_searcher" ; then
-    {
-      echo "All installed no error"
-    }
-    else
-    {
-      echo "something failed while installing err:$?"
-    }
-  fi
-  anounce pip3 install python-mpd2
-  if su - "${SUDO_USER}" -c 'pip3 install python-mpd2'; then
-    {
-      echo "All installed no error"
-    }
-    else
-    {
-      echo "something failed while installing err:$?"
-    }
-  fi
-  anounce pip install python-mpd2
-  if su - "${SUDO_USER}" -c 'pip install python-mpd2'; then
-    {
-      echo "All installed no error"
-    }
-    else
-    {
-      echo "something failed while installing err:$?"
-    }
-  fi
-
-  if verify_is_installed "
-    unzip
-    curl
-    wget
-    tar
-    xset
-  " ; then
-    {
-      echo "All installed no error"
-    }
-    else
-    {
-      echo "something failed while installing err:$?"
-    }
-  fi
   echo "End of install tasks should be installed. I don't know what to do next... "
-} # _fedora_37__64
 
-_redhat_flavor_install() {
-  _fedora_37__64
 } # end _redhat_flavor_install
 
 _arch_flavor_install() {
@@ -865,267 +767,8 @@ _fedora__32() {
 } # end _fedora__32
 
 _fedora__64() {
-  trap "echo Error:$?" ERR INT
-  local _parameters="${*-}"
-  local -i _err=0
-  _fedora_37__64 "${_parameters-}"
-  _err=$?
-  if [ ${_err} -gt 0 ] ; then
-  {
-    failed "$0:$LINENO while running callsomething above _err:${_err}"
-  }
-  fi
+  _redhat_flavor_install
 } # end _fedora__64
-
-_fedora_39__64() {
-  trap "echo Error:$?" ERR INT
-  local _parameters="${*-}"
-  local -i _err=0
-  _fedora_37__64 "${_parameters-}"
-  _err=$?
-  if [ ${_err} -gt 0 ] ; then
-  {
-    failed "$0:$LINENO while running callsomething above _err:${_err}"
-  }
-  fi
-} # end _fedora_39__64
-
-
-_fedora_40__64() {
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
-  echo "REF: https://fedoraproject.org/wiki/I3_guide#First_Login"
-  echo "REF: https://fedoramagazine.org/getting-started-i3-window-manager/"
-  dnf builddep i3 -y --allowerasing
-  dnf builddep kitty -y --allowerasing
-  if (
-  install_requirements "linux" "
-    bzip2-devel
-    libzip-devel
-    bzip2-libs
-    bzip2
-    lbzip2
-    pbzip2
-    rust-zip+bzip2-devel
-    rust-bzip2-devel
-    bzip2
-    yakuake
-    i3
-    i3status
-    i3lock
-    dmenu
-    i3lock
-    feh
-    conky
-    dunst
-    flameshot
-    rofi
-    kitty
-    audacious
-    mpc
-    mpv
-    xset
-    # moc
-    xbacklight
-    terminator
-    rhythmbox
-    totem
-    # thunar
-    tmux
-    py3status
-    # until now no issues with boot or breaking gnome brightness
-    xrandr
-    arandr
-    brightnessctl
-    htop
-    polybar
-    # python-mpd2
-  "
-  ); then
-    {
-      echo "All installed no error"
-    }
-    else
-    {
-      echo "something failed while installing err:$?"
-    }
-  fi
-  if su - "${SUDO_USER}" -c 'brew install libxscrnsaver libnotify bzip2 freetype2' ; then
-    {
-      echo "All installed no error"
-    }
-    else
-    {
-      echo "something failed while installing err:$?"
-    }
-  fi
-
-  if su - $SUDO_USER -c 'brew install the_platinum_searcher'; then
-    {
-      echo "All installed no error"
-    }
-    else
-    {
-      echo "something failed while installing err:$?"
-    }
-  fi
-
-  if su - $SUDO_USER -c 'pip3 install python-mpd'; then
-    {
-      echo "All installed no error"
-    }
-    else
-    {
-      echo "something failed while installing err:$?"
-    }
-  fi
-
-  if su - $SUDO_USER -c 'pip install python-mpd'; then
-    {
-      echo "All installed no error"
-    }
-    else
-    {
-      echo "something failed while installing err:$?"
-    }
-  fi
-
-  if verify_is_installed "
-    unzip
-    curl
-    wget
-    tar
-    xset
-  " ; then
-    {
-      echo "All installed no error"
-    }
-    else
-    {
-      echo "something failed while installing err:$?"
-    }
-  fi
-  echo "End of install tasks should be installed. I don't know what to do next... "
-} # end _fedora_40__64
-
-
-_fedora_42__64() {
-  enforce_variable_with_value USER_HOME "${USER_HOME}"
-  echo "REF: https://fedoraproject.org/wiki/I3_guide#First_Login"
-  echo "REF: https://fedoramagazine.org/getting-started-i3-window-manager/"
-  dnf install xset -y
-  dnf builddep i3 -y --allowerasing
-  dnf builddep kitty -y --allowerasing
-  if (
-  install_requirements "linux" "
-    bzip2-devel
-    libzip-devel
-    bzip2-libs
-    bzip2
-    lbzip2
-    pbzip2
-    rust-zip+bzip2-devel
-    rust-bzip2-devel
-    bzip2
-    yakuake
-    i3
-    i3status
-    i3lock
-    dmenu
-    i3lock
-    feh
-    conky
-    dunst
-    flameshot
-    rofi
-    kitty
-    audacious
-    mpc
-    mpv
-    xset
-    # moc
-    xbacklight
-    terminator
-    rhythmbox
-    totem
-    # thunar
-    tmux
-    py3status
-    # until now no issues with boot or breaking gnome brightness
-    xrandr
-    arandr
-    brightnessctl
-    htop
-    polybar
-    # python-mpd2
-  "
-  ); then
-    {
-      echo "All installed no error"
-    }
-    else
-    {
-      echo "something failed while installing err:$?"
-    }
-  fi
-  if su - "${SUDO_USER}" -c 'brew install libxscrnsaver libnotify bzip2 freetype2' ; then
-    {
-      echo "All installed no error"
-    }
-    else
-    {
-      echo "something failed while installing err:$?"
-    }
-  fi
-
-  if su - $SUDO_USER -c 'brew install the_platinum_searcher'; then
-    {
-      echo "All installed no error"
-    }
-    else
-    {
-      echo "something failed while installing err:$?"
-    }
-  fi
-
-  if su - $SUDO_USER -c 'pip3 install python-mpd'; then
-    {
-      echo "All installed no error"
-    }
-    else
-    {
-      echo "something failed while installing err:$?"
-    }
-  fi
-
-  if su - $SUDO_USER -c 'pip install python-mpd'; then
-    {
-      echo "All installed no error"
-    }
-    else
-    {
-      echo "something failed while installing err:$?"
-    }
-  fi
-
-  if verify_is_installed "
-    unzip
-    curl
-    wget
-    tar
-    xset
-  " ; then
-    {
-      echo "All installed no error"
-    }
-    else
-    {
-      echo "something failed while installing err:$?"
-    }
-  fi
-  echo "End of install tasks should be installed. I don't know what to do next... "
-} # end _fedora_40__64
-
-
 
 _gentoo__32() {
   _redhat_flavor_install
@@ -1159,23 +802,6 @@ _ubuntu__64() {
   _debian_flavor_install
 } # end _ubuntu__64
 
-_ubuntu__24_64() {
-  _debian_flavor_install
-} # end _ubuntu__64
-
-_ubuntu_22__64() {
-  trap 'echo Error:$?' ERR INT
-  local _parameters="${*-}"
-  local -i _err=0
-  callsomething "${_parameters-}"
-  _err=$?
-  if [ ${_err} -gt 0 ] ; then
-  {
-    failed "$0:$LINENO while running callsomething above _err:${_err}"
-  }
-  fi
-} # end _ubuntu_22__64
-
 _darwin__64() {
   echo "_darwin__64 Procedure not yet implemented. I don't know what to do."
 } # end _darwin__64
@@ -1198,7 +824,7 @@ _windows__32() {
 
 
 
- #--------/\/\/\/\-- 2tasks_templates_sudo/i3 …install_i3.bash” -- Custom code-/\/\/\/\-------
+ #--------/\/\/\/\-- 2tasks_templates_sudo/fedora42 …install_fedora42.bash” -- Custom code-/\/\/\/\-------
 
 
 

@@ -499,8 +499,14 @@ _fedora__64() {
 		warm "failed download:$LINENO $0:$LINENO above _err:${_err}"
 	}
 	fi
+  echo -e "RUNNING:  _install_rpm "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0"
 
+  _trap_try_start
   _install_rpm "${TARGET_URL}" "${DOWNLOADFOLDER}"  "${CODENAME}" 0
+  _err=$?
+  _trap_catch_check ${_err}
+  _assure_success $?
+
 
 	ensure bcompare or "Failed to install Beyond Compare"
 	rm -f "${DOWNLOADFOLDER}/${CODENAME}"
