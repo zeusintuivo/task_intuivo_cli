@@ -3,35 +3,40 @@
 #
 
 function main(){
-  set -ue
-	local path_to_file=""
+  set -xue
+  local path_to_file=""
   local -i _err=0
-	local left=""
-	local right=""
+  local left=""
+  local right=""
   local precheckdotdot=""
 
-	[[ -z "${1-}" ]] && return 1
+  [[ -z "${1-}" ]] && return 1
 
-	precheckdotdot="${1-}"
+  precheckdotdot="${1-}"
   path_to_file="${1-}"
-	if [[  "${precheckdotdot-}" == *":"* ]] ; then # if it contains :
-	{
-	  left="$(cut -d: -f1 <<< "${precheckdotdot}")"
-	  right="$(cut -d: -f2 <<< "${precheckdotdot}")"
+  if [[  "${precheckdotdot-}" == *":"* ]] ; then # if it contains :
+  {
+    left="$(cut -d: -f1 <<< "${precheckdotdot}")"
+    right="$(cut -d: -f2 <<< "${precheckdotdot}")"
     path_to_file="${left-}"
-	}
-	elif [[  "${precheckdotdot-}" == *"+"* ]] ; then # if it contains :
-	{
-		path_to_file="$(cut -d+ -f2- <<< "${precheckdotdot}")"
-		[[ -z "${path_to_file-}" ]] && return 1
-	  left="$(cut -d' ' -f2 <<< "${path_to_file}")"
-	  right="$(cut -d' ' -f1 <<< "${path_to_file}")"
+  }
+  elif [[  "${precheckdotdot-}" == *"+"* ]] ; then # if it contains :
+  {
+    path_to_file="$(cut -d+ -f2- <<< "${precheckdotdot}")"
+    [[ -z "${path_to_file-}" ]] && return 1
+    left="$(cut -d' ' -f2 <<< "${path_to_file}")"
+    right="$(cut -d' ' -f1 <<< "${path_to_file}")"
     path_to_file="${left-}"
-	}
-	fi
-	[[ -z "${left-}" ]] && return 1
-	[[ -z "${path_to_file-}" ]] && return 1
-	if [[ ! -e "${path_to_filei-}" ]] ; then   # not found in current folder
+  }
+  fi
+  echo "          left:$left"
+  echo "         right:$right"
+  echo "  path_to_file:$path_to_file"
+  echo "precheckdotdot:$precheckdotdot"
+  [[ -z "${left-}" ]] && [[ -n "${path_to_file-}" ]] && [[ -n "${precheckdotdot-}" ]] &&  [[ "${path_to_file-}" == "${precheckdotdot-}" ]] && left="${precheckdotdot-}"
+  [[ -z "${left-}" ]] && return 1
+  [[ -z "${path_to_file-}" ]] && return 1
+  if [[ ! -e "${path_to_filei-}" ]] ; then   # not found in current folder
   {
     path_to_file="$(pwd)/${left}"
     if [[ ! -e "${path_to_file}" ]] ; then  # add full pwd and see if finds it
@@ -62,14 +67,14 @@ function main(){
     fi
   }
   fi
-	if [[ -n "${right}" ]]  && [ ${right} -gt 0 ] ; then # if it contains :
+  if [[ -n "${right}" ]]  && [ ${right} -gt 0 ] ; then # if it contains :
   {
     vim +"${right}" "${path_to_file}"
   }
   else
-	{
+  {
     vim  "${path_to_file}"
-	}
+  }
   fi
 }
 
