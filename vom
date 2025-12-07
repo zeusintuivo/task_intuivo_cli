@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+#
+#
+
+function main(){
+  local path_to_file=""
+  local -i _err=0
+	local left=""
+	local right=""
+  local precheckdotdot=""
+
+	[[ -z "${1-}" ]] && return 1
+
+	precheckdotdot="${1-}"
+  path_to_file="${1-}"
+  if [[  "${precheckdotdot-}" == ":" ]] ; then # if it contains :
+	{
+	  left="$(cut -d: -f1 <<< "${precheckdotdot}")"
+	  right="$(cut -d: -f2 <<< "${precheckdotdot}")"
+    path_to_file="${left-}"
+	}
+	elif [[  "${precheckdotdot-}" == "+" ]] ; then # if it contains :
+	{
+		path_to_file="$(cut -d+ -f2- <<< "${precheckdotdot}")"
+		[[ -z "${path_to_file-}" ]] && return 1
+	  left="$(cut -d' ' -f2 <<< "${path_to_file}")"
+	  right="$(cut -d' ' -f1 <<< "${path_to_file}")"
+    path_to_file="${left-}"
+	}
+	fi
+	[[ -z "${left-}" ]] && return 1
+	[[ -z "${path_to_file-}" ]] && return 1
+	if [[ ! -e "${path_to_filei-}" ]] ; then   # not found in current folder
+  {
+    path_to_file="$(pwd)/${left}"
+    if [[ ! -e "${path_to_file}" ]] ; then  # add full pwd and see if finds it
+    {
+      path_to_file="$(which "${left}")"   # search in system $PATH and env system
+      _err=$?
+      if [ ${_err} -gt 0 ] ; then
+      {
+        >&2 echo "error 1. ${left} not found in ≤$(pwd)≥ or ≤\${PATH}≥ or ≤\$(env)≥ "
+        exit 1  # not found, silent fail
+      }
+      fi
+      path_to_file="$(realpath "$(which "${left}")")"   # updated realpath macos 20210902
+      _err=$?
+      if [ ${_err} -gt 0 ] ; then
+      {
+        >&2 echo "error 2. ${left} not found in ≤$(pwd)≥ or ≤\${PATH}≥ or ≤\$(env)≥ "
+        exit 1  # not found, silent fail
+      }
+      fi
+      if [[ ! -e "${path_to_file}" ]] ; then
+      {
+        >&2 echo "error 3. ${path_to_file} does not exist or is not accesible "
+        exit 1  # not found, silent fail
+      }
+      fi
+    }
+    fi
+  }
+  fi
+	if [[ -n "${right}" ]]  && [ ${right} -gt 0 ] ; then # if it contains :
+  {
+    vim +"${right}" "${path_to_file}"
+  }
+  else
+	{
+    vim  "${path_to_file}"
+	}
+  fi
+}
+
+
+
+main "${1-}"
