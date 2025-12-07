@@ -3,7 +3,8 @@
 #
 
 function main(){
-  local path_to_file=""
+  set -ue
+	local path_to_file=""
   local -i _err=0
 	local left=""
 	local right=""
@@ -13,13 +14,13 @@ function main(){
 
 	precheckdotdot="${1-}"
   path_to_file="${1-}"
-  if [[  "${precheckdotdot-}" == ":" ]] ; then # if it contains :
+	if [[  "${precheckdotdot-}" == *":"* ]] ; then # if it contains :
 	{
 	  left="$(cut -d: -f1 <<< "${precheckdotdot}")"
 	  right="$(cut -d: -f2 <<< "${precheckdotdot}")"
     path_to_file="${left-}"
 	}
-	elif [[  "${precheckdotdot-}" == "+" ]] ; then # if it contains :
+	elif [[  "${precheckdotdot-}" == *"+"* ]] ; then # if it contains :
 	{
 		path_to_file="$(cut -d+ -f2- <<< "${precheckdotdot}")"
 		[[ -z "${path_to_file-}" ]] && return 1
