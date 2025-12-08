@@ -576,7 +576,7 @@ fi
 
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
-    exit ${__trapped_error_exit_num}
+    exec exit ${__trapped_error_exit_num}
   }
   trap  '_trap_on_error4 $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
 
@@ -734,7 +734,7 @@ EOF
   su - "${SUDO_USER}" -c "git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
   su - "${SUDO_USER}" -c "git clone https://github.com/zsh-users/zsh-autosuggestions ${USER_HOME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
   rm ./install_powerlevel10k_sub.zsh
- 
+
 } # end _debian_flavor_install
 
 _redhat_flavor_install() {
@@ -827,6 +827,19 @@ _ubuntu__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _debian_flavor_install
 } # end _ubuntu__64
+
+_ubuntu__aarch64() {
+  trap 'echo Error:$?' ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+  _debian_flavor_install "${_parameters-}"
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO  while running callsomething above _err:${_err}"
+  }
+  fi
+} # end _ubuntu__aarch64
 
 _darwin__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
