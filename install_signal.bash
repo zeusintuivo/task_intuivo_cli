@@ -576,7 +576,7 @@ fi
 
     # $(eval ${BASH_COMMAND}  2>&1; )
     # echo -e " ☠ ${LIGHTPINK} Offending message:  ${__bash_error} ${RESET}"  >&2
-    exit ${__trapped_error_exit_num}
+    exec exit ${__trapped_error_exit_num}
   }
   trap  '_trap_on_error4 $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
 
@@ -853,9 +853,12 @@ _fedora_40__64() {
 _fedora_41__64() {
 	yes | dnf config-manager addrepo --from-repofile=https://download.opensuse.org/repositories/network:im:signal/Fedora_41/network:im:signal.repo --overwrite
   yes | dnf install signal-desktop -y
-
 } # end _fedora_41__64
 
+_fedora_42__64() {
+	yes | dnf config-manager addrepo --from-repofile=https://download.opensuse.org/repositories/network:im:signal/Fedora_42/network:im:signal.repo --overwrite
+  yes | dnf install signal-desktop -y
+} # end _fedora_42__64
 
 _gentoo__32() {
   _redhat_flavor_install
