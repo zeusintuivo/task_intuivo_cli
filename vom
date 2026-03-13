@@ -3,13 +3,13 @@
 #
 
 function main(){
-  set -xue
+  set -ue
   local path_to_file=""
   local -i _err=0
   local left=""
   local right=""
   local precheckdotdot=""
-
+  local -i  _DEBUG=${DEBUG:-0}
   [[ -z "${1-}" ]] && return 1
 
   precheckdotdot="${1-}"
@@ -29,10 +29,14 @@ function main(){
     path_to_file="${left-}"
   }
   fi
-  echo "          left:$left"
-  echo "         right:$right"
-  echo "  path_to_file:$path_to_file"
-  echo "precheckdotdot:$precheckdotdot"
+  if [ ${_DEBUG} -gt 0 ] ; then
+  {
+    echo "          left:$left"
+    echo "         right:$right"
+    echo "  path_to_file:$path_to_file"
+    echo "precheckdotdot:$precheckdotdot"
+  }
+  fi
   [[ -z "${left-}" ]] && [[ -n "${path_to_file-}" ]] && [[ -n "${precheckdotdot-}" ]] &&  [[ "${path_to_file-}" == "${precheckdotdot-}" ]] && left="${precheckdotdot-}"
   [[ -z "${left-}" ]] && return 1
   [[ -z "${path_to_file-}" ]] && return 1
