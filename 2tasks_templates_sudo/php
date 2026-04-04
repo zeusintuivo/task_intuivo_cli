@@ -103,6 +103,31 @@ _fedora__64() {
   _redhat_flavor_install
 } # end _fedora__64
 
+_fedora_42__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_REF: https://utho.com/docs/tutorial/how-to-install-php-8-on-fedora-38/"
+  echo "system: $(rpm -E %fedora)"
+  dnf install https://rpms.remirepo.net/fedora/remi-release-$(rpm -E %fedora).rpm -y
+  dnf module reset php -y
+	dnf module list php
+  dnf module enable php:remi-8.5 -y
+  # dnf builddep php -y --allowerasing
+  dnf install -y php php-common php-cli -y
+  dnf install -y php-mysqlnd php-gd php-curl php-json  php-zip pecl  -y
+  pecl install xdebug
+  pecl install psr
+	trap 'echo Error:$?' ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+
+	_err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO while running _fedora_42__64 above _err:${_err}"
+  }
+  fi
+} # end _fedora_42__64
+
 _gentoo__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install

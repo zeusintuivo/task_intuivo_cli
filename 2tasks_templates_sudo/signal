@@ -207,6 +207,11 @@ _fedora_42__64() {
   yes | dnf install signal-desktop -y
 } # end _fedora_42__64
 
+_fedora_43__64() {
+	yes | dnf config-manager addrepo --from-repofile=https://download.opensuse.org/repositories/network:im:signal/Fedora_43/network:im:signal.repo --overwrite
+  yes | dnf install signal-desktop -y
+} # end _fedora_43__64
+
 _gentoo__32() {
   _redhat_flavor_install
 } # end _gentoo__32

@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 #
 #
-
+# set -muvex
+set -mue
 function main(){
   set -ue
   local path_to_file=""
@@ -40,12 +41,12 @@ function main(){
   [[ -z "${left-}" ]] && [[ -n "${path_to_file-}" ]] && [[ -n "${precheckdotdot-}" ]] &&  [[ "${path_to_file-}" == "${precheckdotdot-}" ]] && left="${precheckdotdot-}"
   [[ -z "${left-}" ]] && return 1
   [[ -z "${path_to_file-}" ]] && return 1
-  if [[ ! -e "${path_to_filei-}" ]] ; then   # not found in current folder
+  if [[ ! -e "${path_to_file-}" ]] ; then   # not found in current folder
   {
     path_to_file="$(pwd)/${left}"
     if [[ ! -e "${path_to_file}" ]] ; then  # add full pwd and see if finds it
     {
-      path_to_file="$(which "${left}")"   # search in system $PATH and env system
+      path_to_file="$(paeth "${left}")"   # search in system $PATH and env system
       _err=$?
       if [ ${_err} -gt 0 ] ; then
       {
