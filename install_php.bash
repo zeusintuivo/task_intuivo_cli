@@ -657,15 +657,15 @@ _debian_flavor_install() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   enforce_variable_with_value USER_HOME "${USER_HOME}"
   if (
-  install_requirements "linux" "
+    install_requirements "linux" "
     base64
     unzip
     curl
     wget
     ufw
     nginx
-  "
-  ); then
+    "
+    ); then
     {
       apt install base64 -y
       apt install unzip -y
@@ -673,12 +673,12 @@ _debian_flavor_install() {
     }
   fi
   verify_is_installed "
-    unzip
-    curl
-    wget
-    tar
-    ufw
-    nginx
+  unzip
+  curl
+  wget
+  tar
+  ufw
+  nginx
   "
   local PB_VERSION=0.16.7
   local CODENAME="pocketbase_${PB_VERSION}_linux_amd64.zip"
@@ -762,22 +762,22 @@ _fedora_42__64() {
   echo "system: $(rpm -E %fedora)"
   dnf install https://rpms.remirepo.net/fedora/remi-release-$(rpm -E %fedora).rpm -y
   dnf module reset php -y
-	dnf module list php
+  dnf module list php
   dnf module enable php:remi-8.5 -y
   # dnf builddep php -y --allowerasing
   dnf install -y php php-common php-cli -y
   dnf install -y php-mysqlnd php-gd php-curl php-json  php-zip pecl  -y
   pecl install xdebug
   pecl install psr
-	trap 'echo Error:$?' ERR INT
+  trap 'echo Error:$?' ERR INT
   local _parameters="${*-}"
   local -i _err=0
 
-	_err=$?
+  _err=$?
   if [ ${_err} -gt 0 ] ; then
-  {
-    failed "$0:$LINENO while running _fedora_42__64 above _err:${_err}"
-  }
+    {
+      failed "$0:$LINENO while running _fedora_42__64 above _err:${_err}"
+    }
   fi
 } # end _fedora_42__64
 
@@ -820,6 +820,92 @@ _ubuntu__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _debian_flavor_install
 } # end _ubuntu__64
+
+_nginx_template_php_fpm() {
+	echo "
+	";
+} # end _nginx_template_php_fpm
+
+_ubuntu__aarch64() {
+  trap 'echo Error:$?' ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+
+  set -euo pipefail
+  # SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+  need_cmd apt-get
+  # need_cmd sudo
+
+  PHP_VERSION="${PHP_VERSION:-}"
+  APT_GET="${APT_GET:-apt-get}"
+
+  php_packages=()
+  php_fpm_service=""
+
+  if [[ -n "$PHP_VERSION" ]]; then
+    php_packages=(
+    "php${PHP_VERSION}-fpm"
+    "php${PHP_VERSION}-cli"
+    "php${PHP_VERSION}-mysql"
+    "php${PHP_VERSION}-curl"
+    "php${PHP_VERSION}-xml"
+    "php${PHP_VERSION}-mbstring"
+    "php${PHP_VERSION}-zip"
+    "php${PHP_VERSION}-gd"
+    "php${PHP_VERSION}-intl"
+    )
+    php_fpm_service="php${PHP_VERSION}-fpm.service"
+  else
+    php_packages=(
+    php-fpm
+    php-cli
+    php-mysql
+    php-curl
+    php-xml
+    php-mbstring
+    php-zip
+    php-gd
+    php-intl
+  )
+  fi
+
+  log "Updating apt package index"
+  as_root env DEBIAN_FRONTEND=noninteractive "$APT_GET" update
+
+  log "Installing nginx, MariaDB, and PHP runtime packages"
+  as_root env DEBIAN_FRONTEND=noninteractive "$APT_GET" install -y \
+    nginx \
+    mariadb-server \
+    curl \
+    unzip \
+    "${php_packages[@]}"
+
+  log "Enabling nginx and mariadb services"
+  enable_and_start_service nginx.service
+  enable_and_start_service mariadb.service
+
+  if [[ -z "$php_fpm_service" ]] && have_cmd systemctl; then
+    php_fpm_service="$(systemctl list-unit-files --type=service 'php*-fpm.service' 2>/dev/null | awk '/php.*-fpm\.service/ {print $1; exit}')"
+  fi
+
+  if [[ -n "$php_fpm_service" ]]; then
+    log "Enabling ${php_fpm_service}"
+    enable_and_start_service "$php_fpm_service"
+  fi
+
+  echo "Ubuntu stack install complete."
+  echo "Packages: nginx mariadb-server ${php_packages[*]}"
+
+
+  # callsomething "${_parameters-}"
+  # _err=$?
+  # if [ ${_err} -gt 0 ] ; then
+  # {
+  #   failed "$0:$LINENO  while running callsomething above _err:${_err}"
+  # }
+  # fi
+} # end _ubuntu__aarch64
 
 _darwin__64() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
