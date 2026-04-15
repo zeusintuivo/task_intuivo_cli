@@ -173,6 +173,46 @@ _nginx_template_php_fpm() {
 	";
 } # end _nginx_template_php_fpm
 
+
+log() {
+  printf '==> %s\n' "$*"
+}
+
+have_cmd() {
+  command -v "$1" >/dev/null 2>&1
+}
+
+need_cmd() {
+  if ! have_cmd "$1"; then
+    echo "Required command not found: $1" >&2
+    exit 69
+  fi
+}
+
+as_root() {
+  if [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
+    "$@"
+  else
+    sudo "$@"
+  fi
+}
+
+enable_and_start_service() {
+  local service="$1"
+
+  if have_cmd systemctl; then
+    as_root systemctl enable --now "$service"
+  fi
+}
+
+restart_service_if_present() {
+  local service="$1"
+
+  if have_cmd systemctl && systemctl list-unit-files "$service" >/dev/null 2>&1; then
+    as_root systemctl restart "$service"
+  fi
+}
+
 _ubuntu__aarch64() {
   trap 'echo Error:$?' ERR INT
   local _parameters="${*-}"
