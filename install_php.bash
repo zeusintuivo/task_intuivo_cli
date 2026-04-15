@@ -921,11 +921,7 @@ _ubuntu__aarch64() {
     unzip \
     "${php_packages[@]}"
 
-  log "Enabling nginx and mariadb services"
-  enable_and_start_service nginx.service
-  enable_and_start_service mariadb.service
-
-  if [[ -z "$php_fpm_service" ]] && have_cmd systemctl; then
+   if [[ -z "$php_fpm_service" ]] && have_cmd systemctl; then
     php_fpm_service="$(systemctl list-unit-files --type=service 'php*-fpm.service' 2>/dev/null | awk '/php.*-fpm\.service/ {print $1; exit}')"
   fi
 
@@ -934,8 +930,14 @@ _ubuntu__aarch64() {
     enable_and_start_service "$php_fpm_service"
   fi
 
-  echo "Ubuntu stack install complete."
-  echo "Packages: nginx mariadb-server ${php_packages[*]}"
+  echo "Ubuntu php stack install complete."
+
+  log "Enabling nginx and mariadb services"
+  enable_and_start_service nginx.service
+  enable_and_start_service mariadb.service
+
+
+	echo "Packages: nginx mariadb-server ${php_packages[*]}"
 
 
   # callsomething "${_parameters-}"
