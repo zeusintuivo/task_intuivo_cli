@@ -128,6 +128,54 @@ _fedora_42__64() {
   fi
 } # end _fedora_42__64
 
+_fedora_43__64() {
+  trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
+  echo "_REF: https://utho.com/docs/tutorial/how-to-install-php-8-on-fedora-38/"
+  echo "system: $(rpm -E %fedora)"
+
+	trap 'echo Error:$?' ERR INT
+  local _parameters="${*-}"
+  local -i _err=0
+
+	need_cmd dnf
+  # need_cmd sudo
+
+  PHP_STREAM="${PHP_STREAM:-}"
+  DNF="${DNF:-dnf}"
+
+  if [[ -n "$PHP_STREAM" ]]; then
+    log "Switching PHP module stream to ${PHP_STREAM}"
+    as_root "$DNF" -y module reset php
+    as_root "$DNF" -y module enable "php:${PHP_STREAM}"
+  fi
+
+  log "Installing nginx, MariaDB, and PHP runtime packages"
+    as_root "$DNF" -y install \
+     nginx \
+     mariadb-server \
+     curl \
+     unzip \
+     php-fpm \
+     php-cli \
+     php-mysqlnd \
+     php-opcache \
+     php-xml \
+     php-mbstring \
+     php-gd \
+     php-intl
+
+  log "Enabling nginx, mariadb, and php-fpm services"
+  enable_and_start_service php-fpm.service
+  enable_and_start_service nginx.service
+  enable_and_start_service mariadb.service
+  _err=$?
+  if [ ${_err} -gt 0 ] ; then
+  {
+    failed "$0:$LINENO while running _fedora_42__64 above _err:${_err}"
+  }
+  fi
+} # end _fedora_43__64
+
 _gentoo__32() {
   trap  '_trap_on_error $0 "${?}" LINENO BASH_LINENO FUNCNAME BASH_COMMAND $FUNCNAME $BASH_LINENO $LINENO   $BASH_COMMAND'  ERR
   _redhat_flavor_install
