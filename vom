@@ -3,7 +3,22 @@
 #
 # set -muvex
 set -mue
+
 function main(){
+  set -ue
+	local one=""
+	local -A args=${@-}
+
+	for one in $args; do
+	# while read -r one ; do
+	{
+		[[ -z "${one-}" ]] && continue
+		# echo -e ${one}
+		process_one ${one}
+  }
+  done
+} # end main
+function process_one(){
   set -ue
   local path_to_file=""
   local -i _err=0
@@ -12,6 +27,7 @@ function main(){
   local precheckdotdot=""
   local -i  _DEBUG=${DEBUG:-0}
   [[ -z "${1-}" ]] && return 1
+
 
   precheckdotdot="${1-}"
   path_to_file="${1-}"
@@ -81,8 +97,8 @@ function main(){
     vim  "${path_to_file}"
   }
   fi
-}
+} # end process_one
 
 
 
-main "${1-}"
+main "${*-}"
